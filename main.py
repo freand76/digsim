@@ -1,4 +1,4 @@
-from components import Led, PushButton
+from components import JsonComponent, Led, PushButton
 from components.gates import SR
 
 
@@ -28,3 +28,5 @@ OR.push_release()
 OR.push_release()
 OS.push_release()
 OR.push_release()
+
+json_compoenent = JsonComponent("json_modules/counter.json")
