@@ -12,14 +12,12 @@ class PushButton(Component):
         self.release()
 
     def push(self):
-        print(f"{self.name} PUSH")
         if self._inverted:
             self._out.level = SignalLevel.LOW
         else:
             self._out.level = SignalLevel.HIGH
 
     def release(self):
-        print(f"{self.name} RELEASE")
         if self._inverted:
             self._out.level = SignalLevel.HIGH
         else:

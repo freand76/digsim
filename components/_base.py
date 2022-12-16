@@ -17,12 +17,16 @@ SIGNAL_LEVEL_TO_STR = {
 
 class Port(abc.ABC):
     def __init__(self, parent, level=SignalLevel.UNKNOWN):
-        self._level = level
         self._parent = parent
+        self._level = level
 
     @property
     def level(self):
         return self._level
+
+    @property
+    def parent_port(self):
+        return self._parent.portname_from_instance(self)
 
     @level.setter
     def level(self, level):
@@ -30,8 +34,9 @@ class Port(abc.ABC):
         self._level = level
         self.update(port_changed)
 
+    @property
     @abc.abstractmethod
-    def type(self):
+    def iotype(self):
         pass
 
     @abc.abstractmethod
@@ -43,31 +48,48 @@ class Port(abc.ABC):
 
 
 class InputPort(Port):
-    def __init__(self, parent):
+    def __init__(self, parent, update_parent=True):
         super().__init__(parent=parent)
+        self._update_parent = update_parent
 
-    def type(self):
+    @property
+    def iotype(self):
         return "IN"
 
     def update(self, port_changed=False):
-        if port_changed:
+        if port_changed and self._update_parent:
             self._parent.update()
 
 
-class OutputPort(Port):
+class InputFanOutPort(InputPort):
     def __init__(self, parent):
-        super().__init__(parent=parent, level=SignalLevel.LOW)
+        super().__init__(parent=parent)
         self._destinations = []
 
     def connect(self, dest):
         self._destinations.append(dest)
 
-    def type(self):
-        return "OUT"
-
     def update(self, port_changed=False):
         for dest in self._destinations:
             dest.level = self.level
+
+
+class OutputPort(Port):
+    def __init__(self, parent):
+        super().__init__(parent=parent, level=SignalLevel.UNKNOWN)
+        self._destinations = []
+
+    def connect(self, dest):
+        self._destinations.append(dest)
+
+    @property
+    def iotype(self):
+        return "OUT"
+
+    def update(self, port_changed=False):
+        if port_changed:
+            for dest in self._destinations:
+                dest.level = self.level
 
 
 class Component(abc.ABC):
@@ -93,15 +115,30 @@ class Component(abc.ABC):
     def outports(self):
         return [key for key in self._output_ports.keys()]
 
+    def portname_from_instance(self, port):
+        ports = self._input_ports if isinstance(port, InputPort) else self._output_ports
+        for portname, port_instance in ports.items():
+            if port == port_instance:
+                return portname
+
     def inport(self, portname):
         return self._input_ports[portname]
 
     def outport(self, portname):
         return self._output_ports[portname]
 
+    def port(self, portname):
+        if portname in self._input_ports:
+            return self.inport(portname)
+        else:
+            return self.outport(portname)
+
     @property
     def name(self):
         return self._name
 
     def update(self):
+        pass
+
+    def delta(self):
         pass

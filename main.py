@@ -22,11 +22,46 @@ OS.init()
 OR.init()
 
 print(SR.inports, SR.outports)
+print("Set")
 OS.push_release()
-OS.push_release()
-OR.push_release()
-OR.push_release()
-OS.push_release()
+print("Reset")
 OR.push_release()
 
-json_compoenent = JsonComponent("json_modules/counter.json")
+
+json_component = JsonComponent("json_modules/counter.json")
+
+
+clk = PushButton("clk")
+reset = PushButton("reset")
+up = PushButton("up")
+clk.outport("O").connect(json_component.inport("clk"))
+reset.outport("O").connect(json_component.inport("reset"))
+up.outport("O").connect(json_component.inport("up"))
+clk.init()
+up.push()
+reset.push_release()
+x = json_component
+
+print("\n===================== Reset ==========================\n")
+
+print(
+    "OUT",
+    json_component.outport("cnt3"),
+    json_component.outport("cnt2"),
+    json_component.outport("cnt1"),
+    json_component.outport("cnt0"),
+)
+
+
+print("\n===================== Start ==========================\n")
+
+for _ in range(0, 16):
+    clk.push_release()
+    json_component.delta()
+    print(
+        "OUT",
+        json_component.outport("cnt3"),
+        json_component.outport("cnt2"),
+        json_component.outport("cnt1"),
+        json_component.outport("cnt0"),
+    )

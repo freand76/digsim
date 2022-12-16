@@ -1,6 +1,8 @@
 import json
 
-from components import Component, InputPort, OutputPort, SignalLevel
+from components import (Component, InputFanOutPort, InputPort, OutputPort,
+                        SignalLevel)
+from components.gates import AND, DFFE_PP0P, NAND, NOT, SR, XOR
 
 
 class JsonComponentException(Exception):
@@ -8,20 +10,35 @@ class JsonComponentException(Exception):
 
 
 class JsonComponent(Component):
+
+    COMPONENT_MAP = {
+        "$_NOT_": NOT,
+        "$_AND_": AND,
+        "$_XOR_": XOR,
+        "$_DFFE_PP0P_": DFFE_PP0P,
+    }
+
     def __init__(self, filename):
         self._filename = filename
+        self._port_tag_dict = {}
+        self._components = []
 
         with open(self._filename) as f:
             self._json = json.load(f)
 
         super().__init__(self._get_component_name())
-        port_tag_dict = self._parse_ports()
-
-        print("IN:", self.inports)
-        print("OUT:", self.outports)
-        print("TAG:", port_tag_dict)
-
         self._parse_cells()
+        self._make_cell_connections()
+        self._connect_external_ports()
+
+    def delta(self):
+        for component in self._components:
+            component.delta()
+
+    def _add_connection(self, connection_id, port_instance):
+        if self._port_tag_dict.get(connection_id) is None:
+            self._port_tag_dict[connection_id] = []
+        self._port_tag_dict[connection_id].append(port_instance)
 
     def _get_component_name(self):
         modules = self._json["modules"]
@@ -29,27 +46,54 @@ class JsonComponent(Component):
             raise JsonComponentException("Only one module per file is supported")
         return list(modules.keys())[0]
 
-    def _parse_ports(self):
-        port_tag_dict = {}
+    def _parse_cells(self):
+        cells = self._json["modules"][self.name]["cells"]
+        for cellname, cell_dict in cells.items():
+            cell_type = cell_dict["type"]
+            ComponentClass = self.COMPONENT_MAP[cell_type]
+            if ComponentClass is None:
+                raise Exception(f"Cell '{cell_type}' not implemented yet...")
+            component = ComponentClass(name=f"{cell_type}_{cellname}")
+            self._components.append(component)
+            cell_connections = cell_dict["connections"]
+            for portname, connection in cell_connections.items():
+
+                if len(connection) > 1:
+                    raise Exception(
+                        f"Cannot handle multibit connection for cell '{cell_type}'"
+                    )
+                connection_id = connection[0]
+                port_instance = component.port(portname)
+                self._add_connection(connection_id, port_instance)
+
+    def _make_cell_connections(self):
+        for port_tag, portlist in self._port_tag_dict.items():
+            port_iotype = [port.iotype for port in portlist]
+            if "OUT" in port_iotype:
+                out_index = port_iotype.index("OUT")
+                out_port = portlist[out_index]
+                for port in portlist:
+                    if port.iotype == "IN":
+                        out_port.connect(port)
+
+    def _connect_external_ports(self):
         ports = self._json["modules"][self.name]["ports"]
         for portname, port_dict in ports.items():
-            if port_dict["direction"] == "input":
-                PortClass = InputPort
-            else:
-                PortClass = OutputPort
-
-            for idx, bit in enumerate(port_dict["bits"]):
+            is_input_port = port_dict["direction"] == "input"
+            for idx, connection_id in enumerate(port_dict["bits"]):
                 if len(port_dict["bits"]) == 1:
                     portbitname = f"{portname}"
                 else:
                     portbitname = f"{portname}{idx}"
-                port_instance = PortClass(self)
-                self.add_port(portbitname, port_instance)
+                portlist = self._port_tag_dict[connection_id]
+                if is_input_port:
+                    port_instance = InputFanOutPort(self)
+                    self.add_port(portbitname, port_instance)
+                    for port in portlist:
+                        port_instance.connect(port)
 
-                port_tag_dict[bit] = port_instance
-        return port_tag_dict
-
-    def _parse_cells(self):
-        cells = self._json["modules"][self.name]["cells"]
-        for cellname, cell_dict in cells.items():
-            print(cellname, cell_dict["type"])
+                else:
+                    port_iotype = [port.iotype for port in portlist]
+                    out_index = port_iotype.index("OUT")
+                    port_instance = portlist[out_index]
+                    self.add_port(portbitname, port_instance)
