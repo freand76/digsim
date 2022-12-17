@@ -10,10 +10,12 @@ def led_callback(name, on):
         print(f"LED: '{name}' is OFF")
 
 
-OS = PushButton("S Button", inverted=True)
-OR = PushButton("R Button", inverted=True)
-SR = SR()
-D1 = Led("D1", callback=led_callback)
+test_circuit1 = Circuit()
+OS = PushButton(test_circuit1, "S Button", inverted=True)
+OR = PushButton(test_circuit1, "R Button", inverted=True)
+SR = SR(test_circuit1)
+D1 = Led(test_circuit1, "D1", callback=led_callback)
+test_circuit1.add_components([OS, OR, SR, D1])
 
 OS.outport("O").connect(SR.inport("nS"))
 OR.outport("O").connect(SR.inport("nR"))
@@ -28,13 +30,12 @@ OS.push_release()
 print("Reset")
 OR.push_release()
 
-
-json_component = JsonComponent("json_modules/counter.json")
-
-
-clk = PushButton("clk")
-reset = PushButton("reset")
-up = PushButton("up")
+test_circuit2 = Circuit()
+json_component = JsonComponent(test_circuit2, "json_modules/counter.json")
+clk = PushButton(test_circuit2, "clk")
+reset = PushButton(test_circuit2, "reset")
+up = PushButton(test_circuit2, "up")
+test_circuit2.add_components([json_component, clk, reset, up])
 clk.outport("O").connect(json_component.inport("clk"))
 reset.outport("O").connect(json_component.inport("reset"))
 up.outport("O").connect(json_component.inport("up"))
@@ -58,7 +59,6 @@ print("\n===================== Start ==========================\n")
 
 for _ in range(0, 16):
     clk.push_release()
-    json_component.delta()
     print(
         "OUT",
         json_component.outport("cnt3"),

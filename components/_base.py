@@ -95,7 +95,7 @@ class OutputPort(Port):
 
 class Component(abc.ABC):
     @classmethod
-    def from_json(cls, json_component):
+    def from_json(cls, circuit, json_component):
         component_name = json_component["name"]
         component_type = json_component["type"]
 
@@ -104,9 +104,10 @@ class Component(abc.ABC):
 
         module = importlib.import_module(py_module_name)
         class_ = getattr(module, py_class_name)
-        return class_(name=component_name)
+        return class_(circuit=circuit, name=component_name)
 
-    def __init__(self, name):
+    def __init__(self, circuit, name):
+        self._circuit = circuit
         self._name = name
         self._input_ports = {}
         self._output_ports = {}
@@ -147,6 +148,10 @@ class Component(abc.ABC):
             return self.outport(portname)
 
     @property
+    def circuit(self):
+        return self._circuit
+
+    @property
     def name(self):
         return self._name
 
@@ -155,3 +160,11 @@ class Component(abc.ABC):
 
     def delta(self):
         pass
+
+
+class ActorComponent(Component):
+    def __init__(self, circuit, name):
+        super().__init__(circuit, name)
+
+    def actor_event(self):
+        self.circuit.delta()

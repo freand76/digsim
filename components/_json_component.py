@@ -18,15 +18,16 @@ class JsonComponent(Component):
         "$_DFFE_PP0P_": DFFE_PP0P,
     }
 
-    def __init__(self, filename):
+    def __init__(self, circuit, filename):
         self._filename = filename
         self._port_tag_dict = {}
         self._components = []
+        self._circuit = circuit
 
         with open(self._filename) as f:
             self._json = json.load(f)
 
-        super().__init__(self._get_component_name())
+        super().__init__(circuit, self._get_component_name())
         self._parse_cells()
         self._make_cell_connections()
         self._connect_external_ports()
@@ -53,7 +54,7 @@ class JsonComponent(Component):
             ComponentClass = self.COMPONENT_MAP[cell_type]
             if ComponentClass is None:
                 raise Exception(f"Cell '{cell_type}' not implemented yet...")
-            component = ComponentClass(name=f"{cell_type}_{cellname}")
+            component = ComponentClass(self._circuit, name=f"{cell_type}_{cellname}")
             self._components.append(component)
             cell_connections = cell_dict["connections"]
             for portname, connection in cell_connections.items():

@@ -2,8 +2,8 @@ from components import Component, InputPort, OutputPort, SignalLevel
 
 
 class NOT(Component):
-    def __init__(self, name="NOT"):
-        super().__init__(name)
+    def __init__(self, circuit, name="NOT"):
+        super().__init__(circuit, name)
         self._in = InputPort(self)
         self._out = OutputPort(self)
         self.add_port("A", self._in)
@@ -17,8 +17,8 @@ class NOT(Component):
 
 
 class AND(Component):
-    def __init__(self, name="AND"):
-        super().__init__(name)
+    def __init__(self, circuit, name="AND"):
+        super().__init__(circuit, name)
         self._ina = InputPort(self)
         self._inb = InputPort(self)
         self._out = OutputPort(self)
@@ -35,8 +35,8 @@ class AND(Component):
 
 
 class XOR(Component):
-    def __init__(self, name="XOR"):
-        super().__init__(name)
+    def __init__(self, circuit, name="XOR"):
+        super().__init__(circuit, name)
         self._ina = InputPort(self)
         self._inb = InputPort(self)
         self._out = OutputPort(self)
@@ -57,8 +57,8 @@ class XOR(Component):
 
 
 class NAND(Component):
-    def __init__(self, name="NAND"):
-        super().__init__(name)
+    def __init__(self, circuit, name="NAND"):
+        super().__init__(circuit, name)
         self._and = AND(f"{name}_AND")
         self._not = NOT(f"{name}_NOT")
         self._and.outport("Y").connect(self._not.inport("A"))
@@ -69,10 +69,10 @@ class NAND(Component):
 
 
 class SR(Component):
-    def __init__(self, name="SR"):
-        super().__init__(name)
-        self._nands = NAND(f"{name}_NANDS")
-        self._nandr = NAND(f"{name}_NANDR")
+    def __init__(self, circuit, name="SR"):
+        super().__init__(circuit, name)
+        self._nands = NAND(circuit, f"{name}_NANDS")
+        self._nandr = NAND(circuit, f"{name}_NANDR")
         self._nands.outport("Y").connect(self._nandr.inport("A"))
         self._nandr.outport("Y").connect(self._nands.inport("B"))
 
@@ -83,8 +83,8 @@ class SR(Component):
 
 
 class DFFE_PP0P(Component):
-    def __init__(self, name="DFFE"):
-        super().__init__(name)
+    def __init__(self, circuit, name="DFFE"):
+        super().__init__(circuit, name)
         self._inc = InputPort(self)
         self._ind = InputPort(self, update_parent=False)
         self._ine = InputPort(self, update_parent=False)

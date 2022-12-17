@@ -1,6 +1,6 @@
 import json
 
-from components import Component
+from components import ActorComponent, Component
 
 
 class CircuitError(Exception):
@@ -15,11 +15,19 @@ class Circuit:
         for comp in self._components:
             comp.init()
 
+    def delta(self):
+        for comp in self._components:
+            comp.delta()
+
     def add_component(self, component):
         for comp in self._components:
             if component.name == comp.name:
                 raise CircuitError("Component already in circuit")
         self._components.append(component)
+
+    def add_components(self, components):
+        for component in components:
+            self.add_component(component)
 
     def get_component(self, component_name):
         for comp in self._components:
@@ -36,7 +44,7 @@ class Circuit:
         json_connections = json_circuit["connections"]
 
         for json_component in json_components:
-            c = Component.from_json(json_component)
+            c = Component.from_json(self, json_component)
             self.add_component(c)
 
         for json_connection in json_connections:
