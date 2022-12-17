@@ -1,4 +1,5 @@
 import abc
+import importlib
 from enum import Enum, auto
 
 
@@ -93,6 +94,18 @@ class OutputPort(Port):
 
 
 class Component(abc.ABC):
+    @classmethod
+    def from_json(cls, json_component):
+        component_name = json_component["name"]
+        component_type = json_component["type"]
+
+        py_module_name = ".".join(component_type.split(".")[0:-1])
+        py_class_name = component_type.split(".")[-1]
+
+        module = importlib.import_module(py_module_name)
+        class_ = getattr(module, py_class_name)
+        return class_(name=component_name)
+
     def __init__(self, name):
         self._name = name
         self._input_ports = {}

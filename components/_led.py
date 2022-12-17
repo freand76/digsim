@@ -8,6 +8,9 @@ class Led(Component):
         self._in = InputPort(self)
         self.add_port("I", self._in)
 
+    def set_callback(self, callback):
+        self._callback = callback
+
     def update(self):
         if self._callback is not None:
             self._callback(self.name, self._in.level == SignalLevel.HIGH)

@@ -1,0 +1,26 @@
+{
+    "circuit":
+    {
+        "name": "example_circuit",
+        "components": [
+            { "name": "button1", "type": "components.PushButton" } ,           
+            { "name": "button2", "type": "components.PushButton" },            
+            { "name": "and1", "type": "components.gates.AND" },
+            { "name": "not1", "type": "components.gates.NOT" },
+            { "name": "xor1", "type": "components.gates.XOR" },
+            { "name": "and_led", "type": "components.Led" },
+            { "name": "not_led", "type": "components.Led" },
+            { "name": "xor_led", "type": "components.Led" }
+        ],
+        "connections": [
+            { "src": "button1.O", "dst": "and1.A" },
+            { "src": "button2.O", "dst": "and1.B" },            
+            { "src": "button1.O", "dst": "not1.A" },
+            { "src": "button1.O", "dst": "xor1.A" },
+            { "src": "button2.O", "dst": "xor1.B" },            
+            { "src": "and1.Y", "dst": "and_led.I" },
+            { "src": "not1.Y", "dst": "not_led.I" },
+            { "src": "xor1.Y", "dst": "xor_led.I" }
+        ]
+    }
+}
