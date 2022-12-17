@@ -20,32 +20,53 @@ class Port(abc.ABC):
     def __init__(self, parent, level=SignalLevel.UNKNOWN):
         self._parent = parent
         self._level = level
+        self._name = None
 
     @property
     def level(self):
         return self._level
 
     @property
+    def parent(self):
+        return self._parent
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name):
+        self._name = name
+
+    @property
     def parent_port(self):
         return self._parent.portname_from_instance(self)
 
+    @abc.abstractmethod
+    def set_level(self, level):
+        pass
+
     @level.setter
     def level(self, level):
-        port_changed = level != self._level
-        self._level = level
-        self.update(port_changed)
+        self.set_level(level)
 
     @property
     @abc.abstractmethod
     def iotype(self):
         pass
 
-    @abc.abstractmethod
-    def update(self, port_changed=False):
+    def delta(self):
         pass
 
-    def __str__(self):
+    def delta_needed(self):
+        self.parent.delta_needed()
+
+    @property
+    def val(self):
         return SIGNAL_LEVEL_TO_STR[self._level]
+
+    def __str__(self):
+        return f"{self.parent.name}:{self.name}={SIGNAL_LEVEL_TO_STR[self._level]}"
 
 
 class InputPort(Port):
@@ -57,9 +78,11 @@ class InputPort(Port):
     def iotype(self):
         return "IN"
 
-    def update(self, port_changed=False):
-        if port_changed and self._update_parent:
-            self._parent.update()
+    def set_level(self, level):
+        port_changed = self._level != level
+        self._level = level
+        if port_changed:
+            self.parent.update()
 
 
 class InputFanOutPort(InputPort):
@@ -70,15 +93,16 @@ class InputFanOutPort(InputPort):
     def connect(self, dest):
         self._destinations.append(dest)
 
-    def update(self, port_changed=False):
+    def set_level(self, level):
         for dest in self._destinations:
-            dest.level = self.level
+            dest.level = level
 
 
 class OutputPort(Port):
     def __init__(self, parent):
         super().__init__(parent=parent, level=SignalLevel.UNKNOWN)
         self._destinations = []
+        self._next_level = SignalLevel.UNKNOWN
 
     def connect(self, dest):
         self._destinations.append(dest)
@@ -87,10 +111,15 @@ class OutputPort(Port):
     def iotype(self):
         return "OUT"
 
-    def update(self, port_changed=False):
-        if port_changed:
-            for dest in self._destinations:
-                dest.level = self.level
+    def set_level(self, level):
+        self._next_level = level
+        if self._next_level != self._level:
+            self.delta_needed()
+
+    def delta(self):
+        self._level = self._next_level
+        for dest in self._destinations:
+            dest.level = self.level
 
 
 class Component(abc.ABC):
@@ -116,6 +145,7 @@ class Component(abc.ABC):
         pass
 
     def add_port(self, portname, port):
+        port.name = portname
         if isinstance(port, InputPort):
             self._input_ports[portname] = port
         elif isinstance(port, OutputPort):
@@ -159,7 +189,11 @@ class Component(abc.ABC):
         pass
 
     def delta(self):
-        pass
+        for _, port in self._output_ports.items():
+            port.delta()
+
+    def delta_needed(self):
+        self.circuit.delta_needed()
 
 
 class ActorComponent(Component):
@@ -168,3 +202,16 @@ class ActorComponent(Component):
 
     def actor_event(self):
         self.circuit.delta()
+
+
+class MultiComponent(Component):
+    def __init__(self, circuit, name):
+        super().__init__(circuit, name)
+        self._components = []
+
+    def add(self, component):
+        self._components.append(component)
+
+    def delta(self):
+        for comp in self._components:
+            comp.delta()

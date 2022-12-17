@@ -1,4 +1,5 @@
-from components import Component, InputPort, OutputPort, SignalLevel
+from components import (Component, InputPort, MultiComponent, OutputPort,
+                        SignalLevel)
 
 
 class NOT(Component):
@@ -56,11 +57,13 @@ class XOR(Component):
             self._out.level = SignalLevel.LOW
 
 
-class NAND(Component):
+class NAND(MultiComponent):
     def __init__(self, circuit, name="NAND"):
         super().__init__(circuit, name)
-        self._and = AND(f"{name}_AND")
-        self._not = NOT(f"{name}_NOT")
+        self._and = AND(circuit, f"{name}_AND")
+        self.add(self._and)
+        self._not = NOT(circuit, f"{name}_NOT")
+        self.add(self._not)
         self._and.outport("Y").connect(self._not.inport("A"))
 
         self.add_port("A", self._and.inport("A"))
@@ -68,11 +71,13 @@ class NAND(Component):
         self.add_port("Y", self._not.outport("Y"))
 
 
-class SR(Component):
+class SR(MultiComponent):
     def __init__(self, circuit, name="SR"):
         super().__init__(circuit, name)
         self._nands = NAND(circuit, f"{name}_NANDS")
+        self.add(self._nands)
         self._nandr = NAND(circuit, f"{name}_NANDR")
+        self.add(self._nandr)
         self._nands.outport("Y").connect(self._nandr.inport("A"))
         self._nandr.outport("Y").connect(self._nands.inport("B"))
 
@@ -107,9 +112,6 @@ class DFFE_PP0P(Component):
             and self._inc.level == SignalLevel.HIGH
             and self._ine.level == SignalLevel.HIGH
         ):
-            self._next_q_level = self._ind.level
+            self._out.level = self._ind.level
 
         self._old_inc_level = self._inc.level
-
-    def delta(self):
-        self._out.level = self._next_q_level

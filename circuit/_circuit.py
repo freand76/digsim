@@ -10,14 +10,20 @@ class CircuitError(Exception):
 class Circuit:
     def __init__(self):
         self._components = []
+        self._delta_needed = False
 
     def init(self):
         for comp in self._components:
             comp.init()
 
     def delta(self):
-        for comp in self._components:
-            comp.delta()
+        while self._delta_needed:
+            self._delta_needed = False
+            for comp in self._components:
+                comp.delta()
+
+    def delta_needed(self):
+        self._delta_needed = True
 
     def add_component(self, component):
         for comp in self._components:

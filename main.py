@@ -16,6 +16,7 @@ OR = PushButton(test_circuit1, "R Button", inverted=True)
 SR = SR(test_circuit1)
 D1 = Led(test_circuit1, "D1", callback=led_callback)
 test_circuit1.add_components([OS, OR, SR, D1])
+test_circuit1.init()
 
 OS.outport("O").connect(SR.inport("nS"))
 OR.outport("O").connect(SR.inport("nR"))
@@ -44,14 +45,15 @@ up.push()
 reset.push_release()
 x = json_component
 
+
 print("\n===================== Reset ==========================\n")
 
 print(
     "OUT",
-    json_component.outport("cnt3"),
-    json_component.outport("cnt2"),
-    json_component.outport("cnt1"),
-    json_component.outport("cnt0"),
+    json_component.outport("cnt3").val,
+    json_component.outport("cnt2").val,
+    json_component.outport("cnt1").val,
+    json_component.outport("cnt0").val,
 )
 
 
@@ -61,10 +63,10 @@ for _ in range(0, 16):
     clk.push_release()
     print(
         "OUT",
-        json_component.outport("cnt3"),
-        json_component.outport("cnt2"),
-        json_component.outport("cnt1"),
-        json_component.outport("cnt0"),
+        json_component.outport("cnt3").val,
+        json_component.outport("cnt2").val,
+        json_component.outport("cnt1").val,
+        json_component.outport("cnt0").val,
     )
 
 

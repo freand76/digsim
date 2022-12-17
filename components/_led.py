@@ -11,6 +11,10 @@ class Led(Component):
     def set_callback(self, callback):
         self._callback = callback
 
+    @property
+    def state(self):
+        return "1" if self._in.level == SignalLevel.HIGH else "0"
+
     def update(self):
         if self._callback is not None:
             self._callback(self.name, self._in.level == SignalLevel.HIGH)
