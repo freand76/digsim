@@ -94,8 +94,9 @@ class InputFanOutPort(InputPort):
         self._destinations.append(dest)
 
     def set_level(self, level):
-        for dest in self._destinations:
-            dest.level = level
+        if self._level != level:
+            for dest in self._destinations:
+                dest.level = level
 
 
 class OutputPort(Port):
@@ -111,15 +112,21 @@ class OutputPort(Port):
     def iotype(self):
         return "OUT"
 
+    @property
+    def next(self):
+        return SIGNAL_LEVEL_TO_STR[self._next_level]
+
     def set_level(self, level):
         self._next_level = level
         if self._next_level != self._level:
             self.delta_needed()
 
     def delta(self):
-        self._level = self._next_level
-        for dest in self._destinations:
-            dest.level = self.level
+        if self._next_level != self._level:
+            self._level = self._next_level
+            # print(f"DeltaPort {self}")
+            for dest in self._destinations:
+                dest.level = self.level
 
 
 class Component(abc.ABC):
@@ -140,6 +147,7 @@ class Component(abc.ABC):
         self._name = name
         self._input_ports = {}
         self._output_ports = {}
+        self._circuit.add_component(self)
 
     def init(self):
         pass
@@ -211,7 +219,3 @@ class MultiComponent(Component):
 
     def add(self, component):
         self._components.append(component)
-
-    def delta(self):
-        for comp in self._components:
-            comp.delta()

@@ -1,6 +1,6 @@
 from circuit import Circuit
 from components import JsonComponent, Led, PushButton
-from components.gates import SR
+from components.gates import JK_MS, SR
 
 
 def led_callback(name, on):
@@ -15,7 +15,6 @@ OS = PushButton(test_circuit1, "S Button", inverted=True)
 OR = PushButton(test_circuit1, "R Button", inverted=True)
 SR = SR(test_circuit1)
 D1 = Led(test_circuit1, "D1", callback=led_callback)
-test_circuit1.add_components([OS, OR, SR, D1])
 test_circuit1.init()
 
 OS.outport("O").connect(SR.inport("nS"))
@@ -36,7 +35,6 @@ json_component = JsonComponent(test_circuit2, "json_modules/counter.json")
 clk = PushButton(test_circuit2, "clk")
 reset = PushButton(test_circuit2, "reset")
 up = PushButton(test_circuit2, "up")
-test_circuit2.add_components([json_component, clk, reset, up])
 clk.outport("O").connect(json_component.inport("clk"))
 reset.outport("O").connect(json_component.inport("reset"))
 up.outport("O").connect(json_component.inport("up"))
@@ -89,3 +87,37 @@ print("------------ 10")
 button1.push()
 print("------------ 11")
 button2.push()
+
+print("\n===================== Master Slave JK ==========================\n")
+circuit = Circuit()
+jk = JK_MS(circuit)
+led = Led(circuit)
+led.set_callback(led_callback)
+clk = PushButton(circuit, "clk")
+j = PushButton(circuit, "J")
+k = PushButton(circuit, "K")
+clk.outport("O").connect(jk.inport("C"))
+j.outport("O").connect(jk.inport("J"))
+k.outport("O").connect(jk.inport("K"))
+jk.outport("Q").connect(led.inport("I"))
+circuit.init()
+
+j.release()
+k.release()
+
+for _ in range(0, 3):
+    print("-- clk --")
+    clk.push_release()
+
+print("-- Set K --")
+k.push()
+j.release()
+clk.push_release(4)
+print("-- Set J --")
+k.release()
+j.push()
+clk.push_release(4)
+print("-- Set KJ --")
+k.push()
+j.push()
+clk.push_release(4)

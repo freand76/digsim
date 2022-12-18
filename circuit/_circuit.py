@@ -31,10 +31,6 @@ class Circuit:
                 raise CircuitError("Component already in circuit")
         self._components.append(component)
 
-    def add_components(self, components):
-        for component in components:
-            self.add_component(component)
-
     def get_component(self, component_name):
         for comp in self._components:
             if component_name == comp.name:
@@ -51,7 +47,6 @@ class Circuit:
 
         for json_component in json_components:
             c = Component.from_json(self, json_component)
-            self.add_component(c)
 
         for json_connection in json_connections:
             source = json_connection["src"]
