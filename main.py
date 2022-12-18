@@ -104,10 +104,7 @@ circuit.init()
 
 j.release()
 k.release()
-
-for _ in range(0, 3):
-    print("-- clk --")
-    clk.push_release()
+clk.push_release(4)
 
 print("-- Set K --")
 k.push()
