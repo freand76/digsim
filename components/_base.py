@@ -55,12 +55,6 @@ class Port(abc.ABC):
     def iotype(self):
         pass
 
-    def delta(self):
-        pass
-
-    def delta_needed(self):
-        self.parent.delta_needed()
-
     @property
     def val(self):
         return SIGNAL_LEVEL_TO_STR[self._level]
@@ -119,12 +113,11 @@ class OutputPort(Port):
     def set_level(self, level):
         self._next_level = level
         if self._next_level != self._level:
-            self.delta_needed()
+            self.parent.delta_cycle_needed(self)
 
-    def delta(self):
+    def delta_cycle(self):
         if self._next_level != self._level:
             self._level = self._next_level
-            # print(f"DeltaPort {self}")
             for dest in self._destinations:
                 dest.level = self.level
 
@@ -167,12 +160,6 @@ class Component(abc.ABC):
     def outports(self):
         return [key for key in self._output_ports.keys()]
 
-    def portname_from_instance(self, port):
-        ports = self._input_ports if isinstance(port, InputPort) else self._output_ports
-        for portname, port_instance in ports.items():
-            if port == port_instance:
-                return portname
-
     def inport(self, portname):
         return self._input_ports[portname]
 
@@ -196,20 +183,24 @@ class Component(abc.ABC):
     def update(self):
         pass
 
-    def delta(self):
-        for _, port in self._output_ports.items():
-            port.delta()
+    def delta_cycle_needed(self, port):
+        self.circuit.delta_cycle_needed(port)
 
-    def delta_needed(self):
-        self.circuit.delta_needed()
-
-
+    def __str__(self):
+        comp_str = f"{self.name}"
+        for portname, port in self._input_ports.items():
+            comp_str += f" {portname}={port.val}"
+        comp_str += " =>"
+        for portname, port in self._output_ports.items():
+            comp_str += f" {portname}={port.val}>{port.next}"
+        return comp_str
+            
 class ActorComponent(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
 
     def actor_event(self):
-        self.circuit.delta()
+        self.circuit.delta_cycle()
 
 
 class MultiComponent(Component):

@@ -15,7 +15,6 @@ class NOT(Component):
             self._out.level = SignalLevel.HIGH
         else:
             self._out.level = SignalLevel.LOW
-        # print(f" - Update {self.name} {self._in.val} => ({self._out.val} => {self._out.next})")
 
 
 class AND(Component):
@@ -34,7 +33,6 @@ class AND(Component):
             self._out.level = SignalLevel.HIGH
         else:
             self._out.level = SignalLevel.LOW
-        # print(f" - Update {self.name} {self._ina.val}{self._inb.val} => ({self._out.val} => {self._out.next})")
 
 
 class XOR(Component):
@@ -59,16 +57,22 @@ class XOR(Component):
             self._out.level = SignalLevel.LOW
 
 
-class NAND(MultiComponent):
+class NAND(Component):
     def __init__(self, circuit, name="NAND"):
         super().__init__(circuit, name)
-        _and = AND(circuit, f"{name}_AND")
-        _not = NOT(circuit, f"{name}_NOT")
-        _and.outport("Y").connect(_not.inport("A"))
+        self._ina = InputPort(self)
+        self._inb = InputPort(self)
+        self._out = OutputPort(self)
 
-        self.add_port("A", _and.inport("A"))
-        self.add_port("B", _and.inport("B"))
-        self.add_port("Y", _not.outport("Y"))
+        self.add_port("A", self._ina)
+        self.add_port("B", self._inb)
+        self.add_port("Y", self._out)
+
+    def update(self):
+        if self._ina.level == SignalLevel.HIGH and self._inb.level == SignalLevel.HIGH:
+            self._out.level = SignalLevel.LOW
+        else:
+            self._out.level = SignalLevel.HIGH
 
 
 class NAND3(Component):
@@ -93,7 +97,6 @@ class NAND3(Component):
             self._out.level = SignalLevel.LOW
         else:
             self._out.level = SignalLevel.HIGH
-        # print(f" - Update {self.name} {self._ina.val}{self._inb.val}{self._inc.val} => ({self._out.val} => {self._out.next})")
 
 
 class SR(MultiComponent):

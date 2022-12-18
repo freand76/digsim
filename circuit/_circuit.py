@@ -10,20 +10,24 @@ class CircuitError(Exception):
 class Circuit:
     def __init__(self):
         self._components = []
-        self._delta_needed = False
+        self._delta_cycle_ports = []
 
     def init(self):
         for comp in self._components:
             comp.init()
 
-    def delta(self):
-        while self._delta_needed:
-            self._delta_needed = False
-            for comp in self._components:
-                comp.delta()
+    def delta_cycle(self):
+        while len(self._delta_cycle_ports) > 0:
+            #print("Delta")
+            ports = self._delta_cycle_ports
+            self._delta_cycle_ports = []
+            for port in ports:
+                #print(f" - Delta {port.parent}")
+                port.delta_cycle()
+            # input()
 
-    def delta_needed(self):
-        self._delta_needed = True
+    def delta_cycle_needed(self, port):
+        self._delta_cycle_ports.append(port)
 
     def add_component(self, component):
         for comp in self._components:
