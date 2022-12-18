@@ -62,13 +62,13 @@ class XOR(Component):
 class NAND(MultiComponent):
     def __init__(self, circuit, name="NAND"):
         super().__init__(circuit, name)
-        self._and = AND(circuit, f"{name}_AND")
-        self._not = NOT(circuit, f"{name}_NOT")
-        self._and.outport("Y").connect(self._not.inport("A"))
+        _and = AND(circuit, f"{name}_AND")
+        _not = NOT(circuit, f"{name}_NOT")
+        _and.outport("Y").connect(_not.inport("A"))
 
-        self.add_port("A", self._and.inport("A"))
-        self.add_port("B", self._and.inport("B"))
-        self.add_port("Y", self._not.outport("Y"))
+        self.add_port("A", _and.inport("A"))
+        self.add_port("B", _and.inport("B"))
+        self.add_port("Y", _not.outport("Y"))
 
 
 class NAND3(Component):
@@ -99,15 +99,15 @@ class NAND3(Component):
 class SR(MultiComponent):
     def __init__(self, circuit, name="SR"):
         super().__init__(circuit, name)
-        self._nands = NAND(circuit, f"{name}_S")
-        self._nandr = NAND(circuit, f"{name}_R")
-        self._nands.outport("Y").connect(self._nandr.inport("A"))
-        self._nandr.outport("Y").connect(self._nands.inport("B"))
+        _nands = NAND(circuit, f"{name}_S")
+        _nandr = NAND(circuit, f"{name}_R")
+        _nands.outport("Y").connect(_nandr.inport("A"))
+        _nandr.outport("Y").connect(_nands.inport("B"))
 
-        self.add_port("nS", self._nands.inport("A"))
-        self.add_port("nR", self._nandr.inport("B"))
-        self.add_port("Q", self._nands.outport("Y"))
-        self.add_port("nQ", self._nandr.outport("Y"))
+        self.add_port("nS", _nands.inport("A"))
+        self.add_port("nR", _nandr.inport("B"))
+        self.add_port("Q", _nands.outport("Y"))
+        self.add_port("nQ", _nandr.outport("Y"))
 
 
 class JK_MS(MultiComponent):
@@ -160,7 +160,6 @@ class DFFE_PP0P(Component):
         self.add_port("R", self._inr)
         self.add_port("Q", self._out)
         self._old_inc_level = self._inc.level
-        self._next_q_level = SignalLevel.LOW
 
     def update(self):
         if self._inr.level == SignalLevel.HIGH:
