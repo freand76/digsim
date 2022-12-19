@@ -45,7 +45,7 @@ class Circuit:
     def time_increase(self, s=None, ms=None, us=None, ns=None):
         self._time_ns += s * 1e9 if s is not None else 0
         self._time_ns += ms * 1e6 if ms is not None else 0
-        self._time_ns += us * 1e9 if us is not None else 0
+        self._time_ns += us * 1e3 if us is not None else 0
         self._time_ns += ns if ns is not None else 0
 
     def __exit__(self):
