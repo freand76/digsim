@@ -24,8 +24,3 @@ class PushButton(ActorComponent):
         else:
             self._out.level = SignalLevel.LOW
         self.actor_event()
-
-    def push_release(self, count=1):
-        for _ in range(count):
-            self.push()
-            self.release()

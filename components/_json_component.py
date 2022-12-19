@@ -1,6 +1,6 @@
 import json
 
-from components import (Component, InputFanOutPort, InputPort, OutputPort,
+from components import (InputFanOutPort, InputPort, MultiComponent, OutputPort,
                         SignalLevel)
 from components.gates import AND, DFFE_PP0P, NAND, NOT, SR, XOR
 
@@ -9,21 +9,20 @@ class JsonComponentException(Exception):
     pass
 
 
-class JsonComponent(Component):
+class JsonComponent(MultiComponent):
 
     COMPONENT_MAP = {
-        "$_NOT_": NOT,
-        "$_AND_": AND,
-        "$_XOR_": XOR,
-        "$_DFFE_PP0P_": DFFE_PP0P,
+        "$_NOT_": {"class": NOT, "name": "not"},
+        "$_AND_": {"class": AND, "name": "not"},
+        "$_XOR_": {"class": XOR, "name": "not"},
+        "$_DFFE_PP0P_": {"class": DFFE_PP0P, "name": "dffe_pp0p"},
     }
 
     def __init__(self, circuit, filename):
         self._filename = filename
         self._port_tag_dict = {}
-        self._components = []
         self._circuit = circuit
-
+        self._component_id = {}
         with open(self._filename) as f:
             self._json = json.load(f)
 
@@ -31,10 +30,6 @@ class JsonComponent(Component):
         self._parse_cells()
         self._make_cell_connections()
         self._connect_external_ports()
-
-    def delta(self):
-        for component in self._components:
-            component.delta()
 
     def _add_connection(self, connection_id, port_instance):
         if self._port_tag_dict.get(connection_id) is None:
@@ -51,11 +46,16 @@ class JsonComponent(Component):
         cells = self._json["modules"][self.name]["cells"]
         for cellname, cell_dict in cells.items():
             cell_type = cell_dict["type"]
-            ComponentClass = self.COMPONENT_MAP[cell_type]
-            if ComponentClass is None:
+            cell = self.COMPONENT_MAP.get(cell_type)
+            if cell is None:
                 raise Exception(f"Cell '{cell_type}' not implemented yet...")
-            component = ComponentClass(self._circuit, name=f"{cell_type}_{cellname}")
-            self._components.append(component)
+            ComponentClass = cell["class"]
+            cell_count = self._component_id.get(cell["name"], 0)
+            self._component_id[cell["name"]] = cell_count + 1
+            component = ComponentClass(
+                self._circuit, name=f"{cell['name']}_{cell_count}"
+            )
+            self.add(component)
             cell_connections = cell_dict["connections"]
             for portname, connection in cell_connections.items():
 
@@ -94,7 +94,8 @@ class JsonComponent(Component):
                         port_instance.connect(port)
 
                 else:
+                    self.add_port(portbitname, InputFanOutPort(self))
                     port_iotype = [port.iotype for port in portlist]
                     out_index = port_iotype.index("OUT")
                     port_instance = portlist[out_index]
-                    self.add_port(portbitname, port_instance)
+                    port_instance.connect(self.port(portbitname))

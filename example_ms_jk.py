@@ -11,32 +11,55 @@ def led_callback(name, on):
 
 
 print("\n===================== Master Slave JK ==========================\n")
-circuit = Circuit()
+circuit = Circuit(vcd="ms_jk.vcd")
 jk = JK_MS(circuit)
 led = Led(circuit)
 led.set_callback(led_callback)
 clk = PushButton(circuit, "clk")
 j = PushButton(circuit, "J")
 k = PushButton(circuit, "K")
-clk.outport("O").connect(jk.inport("C"))
-j.outport("O").connect(jk.inport("J"))
-k.outport("O").connect(jk.inport("K"))
-jk.outport("Q").connect(led.inport("I"))
+clk.port("O").connect(jk.port("C"))
+j.port("O").connect(jk.port("J"))
+k.port("O").connect(jk.port("K"))
+jk.port("Q").connect(led.port("I"))
 circuit.init()
 
 j.release()
 k.release()
-clk.push_release(4)
+
+circuit.time_increase(ms=10)
+for _ in range(4):
+    clk.push()
+    circuit.time_increase(ms=10)
+    clk.release()
+    circuit.time_increase(ms=10)
 
 print("-- Set K --")
 k.push()
 j.release()
-clk.push_release(4)
+
+for _ in range(4):
+    clk.push()
+    circuit.time_increase(ms=10)
+    clk.release()
+    circuit.time_increase(ms=10)
+
 print("-- Set J --")
 k.release()
 j.push()
-clk.push_release(4)
+
+for _ in range(4):
+    clk.push()
+    circuit.time_increase(ms=10)
+    clk.release()
+    circuit.time_increase(ms=10)
+
 print("-- Set KJ --")
 k.push()
 j.push()
-clk.push_release(4)
+
+for _ in range(4):
+    clk.push()
+    circuit.time_increase(ms=10)
+    clk.release()
+    circuit.time_increase(ms=10)

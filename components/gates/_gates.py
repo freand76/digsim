@@ -102,50 +102,60 @@ class NAND3(Component):
 class SR(MultiComponent):
     def __init__(self, circuit, name="SR"):
         super().__init__(circuit, name)
-        _nands = NAND(circuit, f"{name}_S")
-        _nandr = NAND(circuit, f"{name}_R")
-        _nands.outport("Y").connect(_nandr.inport("A"))
-        _nandr.outport("Y").connect(_nands.inport("B"))
+        _nands = NAND(circuit, name=f"{name}_S")
+        _nandr = NAND(circuit, name=f"{name}_R")
+        self.add(_nands)
+        self.add(_nandr)
+        _nands.port("Y").connect(_nandr.port("A"))
+        _nandr.port("Y").connect(_nands.port("B"))
 
-        self.add_port("nS", _nands.inport("A"))
-        self.add_port("nR", _nandr.inport("B"))
-        self.add_port("Q", _nands.outport("Y"))
-        self.add_port("nQ", _nandr.outport("Y"))
+        self.add_port("nS", InputFanOutPort(self))
+        self.add_port("nR", InputFanOutPort(self))
+        self.add_port("Q", InputFanOutPort(self))
+        self.add_port("nQ", InputFanOutPort(self))
+
+        self.port("nS").connect(_nands.port("A"))
+        self.port("nR").connect(_nandr.port("B"))
+        _nands.port("Y").connect(self.port("Q"))
+        _nandr.port("Y").connect(self.port("nQ"))
 
 
 class JK_MS(MultiComponent):
     def __init__(self, circuit, name="JK"):
         super().__init__(circuit, name)
 
-        notclk = NOT(circuit, f"{name}_NOT_CLK")
-        mnandj = NAND3(circuit, f"{name}_M_J")
-        mnandk = NAND3(circuit, f"{name}_M_K")
-        master = SR(circuit, f"{name}_SR_M")
+        notclk = NOT(circuit, name=f"{name}_NOT_CLK")
+        mnandj = NAND3(circuit, name=f"{name}_M_J")
+        mnandk = NAND3(circuit, name=f"{name}_M_K")
+        master = SR(circuit, name=f"{name}_SR_M")
 
-        snandj = NAND(circuit, f"{name}_S_J")
-        snandk = NAND(circuit, f"{name}_S_K")
-        slave = SR(circuit, f"{name}_SR_S")
+        snandj = NAND(circuit, name=f"{name}_S_J")
+        snandk = NAND(circuit, name=f"{name}_S_K")
+        slave = SR(circuit, name=f"{name}_SR_S")
 
-        inc = InputFanOutPort(self)
-        inc.connect(mnandj.inport("A"))
-        inc.connect(mnandk.inport("A"))
-        inc.connect(notclk.inport("A"))
-        self.add_port("C", inc)
+        self.add_port("C", InputFanOutPort(self))
+        self.add_port("J", InputFanOutPort(self))
+        self.add_port("K", InputFanOutPort(self))
+        self.add_port("Q", InputFanOutPort(self))
 
-        mnandj.outport("Y").connect(master.inport("nS"))
-        mnandk.outport("Y").connect(master.inport("nR"))
-        master.outport("Q").connect(snandj.inport("A"))
-        master.outport("nQ").connect(snandk.inport("A"))
-        notclk.outport("Y").connect(snandj.inport("B"))
-        notclk.outport("Y").connect(snandk.inport("B"))
-        snandj.outport("Y").connect(slave.inport("nS"))
-        snandk.outport("Y").connect(slave.inport("nR"))
-        slave.outport("Q").connect(mnandk.inport("B"))
-        slave.outport("nQ").connect(mnandj.inport("B"))
+        self.port("J").connect(mnandj.port("C"))
+        self.port("K").connect(mnandk.port("C"))
+        slave.port("Q").connect(self.port("Q"))
 
-        self.add_port("J", mnandj.inport("C"))
-        self.add_port("K", mnandk.inport("C"))
-        self.add_port("Q", slave.outport("Q"))
+        self.port("C").connect(mnandj.port("A"))
+        self.port("C").connect(mnandk.port("A"))
+        self.port("C").connect(notclk.port("A"))
+
+        mnandj.port("Y").connect(master.port("nS"))
+        mnandk.port("Y").connect(master.port("nR"))
+        master.port("Q").connect(snandj.port("A"))
+        master.port("nQ").connect(snandk.port("A"))
+        notclk.port("Y").connect(snandj.port("B"))
+        notclk.port("Y").connect(snandk.port("B"))
+        snandj.port("Y").connect(slave.port("nS"))
+        snandk.port("Y").connect(slave.port("nR"))
+        slave.port("Q").connect(mnandk.port("B"))
+        slave.port("nQ").connect(mnandj.port("B"))
 
 
 class DFFE_PP0P(Component):

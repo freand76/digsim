@@ -9,38 +9,48 @@ def led_callback(name, on):
         print(f"LED: '{name}' is OFF")
 
 
-circuit = Circuit()
+circuit = Circuit(vcd="counter.vcd")
 json_component = JsonComponent(circuit, "json_modules/counter.json")
 clk = PushButton(circuit, "clk")
 reset = PushButton(circuit, "reset")
 up = PushButton(circuit, "up")
-clk.outport("O").connect(json_component.inport("clk"))
-reset.outport("O").connect(json_component.inport("reset"))
-up.outport("O").connect(json_component.inport("up"))
+clk.port("O").connect(json_component.port("clk"))
+reset.port("O").connect(json_component.port("reset"))
+up.port("O").connect(json_component.port("up"))
 circuit.init()
+
+for port in circuit.get_port_paths():
+    print("APA", port)
+
+circuit.time_increase(ms=10)
 up.push()
-reset.push_release()
-x = json_component
+reset.push()
+circuit.time_increase(ms=10)
+reset.release()
+circuit.time_increase(ms=10)
 
 print("\n===================== Reset ==========================\n")
 
 print(
     "OUT",
-    json_component.outport("cnt3").val,
-    json_component.outport("cnt2").val,
-    json_component.outport("cnt1").val,
-    json_component.outport("cnt0").val,
+    json_component.port("cnt3").val,
+    json_component.port("cnt2").val,
+    json_component.port("cnt1").val,
+    json_component.port("cnt0").val,
 )
 
 
 print("\n===================== Start ==========================\n")
 
 for _ in range(0, 16):
-    clk.push_release()
+    clk.push()
+    circuit.time_increase(ms=10)
+    clk.release()
+    circuit.time_increase(ms=10)
     print(
         "OUT",
-        json_component.outport("cnt3").val,
-        json_component.outport("cnt2").val,
-        json_component.outport("cnt1").val,
-        json_component.outport("cnt0").val,
+        json_component.port("cnt3").val,
+        json_component.port("cnt2").val,
+        json_component.port("cnt1").val,
+        json_component.port("cnt0").val,
     )
