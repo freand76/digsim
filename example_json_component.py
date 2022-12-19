@@ -19,9 +19,6 @@ reset.port("O").connect(json_component.port("reset"))
 up.port("O").connect(json_component.port("up"))
 circuit.init()
 
-for port in circuit.get_port_paths():
-    print("APA", port)
-
 circuit.time_increase(ms=10)
 up.push()
 reset.push()
