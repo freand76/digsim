@@ -20,18 +20,23 @@ led3.set_callback(led_callback)
 button1 = circuit.get_component("button1")
 button2 = circuit.get_component("button2")
 
-circuit.run(ms=10)
+circuit.run_until(ms=5)
 print("------------ 10")
 button1.push()
-circuit.run(ms=10)
+while circuit.process_single_event():
+    pass
+circuit.run_until(ms=10)
 print("------------ 00")
 button1.release()
-circuit.run(ms=10)
+while circuit.process_single_event():
+    pass
+circuit.run_until(ms=15)
 print("------------ 10")
 button1.push()
-circuit.run(ms=10)
+while circuit.process_single_event():
+    pass
+circuit.run_until(ms=20)
 print("------------ 11")
 button2.push()
-circuit.run(ms=10)
-button1.release()
-button2.release()
+while circuit.process_single_event():
+    pass

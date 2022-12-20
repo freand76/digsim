@@ -23,13 +23,11 @@ j.port("O").connect(jk.port("J"))
 k.port("O").connect(jk.port("K"))
 jk.port("Q").connect(led.port("I"))
 circuit.init()
-
-circuit.run(ms=10)
-for _ in range(4):
-    clk.push()
-    circuit.run(ms=10)
-    clk.release()
-    circuit.run(ms=10)
+k.push()
+clk.push()
+circuit.run(ms=1)
+clk.release()
+circuit.run(ms=1)
 
 print("-- Set J --")
 k.release()
@@ -40,16 +38,17 @@ for _ in range(4):
     circuit.run(ms=10)
     clk.release()
     circuit.run(ms=10)
+    j.release()
 
 print("-- Set K --")
 k.push()
-j.release()
 
 for _ in range(4):
     clk.push()
     circuit.run(ms=10)
     clk.release()
     circuit.run(ms=10)
+    k.release()
 
 print("-- Set KJ --")
 k.push()

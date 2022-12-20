@@ -45,9 +45,8 @@ class Circuit:
             self._vcd_file = open(self._vcd_name, mode="w")
             self._vcd_writer = VCDWriter(self._vcd_file, timescale="1 ns", date="today")
             for port_path, port_name in self.get_port_paths():
-                full_name = f"{port_path}.{port_name}".replace(".", "_")
                 var = self._vcd_writer.register_var(
-                    port_path, full_name, "integer", size=1
+                    port_path, port_name, "integer", size=1
                 )
                 self._vcd_dict[f"{port_path}.{port_name}"] = var
 
@@ -87,26 +86,35 @@ class Circuit:
         for p in port.destinations:
             self.vcd_dump(p)
 
+    def process_single_event(self, stop_time_ns=None):
+        if len(self._circuit_events) == 0:
+            return False
+        self._circuit_events.sort()
+        if stop_time_ns is None or self._circuit_events[0].time_ns > stop_time_ns:
+            return False
+        event = self._circuit_events.pop()
+        # print(f"Execute event {event.port.path}.{event.port.name} {event.time_ns}")
+        self._time_ns = event.time_ns
+        event.port.delta_cycle()
+        if self._vcd_writer is not None:
+            self.vcd_dump(event.port)
+        return True
+
     def run(self, s=None, ms=None, us=None, ns=None):
         recursion = 0
-        stop_time = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
-        while len(self._circuit_events) > 0:
-            self._circuit_events.sort()
-            event = self._circuit_events.pop()
-            # print(f"Execute event {event.port.path}.{event.port.name} {event.time_ns}")
-            self._time_ns = event.time_ns
-            event.port.delta_cycle()
-            if self._vcd_writer is not None:
-                self.vcd_dump(event.port)
-            recursion += 1
-            if recursion > 10000:
-                print("Recursion")
-                self.close()
-                import sys
+        stop_time_ns = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
 
-                sys.exit()
+        while len(self._circuit_events) > 0 and self._time_ns < stop_time_ns:
+            if not self.process_single_event(stop_time_ns):
+                break
 
-        self._time_ns = stop_time
+        if self._time_ns < stop_time_ns:
+            self._time_ns = stop_time_ns
+
+    def run_until(self, s=None, ms=None, us=None, ns=None):
+        stop_time_ns = self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
+        if stop_time_ns > self._time_ns:
+            self.run(ns=stop_time_ns - self._time_ns)
 
     def add_event(self, port):
         self._circuit_events.append(
