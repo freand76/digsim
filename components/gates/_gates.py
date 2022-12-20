@@ -75,24 +75,6 @@ class NAND(Component):
             self._out.level = SignalLevel.HIGH
 
 
-class AND_NOT(MultiComponent):
-    def __init__(self, circuit, name="AND_NOT"):
-        super().__init__(circuit, name)
-        _and = AND(circuit, name=f"{name}_AND")
-        _not = NOT(circuit, name=f"{name}_NOT")
-        self.add(_and)
-        self.add(_not)
-        _and.port("Y").connect(_not.port("A"))
-
-        self.add_port("A", InputFanOutPort(self))
-        self.add_port("B", InputFanOutPort(self))
-        self.add_port("Y", InputFanOutPort(self))
-
-        self.port("A").connect(_and.port("A"))
-        self.port("B").connect(_and.port("B"))
-        _not.port("Y").connect(self.port("Y"))
-
-
 class NAND3(Component):
     def __init__(self, circuit, name="NAND3"):
         super().__init__(circuit, name)
@@ -120,8 +102,8 @@ class NAND3(Component):
 class SR(MultiComponent):
     def __init__(self, circuit, name="SR"):
         super().__init__(circuit, name)
-        _nands = AND_NOT(circuit, name=f"{name}_S")
-        _nandr = AND_NOT(circuit, name=f"{name}_R")
+        _nands = NAND(circuit, name=f"{name}_S")
+        _nandr = NAND(circuit, name=f"{name}_R")
         self.add(_nands)
         self.add(_nandr)
         _nands.port("Y").connect(_nandr.port("A"))

@@ -88,15 +88,24 @@ class Circuit:
             self.vcd_dump(p)
 
     def run(self, s=None, ms=None, us=None, ns=None):
+        recursion = 0
         stop_time = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
         while len(self._circuit_events) > 0:
             self._circuit_events.sort()
             event = self._circuit_events.pop()
             # print(f"Execute event {event.port.path}.{event.port.name} {event.time_ns}")
-            event.port.delta_cycle()
             self._time_ns = event.time_ns
+            event.port.delta_cycle()
             if self._vcd_writer is not None:
                 self.vcd_dump(event.port)
+            recursion += 1
+            if recursion > 10000:
+                print("Recursion")
+                self.close()
+                import sys
+
+                sys.exit()
+
         self._time_ns = stop_time
 
     def add_event(self, port):
