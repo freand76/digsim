@@ -17,9 +17,10 @@ SIGNAL_LEVEL_TO_STR = {
 
 
 class Port(abc.ABC):
-    def __init__(self, parent, level=SignalLevel.UNKNOWN):
+    def __init__(self, parent, level=SignalLevel.UNKNOWN, propagation_delay_ns=0):
         self._parent = parent
         self._level = level
+        self._propagation_delay_ns = propagation_delay_ns
         self._name = None
         self._destinations = []
 
@@ -30,6 +31,10 @@ class Port(abc.ABC):
     @property
     def parent(self):
         return self._parent
+
+    @property
+    def propagation_delay_ns(self):
+        return self._propagation_delay_ns
 
     @property
     def name(self):
@@ -107,8 +112,12 @@ class InputFanOutPort(InputPort):
 
 
 class OutputPort(Port):
-    def __init__(self, parent):
-        super().__init__(parent=parent, level=SignalLevel.UNKNOWN)
+    def __init__(self, parent, propagation_delay_ns=10):
+        super().__init__(
+            parent=parent,
+            level=SignalLevel.UNKNOWN,
+            propagation_delay_ns=propagation_delay_ns,
+        )
         self._next_level = SignalLevel.UNKNOWN
 
     def connect(self, dest):
@@ -125,7 +134,7 @@ class OutputPort(Port):
     def set_level(self, level):
         self._next_level = level
         if self._next_level != self._level:
-            self.parent.delta_cycle_needed(self)
+            self.parent.add_event(self)
 
     def delta_cycle(self):
         if self._next_level != self._level:
@@ -213,8 +222,8 @@ class Component(abc.ABC):
     def update(self):
         pass
 
-    def delta_cycle_needed(self, port):
-        self.circuit.delta_cycle_needed(port)
+    def add_event(self, port):
+        self.circuit.add_event(port)
 
     def __str__(self):
         comp_str = f"{self.name}"
@@ -224,14 +233,6 @@ class Component(abc.ABC):
         for port in self.outports:
             comp_str += f" {port.name}={port.val}>{port.next}"
         return comp_str
-
-
-class ActorComponent(Component):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name)
-
-    def actor_event(self):
-        self.circuit.delta_cycle()
 
 
 class MultiComponent(Component):

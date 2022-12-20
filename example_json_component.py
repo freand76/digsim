@@ -1,14 +1,6 @@
 from circuit import Circuit
 from components import JsonComponent, Led, PushButton
 
-
-def led_callback(name, on):
-    if on:
-        print(f"LED: '{name}' is ON")
-    else:
-        print(f"LED: '{name}' is OFF")
-
-
 circuit = Circuit(vcd="counter.vcd")
 json_component = JsonComponent(circuit, "json_modules/counter.json")
 clk = PushButton(circuit, "clk")
@@ -19,12 +11,12 @@ reset.port("O").connect(json_component.port("reset"))
 up.port("O").connect(json_component.port("up"))
 circuit.init()
 
-circuit.time_increase(ms=10)
+circuit.run(ms=10)
 up.push()
 reset.push()
-circuit.time_increase(ms=10)
+circuit.run(ms=10)
 reset.release()
-circuit.time_increase(ms=10)
+circuit.run(ms=10)
 
 print("\n===================== Reset ==========================\n")
 
@@ -41,9 +33,9 @@ print("\n===================== Start ==========================\n")
 
 for _ in range(0, 16):
     clk.push()
-    circuit.time_increase(ms=10)
+    circuit.run(ms=10)
     clk.release()
-    circuit.time_increase(ms=10)
+    circuit.run(ms=10)
     print(
         "OUT",
         json_component.port("cnt3").val,

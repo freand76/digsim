@@ -17,4 +17,6 @@ class Led(Component):
 
     def update(self):
         if self._callback is not None:
-            self._callback(self.name, self._in.level == SignalLevel.HIGH)
+            self._callback(
+                self.circuit.time_ns, self.name, self._in.level == SignalLevel.HIGH
+            )

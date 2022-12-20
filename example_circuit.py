@@ -1,11 +1,11 @@
 from circuit import Circuit
 
 
-def led_callback(name, on):
+def led_callback(time, name, on):
     if on:
-        print(f"LED: '{name}' is ON")
+        print(f"{time:9}:LED: '{name}' is ON")
     else:
-        print(f"LED: '{name}' is OFF")
+        print(f"{time:9}:LED: '{name}' is OFF")
 
 
 circuit = Circuit(vcd="circuit.vcd")
@@ -20,18 +20,18 @@ led3.set_callback(led_callback)
 button1 = circuit.get_component("button1")
 button2 = circuit.get_component("button2")
 
-circuit.time_increase(ms=10)
+circuit.run(ms=10)
 print("------------ 10")
 button1.push()
-circuit.time_increase(ms=10)
+circuit.run(ms=10)
 print("------------ 00")
 button1.release()
-circuit.time_increase(ms=10)
+circuit.run(ms=10)
 print("------------ 10")
 button1.push()
-circuit.time_increase(ms=10)
+circuit.run(ms=10)
 print("------------ 11")
 button2.push()
-circuit.time_increase(ms=10)
+circuit.run(ms=10)
 button1.release()
 button2.release()

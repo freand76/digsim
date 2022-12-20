@@ -3,11 +3,11 @@ from components import Led, PushButton
 from components.gates import SR
 
 
-def led_callback(name, on):
+def led_callback(time, name, on):
     if on:
-        print(f"LED: '{name}' is ON")
+        print(f"{time:9}:LED: '{name}' is ON")
     else:
-        print(f"LED: '{name}' is OFF")
+        print(f"{time:9}:LED: '{name}' is OFF")
 
 
 circuit = Circuit(vcd="sr.vcd")
@@ -19,16 +19,18 @@ BS.port("O").connect(SR.port("nS"))
 BR.port("O").connect(SR.port("nR"))
 SR.port("Q").connect(D1.port("I"))
 circuit.init()
-circuit.time_increase(ms=10)
+circuit.run(ms=10)
 
-print("Set")
-BS.push()
-circuit.time_increase(ms=10)
-BS.release()
-circuit.time_increase(ms=100)
 print("Reset")
 BR.push()
-circuit.time_increase(ms=10)
+circuit.run(ms=10)
 BR.release()
-circuit.time_increase(ms=100)
+circuit.run(ms=10)
+print("Set")
 BS.push()
+circuit.run(ms=10)
+BS.release()
+circuit.run(ms=10)
+
+BS.push()
+circuit.close()

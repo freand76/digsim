@@ -2,22 +2,43 @@ import json
 
 from vcd import VCDWriter
 
-from components import ActorComponent, Component
+from components import Component
 
 
 class CircuitError(Exception):
     pass
 
 
+class CircuitEvent:
+    def __init__(self, port, time_ns):
+        self._time_ns = time_ns
+        self._port = port
+
+    @property
+    def time_ns(self):
+        return self._time_ns
+
+    @property
+    def port(self):
+        return self._port
+
+    def __lt__(self, other):
+        return other.time_ns < self.time_ns
+
+
 class Circuit:
     def __init__(self, vcd=None):
         self._components = []
-        self._delta_cycle_ports = []
+        self._circuit_events = []
         self._vcd_name = vcd
         self._vcd_file = None
         self._vcd_writer = None
         self._vcd_dict = {}
         self._time_ns = 0
+
+    @property
+    def time_ns(self):
+        return self._time_ns
 
     def init(self):
         if self._vcd_name is not None:
@@ -42,11 +63,13 @@ class Circuit:
             self._vcd_file.close()
             self._vcd_file = None
 
-    def time_increase(self, s=None, ms=None, us=None, ns=None):
-        self._time_ns += s * 1e9 if s is not None else 0
-        self._time_ns += ms * 1e6 if ms is not None else 0
-        self._time_ns += us * 1e3 if us is not None else 0
-        self._time_ns += ns if ns is not None else 0
+    def _time_to_ns(self, s=None, ms=None, us=None, ns=None):
+        time_ns = 0
+        time_ns += s * 1e9 if s is not None else 0
+        time_ns += ms * 1e6 if ms is not None else 0
+        time_ns += us * 1e3 if us is not None else 0
+        time_ns += ns if ns is not None else 0
+        return int(time_ns)
 
     def __exit__(self):
         self.close()
@@ -64,18 +87,22 @@ class Circuit:
         for p in port.destinations:
             self.vcd_dump(p)
 
-    def delta_cycle(self):
-        while len(self._delta_cycle_ports) > 0:
-            ports = self._delta_cycle_ports
-            self._delta_cycle_ports = []
-            for port in ports:
-                # print(f" - Delta {port.parent}")
-                port.delta_cycle()
-                if self._vcd_writer is not None:
-                    self.vcd_dump(port)
+    def run(self, s=None, ms=None, us=None, ns=None):
+        stop_time = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
+        while len(self._circuit_events) > 0:
+            self._circuit_events.sort()
+            event = self._circuit_events.pop()
+            # print(f"Execute event {event.port.path}.{event.port.name} {event.time_ns}")
+            event.port.delta_cycle()
+            self._time_ns = event.time_ns
+            if self._vcd_writer is not None:
+                self.vcd_dump(event.port)
+        self._time_ns = stop_time
 
-    def delta_cycle_needed(self, port):
-        self._delta_cycle_ports.append(port)
+    def add_event(self, port):
+        self._circuit_events.append(
+            CircuitEvent(port, self._time_ns + port.propagation_delay_ns)
+        )
 
     def add_component(self, component):
         for comp in self._components:
