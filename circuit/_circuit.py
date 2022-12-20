@@ -27,9 +27,10 @@ class CircuitEvent:
 
 
 class Circuit:
-    def __init__(self, vcd=None):
+    def __init__(self, name=None, vcd=None):
         self._components = []
         self._circuit_events = []
+        self._name = name
         self._vcd_name = vcd
         self._vcd_file = None
         self._vcd_writer = None
@@ -134,15 +135,24 @@ class Circuit:
         raise CircuitError(f"Component '{component_name}' not found")
 
     def from_json_file(self, filename):
-        with open(filename) as f:
+        with open(filename, mode="r") as f:
             json_file = json.load(f)
 
+        if "circuit" not in json_file:
+            raise CircuitError(f"No 'circuit' in '{filename}'")
         json_circuit = json_file["circuit"]
+        if "name" not in json_circuit:
+            raise CircuitError(f"No 'circuit/name' in '{filename}'")
+        self._name = json_circuit["name"]
+        if "components" not in json_circuit:
+            raise CircuitError(f"No 'circuit/components' in '{filename}'")
         json_components = json_circuit["components"]
+        if "connections" not in json_circuit:
+            raise CircuitError(f"No 'circuit/connections' in '{filename}'")
         json_connections = json_circuit["connections"]
 
         for json_component in json_components:
-            c = Component.from_json(self, json_component)
+            c = Component.from_dict(self, json_component)
 
         for json_connection in json_connections:
             source = json_connection["src"]
@@ -157,3 +167,30 @@ class Circuit:
             source_component.port(source_port_name).connect(
                 dest_componment.port(dest_port_name)
             )
+
+    def to_json_file(self, filename):
+        if self._name is None:
+            raise CircuitError("Circuit must have a name")
+
+        components_list = []
+        for comp in self._components:
+            components_list.append(comp.to_dict())
+
+        connection_list = []
+        for comp in self._components:
+            for port in comp.ports:
+                port_conn_list = port.to_dict_list()
+                connection_list.extend(port_conn_list)
+
+        circuit_dict = {
+            "circuit": {
+                "name": self._name,
+                "components": components_list,
+                "connections": connection_list,
+            }
+        }
+
+        json_object = json.dumps(circuit_dict, indent=4)
+
+        with open(filename, mode="w") as f:
+            f.write(json_object)

@@ -76,6 +76,17 @@ class Port(abc.ABC):
     def __str__(self):
         return f"{self._parent.name}:{self.name}={SIGNAL_LEVEL_TO_STR[self._level]}"
 
+    def to_dict_list(self):
+        port_conn_list = []
+        for dest in self.destinations:
+            port_conn_list.append(
+                {
+                    "src": f"{self._parent.name}.{self.name}",
+                    "dst": f"{dest._parent.name}.{dest.name}",
+                }
+            )
+        return port_conn_list
+
 
 class InputPort(Port):
     def __init__(self, parent, update_parent=True):
@@ -139,18 +150,6 @@ class OutputPort(Port):
 
 
 class Component(abc.ABC):
-    @classmethod
-    def from_json(cls, circuit, json_component):
-        component_name = json_component["name"]
-        component_type = json_component["type"]
-
-        py_module_name = ".".join(component_type.split(".")[0:-1])
-        py_class_name = component_type.split(".")[-1]
-
-        module = importlib.import_module(py_module_name)
-        class_ = getattr(module, py_class_name)
-        return class_(circuit=circuit, name=component_name)
-
     def __init__(self, circuit, name=""):
         self._circuit = circuit
         self._name = name
@@ -201,6 +200,24 @@ class Component(abc.ABC):
         for port in self.ports:
             comp_str += f"-{port.name}={port.bitval}\n"
         return comp_str
+
+    @classmethod
+    def from_dict(cls, circuit, json_component):
+        component_name = json_component["name"]
+        component_type = json_component["type"]
+
+        py_module_name = ".".join(component_type.split(".")[0:-1])
+        py_class_name = component_type.split(".")[-1]
+
+        module = importlib.import_module(py_module_name)
+        class_ = getattr(module, py_class_name)
+        return class_(circuit=circuit, name=component_name)
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "type": f"{type(self).__module__}.{type(self).__name__}",
+        }
 
 
 class MultiComponent(Component):

@@ -10,7 +10,7 @@ def led_callback(time, name, on):
         print(f"{time:9}:LED: '{name}' is OFF")
 
 
-circuit = Circuit(vcd="pulse.vcd")
+circuit = Circuit(name="example_pulse", vcd="pulse.vcd")
 B = PushButton(circuit, "Button")
 _not1 = NOT(circuit, "not1")
 _not2 = NOT(circuit, "not2")
@@ -35,3 +35,16 @@ B.release()
 circuit.run(ms=10)
 
 circuit.close()
+circuit.to_json_file("pulse_circuit.json")
+
+circuit2 = Circuit()
+circuit2.from_json_file("pulse_circuit.json")
+led = circuit2.get_component("D")
+led.set_callback(led_callback)
+button = circuit2.get_component("Button")
+circuit2.init()
+circuit2.run(ms=5)
+button.push()
+circuit2.run(ms=5)
+button.release()
+circuit2.run(ms=5)
