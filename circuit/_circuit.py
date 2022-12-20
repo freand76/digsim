@@ -31,17 +31,28 @@ class Circuit:
         self._components = []
         self._circuit_events = []
         self._name = name
-        self._vcd_name = vcd
         self._vcd_file = None
         self._vcd_writer = None
         self._vcd_dict = {}
         self._time_ns = 0
+        self._vcd_name = vcd
 
     @property
     def time_ns(self):
         return self._time_ns
 
     def init(self):
+        self.vcd()
+        for comp in self._components:
+            comp.init()
+
+    def vcd(self, vcd=None):
+        if vcd is not None and self._vcd_name is not None:
+            raise CircuitError("VCD already started")
+
+        if vcd is not None:
+            self._vcd_name = vcd
+
         if self._vcd_name is not None:
             self._vcd_file = open(self._vcd_name, mode="w")
             self._vcd_writer = VCDWriter(self._vcd_file, timescale="1 ns", date="today")
@@ -51,10 +62,7 @@ class Circuit:
                 )
                 self._vcd_dict[f"{port_path}.{port_name}"] = var
 
-        for comp in self._components:
-            comp.init()
-
-    def close(self):
+    def vcd_close(self):
         if self._vcd_writer is not None:
             self._vcd_writer.close()
             self._vcd_writer = None
@@ -62,6 +70,8 @@ class Circuit:
         if self._vcd_file is not None:
             self._vcd_file.close()
             self._vcd_file = None
+
+        self._vcd_name = None
 
     def _time_to_ns(self, s=None, ms=None, us=None, ns=None):
         time_ns = 0
@@ -72,7 +82,7 @@ class Circuit:
         return int(time_ns)
 
     def __exit__(self):
-        self.close()
+        self.vcd_close()
 
     def get_port_paths(self):
         port_paths = []

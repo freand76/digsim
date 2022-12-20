@@ -139,14 +139,12 @@ class OutputPort(Port):
 
     def set_level(self, level):
         self._next_level = level
-        if self._next_level != self._level:
-            self._parent.add_event(self)
+        self._parent.add_event(self)
 
     def delta_cycle(self):
-        if self._next_level != self._level:
-            self._level = self._next_level
-            for dest in self.destinations:
-                dest.level = self.level
+        self._level = self._next_level
+        for dest in self.destinations:
+            dest.level = self.level
 
 
 class Component(abc.ABC):

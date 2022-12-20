@@ -1,7 +1,7 @@
 from circuit import Circuit
 from components import JsonComponent, Led, PushButton
 
-circuit = Circuit(vcd="counter.vcd")
+circuit = Circuit()
 json_component = JsonComponent(circuit, "json_modules/counter.json")
 clk = PushButton(circuit, "clk")
 reset = PushButton(circuit, "reset")
@@ -17,6 +17,8 @@ reset.push()
 circuit.run(ms=10)
 reset.release()
 circuit.run(ms=10)
+
+circuit.vcd("counter.vcd")
 
 print("\n===================== Reset ==========================\n")
 

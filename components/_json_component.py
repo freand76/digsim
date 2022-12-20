@@ -13,8 +13,8 @@ class JsonComponent(MultiComponent):
 
     COMPONENT_MAP = {
         "$_NOT_": {"class": NOT, "name": "not"},
-        "$_AND_": {"class": AND, "name": "not"},
-        "$_XOR_": {"class": XOR, "name": "not"},
+        "$_AND_": {"class": AND, "name": "and"},
+        "$_XOR_": {"class": XOR, "name": "xor"},
         "$_DFFE_PP0P_": {"class": DFFE_PP0P, "name": "dffe_pp0p"},
     }
 

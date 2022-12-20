@@ -34,7 +34,7 @@ print("OFF")
 B.release()
 circuit.run(ms=10)
 
-circuit.close()
+circuit.vcd_close()
 circuit.to_json_file("pulse_circuit.json")
 
 circuit2 = Circuit()

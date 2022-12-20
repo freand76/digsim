@@ -33,4 +33,4 @@ BS.release()
 circuit.run(ms=10)
 
 BS.push()
-circuit.close()
+circuit.vcd_close()
