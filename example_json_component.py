@@ -22,10 +22,10 @@ print("\n===================== Reset ==========================\n")
 
 print(
     "OUT",
-    json_component.port("cnt3").val,
-    json_component.port("cnt2").val,
-    json_component.port("cnt1").val,
-    json_component.port("cnt0").val,
+    json_component.port("cnt3").bitval,
+    json_component.port("cnt2").bitval,
+    json_component.port("cnt1").bitval,
+    json_component.port("cnt0").bitval,
 )
 
 
@@ -38,8 +38,8 @@ for _ in range(0, 16):
     circuit.run(ms=10)
     print(
         "OUT",
-        json_component.port("cnt3").val,
-        json_component.port("cnt2").val,
-        json_component.port("cnt1").val,
-        json_component.port("cnt0").val,
+        json_component.port("cnt3").bitval,
+        json_component.port("cnt2").bitval,
+        json_component.port("cnt1").bitval,
+        json_component.port("cnt0").bitval,
     )

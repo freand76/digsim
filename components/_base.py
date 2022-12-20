@@ -3,6 +3,10 @@ import importlib
 from enum import Enum, auto
 
 
+class ConnectionError(Exception):
+    pass
+
+
 class SignalLevel(Enum):
     UNKNOWN = auto()
     HIGH = auto()
@@ -18,51 +22,43 @@ SIGNAL_LEVEL_TO_STR = {
 
 class Port(abc.ABC):
     def __init__(self, parent, level=SignalLevel.UNKNOWN, propagation_delay_ns=0):
+        self._name = None
         self._parent = parent
         self._level = level
         self._propagation_delay_ns = propagation_delay_ns
-        self._name = None
         self._destinations = []
-
-    @property
-    def level(self):
-        return self._level
-
-    @property
-    def parent(self):
-        return self._parent
-
-    @property
-    def propagation_delay_ns(self):
-        return self._propagation_delay_ns
 
     @property
     def name(self):
         return self._name
-
-    @property
-    def destinations(self):
-        return self._destinations
-
-    @property
-    def path(self):
-        return f"{self.parent.path}"
 
     @name.setter
     def name(self, name):
         self._name = name
 
     @property
-    def parent_port(self):
-        return self._parent.portname_from_instance(self)
+    def path(self):
+        return f"{self._parent.path}"
 
-    @abc.abstractmethod
-    def set_level(self, level):
-        pass
+    @property
+    def level(self):
+        return self._level
 
     @level.setter
     def level(self, level):
         self.set_level(level)
+
+    @property
+    def propagation_delay_ns(self):
+        return self._propagation_delay_ns
+
+    @property
+    def destinations(self):
+        return self._destinations
+
+    @abc.abstractmethod
+    def set_level(self, level):
+        pass
 
     @property
     @abc.abstractmethod
@@ -70,15 +66,15 @@ class Port(abc.ABC):
         pass
 
     @property
-    def val(self):
+    def bitval(self):
         return SIGNAL_LEVEL_TO_STR[self._level]
 
     @property
     def intval(self):
-        return 1 if self.level == SignalLevel.HIGH else 0
+        return 1 if self._level == SignalLevel.HIGH else 0
 
     def __str__(self):
-        return f"{self.parent.name}:{self.name}={SIGNAL_LEVEL_TO_STR[self._level]}"
+        return f"{self._parent.name}:{self.name}={SIGNAL_LEVEL_TO_STR[self._level]}"
 
 
 class InputPort(Port):
@@ -90,11 +86,14 @@ class InputPort(Port):
     def iotype(self):
         return "IN"
 
+    def connect(self, dest):
+        raise ConnectionError("Cannot make connection from InputPort")
+
     def set_level(self, level):
         port_changed = self._level != level
         self._level = level
         if port_changed:
-            self.parent.update()
+            self._parent.update()
 
 
 class InputFanOutPort(InputPort):
@@ -127,14 +126,10 @@ class OutputPort(Port):
     def iotype(self):
         return "OUT"
 
-    @property
-    def next(self):
-        return SIGNAL_LEVEL_TO_STR[self._next_level]
-
     def set_level(self, level):
         self._next_level = level
         if self._next_level != self._level:
-            self.parent.add_event(self)
+            self._parent.add_event(self)
 
     def delta_cycle(self):
         if self._next_level != self._level:
@@ -171,35 +166,11 @@ class Component(abc.ABC):
         self._ports.append(port)
 
     @property
-    def parent(self):
-        return self._parent
-
-    @parent.setter
-    def parent(self, parent):
-        self._parent = parent
-
-    @property
     def path(self):
-        if self.parent is not None:
-            return f"{self.parent.path}.{self.name}"
+        if self._parent is not None:
+            return f"{self._parent.path}.{self.name}"
         else:
             return f"{self.name}"
-
-    @property
-    def inports(self):
-        ports = []
-        for port in self._ports:
-            if isinstance(port, InputPort):
-                ports.append(port)
-        return ports
-
-    @property
-    def outports(self):
-        ports = []
-        for port in self._ports:
-            if isinstance(port, OutputPort):
-                ports.append(port)
-        return ports
 
     @property
     def ports(self):
@@ -226,12 +197,9 @@ class Component(abc.ABC):
         self.circuit.add_event(port)
 
     def __str__(self):
-        comp_str = f"{self.name}"
-        for port in self.inports:
-            comp_str += f" {port.name}={port.val}"
-        comp_str += " =>"
-        for port in self.outports:
-            comp_str += f" {port.name}={port.val}>{port.next}"
+        comp_str = f"{self.name}\n"
+        for port in self.ports:
+            comp_str += f"-{port.name}={port.bitval}\n"
         return comp_str
 
 
@@ -242,4 +210,4 @@ class MultiComponent(Component):
 
     def add(self, component):
         self._components.append(component)
-        component.parent = self
+        component._parent = self
