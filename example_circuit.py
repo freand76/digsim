@@ -1,4 +1,4 @@
-from circuit import Circuit
+from digsim import Circuit
 
 
 def led_callback(time, name, on):

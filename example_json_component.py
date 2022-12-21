@@ -1,5 +1,4 @@
-from circuit import Circuit
-from components import JsonComponent, Led, PushButton
+from digsim import Circuit, JsonComponent, Led, PushButton
 
 circuit = Circuit()
 json_component = JsonComponent(circuit, "json_modules/counter.json")

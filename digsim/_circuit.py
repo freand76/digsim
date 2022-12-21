@@ -2,7 +2,7 @@ import json
 
 from vcd import VCDWriter
 
-from components import Component
+from ._base import Component
 
 
 class CircuitError(Exception):
@@ -54,7 +54,7 @@ class Circuit:
             self._vcd_name = vcd
 
         if self._vcd_name is not None:
-            self._vcd_file = open(self._vcd_name, mode="w")
+            self._vcd_file = open(self._vcd_name, mode="w", encoding="utf-8")
             self._vcd_writer = VCDWriter(self._vcd_file, timescale="1 ns", date="today")
             for port_path, port_name in self.get_port_paths():
                 var = self._vcd_writer.register_var(
@@ -81,7 +81,7 @@ class Circuit:
         time_ns += ns if ns is not None else 0
         return int(time_ns)
 
-    def __exit__(self):
+    def __exit__(self, exc_type, exc_value, exc_traceback):
         self.vcd_close()
 
     def get_port_paths(self):
@@ -112,15 +112,13 @@ class Circuit:
         return True
 
     def run(self, s=None, ms=None, us=None, ns=None):
-        recursion = 0
         stop_time_ns = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
 
         while len(self._circuit_events) > 0 and self._time_ns < stop_time_ns:
             if not self.process_single_event(stop_time_ns):
                 break
 
-        if self._time_ns < stop_time_ns:
-            self._time_ns = stop_time_ns
+        self._time_ns = max(self._time_ns, stop_time_ns)
 
     def run_until(self, s=None, ms=None, us=None, ns=None):
         stop_time_ns = self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
@@ -145,8 +143,8 @@ class Circuit:
         raise CircuitError(f"Component '{component_name}' not found")
 
     def from_json_file(self, filename):
-        with open(filename, mode="r") as f:
-            json_file = json.load(f)
+        with open(filename, mode="r", encoding="utf-8") as json_file:
+            json_file = json.load(json_file)
 
         if "circuit" not in json_file:
             raise CircuitError(f"No 'circuit' in '{filename}'")
@@ -157,12 +155,12 @@ class Circuit:
         if "components" not in json_circuit:
             raise CircuitError(f"No 'circuit/components' in '{filename}'")
         json_components = json_circuit["components"]
-        if "connections" not in json_circuit:
+        if "wires" not in json_circuit:
             raise CircuitError(f"No 'circuit/connections' in '{filename}'")
-        json_connections = json_circuit["connections"]
+        json_connections = json_circuit["wires"]
 
         for json_component in json_components:
-            c = Component.from_dict(self, json_component)
+            Component.from_dict(self, json_component)
 
         for json_connection in json_connections:
             source = json_connection["src"]
@@ -196,11 +194,11 @@ class Circuit:
             "circuit": {
                 "name": self._name,
                 "components": components_list,
-                "connections": connection_list,
+                "wires": connection_list,
             }
         }
 
         json_object = json.dumps(circuit_dict, indent=4)
 
-        with open(filename, mode="w") as f:
-            f.write(json_object)
+        with open(filename, mode="w", encoding="utf-8") as json_file:
+            json_file.write(json_object)

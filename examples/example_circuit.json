@@ -3,16 +3,16 @@
     {
         "name": "example_circuit",
         "components": [
-            { "name": "button1", "type": "components.PushButton" } ,           
-            { "name": "button2", "type": "components.PushButton" },            
-            { "name": "and1", "type": "components.AND" },
-            { "name": "not1", "type": "components.NOT" },
-            { "name": "xor1", "type": "components.XOR" },
-            { "name": "and_led", "type": "components.Led" },
-            { "name": "not_led", "type": "components.Led" },
-            { "name": "xor_led", "type": "components.Led" }
+            { "name": "button1", "type": "digsim.PushButton" } ,           
+            { "name": "button2", "type": "digsim.PushButton" },            
+            { "name": "and1", "type": "digsim.AND" },
+            { "name": "not1", "type": "digsim.NOT" },
+            { "name": "xor1", "type": "digsim.XOR" },
+            { "name": "and_led", "type": "digsim.Led" },
+            { "name": "not_led", "type": "digsim.Led" },
+            { "name": "xor_led", "type": "digsim.Led" }
         ],
-        "connections": [
+        "wires": [
             { "src": "button1.O", "dst": "and1.A" },
             { "src": "button2.O", "dst": "and1.B" },            
             { "src": "button1.O", "dst": "not1.A" },

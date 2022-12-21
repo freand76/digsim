@@ -1,5 +1,4 @@
-from circuit import Circuit
-from components import AND, NOT, Led, PushButton
+from digsim import AND, NOT, Circuit, Led, PushButton
 
 
 def led_callback(time, name, on):

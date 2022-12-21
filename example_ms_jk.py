@@ -1,5 +1,4 @@
-from circuit import Circuit
-from components import JK_MS, Led, PushButton
+from digsim import JK_MS, Circuit, Led, PushButton
 
 
 def led_callback(time, name, on):

@@ -1,5 +1,4 @@
-from circuit import Circuit
-from components import SR, Led, PushButton
+from digsim import SR, Circuit, Led, PushButton
 
 
 def led_callback(time, name, on):
