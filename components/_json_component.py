@@ -1,7 +1,7 @@
 import json
 
-from components import InputPort, MultiComponent, SignalLevel
-from components.gates import AND, DFFE_PP0P, NAND, NOT, SR, XOR
+from ._base import InputPort, MultiComponent
+from ._gates import AND, DFFE_PP0P, NOT, XOR
 
 
 class JsonComponentException(Exception):
@@ -22,8 +22,8 @@ class JsonComponent(MultiComponent):
         self._port_tag_dict = {}
         self._circuit = circuit
         self._component_id = {}
-        with open(self._filename) as f:
-            self._json = json.load(f)
+        with open(self._filename, encoding="utf-8") as json_file:
+            self._json = json.load(json_file)
 
         super().__init__(circuit, self._get_component_name())
         self._parse_cells()
@@ -43,7 +43,7 @@ class JsonComponent(MultiComponent):
 
     def _parse_cells(self):
         cells = self._json["modules"][self.name]["cells"]
-        for cellname, cell_dict in cells.items():
+        for _, cell_dict in cells.items():
             cell_type = cell_dict["type"]
             cell = self.COMPONENT_MAP.get(cell_type)
             if cell is None:
@@ -67,7 +67,7 @@ class JsonComponent(MultiComponent):
                 self._add_connection(connection_id, port_instance)
 
     def _make_cell_connections(self):
-        for port_tag, portlist in self._port_tag_dict.items():
+        for _, portlist in self._port_tag_dict.items():
             is_outport_list = [port.is_outport for port in portlist]
             if any(is_outport_list):
                 out_index = is_outport_list.index(True)

@@ -1,4 +1,4 @@
-from components import Component, InputPort, SignalLevel
+from ._base import Component, InputPort, SignalLevel
 
 
 class Led(Component):

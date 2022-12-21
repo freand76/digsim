@@ -5,9 +5,9 @@
         "components": [
             { "name": "button1", "type": "components.PushButton" } ,           
             { "name": "button2", "type": "components.PushButton" },            
-            { "name": "and1", "type": "components.gates.AND" },
-            { "name": "not1", "type": "components.gates.NOT" },
-            { "name": "xor1", "type": "components.gates.XOR" },
+            { "name": "and1", "type": "components.AND" },
+            { "name": "not1", "type": "components.NOT" },
+            { "name": "xor1", "type": "components.XOR" },
             { "name": "and_led", "type": "components.Led" },
             { "name": "not_led", "type": "components.Led" },
             { "name": "xor_led", "type": "components.Led" }

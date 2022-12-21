@@ -1,6 +1,5 @@
 from circuit import Circuit
-from components import Led, PushButton
-from components.gates import AND, NOT
+from components import AND, NOT, Led, PushButton
 
 
 def led_callback(time, name, on):

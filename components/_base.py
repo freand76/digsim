@@ -3,10 +3,6 @@ import importlib
 from enum import Enum, auto
 
 
-class ConnectionError(Exception):
-    pass
-
-
 class SignalLevel(Enum):
     UNKNOWN = auto()
     HIGH = auto()
@@ -35,6 +31,10 @@ class Port(abc.ABC):
     @name.setter
     def name(self, name):
         self._name = name
+
+    @property
+    def parent(self):
+        return self._parent
 
     @property
     def path(self):
@@ -89,8 +89,8 @@ class Port(abc.ABC):
         for port in self._wired_ports:
             port_conn_list.append(
                 {
-                    "src": f"{self._parent.name}.{self.name}",
-                    "dst": f"{port._parent.name}.{port.name}",
+                    "src": f"{self.parent.name}.{self.name}",
+                    "dst": f"{port.parent.name}.{port.name}",
                 }
             )
         return port_conn_list
@@ -157,8 +157,7 @@ class Component(abc.ABC):
     def path(self):
         if self._parent is not None:
             return f"{self._parent.path}.{self.name}"
-        else:
-            return f"{self.name}"
+        return f"{self.name}"
 
     @property
     def ports(self):
@@ -177,6 +176,14 @@ class Component(abc.ABC):
     @property
     def name(self):
         return self._name
+
+    @property
+    def parent(self):
+        return self._parent
+
+    @parent.setter
+    def parent(self, parent):
+        self._parent = parent
 
     def update(self):
         pass
@@ -216,4 +223,4 @@ class MultiComponent(Component):
 
     def add(self, component):
         self._components.append(component)
-        component._parent = self
+        component.parent = self
