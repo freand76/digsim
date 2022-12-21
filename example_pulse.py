@@ -18,12 +18,12 @@ _not3 = NOT(circuit, "not3")
 _and = AND(circuit)
 D = Led(circuit, "D", callback=led_callback)
 
-B.port("O").connect(_not1.port("A"))
-B.port("O").connect(_and.port("A"))
-_not1.port("Y").connect(_not2.port("A"))
-_not2.port("Y").connect(_not3.port("A"))
-_not3.port("Y").connect(_and.port("B"))
-_and.port("Y").connect(D.port("I"))
+B.O.wire = _not1.A
+B.O.wire = _and.A
+_not1.Y.wire = _not2.A
+_not2.Y.wire = _not3.A
+_not3.Y.wire = _and.B
+_and.Y.wire = D.I
 circuit.init()
 circuit.run(ms=10)
 

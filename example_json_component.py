@@ -6,9 +6,9 @@ json_component = JsonComponent(circuit, "json_modules/counter.json")
 clk = PushButton(circuit, "clk")
 reset = PushButton(circuit, "reset")
 up = PushButton(circuit, "up")
-clk.port("O").connect(json_component.port("clk"))
-reset.port("O").connect(json_component.port("reset"))
-up.port("O").connect(json_component.port("up"))
+clk.O.wire = json_component.clk
+reset.O.wire = json_component.reset
+up.O.wire = json_component.up
 circuit.init()
 
 circuit.run(ms=10)
@@ -24,10 +24,10 @@ print("\n===================== Reset ==========================\n")
 
 print(
     "OUT",
-    json_component.port("cnt3").bitval,
-    json_component.port("cnt2").bitval,
-    json_component.port("cnt1").bitval,
-    json_component.port("cnt0").bitval,
+    json_component.cnt3.bitval,
+    json_component.cnt2.bitval,
+    json_component.cnt1.bitval,
+    json_component.cnt0.bitval,
 )
 
 
@@ -40,8 +40,8 @@ for _ in range(0, 16):
     circuit.run(ms=10)
     print(
         "OUT",
-        json_component.port("cnt3").bitval,
-        json_component.port("cnt2").bitval,
-        json_component.port("cnt1").bitval,
-        json_component.port("cnt0").bitval,
+        json_component.cnt3.bitval,
+        json_component.cnt2.bitval,
+        json_component.cnt1.bitval,
+        json_component.cnt0.bitval,
     )

@@ -26,7 +26,7 @@ class Port(abc.ABC):
         self._parent = parent
         self._level = level
         self._propagation_delay_ns = propagation_delay_ns
-        self._destinations = []
+        self._wired_ports = []
 
     @property
     def name(self):
@@ -49,12 +49,20 @@ class Port(abc.ABC):
         self.set_level(level)
 
     @property
+    def wire(self):
+        raise ConnectionError("Cannot get a wire")
+
+    @wire.setter
+    def wire(self, port):
+        return self._wired_ports.append(port)
+
+    @property
     def propagation_delay_ns(self):
         return self._propagation_delay_ns
 
     @property
-    def destinations(self):
-        return self._destinations
+    def wires(self):
+        return self._wired_ports
 
     @abc.abstractmethod
     def set_level(self, level):
@@ -62,7 +70,7 @@ class Port(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def iotype(self):
+    def is_outport(self):
         pass
 
     @property
@@ -78,11 +86,11 @@ class Port(abc.ABC):
 
     def to_dict_list(self):
         port_conn_list = []
-        for dest in self.destinations:
+        for port in self._wired_ports:
             port_conn_list.append(
                 {
                     "src": f"{self._parent.name}.{self.name}",
-                    "dst": f"{dest._parent.name}.{dest.name}",
+                    "dst": f"{port._parent.name}.{port.name}",
                 }
             )
         return port_conn_list
@@ -94,31 +102,16 @@ class InputPort(Port):
         self._update_parent = update_parent
 
     @property
-    def iotype(self):
-        return "IN"
-
-    def connect(self, dest):
-        raise ConnectionError("Cannot make connection from InputPort")
+    def is_outport(self):
+        return False
 
     def set_level(self, level):
         port_changed = self._level != level
         self._level = level
         if port_changed:
             self._parent.update()
-
-
-class InputFanOutPort(InputPort):
-    def __init__(self, parent):
-        super().__init__(parent=parent)
-
-    def connect(self, dest):
-        self._destinations.append(dest)
-
-    def set_level(self, level):
-        if self._level != level:
-            self._level = level
-            for dest in self.destinations:
-                dest.level = level
+            for port in self._wired_ports:
+                port.level = level
 
 
 class OutputPort(Port):
@@ -130,12 +123,9 @@ class OutputPort(Port):
         )
         self._next_level = SignalLevel.UNKNOWN
 
-    def connect(self, dest):
-        self._destinations.append(dest)
-
     @property
-    def iotype(self):
-        return "OUT"
+    def is_outport(self):
+        return True
 
     def set_level(self, level):
         self._next_level = level
@@ -143,8 +133,8 @@ class OutputPort(Port):
 
     def delta_cycle(self):
         self._level = self._next_level
-        for dest in self.destinations:
-            dest.level = self.level
+        for port in self._wired_ports:
+            port.level = self.level
 
 
 class Component(abc.ABC):
@@ -159,6 +149,7 @@ class Component(abc.ABC):
         pass
 
     def add_port(self, portname, port):
+        self.__dict__[portname] = port
         port.name = portname
         self._ports.append(port)
 

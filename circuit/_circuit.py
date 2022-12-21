@@ -94,7 +94,7 @@ class Circuit:
     def vcd_dump(self, port):
         var = self._vcd_dict[f"{port.path}.{port.name}"]
         self._vcd_writer.change(var, timestamp=self._time_ns, value=port.intval)
-        for p in port.destinations:
+        for p in port.wires:
             self.vcd_dump(p)
 
     def process_single_event(self, stop_time_ns=None):
@@ -174,8 +174,8 @@ class Circuit:
 
             source_component = self.get_component(source_component_name)
             dest_componment = self.get_component(dest_component_name)
-            source_component.port(source_port_name).connect(
-                dest_componment.port(dest_port_name)
+            source_component.port(source_port_name).wire = dest_componment.port(
+                dest_port_name
             )
 
     def to_json_file(self, filename):

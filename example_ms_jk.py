@@ -18,10 +18,10 @@ led.set_callback(led_callback)
 clk = PushButton(circuit, "clk")
 j = PushButton(circuit, "J")
 k = PushButton(circuit, "K")
-clk.port("O").connect(jk.port("C"))
-j.port("O").connect(jk.port("J"))
-k.port("O").connect(jk.port("K"))
-jk.port("Q").connect(led.port("I"))
+clk.O.wire = jk.C
+j.O.wire = jk.J
+k.O.wire = jk.K
+jk.Q.wire = led.I
 circuit.init()
 k.push()
 clk.push()

@@ -1,5 +1,5 @@
-from components import (Component, InputFanOutPort, InputPort, MultiComponent,
-                        OutputPort, SignalLevel)
+from components import (Component, InputPort, MultiComponent, OutputPort,
+                        SignalLevel)
 
 
 class NOT(Component):
@@ -106,18 +106,18 @@ class SR(MultiComponent):
         _nandr = NAND(circuit, name=f"{name}_R")
         self.add(_nands)
         self.add(_nandr)
-        _nands.port("Y").connect(_nandr.port("A"))
-        _nandr.port("Y").connect(_nands.port("B"))
+        _nands.Y.wire = _nandr.A
+        _nandr.Y.wire = _nands.B
 
-        self.add_port("nS", InputFanOutPort(self))
-        self.add_port("nR", InputFanOutPort(self))
-        self.add_port("Q", InputFanOutPort(self))
-        self.add_port("nQ", InputFanOutPort(self))
+        self.add_port("nS", InputPort(self))
+        self.add_port("nR", InputPort(self))
+        self.add_port("Q", InputPort(self))
+        self.add_port("nQ", InputPort(self))
 
-        self.port("nS").connect(_nands.port("A"))
-        self.port("nR").connect(_nandr.port("B"))
-        _nands.port("Y").connect(self.port("Q"))
-        _nandr.port("Y").connect(self.port("nQ"))
+        self.nS.wire = _nands.A
+        self.nR.wire = _nandr.B
+        _nands.Y.wire = self.Q
+        _nandr.Y.wire = self.nQ
 
 
 class JK_MS(MultiComponent):
@@ -133,29 +133,29 @@ class JK_MS(MultiComponent):
         snandk = NAND(circuit, name=f"{name}_S_K")
         slave = SR(circuit, name=f"{name}_SR_S")
 
-        self.add_port("C", InputFanOutPort(self))
-        self.add_port("J", InputFanOutPort(self))
-        self.add_port("K", InputFanOutPort(self))
-        self.add_port("Q", InputFanOutPort(self))
+        self.add_port("C", InputPort(self))
+        self.add_port("J", InputPort(self))
+        self.add_port("K", InputPort(self))
+        self.add_port("Q", InputPort(self))
 
-        self.port("J").connect(mnandj.port("C"))
-        self.port("K").connect(mnandk.port("C"))
-        slave.port("Q").connect(self.port("Q"))
+        self.J.wire = mnandj.C
+        self.K.wire = mnandk.C
+        slave.Q.wire = self.Q
 
-        self.port("C").connect(mnandj.port("A"))
-        self.port("C").connect(mnandk.port("A"))
-        self.port("C").connect(notclk.port("A"))
+        self.C.wire = mnandj.A
+        self.C.wire = mnandk.A
+        self.C.wire = notclk.A
 
-        mnandj.port("Y").connect(master.port("nS"))
-        mnandk.port("Y").connect(master.port("nR"))
-        master.port("Q").connect(snandj.port("A"))
-        master.port("nQ").connect(snandk.port("A"))
-        notclk.port("Y").connect(snandj.port("B"))
-        notclk.port("Y").connect(snandk.port("B"))
-        snandj.port("Y").connect(slave.port("nS"))
-        snandk.port("Y").connect(slave.port("nR"))
-        slave.port("Q").connect(mnandk.port("B"))
-        slave.port("nQ").connect(mnandj.port("B"))
+        mnandj.Y.wire = master.nS
+        mnandk.Y.wire = master.nR
+        master.Q.wire = snandj.A
+        master.nQ.wire = snandk.A
+        notclk.Y.wire = snandj.B
+        notclk.Y.wire = snandk.B
+        snandj.Y.wire = slave.nS
+        snandk.Y.wire = slave.nR
+        slave.Q.wire = mnandk.B
+        slave.nQ.wire = mnandj.B
 
 
 class DFFE_PP0P(Component):

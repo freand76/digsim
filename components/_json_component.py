@@ -1,7 +1,6 @@
 import json
 
-from components import (InputFanOutPort, InputPort, MultiComponent, OutputPort,
-                        SignalLevel)
+from components import InputPort, MultiComponent, OutputPort, SignalLevel
 from components.gates import AND, DFFE_PP0P, NAND, NOT, SR, XOR
 
 
@@ -69,13 +68,13 @@ class JsonComponent(MultiComponent):
 
     def _make_cell_connections(self):
         for port_tag, portlist in self._port_tag_dict.items():
-            port_iotype = [port.iotype for port in portlist]
-            if "OUT" in port_iotype:
-                out_index = port_iotype.index("OUT")
+            is_outport_list = [port.is_outport for port in portlist]
+            if any(is_outport_list):
+                out_index = is_outport_list.index(True)
                 out_port = portlist[out_index]
                 for port in portlist:
-                    if port.iotype == "IN":
-                        out_port.connect(port)
+                    if not port.is_outport:
+                        out_port.wire = port
 
     def _connect_external_ports(self):
         ports = self._json["modules"][self.name]["ports"]
@@ -88,14 +87,14 @@ class JsonComponent(MultiComponent):
                     portbitname = f"{portname}{idx}"
                 portlist = self._port_tag_dict[connection_id]
                 if is_input_port:
-                    port_instance = InputFanOutPort(self)
+                    port_instance = InputPort(self)
                     self.add_port(portbitname, port_instance)
                     for port in portlist:
-                        port_instance.connect(port)
+                        port_instance.wire = port
 
                 else:
-                    self.add_port(portbitname, InputFanOutPort(self))
-                    port_iotype = [port.iotype for port in portlist]
-                    out_index = port_iotype.index("OUT")
+                    self.add_port(portbitname, InputPort(self))
+                    port_iotype = [port.is_outport for port in portlist]
+                    out_index = port_iotype.index(True)
                     port_instance = portlist[out_index]
-                    port_instance.connect(self.port(portbitname))
+                    port_instance.wire = self.port(portbitname)

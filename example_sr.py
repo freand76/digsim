@@ -15,9 +15,9 @@ BS = PushButton(circuit, "S-Button", inverted=True)
 BR = PushButton(circuit, "R-Button", inverted=True)
 SR = SR(circuit)
 D1 = Led(circuit, "D1", callback=led_callback)
-BS.port("O").connect(SR.port("nS"))
-BR.port("O").connect(SR.port("nR"))
-SR.port("Q").connect(D1.port("I"))
+BS.O.wire = SR.nS
+BR.O.wire = SR.nR
+SR.Q.wire = D1.I
 circuit.init()
 circuit.run(ms=10)
 
