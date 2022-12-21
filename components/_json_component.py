@@ -1,6 +1,6 @@
 import json
 
-from components import InputPort, MultiComponent, OutputPort, SignalLevel
+from components import InputPort, MultiComponent, SignalLevel
 from components.gates import AND, DFFE_PP0P, NAND, NOT, SR, XOR
 
 
@@ -86,15 +86,13 @@ class JsonComponent(MultiComponent):
                 else:
                     portbitname = f"{portname}{idx}"
                 portlist = self._port_tag_dict[connection_id]
+                external_port = InputPort(self)
+                self.add_port(portbitname, external_port)
                 if is_input_port:
-                    port_instance = InputPort(self)
-                    self.add_port(portbitname, port_instance)
                     for port in portlist:
-                        port_instance.wire = port
-
+                        external_port.wire = port
                 else:
-                    self.add_port(portbitname, InputPort(self))
                     port_iotype = [port.is_outport for port in portlist]
                     out_index = port_iotype.index(True)
                     port_instance = portlist[out_index]
-                    port_instance.wire = self.port(portbitname)
+                    port_instance.wire = external_port
