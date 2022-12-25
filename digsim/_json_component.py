@@ -1,6 +1,6 @@
 import json
 
-from ._base import InputPort, MultiComponent
+from ._base import ComponentPort, MultiComponent, PortDirection
 from ._gates import AND, DFFE_PP0P, NOT, XOR
 
 
@@ -68,31 +68,37 @@ class JsonComponent(MultiComponent):
 
     def _make_cell_connections(self):
         for _, portlist in self._port_tag_dict.items():
-            is_outport_list = [port.is_outport for port in portlist]
+            is_outport_list = [port.direction == PortDirection.OUT for port in portlist]
             if any(is_outport_list):
                 out_index = is_outport_list.index(True)
                 out_port = portlist[out_index]
                 for port in portlist:
-                    if not port.is_outport:
+                    if port.direction == PortDirection.IN:
                         out_port.wire = port
 
     def _connect_external_ports(self):
         ports = self._json["modules"][self.name]["ports"]
         for portname, port_dict in ports.items():
-            is_input_port = port_dict["direction"] == "input"
+            port_direction = (
+                PortDirection.IN
+                if port_dict["direction"] == "input"
+                else PortDirection.OUT
+            )
             for idx, connection_id in enumerate(port_dict["bits"]):
                 if len(port_dict["bits"]) == 1:
                     portbitname = f"{portname}"
                 else:
                     portbitname = f"{portname}{idx}"
                 portlist = self._port_tag_dict[connection_id]
-                external_port = InputPort(self)
+                external_port = ComponentPort(self, port_direction)
                 self.add_port(portbitname, external_port)
-                if is_input_port:
+                if port_direction == PortDirection.IN:
                     for port in portlist:
                         external_port.wire = port
                 else:
-                    port_iotype = [port.is_outport for port in portlist]
+                    port_iotype = [
+                        port.direction == PortDirection.OUT for port in portlist
+                    ]
                     out_index = port_iotype.index(True)
                     port_instance = portlist[out_index]
                     port_instance.wire = external_port

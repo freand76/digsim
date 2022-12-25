@@ -3,6 +3,11 @@ import importlib
 from enum import Enum, auto
 
 
+class PortDirection(Enum):
+    IN = auto()
+    OUT = auto()
+
+
 class SignalLevel(Enum):
     UNKNOWN = auto()
     HIGH = auto()
@@ -17,11 +22,11 @@ SIGNAL_LEVEL_TO_STR = {
 
 
 class Port(abc.ABC):
-    def __init__(self, parent, level=SignalLevel.UNKNOWN, propagation_delay_ns=0):
-        self._name = None
+    def __init__(self, parent, direction):
         self._parent = parent
-        self._level = level
-        self._propagation_delay_ns = propagation_delay_ns
+        self._direction = direction
+        self._name = None
+        self._level = SignalLevel.UNKNOWN
         self._wired_ports = []
 
     @property
@@ -31,6 +36,10 @@ class Port(abc.ABC):
     @name.setter
     def name(self, name):
         self._name = name
+
+    @property
+    def direction(self):
+        return self._direction
 
     @property
     def parent(self):
@@ -57,20 +66,11 @@ class Port(abc.ABC):
         return self._wired_ports.append(port)
 
     @property
-    def propagation_delay_ns(self):
-        return self._propagation_delay_ns
-
-    @property
     def wires(self):
         return self._wired_ports
 
     @abc.abstractmethod
     def set_level(self, level):
-        pass
-
-    @property
-    @abc.abstractmethod
-    def is_outport(self):
         pass
 
     @property
@@ -100,42 +100,33 @@ class Port(abc.ABC):
         return port_conn_list
 
 
-class InputPort(Port):
-    def __init__(self, parent, update_parent=True):
-        super().__init__(parent=parent)
+class ComponentPort(Port):
+    def __init__(self, parent, direction, update_parent=True):
+        super().__init__(parent=parent, direction=direction)
         self._update_parent = update_parent
-
-    @property
-    def is_outport(self):
-        return False
 
     def set_level(self, level):
         port_changed = self._level != level
         self._level = level
         if port_changed:
-            self._parent.update()
             self.update_wires()
+        if port_changed and self._update_parent:
+            self.parent.update()
 
 
 class OutputPort(Port):
     def __init__(self, parent, propagation_delay_ns=10):
         super().__init__(
             parent=parent,
-            level=SignalLevel.UNKNOWN,
-            propagation_delay_ns=propagation_delay_ns,
+            direction=PortDirection.OUT,
         )
-        self._next_level = SignalLevel.UNKNOWN
-
-    @property
-    def is_outport(self):
-        return True
+        self._propagation_delay_ns = propagation_delay_ns
 
     def set_level(self, level):
-        self._next_level = level
-        self._parent.add_event(self)
+        self._parent.add_event(self, level, self._propagation_delay_ns)
 
-    def delta_cycle(self):
-        self._level = self._next_level
+    def delta_cycle(self, level):
+        self._level = level
         self.update_wires()
 
 
@@ -190,8 +181,8 @@ class Component(abc.ABC):
     def update(self):
         pass
 
-    def add_event(self, port):
-        self.circuit.add_event(port)
+    def add_event(self, port, level, propagation_delay_ns):
+        self.circuit.add_event(port, level, propagation_delay_ns)
 
     def __str__(self):
         comp_str = f"{self.name}\n"

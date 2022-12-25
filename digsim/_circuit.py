@@ -10,9 +10,10 @@ class CircuitError(Exception):
 
 
 class CircuitEvent:
-    def __init__(self, port, time_ns):
+    def __init__(self, time_ns, port, level):
         self._time_ns = time_ns
         self._port = port
+        self._level = level
 
     @property
     def time_ns(self):
@@ -21,6 +22,17 @@ class CircuitEvent:
     @property
     def port(self):
         return self._port
+
+    @property
+    def level(self):
+        return self._level
+
+    def is_same_event(self, time_ns, port):
+        return port == self._port
+
+    def update(self, time_ns, level):
+        self._time_ns = time_ns
+        self._level = level
 
     def __lt__(self, other):
         return other.time_ns < self.time_ns
@@ -111,7 +123,7 @@ class Circuit:
         event = self._circuit_events.pop()
         # print(f"Execute event {event.port.path}.{event.port.name} {event.time_ns}")
         self._time_ns = event.time_ns
-        event.port.delta_cycle()
+        event.port.delta_cycle(event.level)
         if self._vcd_writer is not None:
             self.vcd_dump(event.port)
         return True
@@ -130,10 +142,14 @@ class Circuit:
         if stop_time_ns > self._time_ns:
             self.run(ns=stop_time_ns - self._time_ns)
 
-    def add_event(self, port):
-        self._circuit_events.append(
-            CircuitEvent(port, self._time_ns + port.propagation_delay_ns)
-        )
+    def add_event(self, port, level, propagation_delay_ns):
+        event_time_ns = self._time_ns + propagation_delay_ns
+        for idx, event in enumerate(self._circuit_events):
+            if event.is_same_event(event_time_ns, port):
+                event.update(event_time_ns, level)
+                return
+
+        self._circuit_events.append(CircuitEvent(event_time_ns, port, level))
 
     def add_component(self, component):
         for comp in self._components:

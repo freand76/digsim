@@ -1,4 +1,4 @@
-from ._base import (Component, InputPort, MultiComponent, OutputPort,
+from ._base import (Component, ComponentPort, MultiComponent, OutputPort,
                     SignalLevel)
 from ._button import PushButton
 from ._circuit import Circuit

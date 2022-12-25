@@ -1,102 +1,81 @@
-from ._base import (Component, InputPort, MultiComponent, OutputPort,
-                    SignalLevel)
+from ._base import (Component, ComponentPort, MultiComponent, OutputPort,
+                    PortDirection, SignalLevel)
 
 
 class NOT(Component):
     def __init__(self, circuit, name="NOT"):
         super().__init__(circuit, name)
-        self._in = InputPort(self)
-        self._out = OutputPort(self)
-        self.add_port("A", self._in)
-        self.add_port("Y", self._out)
+        self.add_port("A", ComponentPort(self, PortDirection.IN))
+        self.add_port("Y", OutputPort(self))
 
     def update(self):
-        if self._in.level == SignalLevel.LOW:
-            self._out.level = SignalLevel.HIGH
+        if self.A.level == SignalLevel.LOW:
+            self.Y.level = SignalLevel.HIGH
         else:
-            self._out.level = SignalLevel.LOW
+            self.Y.level = SignalLevel.LOW
 
 
 class AND(Component):
     def __init__(self, circuit, name="AND"):
         super().__init__(circuit, name)
-        self._ina = InputPort(self)
-        self._inb = InputPort(self)
-        self._out = OutputPort(self)
-
-        self.add_port("A", self._ina)
-        self.add_port("B", self._inb)
-        self.add_port("Y", self._out)
+        self.add_port("A", ComponentPort(self, PortDirection.IN))
+        self.add_port("B", ComponentPort(self, PortDirection.IN))
+        self.add_port("Y", OutputPort(self))
 
     def update(self):
-        if self._ina.level == SignalLevel.HIGH and self._inb.level == SignalLevel.HIGH:
-            self._out.level = SignalLevel.HIGH
+        if self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH:
+            self.Y.level = SignalLevel.HIGH
         else:
-            self._out.level = SignalLevel.LOW
+            self.Y.level = SignalLevel.LOW
 
 
 class XOR(Component):
     def __init__(self, circuit, name="XOR"):
         super().__init__(circuit, name)
-        self._ina = InputPort(self)
-        self._inb = InputPort(self)
-        self._out = OutputPort(self)
-
-        self.add_port("A", self._ina)
-        self.add_port("B", self._inb)
-        self.add_port("Y", self._out)
+        self.add_port("A", ComponentPort(self, PortDirection.IN))
+        self.add_port("B", ComponentPort(self, PortDirection.IN))
+        self.add_port("Y", OutputPort(self))
 
     def update(self):
-        if (
-            self._ina.level == SignalLevel.HIGH and self._inb.level == SignalLevel.LOW
-        ) or (
-            self._ina.level == SignalLevel.LOW and self._inb.level == SignalLevel.HIGH
+        if (self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.LOW) or (
+            self.A.level == SignalLevel.LOW and self.B.level == SignalLevel.HIGH
         ):
-            self._out.level = SignalLevel.HIGH
+            self.Y.level = SignalLevel.HIGH
         else:
-            self._out.level = SignalLevel.LOW
+            self.Y.level = SignalLevel.LOW
 
 
 class NAND(Component):
     def __init__(self, circuit, name="NAND"):
         super().__init__(circuit, name)
-        self._ina = InputPort(self)
-        self._inb = InputPort(self)
-        self._out = OutputPort(self)
-
-        self.add_port("A", self._ina)
-        self.add_port("B", self._inb)
-        self.add_port("Y", self._out)
+        self.add_port("A", ComponentPort(self, PortDirection.IN))
+        self.add_port("B", ComponentPort(self, PortDirection.IN))
+        self.add_port("Y", OutputPort(self))
 
     def update(self):
-        if self._ina.level == SignalLevel.HIGH and self._inb.level == SignalLevel.HIGH:
-            self._out.level = SignalLevel.LOW
+        if self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH:
+            self.Y.level = SignalLevel.LOW
         else:
-            self._out.level = SignalLevel.HIGH
+            self.Y.level = SignalLevel.HIGH
 
 
 class NAND3(Component):
     def __init__(self, circuit, name="NAND3"):
         super().__init__(circuit, name)
-        self._ina = InputPort(self)
-        self._inb = InputPort(self)
-        self._inc = InputPort(self)
-        self._out = OutputPort(self)
-
-        self.add_port("A", self._ina)
-        self.add_port("B", self._inb)
-        self.add_port("C", self._inc)
-        self.add_port("Y", self._out)
+        self.add_port("A", ComponentPort(self, PortDirection.IN))
+        self.add_port("B", ComponentPort(self, PortDirection.IN))
+        self.add_port("C", ComponentPort(self, PortDirection.IN))
+        self.add_port("Y", OutputPort(self))
 
     def update(self):
         if (
-            self._ina.level == SignalLevel.HIGH
-            and self._inb.level == SignalLevel.HIGH
-            and self._inc.level == SignalLevel.HIGH
+            self.A.level == SignalLevel.HIGH
+            and self.B.level == SignalLevel.HIGH
+            and self.C.level == SignalLevel.HIGH
         ):
-            self._out.level = SignalLevel.LOW
+            self.Y.level = SignalLevel.LOW
         else:
-            self._out.level = SignalLevel.HIGH
+            self.Y.level = SignalLevel.HIGH
 
 
 class SR(MultiComponent):
@@ -109,10 +88,10 @@ class SR(MultiComponent):
         _nands.Y.wire = _nandr.A
         _nandr.Y.wire = _nands.B
 
-        self.add_port("nS", InputPort(self))
-        self.add_port("nR", InputPort(self))
-        self.add_port("Q", InputPort(self))
-        self.add_port("nQ", InputPort(self))
+        self.add_port("nS", ComponentPort(self, PortDirection.IN))
+        self.add_port("nR", ComponentPort(self, PortDirection.IN))
+        self.add_port("Q", ComponentPort(self, PortDirection.OUT))
+        self.add_port("nQ", ComponentPort(self, PortDirection.OUT))
 
         self.nS.wire = _nands.A
         self.nR.wire = _nandr.B
@@ -133,10 +112,10 @@ class JK_MS(MultiComponent):
         snandk = NAND(circuit, name=f"{name}_S_K")
         slave = SR(circuit, name=f"{name}_SR_S")
 
-        self.add_port("C", InputPort(self))
-        self.add_port("J", InputPort(self))
-        self.add_port("K", InputPort(self))
-        self.add_port("Q", InputPort(self))
+        self.add_port("C", ComponentPort(self, PortDirection.IN))
+        self.add_port("J", ComponentPort(self, PortDirection.IN))
+        self.add_port("K", ComponentPort(self, PortDirection.IN))
+        self.add_port("Q", ComponentPort(self, PortDirection.IN))
 
         self.J.wire = mnandj.C
         self.K.wire = mnandk.C
@@ -161,27 +140,21 @@ class JK_MS(MultiComponent):
 class DFFE_PP0P(Component):
     def __init__(self, circuit, name="DFFE"):
         super().__init__(circuit, name)
-        self._inc = InputPort(self)
-        self._ind = InputPort(self, update_parent=False)
-        self._ine = InputPort(self, update_parent=False)
-        self._inr = InputPort(self)
-        self._out = OutputPort(self)
-
-        self.add_port("C", self._inc)
-        self.add_port("D", self._ind)
-        self.add_port("E", self._ine)
-        self.add_port("R", self._inr)
-        self.add_port("Q", self._out)
-        self._old_inc_level = self._inc.level
+        self.add_port("C", ComponentPort(self, PortDirection.IN))
+        self.add_port("D", ComponentPort(self, PortDirection.IN, update_parent=False))
+        self.add_port("E", ComponentPort(self, PortDirection.IN, update_parent=False))
+        self.add_port("R", ComponentPort(self, PortDirection.IN))
+        self.add_port("Q", OutputPort(self))
+        self._old_C_level = self.C.level
 
     def update(self):
-        if self._inr.level == SignalLevel.HIGH:
-            self._out.level = SignalLevel.LOW
+        if self.R.level == SignalLevel.HIGH:
+            self.Q.level = SignalLevel.LOW
         elif (
-            self._inc.level != self._old_inc_level
-            and self._inc.level == SignalLevel.HIGH
-            and self._ine.level == SignalLevel.HIGH
+            self.C.level != self._old_C_level
+            and self.C.level == SignalLevel.HIGH
+            and self.E.level == SignalLevel.HIGH
         ):
-            self._out.level = self._ind.level
+            self.Q.level = self.D.level
 
-        self._old_inc_level = self._inc.level
+        self._old_inc_level = self.C.level
