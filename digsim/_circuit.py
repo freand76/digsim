@@ -1,8 +1,7 @@
 import json
 
-from vcd import VCDWriter
-
 from ._base import Component
+from ._waves_writer import WavesWriter
 
 
 class CircuitError(Exception):
@@ -43,52 +42,44 @@ class Circuit:
         self._components = []
         self._circuit_events = []
         self._name = name
-        self._vcd_file = None
-        self._vcd_writer = None
-        self._vcd_dict = {}
         self._time_ns = 0
-        self._vcd_name = vcd
+
+        if vcd is not None:
+            self._vcd = WavesWriter(filename=vcd)
+        else:
+            self._vcd = None
 
     @property
     def time_ns(self):
         return self._time_ns
 
     def init(self):
-        self.vcd()
+        if self._vcd is not None:
+            self._vcd_init()
         for comp in self._components:
             comp.init()
 
-    def vcd(self, vcd=None):
-        if vcd is not None and self._vcd_name is not None:
+    def vcd(self, filename):
+        if self._vcd is not None:
             raise CircuitError("VCD already started")
-
-        if vcd is not None:
-            self._vcd_name = vcd
-
-        if self._vcd_name is not None:
-            self._vcd_file = open(self._vcd_name, mode="w", encoding="utf-8")
-            self._vcd_writer = VCDWriter(self._vcd_file, timescale="1 ns", date="today")
-            for port_path, port_name in self.get_port_paths():
-                var = self._vcd_writer.register_var(
-                    port_path, port_name, "integer", size=1
-                )
-                self._vcd_dict[f"{port_path}.{port_name}"] = var
-
-            # Get initial state in vcd
-            for comp in self._components:
-                for port in comp.ports:
-                    self.vcd_dump(port)
+        self._vcd = WavesWriter(filename=filename)
+        self._vcd_init()
 
     def vcd_close(self):
-        if self._vcd_writer is not None:
-            self._vcd_writer.close()
-            self._vcd_writer = None
+        self._vcd.close()
+        self._vcd = None
 
-        if self._vcd_file is not None:
-            self._vcd_file.close()
-            self._vcd_file = None
+    def _vcd_init(self):
+        port_paths = []
+        for comp in self._components:
+            for port in comp.ports:
+                port_paths.append((port.path, port.name))
+        self._vcd.init(port_paths)
 
-        self._vcd_name = None
+        # Dump initial state in vcd
+        for comp in self._components:
+            for port in comp.ports:
+                self._vcd.write(port, self._time_ns)
 
     def _time_to_ns(self, s=None, ms=None, us=None, ns=None):
         time_ns = 0
@@ -99,20 +90,7 @@ class Circuit:
         return int(time_ns)
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.vcd_close()
-
-    def get_port_paths(self):
-        port_paths = []
-        for comp in self._components:
-            for port in comp.ports:
-                port_paths.append((port.path, port.name))
-        return port_paths
-
-    def vcd_dump(self, port):
-        var = self._vcd_dict[f"{port.path}.{port.name}"]
-        self._vcd_writer.change(var, timestamp=self._time_ns, value=port.vcdval)
-        for p in port.wires:
-            self.vcd_dump(p)
+        self._vcd.close()
 
     def process_single_event(self, stop_time_ns=None):
         if len(self._circuit_events) == 0:
@@ -124,8 +102,8 @@ class Circuit:
         # print(f"Execute event {event.port.path}.{event.port.name} {event.time_ns}")
         self._time_ns = event.time_ns
         event.port.delta_cycle(event.level)
-        if self._vcd_writer is not None:
-            self.vcd_dump(event.port)
+        if self._vcd is not None:
+            self._vcd.write(event.port, self._time_ns)
         return True
 
     def run(self, s=None, ms=None, us=None, ns=None):
