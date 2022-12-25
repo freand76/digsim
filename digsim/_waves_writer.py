@@ -16,7 +16,9 @@ class WavesWriter:
             self._vcd_dict[f"{port_path}.{port_name}"] = var
 
     def write(self, port, time_ns):
-        var = self._vcd_dict[f"{port.path}.{port.name}"]
+        var = self._vcd_dict.get(f"{port.path}.{port.name}")
+        if var is None:
+            return
         self._vcd_writer.change(var, timestamp=time_ns, value=port.vcdval)
         for p in port.wires:
             self.write(p, time_ns)

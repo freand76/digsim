@@ -139,6 +139,9 @@ class OutputPort(Port):
         )
         self._propagation_delay_ns = propagation_delay_ns
 
+    def set_propagation_delay_ns(self, propagation_delay_ns):
+        self._propagation_delay_ns = propagation_delay_ns
+
     def set_level(self, level):
         self._parent.add_event(self, level, self._propagation_delay_ns)
 
