@@ -81,6 +81,10 @@ class Port(abc.ABC):
     def intval(self):
         return 1 if self._level == SignalLevel.HIGH else 0
 
+    def update_wires(self):
+        for port in self._wired_ports:
+            port.level = self._level
+
     def __str__(self):
         return f"{self._parent.name}:{self.name}={SIGNAL_LEVEL_TO_STR[self._level]}"
 
@@ -110,8 +114,7 @@ class InputPort(Port):
         self._level = level
         if port_changed:
             self._parent.update()
-            for port in self._wired_ports:
-                port.level = level
+            self.update_wires()
 
 
 class OutputPort(Port):
@@ -133,8 +136,7 @@ class OutputPort(Port):
 
     def delta_cycle(self):
         self._level = self._next_level
-        for port in self._wired_ports:
-            port.level = self.level
+        self.update_wires()
 
 
 class Component(abc.ABC):
