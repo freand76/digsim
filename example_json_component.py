@@ -1,17 +1,17 @@
-from digsim import Circuit, JsonComponent, PushButton
+from digsim import VDD, Circuit, JsonComponent, PushButton
 
 circuit = Circuit()
 json_component = JsonComponent(circuit, "json_modules/counter.json")
 clk = PushButton(circuit, "clk")
 reset = PushButton(circuit, "reset")
-up = PushButton(circuit, "up")
+
+vdd = VDD(circuit)
 clk.O.wire = json_component.clk
 reset.O.wire = json_component.reset
-up.O.wire = json_component.up
+vdd.wire = json_component.up
 circuit.init()
 
 circuit.run(ms=10)
-up.push()
 reset.push()
 circuit.run(ms=10)
 reset.release()
