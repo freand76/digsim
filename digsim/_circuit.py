@@ -110,7 +110,7 @@ class Circuit:
 
     def vcd_dump(self, port):
         var = self._vcd_dict[f"{port.path}.{port.name}"]
-        self._vcd_writer.change(var, timestamp=self._time_ns, value=port.intval)
+        self._vcd_writer.change(var, timestamp=self._time_ns, value=port.vcdval)
         for p in port.wires:
             self.vcd_dump(p)
 

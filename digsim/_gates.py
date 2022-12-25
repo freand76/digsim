@@ -45,8 +45,12 @@ class XOR(Component):
             self.A.level == SignalLevel.LOW and self.B.level == SignalLevel.HIGH
         ):
             self.Y.level = SignalLevel.HIGH
-        else:
+        elif (
+            self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH
+        ) or (self.A.level == SignalLevel.LOW and self.B.level == SignalLevel.LOW):
             self.Y.level = SignalLevel.LOW
+        else:
+            self.Y.level = SignalLevel.UNKNOWN
 
 
 class NAND(Component):
@@ -59,8 +63,10 @@ class NAND(Component):
     def update(self):
         if self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH:
             self.Y.level = SignalLevel.LOW
-        else:
+        elif self.A.level == SignalLevel.LOW or self.B.level == SignalLevel.LOW:
             self.Y.level = SignalLevel.HIGH
+        else:
+            self.Y.level = SignalLevel.UNKNOWN
 
 
 class NAND3(Component):
@@ -78,8 +84,14 @@ class NAND3(Component):
             and self.C.level == SignalLevel.HIGH
         ):
             self.Y.level = SignalLevel.LOW
-        else:
+        elif (
+            self.A.level == SignalLevel.LOW
+            or self.B.level == SignalLevel.LOW
+            or self.C.level == SignalLevel.LOW
+        ):
             self.Y.level = SignalLevel.HIGH
+        else:
+            self.Y.level = SignalLevel.UNKNOWN
 
 
 class SR(MultiComponent):
@@ -91,7 +103,8 @@ class SR(MultiComponent):
         self.add(_nandr)
         _nands.Y.wire = _nandr.A
         _nandr.Y.wire = _nands.B
-
+        _nands.Y.level = SignalLevel.HIGH
+        _nandr.Y.level = SignalLevel.HIGH
         self.add_port("nS", ComponentPort(self, PortDirection.IN))
         self.add_port("nR", ComponentPort(self, PortDirection.IN))
         self.add_port("Q", ComponentPort(self, PortDirection.OUT))

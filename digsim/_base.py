@@ -81,6 +81,12 @@ class Port(abc.ABC):
     def intval(self):
         return 1 if self._level == SignalLevel.HIGH else 0
 
+    @property
+    def vcdval(self):
+        if self._level == SignalLevel.UNKNOWN:
+            return "x"
+        return self.intval
+
     def update_wires(self, level):
         self._level = level
         for port in self._wired_ports:
