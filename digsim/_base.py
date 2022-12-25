@@ -27,6 +27,7 @@ class Port(abc.ABC):
         self._direction = direction
         self._name = name
         self._level = SignalLevel.UNKNOWN
+        self._connected = False
         self._wired_ports = []
 
     @property
@@ -54,11 +55,24 @@ class Port(abc.ABC):
         self.set_level(level)
 
     @property
+    def connected(self):
+        return self._connected
+
+    @connected.setter
+    def connected(self, connect):
+        if connect and self._connected:
+            raise ConnectionError(
+                f"The port {self.path}.{self.name} is alread connected"
+            )
+        self._connected = connect
+
+    @property
     def wire(self):
         raise ConnectionError("Cannot get a wire")
 
     @wire.setter
     def wire(self, port):
+        port.connected = True
         return self._wired_ports.append(port)
 
     @property
