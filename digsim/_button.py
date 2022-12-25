@@ -1,11 +1,11 @@
-from ._base import Component, OutputPort, SignalLevel
+from ._base import Component, ComponentPort, PortDirection, SignalLevel
 
 
 class PushButton(Component):
     def __init__(self, circuit, name="PushButton", inverted=False):
         super().__init__(circuit, name)
         self._inverted = inverted
-        self.add_port("O", OutputPort(self, propagation_delay_ns=0))
+        self.add_port("O", ComponentPort(self, PortDirection.OUT))
 
     def init(self):
         self.release()
