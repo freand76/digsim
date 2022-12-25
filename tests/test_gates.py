@@ -1,6 +1,6 @@
 import pytest
 
-from digsim import AND, NAND, NOT, XOR, Circuit, SignalLevel
+from digsim import AND, NAND, NOT, NOT_AND, XOR, Circuit, SignalLevel
 
 UNKNOWN = SignalLevel.UNKNOWN
 HIGH = SignalLevel.HIGH
@@ -49,6 +49,31 @@ def test_not(in_a, out_y):
     assert _not.Y.level == UNKNOWN
     circuit.run(ms=1)
     assert _not.Y.level == out_y
+
+
+@pytest.mark.parametrize(
+    "in_a,in_b,out_y",
+    [
+        (UNKNOWN, UNKNOWN, UNKNOWN),
+        (HIGH, UNKNOWN, UNKNOWN),
+        (LOW, UNKNOWN, HIGH),
+        (LOW, LOW, HIGH),
+        (LOW, HIGH, HIGH),
+        (HIGH, LOW, HIGH),
+        (HIGH, HIGH, LOW),
+    ],
+)
+def test_not_and(in_a, in_b, out_y):
+    circuit = Circuit()
+    _nand = NOT_AND(circuit)
+
+    _nand.A.level = in_a
+    _nand.B.level = in_b
+    assert _nand.A.level == in_a
+    assert _nand.B.level == in_b
+    assert _nand.Y.level == UNKNOWN
+    circuit.run(ms=1)
+    assert _nand.Y.level == out_y
 
 
 @pytest.mark.parametrize(

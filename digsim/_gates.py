@@ -33,6 +33,23 @@ class AND(Component):
             self.Y.level = SignalLevel.UNKNOWN
 
 
+class NOT_AND(MultiComponent):
+    def __init__(self, circuit, name="SR"):
+        super().__init__(circuit, name)
+        self._not = NOT(circuit, name=f"{name}_NOT")
+        self._and = AND(circuit, name=f"{name}_AND")
+        self.add(self._and)
+        self.add(self._not)
+        self._and.Y.wire = self._not.A
+        self.add_port("A", ComponentPort(self, PortDirection.IN))
+        self.add_port("B", ComponentPort(self, PortDirection.IN))
+        self.add_port("Y", ComponentPort(self, PortDirection.OUT))
+
+        self._not.Y.wire = self.Y
+        self.A.wire = self._and.A
+        self.B.wire = self._and.B
+
+
 class XOR(Component):
     def __init__(self, circuit, name="XOR"):
         super().__init__(circuit, name)
