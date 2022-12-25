@@ -11,8 +11,10 @@ class NOT(Component):
     def update(self):
         if self.A.level == SignalLevel.LOW:
             self.Y.level = SignalLevel.HIGH
-        else:
+        elif self.A.level == SignalLevel.HIGH:
             self.Y.level = SignalLevel.LOW
+        else:
+            self.Y.level = SignalLevel.UNKNOWN
 
 
 class AND(Component):
@@ -25,8 +27,10 @@ class AND(Component):
     def update(self):
         if self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH:
             self.Y.level = SignalLevel.HIGH
-        else:
+        elif self.A.level == SignalLevel.LOW or self.B.level == SignalLevel.LOW:
             self.Y.level = SignalLevel.LOW
+        else:
+            self.Y.level = SignalLevel.UNKNOWN
 
 
 class XOR(Component):
