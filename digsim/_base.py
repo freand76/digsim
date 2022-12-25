@@ -22,20 +22,16 @@ SIGNAL_LEVEL_TO_STR = {
 
 
 class Port(abc.ABC):
-    def __init__(self, parent, direction):
+    def __init__(self, parent, name, direction):
         self._parent = parent
         self._direction = direction
-        self._name = None
+        self._name = name
         self._level = SignalLevel.UNKNOWN
         self._wired_ports = []
 
     @property
     def name(self):
         return self._name
-
-    @name.setter
-    def name(self, name):
-        self._name = name
 
     @property
     def direction(self):
@@ -108,8 +104,8 @@ class Port(abc.ABC):
 
 
 class ComponentPort(Port):
-    def __init__(self, parent, direction, update_parent=True):
-        super().__init__(parent=parent, direction=direction)
+    def __init__(self, parent, name, direction, update_parent=True):
+        super().__init__(parent=parent, name=name, direction=direction)
         self._update_parent = update_parent
 
     def set_level(self, level):
@@ -121,9 +117,10 @@ class ComponentPort(Port):
 
 
 class OutputPort(Port):
-    def __init__(self, parent, propagation_delay_ns=10):
+    def __init__(self, parent, name, propagation_delay_ns=10):
         super().__init__(
             parent=parent,
+            name=name,
             direction=PortDirection.OUT,
         )
         self._propagation_delay_ns = propagation_delay_ns
@@ -146,9 +143,8 @@ class Component(abc.ABC):
     def init(self):
         pass
 
-    def add_port(self, portname, port):
-        self.__dict__[portname] = port
-        port.name = portname
+    def add_port(self, port):
+        self.__dict__[port.name] = port
         self._ports.append(port)
 
     @property

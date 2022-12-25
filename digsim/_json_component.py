@@ -90,8 +90,8 @@ class JsonComponent(MultiComponent):
                 else:
                     portbitname = f"{portname}{idx}"
                 portlist = self._port_tag_dict[connection_id]
-                external_port = ComponentPort(self, port_direction)
-                self.add_port(portbitname, external_port)
+                external_port = ComponentPort(self, portbitname, port_direction)
+                self.add_port(external_port)
                 if port_direction == PortDirection.IN:
                     for port in portlist:
                         external_port.wire = port

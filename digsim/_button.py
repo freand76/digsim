@@ -5,7 +5,7 @@ class PushButton(Component):
     def __init__(self, circuit, name="PushButton", inverted=False):
         super().__init__(circuit, name)
         self._inverted = inverted
-        self.add_port("O", ComponentPort(self, PortDirection.OUT))
+        self.add_port(ComponentPort(self, "O", PortDirection.OUT))
 
     def init(self):
         self.release()

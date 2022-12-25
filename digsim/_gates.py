@@ -5,8 +5,8 @@ from ._base import (Component, ComponentPort, MultiComponent, OutputPort,
 class NOT(Component):
     def __init__(self, circuit, name="NOT"):
         super().__init__(circuit, name)
-        self.add_port("A", ComponentPort(self, PortDirection.IN))
-        self.add_port("Y", OutputPort(self))
+        self.add_port(ComponentPort(self, "A", PortDirection.IN))
+        self.add_port(OutputPort(self, "Y"))
 
     def update(self):
         if self.A.level == SignalLevel.LOW:
@@ -20,9 +20,9 @@ class NOT(Component):
 class AND(Component):
     def __init__(self, circuit, name="AND"):
         super().__init__(circuit, name)
-        self.add_port("A", ComponentPort(self, PortDirection.IN))
-        self.add_port("B", ComponentPort(self, PortDirection.IN))
-        self.add_port("Y", OutputPort(self))
+        self.add_port(ComponentPort(self, "A", PortDirection.IN))
+        self.add_port(ComponentPort(self, "B", PortDirection.IN))
+        self.add_port(OutputPort(self, "Y"))
 
     def update(self):
         if self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH:
@@ -41,9 +41,9 @@ class NOT_AND(MultiComponent):
         self.add(self._and)
         self.add(self._not)
         self._and.Y.wire = self._not.A
-        self.add_port("A", ComponentPort(self, PortDirection.IN))
-        self.add_port("B", ComponentPort(self, PortDirection.IN))
-        self.add_port("Y", ComponentPort(self, PortDirection.OUT))
+        self.add_port(ComponentPort(self, "A", PortDirection.IN))
+        self.add_port(ComponentPort(self, "B", PortDirection.IN))
+        self.add_port(ComponentPort(self, "Y", PortDirection.OUT))
 
         self._not.Y.wire = self.Y
         self.A.wire = self._and.A
@@ -53,9 +53,9 @@ class NOT_AND(MultiComponent):
 class XOR(Component):
     def __init__(self, circuit, name="XOR"):
         super().__init__(circuit, name)
-        self.add_port("A", ComponentPort(self, PortDirection.IN))
-        self.add_port("B", ComponentPort(self, PortDirection.IN))
-        self.add_port("Y", OutputPort(self))
+        self.add_port(ComponentPort(self, "A", PortDirection.IN))
+        self.add_port(ComponentPort(self, "B", PortDirection.IN))
+        self.add_port(OutputPort(self, "Y"))
 
     def update(self):
         if (self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.LOW) or (
@@ -73,9 +73,9 @@ class XOR(Component):
 class NAND(Component):
     def __init__(self, circuit, name="NAND"):
         super().__init__(circuit, name)
-        self.add_port("A", ComponentPort(self, PortDirection.IN))
-        self.add_port("B", ComponentPort(self, PortDirection.IN))
-        self.add_port("Y", OutputPort(self))
+        self.add_port(ComponentPort(self, "A", PortDirection.IN))
+        self.add_port(ComponentPort(self, "B", PortDirection.IN))
+        self.add_port(OutputPort(self, "Y"))
 
     def update(self):
         if self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH:
@@ -89,10 +89,10 @@ class NAND(Component):
 class NAND3(Component):
     def __init__(self, circuit, name="NAND3"):
         super().__init__(circuit, name)
-        self.add_port("A", ComponentPort(self, PortDirection.IN))
-        self.add_port("B", ComponentPort(self, PortDirection.IN))
-        self.add_port("C", ComponentPort(self, PortDirection.IN))
-        self.add_port("Y", OutputPort(self))
+        self.add_port(ComponentPort(self, "A", PortDirection.IN))
+        self.add_port(ComponentPort(self, "B", PortDirection.IN))
+        self.add_port(ComponentPort(self, "C", PortDirection.IN))
+        self.add_port(OutputPort(self, "Y"))
 
     def update(self):
         if (
@@ -122,10 +122,10 @@ class SR(MultiComponent):
         _nandr.Y.wire = _nands.B
         _nands.Y.level = SignalLevel.HIGH
         _nandr.Y.level = SignalLevel.HIGH
-        self.add_port("nS", ComponentPort(self, PortDirection.IN))
-        self.add_port("nR", ComponentPort(self, PortDirection.IN))
-        self.add_port("Q", ComponentPort(self, PortDirection.OUT))
-        self.add_port("nQ", ComponentPort(self, PortDirection.OUT))
+        self.add_port(ComponentPort(self, "nS", PortDirection.IN))
+        self.add_port(ComponentPort(self, "nR", PortDirection.IN))
+        self.add_port(ComponentPort(self, "Q", PortDirection.OUT))
+        self.add_port(ComponentPort(self, "nQ", PortDirection.OUT))
 
         self.nS.wire = _nands.A
         self.nR.wire = _nandr.B
@@ -146,10 +146,10 @@ class JK_MS(MultiComponent):
         snandk = NAND(circuit, name=f"{name}_S_K")
         slave = SR(circuit, name=f"{name}_SR_S")
 
-        self.add_port("C", ComponentPort(self, PortDirection.IN))
-        self.add_port("J", ComponentPort(self, PortDirection.IN))
-        self.add_port("K", ComponentPort(self, PortDirection.IN))
-        self.add_port("Q", ComponentPort(self, PortDirection.IN))
+        self.add_port(ComponentPort(self, "C", PortDirection.IN))
+        self.add_port(ComponentPort(self, "J", PortDirection.IN))
+        self.add_port(ComponentPort(self, "K", PortDirection.IN))
+        self.add_port(ComponentPort(self, "Q", PortDirection.IN))
 
         self.J.wire = mnandj.C
         self.K.wire = mnandk.C
@@ -174,11 +174,11 @@ class JK_MS(MultiComponent):
 class DFFE_PP0P(Component):
     def __init__(self, circuit, name="DFFE"):
         super().__init__(circuit, name)
-        self.add_port("C", ComponentPort(self, PortDirection.IN))
-        self.add_port("D", ComponentPort(self, PortDirection.IN, update_parent=False))
-        self.add_port("E", ComponentPort(self, PortDirection.IN, update_parent=False))
-        self.add_port("R", ComponentPort(self, PortDirection.IN))
-        self.add_port("Q", OutputPort(self))
+        self.add_port(ComponentPort(self, "C", PortDirection.IN))
+        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
+        self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
+        self.add_port(ComponentPort(self, "R", PortDirection.IN))
+        self.add_port(OutputPort(self, "Q"))
         self._old_C_level = self.C.level
 
     def update(self):
