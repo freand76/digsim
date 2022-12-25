@@ -62,6 +62,11 @@ class Circuit:
                 )
                 self._vcd_dict[f"{port_path}.{port_name}"] = var
 
+            # Get initial state in vcd
+            for comp in self._components:
+                for port in comp.ports:
+                    self.vcd_dump(port)
+
     def vcd_close(self):
         if self._vcd_writer is not None:
             self._vcd_writer.close()
