@@ -1,4 +1,4 @@
-from ._base import Component, OutputPort, PortDirection, SignalLevel
+from ._base import Component, OutputPort, SignalLevel
 
 
 class PushButton(Component):

@@ -1,4 +1,4 @@
-from digsim import Circuit, JsonComponent, Led, PushButton
+from digsim import Circuit, JsonComponent, PushButton
 
 circuit = Circuit()
 json_component = JsonComponent(circuit, "json_modules/counter.json")

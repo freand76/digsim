@@ -81,7 +81,8 @@ class Port(abc.ABC):
     def intval(self):
         return 1 if self._level == SignalLevel.HIGH else 0
 
-    def update_wires(self):
+    def update_wires(self, level):
+        self._level = level
         for port in self._wired_ports:
             port.level = self._level
 
@@ -106,10 +107,9 @@ class ComponentPort(Port):
         self._update_parent = update_parent
 
     def set_level(self, level):
-        port_changed = self._level != level
-        self._level = level
+        port_changed = self.level != level
         if port_changed:
-            self.update_wires()
+            self.update_wires(level)
         if port_changed and self._update_parent:
             self.parent.update()
 
@@ -126,8 +126,7 @@ class OutputPort(Port):
         self._parent.add_event(self, level, self._propagation_delay_ns)
 
     def delta_cycle(self, level):
-        self._level = level
-        self.update_wires()
+        self.update_wires(level)
 
 
 class Component(abc.ABC):

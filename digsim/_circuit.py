@@ -27,7 +27,7 @@ class CircuitEvent:
     def level(self):
         return self._level
 
-    def is_same_event(self, time_ns, port):
+    def is_same_event(self, port):
         return port == self._port
 
     def update(self, time_ns, level):
@@ -144,8 +144,8 @@ class Circuit:
 
     def add_event(self, port, level, propagation_delay_ns):
         event_time_ns = self._time_ns + propagation_delay_ns
-        for idx, event in enumerate(self._circuit_events):
-            if event.is_same_event(event_time_ns, port):
+        for event in self._circuit_events:
+            if event.is_same_event(port):
                 event.update(event_time_ns, level)
                 return
 

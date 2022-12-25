@@ -157,4 +157,4 @@ class DFFE_PP0P(Component):
         ):
             self.Q.level = self.D.level
 
-        self._old_inc_level = self.C.level
+        self._old_C_level = self.C.level
