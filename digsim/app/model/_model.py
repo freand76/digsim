@@ -19,7 +19,7 @@ class AppModel:
         _and = AND(self._circuit)
         _led = Led(self._circuit, "D")
         bu_a.O.wire = _and.A
-        bu_a.O.wire = _and.B
+        bu_b.O.wire = _and.B
         _and.Y.wire = _led.I
         self._circuit.init()
         _led.set_callback(led_cb)
