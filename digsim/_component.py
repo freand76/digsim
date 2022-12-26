@@ -113,3 +113,16 @@ class MultiComponent(Component):
     def add(self, component):
         self._components.append(component)
         component.parent = self
+
+
+class CallbackComponent(Component):
+    def __init__(self, circuit, name, callback=None):
+        super().__init__(circuit, name)
+        self._callback = callback
+
+    def set_callback(self, callback):
+        self._callback = callback
+
+    def update(self):
+        if self._callback is not None:
+            self._callback(self)

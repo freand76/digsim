@@ -1,11 +1,14 @@
 from digsim import SR, Circuit, Led, PushButton
 
 
-def led_callback(time, name, on):
-    if on:
-        print(f"{time:9}:LED: '{name}' is ON")
+def led_callback(comp):
+    led_port = comp.ports[0]
+    time_ns = comp.circuit.time_ns
+    name = comp.name
+    if led_port.intval == 1:
+        print(f"{time_ns:9}:LED: '{name}' is ON")
     else:
-        print(f"{time:9}:LED: '{name}' is OFF")
+        print(f"{time_ns:9}:LED: '{name}' is OFF")
 
 
 circuit = Circuit(vcd="sr.vcd")
