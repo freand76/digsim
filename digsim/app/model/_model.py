@@ -1,28 +1,30 @@
-from digsim import AND, Circuit, Led, PushButton
+from digsim import AND, Circuit, Led, OnOffSwitch
 
 
-def led_cb(comp):
+def comp_cb(comp):
     led_port = comp.ports[0]
     time_ns = comp.circuit.time_ns
     name = comp.name
     if led_port.intval == 1:
-        print(f"{time_ns:9}:LED: '{name}' is ON")
+        print(f"{time_ns:9}: '{name}' is ON")
     else:
-        print(f"{time_ns:9}:LED: '{name}' is OFF")
+        print(f"{time_ns:9}: '{name}' is OFF")
 
 
 class AppModel:
     def __init__(self):
         self._circuit = Circuit()
-        bu_a = PushButton(self._circuit, "ButtonA")
-        bu_b = PushButton(self._circuit, "ButtonB")
+        _bu_a = OnOffSwitch(self._circuit, "SwitchA")
+        _bu_b = OnOffSwitch(self._circuit, "SwitchB")
         _and = AND(self._circuit)
         _led = Led(self._circuit, "D")
-        bu_a.O.wire = _and.A
-        bu_b.O.wire = _and.B
+        _bu_a.O.wire = _and.A
+        _bu_b.O.wire = _and.B
         _and.Y.wire = _led.I
+        _led.set_callback(comp_cb)
+        _bu_a.set_callback(comp_cb)
+        _bu_b.set_callback(comp_cb)
         self._circuit.init()
-        _led.set_callback(led_cb)
 
     @property
     def circuit(self):
