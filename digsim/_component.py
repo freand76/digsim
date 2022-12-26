@@ -92,6 +92,12 @@ class Component(abc.ABC):
         class_ = getattr(module, py_class_name)
         return class_(circuit=circuit, name=component_name)
 
+    def onpress(self):
+        pass
+
+    def onrelease(self):
+        pass
+
     def to_dict(self):
         return {
             "name": self.name,

@@ -22,3 +22,9 @@ class PushButton(Component):
             self.O.level = SignalLevel.HIGH
         else:
             self.O.level = SignalLevel.LOW
+
+    def onpress(self):
+        self.push()
+
+    def onrelease(self):
+        self.release()

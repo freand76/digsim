@@ -1,6 +1,13 @@
 from digsim import AND, Circuit, Led, PushButton
 
 
+def led_cb(time, name, on):
+    if on:
+        print(f"{time:9}:LED: '{name}' is ON")
+    else:
+        print(f"{time:9}:LED: '{name}' is OFF")
+
+
 class AppModel:
     def __init__(self):
         self._circuit = Circuit()
@@ -12,6 +19,7 @@ class AppModel:
         bu_a.O.wire = _and.B
         _and.Y.wire = _led.I
         self._circuit.init()
+        _led.set_callback(led_cb)
 
     @property
     def circuit(self):

@@ -4,10 +4,11 @@ from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
 
 class MyButton(QtWidgets.QPushButton):
-    def __init__(self, parent, name):
-        super().__init__(parent, objectName=name)
-        self.setGeometry(QtCore.QRect(0, 0, 120, 100))
-        self._name = name
+    def __init__(self, parent, component):
+        super().__init__(parent, objectName=component.name)
+        self.resize(120, 100)
+        self._component = component
+        self._name = component.name
 
     def paintEvent(self, event):
         painter = QtGui.QPainter(self)
@@ -28,9 +29,18 @@ class MyButton(QtWidgets.QPushButton):
         super().mousePressEvent(event)
         if event.button() == QtCore.Qt.LeftButton:
             print(f"press {self._name}")
+            self._component.onpress()
+            self._component.circuit.run(ms=1)
         elif event.button() == QtCore.Qt.RightButton:
             # save the click position to keep it consistent when dragging
             self.mousePos = event.pos()
+
+    def mouseReleaseEvent(self, event):
+        super().mouseReleaseEvent(event)
+        if event.button() == QtCore.Qt.LeftButton:
+            print(f"release {self._name}")
+            self._component.onrelease()
+            self._component.circuit.run(ms=1)
 
     def mouseMoveEvent(self, event):
         if event.buttons() != QtCore.Qt.RightButton:
@@ -65,9 +75,10 @@ class MainWindow(QtWidgets.QMainWindow):
         centralWidget = QtWidgets.QWidget()
         self.setCentralWidget(centralWidget)
         circuit = self._app_model.circuit
-        for comp in circuit.components:
-            pushButton = MyButton(centralWidget, f"{comp.name}")
-        self.setAcceptDrops(True)
+        for idx, comp in enumerate(circuit.components):
+            pushButton = MyButton(centralWidget, comp)
+            pushButton.move(20 + 200 * idx, 20)
+            self.setAcceptDrops(True)
 
     def dragEnterEvent(self, event):
         # only accept our mimeData format, ignoring any other data content
