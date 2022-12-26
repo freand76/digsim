@@ -2,6 +2,7 @@ from digsim import VDD, Circuit, JsonComponent, PushButton
 
 circuit = Circuit()
 json_component = JsonComponent(circuit, "json_modules/counter.json")
+
 clk = PushButton(circuit, "clk")
 reset = PushButton(circuit, "reset")
 
@@ -10,6 +11,7 @@ clk.O.wire = json_component.clk
 reset.O.wire = json_component.reset
 vdd.wire = json_component.up
 circuit.init()
+
 
 circuit.run(ms=10)
 reset.push()
@@ -21,14 +23,7 @@ circuit.vcd("counter.vcd")
 
 print("\n===================== Reset ==========================\n")
 
-print(
-    "OUT",
-    json_component.cnt3.bitval,
-    json_component.cnt2.bitval,
-    json_component.cnt1.bitval,
-    json_component.cnt0.bitval,
-)
-
+print(json_component)
 
 print("\n===================== Start ==========================\n")
 

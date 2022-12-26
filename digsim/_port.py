@@ -1,17 +1,6 @@
 import abc
-from enum import Enum, auto
 
-
-class PortDirection(Enum):
-    IN = auto()
-    OUT = auto()
-
-
-class SignalLevel(Enum):
-    UNKNOWN = auto()
-    HIGH = auto()
-    LOW = auto()
-
+from ._enum import PortDirection, SignalLevel
 
 SIGNAL_LEVEL_TO_STR = {
     SignalLevel.UNKNOWN: "X",

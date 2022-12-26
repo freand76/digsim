@@ -1,6 +1,8 @@
 import abc
 import importlib
 
+from ._enum import PortDirection
+
 
 class Component(abc.ABC):
     def __init__(self, circuit, name=""):
@@ -26,6 +28,21 @@ class Component(abc.ABC):
     @property
     def ports(self):
         return self._ports
+
+    def _get_ports(self, direction):
+        sel_ports = []
+        for port in self._ports:
+            if port.direction == direction:
+                sel_ports.append(port)
+        return sel_ports
+
+    @property
+    def inports(self):
+        return self._get_ports(PortDirection.IN)
+
+    @property
+    def outports(self):
+        return self._get_ports(PortDirection.OUT)
 
     def port(self, portname):
         for port in self._ports:
@@ -56,9 +73,11 @@ class Component(abc.ABC):
         self.circuit.add_event(port, level, propagation_delay_ns)
 
     def __str__(self):
-        comp_str = f"{self.name}\n"
-        for port in self.ports:
-            comp_str += f"-{port.name}={port.bitval}\n"
+        comp_str = f"{self.name}"
+        for port in self.inports:
+            comp_str += f"\n - I:{port.name}={port.bitval}"
+        for port in self.outports:
+            comp_str += f"\n - O:{port.name}={port.bitval}"
         return comp_str
 
     @classmethod
