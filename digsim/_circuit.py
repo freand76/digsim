@@ -53,6 +53,10 @@ class Circuit:
     def time_ns(self):
         return self._time_ns
 
+    @property
+    def components(self):
+        return self._components
+
     def init(self):
         if self._vcd is not None:
             self._vcd_init()

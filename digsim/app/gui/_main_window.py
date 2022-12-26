@@ -1,13 +1,33 @@
 import sys
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import Qt, QtCore, QtGui, QtWidgets
 
 
 class MyButton(QtWidgets.QPushButton):
+    def __init__(self, parent, name):
+        super().__init__(parent, objectName=name)
+        self.setGeometry(QtCore.QRect(0, 0, 120, 100))
+        self._name = name
+
+    def paintEvent(self, event):
+        painter = QtGui.QPainter(self)
+        path = QtGui.QPainterPath()
+        object_rect = QtCore.QRectF(event.rect())
+        object_rect.setBottom(object_rect.bottom() - 1)
+        object_rect.setRight(object_rect.right() - 1)
+        painter.setPen(QtCore.Qt.black)
+        path.addRoundedRect(object_rect, 5, 5)
+        painter.setPen(QtCore.Qt.blue)
+        painter.fillPath(path, QtCore.Qt.red)
+        painter.drawPath(path)
+        painter.setFont(QtGui.QFont("Arial", 12))
+        painter.drawText(object_rect, QtCore.Qt.AlignCenter, self._name)
+        painter.end()
+
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         if event.button() == QtCore.Qt.LeftButton:
-            print("press")
+            print(f"press {self._name}")
         elif event.button() == QtCore.Qt.RightButton:
             # save the click position to keep it consistent when dragging
             self.mousePos = event.pos()
@@ -36,14 +56,17 @@ class MyButton(QtWidgets.QPushButton):
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self):
+    def __init__(self, app_model):
         QtWidgets.QMainWindow.__init__(self)
         super().__init__()
+        self._app_model = app_model
+
         self.resize(800, 600)
         centralWidget = QtWidgets.QWidget()
         self.setCentralWidget(centralWidget)
-        self.pushButton = MyButton(centralWidget, objectName="pushButton")
-        self.pushButton.setGeometry(QtCore.QRect(220, 180, 331, 151))
+        circuit = self._app_model.circuit
+        for comp in circuit.components:
+            pushButton = MyButton(centralWidget, f"{comp.name}")
         self.setAcceptDrops(True)
 
     def dragEnterEvent(self, event):
