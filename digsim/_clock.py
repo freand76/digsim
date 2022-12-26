@@ -1,5 +1,5 @@
-from ._base import (Component, ComponentPort, OutputPort, PortDirection,
-                    SignalLevel)
+from ._component import Component
+from ._port import ComponentPort, OutputPort, PortDirection, SignalLevel
 
 
 class Clock(Component):

@@ -1,4 +1,5 @@
-from ._base import Component, ComponentPort, PortDirection, SignalLevel
+from ._component import Component
+from ._port import ComponentPort, PortDirection, SignalLevel
 
 
 class VDD(Component):

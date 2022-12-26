@@ -1,7 +1,8 @@
 import json
 
-from ._base import ComponentPort, MultiComponent, PortDirection
+from ._component import MultiComponent
 from ._gates import AND, DFFE_PP0P, NOT, XOR
+from ._port import ComponentPort, PortDirection
 
 
 class JsonComponentException(Exception):

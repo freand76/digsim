@@ -1,5 +1,5 @@
-from ._base import (Component, ComponentPort, MultiComponent, OutputPort,
-                    PortDirection, SignalLevel)
+from ._component import Component, MultiComponent
+from ._port import ComponentPort, OutputPort, PortDirection, SignalLevel
 
 
 class NOT(Component):

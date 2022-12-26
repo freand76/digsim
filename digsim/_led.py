@@ -1,4 +1,5 @@
-from ._base import Component, ComponentPort, PortDirection, SignalLevel
+from ._component import Component
+from ._port import ComponentPort, PortDirection, SignalLevel
 
 
 class Led(Component):
@@ -9,10 +10,6 @@ class Led(Component):
 
     def set_callback(self, callback):
         self._callback = callback
-
-    @property
-    def state(self):
-        return "1" if self.I.level == SignalLevel.HIGH else "0"
 
     def update(self):
         if self._callback is not None:

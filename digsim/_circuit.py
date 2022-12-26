@@ -1,6 +1,6 @@
 import json
 
-from ._base import Component
+from ._component import Component
 from ._waves_writer import WavesWriter
 
 
