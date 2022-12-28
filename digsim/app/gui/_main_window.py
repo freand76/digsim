@@ -28,7 +28,7 @@ class MyButton(QtWidgets.QPushButton):
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         if event.button() == QtCore.Qt.LeftButton:
-            print(f"press {self._name}")
+            # print(f"press {self._name}")
             self._component.onpress()
             self._component.circuit.run(ms=1)
         elif event.button() == QtCore.Qt.RightButton:
@@ -38,7 +38,7 @@ class MyButton(QtWidgets.QPushButton):
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
         if event.button() == QtCore.Qt.LeftButton:
-            print(f"release {self._name}")
+            # print(f"release {self._name}")
             self._component.onrelease()
             self._component.circuit.run(ms=1)
 
@@ -70,6 +70,7 @@ class MainWindow(QtWidgets.QMainWindow):
         QtWidgets.QMainWindow.__init__(self)
         super().__init__()
         self._app_model = app_model
+        self._app_model.sig_notify.connect(self._component_update)
 
         self.resize(800, 600)
         centralWidget = QtWidgets.QWidget()
@@ -79,6 +80,15 @@ class MainWindow(QtWidgets.QMainWindow):
             pushButton = MyButton(centralWidget, comp)
             pushButton.move(20 + 200 * idx, 20)
             self.setAcceptDrops(True)
+
+    def _component_update(self, component):
+        action_port = component.ports[0]
+        time_ns = component.circuit.time_ns
+        name = component.name
+        if action_port.intval == 1:
+            print(f"GUI {time_ns:9}: '{name}' is ON")
+        else:
+            print(f"GUI {time_ns:9}: '{name}' is OFF")
 
     def dragEnterEvent(self, event):
         # only accept our mimeData format, ignoring any other data content
