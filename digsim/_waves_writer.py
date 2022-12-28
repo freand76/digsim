@@ -9,6 +9,8 @@ class WavesWriter:
         self._vcd_dict = {}
 
     def init(self, port_paths):
+        if self._vcd_file is not None or self._vcd_writer is not None:
+            self.close()
         self._vcd_file = open(self._vcd_name, mode="w", encoding="utf-8")
         self._vcd_writer = VCDWriter(self._vcd_file, timescale="1 ns", date="today")
         for port_path, port_name in port_paths:
@@ -31,3 +33,5 @@ class WavesWriter:
         if self._vcd_file is not None:
             self._vcd_file.close()
             self._vcd_file = None
+
+        self._vcd_dict = {}

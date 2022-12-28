@@ -14,9 +14,12 @@ class Port(abc.ABC):
         self._parent = parent
         self._direction = direction
         self._name = name
-        self._level = SignalLevel.UNKNOWN
         self._connected = False
         self._wired_ports = []
+        self.init()
+
+    def init(self):
+        self._level = SignalLevel.UNKNOWN
 
     @property
     def name(self):

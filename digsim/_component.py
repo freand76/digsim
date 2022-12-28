@@ -13,7 +13,8 @@ class Component(abc.ABC):
         self._circuit.add_component(self)
 
     def init(self):
-        pass
+        for port in self._ports:
+            port.init()
 
     def add_port(self, port):
         self.__dict__[port.name] = port

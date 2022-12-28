@@ -58,6 +58,8 @@ class Circuit:
         return self._components
 
     def init(self):
+        self._time_ns = 0
+        self._circuit_events = []
         if self._vcd is not None:
             self._vcd_init()
         for comp in self._components:
