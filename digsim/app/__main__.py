@@ -1,7 +1,7 @@
 import pathlib
 import sys
 
-from PyQt5.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 
 sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.resolve()))
 
@@ -13,4 +13,4 @@ if __name__ == "__main__":
     app_model = AppModel()
     window = MainWindow(app_model)
     window.show()
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

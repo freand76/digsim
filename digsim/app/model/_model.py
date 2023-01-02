@@ -1,13 +1,13 @@
 from functools import partial
 
-from PyQt5.QtCore import QObject, pyqtSignal
+from PySide6.QtCore import QObject, Signal
 
 from digsim import AND, Circuit, Component, Led, OnOffSwitch
 
 
 class AppModel(QObject):
 
-    sig_notify = pyqtSignal(Component)
+    sig_notify = Signal(Component)
 
     def __init__(self):
         super().__init__()
