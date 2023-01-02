@@ -1,4 +1,6 @@
-from PySide6 import QtCore, QtGui
+from PySide6.QtCore import (QByteArray, QDataStream, QIODevice, QMimeData,
+                            QRectF, Qt)
+from PySide6.QtGui import QDrag, QFont, QPainter, QPainterPath
 from PySide6.QtWidgets import (QFrame, QHBoxLayout, QMainWindow, QPushButton,
                                QSplitter, QStatusBar, QVBoxLayout, QWidget)
 
@@ -23,44 +25,48 @@ class MyButton(QPushButton):
             self.parent().update()
 
     def paintEvent(self, event):
-        painter = QtGui.QPainter(self)
-        path = QtGui.QPainterPath()
-        object_rect = QtCore.QRectF(event.rect())
+        painter = QPainter(self)
+        path = QPainterPath()
+        object_rect = QRectF(event.rect())
         object_rect.setBottom(object_rect.bottom() - 1)
         object_rect.setRight(object_rect.right() - 1)
-        painter.setPen(QtCore.Qt.black)
+        painter.setPen(Qt.black)
         path.addRoundedRect(object_rect, 5, 5)
         if self._active:
-            painter.fillPath(path, QtCore.Qt.red)
+            painter.fillPath(path, Qt.red)
         painter.drawPath(path)
-        painter.setFont(QtGui.QFont("Arial", 12))
-        painter.drawText(object_rect, QtCore.Qt.AlignCenter, self._name)
+        painter.setFont(QFont("Arial", 12))
+        painter.drawText(object_rect, Qt.AlignCenter, self._name)
+
+        inports = self._component.inports
+        outports = self._component.outports
+        # print("IN", inports, "\nOUT", outports)
         painter.end()
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
-        if event.button() == QtCore.Qt.LeftButton:
+        if event.button() == Qt.LeftButton:
             # print(f"press {self._name}")
             self._component.onpress()
             self._component.circuit.run(ms=1)
-        elif event.button() == QtCore.Qt.RightButton:
+        elif event.button() == Qt.RightButton:
             # save the click position to keep it consistent when dragging
             self.mousePos = event.pos()
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
-        if event.button() == QtCore.Qt.LeftButton:
+        if event.button() == Qt.LeftButton:
             # print(f"release {self._name}")
             self._component.onrelease()
             self._component.circuit.run(ms=1)
 
     def mouseMoveEvent(self, event):
-        if event.buttons() != QtCore.Qt.RightButton:
+        if event.buttons() != Qt.RightButton:
             return
-        mimeData = QtCore.QMimeData()
+        mimeData = QMimeData()
         # create a byte array and a stream that is used to write into
-        byteArray = QtCore.QByteArray()
-        stream = QtCore.QDataStream(byteArray, QtCore.QIODevice.WriteOnly)
+        byteArray = QByteArray()
+        stream = QDataStream(byteArray, QIODevice.WriteOnly)
         # set the objectName and click position to keep track of the widget
         # that we're moving and it's click position to ensure that it will
         # be moved accordingly
@@ -68,7 +74,7 @@ class MyButton(QPushButton):
         stream.writeQVariant(self.mousePos)
         # create a custom mimeData format to save the drag info
         mimeData.setData("myApp/QtWidget", byteArray)
-        drag = QtGui.QDrag(self)
+        drag = QDrag(self)
         # add a pixmap of the widget to show what's actually moving
         drag.setPixmap(self.grab())
         drag.setMimeData(mimeData)
@@ -88,13 +94,21 @@ class CircuitArea(QWidget):
             pushButton.move(20 + 200 * idx, 20)
             self.setAcceptDrops(True)
 
+    def paintEvent(self, event):
+        # Prepare to draw wires
+        path = QPainterPath()
+        # path.moveTo(50, 50)
+        # path.cubicTo(0, 60, 40, 100, 120, 120)
+        # painter = QPainter(self)
+        # painter.drawPath(path)
+
     def dragEnterEvent(self, event):
         # only accept our mimeData format, ignoring any other data content
         if event.mimeData().hasFormat("myApp/QtWidget"):
             event.accept()
 
     def dropEvent(self, event):
-        stream = QtCore.QDataStream(event.mimeData().data("myApp/QtWidget"))
+        stream = QDataStream(event.mimeData().data("myApp/QtWidget"))
         # QDataStream objects should be read in the same order as they were written
         objectName = stream.readQString()
         # find the child widget that has the objectName set within the drag event
