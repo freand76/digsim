@@ -1,22 +1,25 @@
 from PySide6.QtCore import (QByteArray, QDataStream, QIODevice, QMimeData,
-                            QPointF, QRectF, Qt)
+                            QPoint, QRectF, Qt)
 from PySide6.QtGui import QDrag, QFont, QPainter, QStaticText
 from PySide6.QtWidgets import (QFrame, QHBoxLayout, QMainWindow, QPushButton,
                                QSplitter, QStatusBar, QVBoxLayout, QWidget)
 
 
-class MyButton(QPushButton):
+class ComponentWidget(QPushButton):
     TOP_BOTTOM_MARGIN = 20
+    PORT_SIDE = 8
 
     @classmethod
-    def get_port_points(cls, ports, height):
+    def get_port_points(cls, ports, x, height):
         port_dict = {}
         if len(ports) == 1:
-            port_dict[ports[0].name] = height / 2
+            port_dict[ports[0].name] = QPoint(x, height / 2)
         elif len(ports) > 1:
             port_distance = (height - 2 * cls.TOP_BOTTOM_MARGIN) / (len(ports) - 1)
             for idx, port in enumerate(ports):
-                port_dict[port.name] = cls.TOP_BOTTOM_MARGIN + idx * port_distance
+                port_dict[port.name] = QPoint(
+                    x, cls.TOP_BOTTOM_MARGIN + idx * port_distance
+                )
         return port_dict
 
     def __init__(self, app_model, component, parent):
@@ -27,10 +30,21 @@ class MyButton(QPushButton):
         self._name = component.name
         self._active = False
         self._app_model.sig_notify.connect(self._component_update)
-        self._inports = MyButton.get_port_points(self._component.inports, self.height())
-        self._outports = MyButton.get_port_points(
-            self._component.outports, self.height()
+        self._inports = self.get_port_points(self._component.inports, 0, self.height())
+        self._outports = self.get_port_points(
+            self._component.outports, self.width() - self.PORT_SIDE - 1, self.height()
         )
+
+    @property
+    def component(self):
+        return self._component
+
+    def get_port_pos(self, portname):
+        if portname in self._inports:
+            return self._inports[portname]
+        if portname in self._outports:
+            return self._outports[portname]
+        return None
 
     def _component_update(self, component):
         if component == self._component:
@@ -55,26 +69,36 @@ class MyButton(QPushButton):
             painter.setBrush(Qt.NoBrush)
         painter.drawRoundedRect(comp_rect, 5, 5)
         painter.setFont(QFont("Arial", 8))
-        painter.drawText(comp_rect, Qt.AlignCenter | Qt.AlignTop, self._name)
+        painter.drawText(comp_rect, Qt.AlignCenter, self._name)
 
         port_rect = QRectF(event.rect())
         painter.setBrush(Qt.SolidPattern)
         painter.setBrush(Qt.green)
         painter.setFont(QFont("Arial", 8))
-        for portname, pos in self._inports.items():
-            painter.drawRect(port_rect.left(), port_rect.top() + pos - 4, 8, 8)
+        for portname, point in self._inports.items():
+            painter.drawRect(
+                point.x(),
+                point.y() - self.PORT_SIDE / 2,
+                self.PORT_SIDE,
+                self.PORT_SIDE,
+            )
             port_text = QStaticText(portname)
             painter.drawStaticText(
-                int(port_rect.left() + 15),
-                int(port_rect.top() + pos - port_text.size().height() / 3),
+                point.x() + 15,
+                point.y() - port_text.size().height() / 3,
                 port_text,
             )
-        for portname, pos in self._outports.items():
-            painter.drawRect(port_rect.right() - 9, port_rect.top() + pos - 4, 8, 8)
+        for portname, point in self._outports.items():
+            painter.drawRect(
+                point.x(),
+                point.y() - self.PORT_SIDE / 2,
+                self.PORT_SIDE,
+                self.PORT_SIDE,
+            )
             port_text = QStaticText(portname)
             painter.drawStaticText(
-                int(port_rect.right() - port_text.textWidth() - 25),
-                int(port_rect.top() + pos - port_text.size().height() / 3),
+                point.x() - port_text.textWidth() - 15,
+                point.y() - port_text.size().height() / 3,
                 port_text,
             )
         painter.end()
@@ -117,27 +141,35 @@ class MyButton(QPushButton):
         # set the hotspot according to the mouse press position
         drag.setHotSpot(self.mousePos - self.rect().topLeft())
         drag.exec_()
+        self.parent().update()
 
 
 class CircuitArea(QWidget):
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self._app_model = app_model
+        self._component_widgets = {}
 
         circuit = self._app_model.circuit
         for idx, comp in enumerate(circuit.components):
-            pushButton = MyButton(app_model, comp, self)
-            pushButton.move(20 + 200 * idx, 20)
-            self.setAcceptDrops(True)
+            compWidget = ComponentWidget(app_model, comp, self)
+            compWidget.move(self._app_model.get_position(comp))
+            self._component_widgets[comp] = compWidget
+        self.setAcceptDrops(True)
 
     def paintEvent(self, event):
-        pass
-        # Prepare to draw wires
-        # path = QPainterPath()
-        # path.moveTo(50, 50)
-        # path.cubicTo(0, 60, 40, 100, 120, 120)
-        # painter = QPainter(self)
-        # painter.drawPath(path)
+        painter = QPainter(self)
+        for comp, comp_widget in self._component_widgets.items():
+            outports = comp.outports
+            for port in outports:
+                for dst in port.wires:
+                    dst_comp = dst.parent
+                    dst_widget = self._component_widgets[dst_comp]
+
+                    src_point = comp_widget.pos() + comp_widget.get_port_pos(port.name)
+                    dst_point = dst_widget.pos() + dst_widget.get_port_pos(dst.name)
+                    painter.drawLine(src_point, dst_point)
+        painter.end()
 
     def dragEnterEvent(self, event):
         # only accept our mimeData format, ignoring any other data content
