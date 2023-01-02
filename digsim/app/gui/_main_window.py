@@ -1,11 +1,24 @@
 from PySide6.QtCore import (QByteArray, QDataStream, QIODevice, QMimeData,
-                            QRectF, Qt)
-from PySide6.QtGui import QDrag, QFont, QPainter, QPainterPath
+                            QPointF, QRectF, Qt)
+from PySide6.QtGui import QDrag, QFont, QPainter, QStaticText
 from PySide6.QtWidgets import (QFrame, QHBoxLayout, QMainWindow, QPushButton,
                                QSplitter, QStatusBar, QVBoxLayout, QWidget)
 
 
 class MyButton(QPushButton):
+    TOP_BOTTOM_MARGIN = 20
+
+    @classmethod
+    def get_port_points(cls, ports, height):
+        port_dict = {}
+        if len(ports) == 1:
+            port_dict[ports[0].name] = height / 2
+        elif len(ports) > 1:
+            port_distance = (height - 2 * cls.TOP_BOTTOM_MARGIN) / (len(ports) - 1)
+            for idx, port in enumerate(ports):
+                port_dict[port.name] = cls.TOP_BOTTOM_MARGIN + idx * port_distance
+        return port_dict
+
     def __init__(self, app_model, component, parent):
         super().__init__(parent, objectName=component.name)
         self.resize(120, 100)
@@ -14,6 +27,10 @@ class MyButton(QPushButton):
         self._name = component.name
         self._active = False
         self._app_model.sig_notify.connect(self._component_update)
+        self._inports = MyButton.get_port_points(self._component.inports, self.height())
+        self._outports = MyButton.get_port_points(
+            self._component.outports, self.height()
+        )
 
     def _component_update(self, component):
         if component == self._component:
@@ -26,21 +43,40 @@ class MyButton(QPushButton):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        path = QPainterPath()
-        object_rect = QRectF(event.rect())
-        object_rect.setBottom(object_rect.bottom() - 1)
-        object_rect.setRight(object_rect.right() - 1)
+        comp_rect = QRectF(event.rect())
+        comp_rect.setBottom(comp_rect.bottom() - 1)
+        comp_rect.setRight(comp_rect.right() - 4)
+        comp_rect.setLeft(comp_rect.left() + 4)
         painter.setPen(Qt.black)
-        path.addRoundedRect(object_rect, 5, 5)
         if self._active:
-            painter.fillPath(path, Qt.red)
-        painter.drawPath(path)
-        painter.setFont(QFont("Arial", 12))
-        painter.drawText(object_rect, Qt.AlignCenter, self._name)
+            painter.setBrush(Qt.SolidPattern)
+            painter.setBrush(Qt.red)
+        else:
+            painter.setBrush(Qt.NoBrush)
+        painter.drawRoundedRect(comp_rect, 5, 5)
+        painter.setFont(QFont("Arial", 8))
+        painter.drawText(comp_rect, Qt.AlignCenter | Qt.AlignTop, self._name)
 
-        inports = self._component.inports
-        outports = self._component.outports
-        # print("IN", inports, "\nOUT", outports)
+        port_rect = QRectF(event.rect())
+        painter.setBrush(Qt.SolidPattern)
+        painter.setBrush(Qt.green)
+        painter.setFont(QFont("Arial", 8))
+        for portname, pos in self._inports.items():
+            painter.drawRect(port_rect.left(), port_rect.top() + pos - 4, 8, 8)
+            port_text = QStaticText(portname)
+            painter.drawStaticText(
+                int(port_rect.left() + 15),
+                int(port_rect.top() + pos - port_text.size().height() / 3),
+                port_text,
+            )
+        for portname, pos in self._outports.items():
+            painter.drawRect(port_rect.right() - 9, port_rect.top() + pos - 4, 8, 8)
+            port_text = QStaticText(portname)
+            painter.drawStaticText(
+                int(port_rect.right() - port_text.textWidth() - 25),
+                int(port_rect.top() + pos - port_text.size().height() / 3),
+                port_text,
+            )
         painter.end()
 
     def mousePressEvent(self, event):
@@ -95,8 +131,9 @@ class CircuitArea(QWidget):
             self.setAcceptDrops(True)
 
     def paintEvent(self, event):
+        pass
         # Prepare to draw wires
-        path = QPainterPath()
+        # path = QPainterPath()
         # path.moveTo(50, 50)
         # path.cubicTo(0, 60, 40, 100, 120, 120)
         # painter = QPainter(self)
