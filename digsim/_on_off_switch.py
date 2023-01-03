@@ -13,9 +13,9 @@ class OnOffSwitch(CallbackComponent):
 
     def _set(self, set_on):
         if set_on:
-            self.on()
+            self.turn_on()
         else:
-            self.off()
+            self.turn_off()
 
     def init(self):
         self._set(self._start_on)
