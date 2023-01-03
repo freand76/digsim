@@ -1,3 +1,6 @@
+# pylint: disable=consider-using-with
+# pylint: disable=import-error
+
 from vcd import VCDWriter
 
 

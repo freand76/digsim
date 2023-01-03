@@ -16,6 +16,7 @@ class Port(abc.ABC):
         self._name = name
         self._connected = False
         self._wired_ports = []
+        self._level = None
         self.init()
 
     def init(self):

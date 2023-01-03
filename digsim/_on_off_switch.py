@@ -31,3 +31,7 @@ class OnOffSwitch(CallbackComponent):
 
     def onpress(self):
         self.toggle()
+
+    @property
+    def active(self):
+        return self.O.level == SignalLevel.HIGH

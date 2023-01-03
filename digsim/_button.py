@@ -23,6 +23,12 @@ class PushButton(Component):
         else:
             self.O.level = SignalLevel.LOW
 
+    @property
+    def active(self):
+        if self._inverted:
+            return self.O.level == SignalLevel.LOW
+        return self.O.level == SignalLevel.HIGH
+
     def onpress(self):
         self.push()
 

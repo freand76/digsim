@@ -93,6 +93,10 @@ class Component(abc.ABC):
         class_ = getattr(module, py_class_name)
         return class_(circuit=circuit, name=component_name)
 
+    @property
+    def active(self):
+        return False
+
     def onpress(self):
         pass
 

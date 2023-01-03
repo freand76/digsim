@@ -147,6 +147,18 @@ class Circuit:
                 return comp
         raise CircuitError(f"Component '{component_name}' not found")
 
+    def connect_from_json(self, source, dest):
+        source_component_name = source.split(".")[0]
+        source_port_name = source.split(".")[1]
+        dest_component_name = dest.split(".")[0]
+        dest_port_name = dest.split(".")[1]
+
+        source_component = self.get_component(source_component_name)
+        dest_componment = self.get_component(dest_component_name)
+        source_component.port(source_port_name).wire = dest_componment.port(
+            dest_port_name
+        )
+
     def from_json_file(self, filename):
         with open(filename, mode="r", encoding="utf-8") as json_file:
             json_file = json.load(json_file)
@@ -168,18 +180,7 @@ class Circuit:
             Component.from_dict(self, json_component)
 
         for json_connection in json_connections:
-            source = json_connection["src"]
-            dest = json_connection["dst"]
-            source_component_name = source.split(".")[0]
-            source_port_name = source.split(".")[1]
-            dest_component_name = dest.split(".")[0]
-            dest_port_name = dest.split(".")[1]
-
-            source_component = self.get_component(source_component_name)
-            dest_componment = self.get_component(dest_component_name)
-            source_component.port(source_port_name).wire = dest_componment.port(
-                dest_port_name
-            )
+            self.connect_from_json(json_connection["src"], json_connection["dst"])
 
     def to_json_file(self, filename):
         if self._name is None:

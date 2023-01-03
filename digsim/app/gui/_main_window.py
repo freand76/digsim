@@ -9,51 +9,23 @@ class ComponentWidget(QPushButton):
     TOP_BOTTOM_MARGIN = 20
     PORT_SIDE = 8
 
-    @classmethod
-    def get_port_points(cls, ports, x, height):
-        port_dict = {}
-        if len(ports) == 1:
-            port_dict[ports[0].name] = QPoint(x, height / 2)
-        elif len(ports) > 1:
-            port_distance = (height - 2 * cls.TOP_BOTTOM_MARGIN) / (len(ports) - 1)
-            for idx, port in enumerate(ports):
-                port_dict[port.name] = QPoint(
-                    x, cls.TOP_BOTTOM_MARGIN + idx * port_distance
-                )
-        return port_dict
-
-    def __init__(self, app_model, component, parent):
-        super().__init__(parent, objectName=component.name)
+    def __init__(self, app_model, placed_component, parent):
+        super().__init__(parent, objectName=placed_component.component.name)
         self.resize(120, 100)
         self._app_model = app_model
-        self._component = component
-        self._name = component.name
-        self._active = False
+        self._placed_component = placed_component
+        self._name = placed_component.component.name
         self._app_model.sig_notify.connect(self._component_update)
-        self._inports = self.get_port_points(self._component.inports, 0, self.height())
-        self._outports = self.get_port_points(
-            self._component.outports, self.width() - self.PORT_SIDE - 1, self.height()
-        )
+        self.move(self._placed_component.pos)
+        self._mouse_grab_pos = None
 
     @property
     def component(self):
-        return self._component
-
-    def get_port_pos(self, portname):
-        if portname in self._inports:
-            return self._inports[portname]
-        if portname in self._outports:
-            return self._outports[portname]
-        return None
+        return self._placed_component.component
 
     def _component_update(self, component):
-        if component == self._component:
-            action_port = component.ports[0]
-            if action_port.intval == 1:
-                self._active = True
-            else:
-                self._active = False
-            self.parent().update()
+        if component == self.component:
+            self.update()
 
     def paintEvent(self, event):
         painter = QPainter(self)
@@ -62,44 +34,25 @@ class ComponentWidget(QPushButton):
         comp_rect.setRight(comp_rect.right() - 4)
         comp_rect.setLeft(comp_rect.left() + 4)
         painter.setPen(Qt.black)
-        if self._active:
-            painter.setBrush(Qt.SolidPattern)
-            painter.setBrush(Qt.red)
+        painter.setBrush(Qt.SolidPattern)
+        if self.component.active:
+            painter.setBrush(Qt.green)
         else:
-            painter.setBrush(Qt.NoBrush)
+            painter.setBrush(Qt.gray)
         painter.drawRoundedRect(comp_rect, 5, 5)
         painter.setFont(QFont("Arial", 8))
         painter.drawText(comp_rect, Qt.AlignCenter, self._name)
 
         port_rect = QRectF(event.rect())
         painter.setBrush(Qt.SolidPattern)
-        painter.setBrush(Qt.green)
+        painter.setBrush(Qt.gray)
         painter.setFont(QFont("Arial", 8))
-        for portname, point in self._inports.items():
+        for portname, point in self._placed_component.ports.items():
             painter.drawRect(
                 point.x(),
                 point.y() - self.PORT_SIDE / 2,
                 self.PORT_SIDE,
                 self.PORT_SIDE,
-            )
-            port_text = QStaticText(portname)
-            painter.drawStaticText(
-                point.x() + 15,
-                point.y() - port_text.size().height() / 3,
-                port_text,
-            )
-        for portname, point in self._outports.items():
-            painter.drawRect(
-                point.x(),
-                point.y() - self.PORT_SIDE / 2,
-                self.PORT_SIDE,
-                self.PORT_SIDE,
-            )
-            port_text = QStaticText(portname)
-            painter.drawStaticText(
-                point.x() - port_text.textWidth() - 15,
-                point.y() - port_text.size().height() / 3,
-                port_text,
             )
         painter.end()
 
@@ -107,87 +60,50 @@ class ComponentWidget(QPushButton):
         super().mousePressEvent(event)
         if event.button() == Qt.LeftButton:
             # print(f"press {self._name}")
-            self._component.onpress()
-            self._component.circuit.run(ms=1)
+            self.component.onpress()
+            self.component.circuit.run(ms=1)
         elif event.button() == Qt.RightButton:
             # save the click position to keep it consistent when dragging
-            self.mousePos = event.pos()
+            self._mouse_grab_pos = event.pos()
+            # self.move(self._mouse_grab_pos)
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
         if event.button() == Qt.LeftButton:
             # print(f"release {self._name}")
-            self._component.onrelease()
-            self._component.circuit.run(ms=1)
+            self.component.onrelease()
+            self.component.circuit.run(ms=1)
+        elif event.button() == Qt.RightButton:
+            # save the click position to keep it consistent when dragging
+            self._mouse_grab_pos = None
+            self._placed_component.pos = self.pos()
+            self._app_model.update_wires()
+            self.parent().update()
 
     def mouseMoveEvent(self, event):
         if event.buttons() != Qt.RightButton:
             return
-        mimeData = QMimeData()
-        # create a byte array and a stream that is used to write into
-        byteArray = QByteArray()
-        stream = QDataStream(byteArray, QIODevice.WriteOnly)
-        # set the objectName and click position to keep track of the widget
-        # that we're moving and it's click position to ensure that it will
-        # be moved accordingly
-        stream.writeQString(self.objectName())
-        stream.writeQVariant(self.mousePos)
-        # create a custom mimeData format to save the drag info
-        mimeData.setData("myApp/QtWidget", byteArray)
-        drag = QDrag(self)
-        # add a pixmap of the widget to show what's actually moving
-        drag.setPixmap(self.grab())
-        drag.setMimeData(mimeData)
-        # set the hotspot according to the mouse press position
-        drag.setHotSpot(self.mousePos - self.rect().topLeft())
-        drag.exec_()
-        self.parent().update()
+        if self._mouse_grab_pos is not None:
+            self.move(self.pos() + event.pos() - self._mouse_grab_pos)
+            self._placed_component.pos = self.pos()
+            self._app_model.update_wires()
+            self.parent().update()
 
 
 class CircuitArea(QWidget):
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self._app_model = app_model
-        self._component_widgets = {}
 
-        circuit = self._app_model.circuit
-        for idx, comp in enumerate(circuit.components):
-            compWidget = ComponentWidget(app_model, comp, self)
-            compWidget.move(self._app_model.get_position(comp))
-            self._component_widgets[comp] = compWidget
-        self.setAcceptDrops(True)
+        for placed_comp in self._app_model.get_placed_components():
+            compWidget = ComponentWidget(app_model, placed_comp, self)
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        for comp, comp_widget in self._component_widgets.items():
-            outports = comp.outports
-            for port in outports:
-                for dst in port.wires:
-                    dst_comp = dst.parent
-                    dst_widget = self._component_widgets[dst_comp]
-
-                    src_point = comp_widget.pos() + comp_widget.get_port_pos(port.name)
-                    dst_point = dst_widget.pos() + dst_widget.get_port_pos(dst.name)
-                    painter.drawLine(src_point, dst_point)
+        wires = self._app_model.get_wires()
+        for wire in wires:
+            painter.drawLine(wire.src, wire.dst)
         painter.end()
-
-    def dragEnterEvent(self, event):
-        # only accept our mimeData format, ignoring any other data content
-        if event.mimeData().hasFormat("myApp/QtWidget"):
-            event.accept()
-
-    def dropEvent(self, event):
-        stream = QDataStream(event.mimeData().data("myApp/QtWidget"))
-        # QDataStream objects should be read in the same order as they were written
-        objectName = stream.readQString()
-        # find the child widget that has the objectName set within the drag event
-        widget = self.findChild(QWidget, objectName)
-        if not widget:
-            return
-        # move the widget relative to the original mouse position, so that
-        # it will be placed exactly where the user drags it and according to
-        # the original click position
-        widget.move(event.pos() - stream.readQVariant())
 
 
 class ComponentSelection(QWidget):
