@@ -1,3 +1,5 @@
+# pylint: disable=no-member
+
 from ._component import CallbackComponent
 from ._port import ComponentPort, PortDirection, SignalLevel
 
@@ -9,8 +11,8 @@ class OnOffSwitch(CallbackComponent):
         self._on = False
         self._start_on = start_on
 
-    def _set(self, on):
-        if on:
+    def _set(self, set_on):
+        if set_on:
             self.on()
         else:
             self.off()
@@ -18,11 +20,11 @@ class OnOffSwitch(CallbackComponent):
     def init(self):
         self._set(self._start_on)
 
-    def on(self):
+    def turn_on(self):
         self.O.level = SignalLevel.HIGH
         self._on = True
 
-    def off(self):
+    def turn_off(self):
         self.O.level = SignalLevel.LOW
         self._on = False
 

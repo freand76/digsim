@@ -1,3 +1,6 @@
+# pylint: disable=no-member
+# pylint: disable=invalid-name
+
 from ._component import Component, MultiComponent
 from ._port import ComponentPort, OutputPort, PortDirection, SignalLevel
 

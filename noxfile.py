@@ -31,8 +31,4 @@ def lint(session):
         "missing-module-docstring",
         "-d",
         "missing-function-docstring",
-        "-d",
-        "no-member",
-        "-d",
-        "invalid-name",
     )

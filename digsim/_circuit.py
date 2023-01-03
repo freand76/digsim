@@ -1,3 +1,5 @@
+# pylint: disable=invalid-name
+
 import json
 
 from ._component import Component

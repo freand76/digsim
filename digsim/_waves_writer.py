@@ -25,8 +25,8 @@ class WavesWriter:
         if var is None:
             return
         self._vcd_writer.change(var, timestamp=time_ns, value=port.vcdval)
-        for p in port.wires:
-            self.write(p, time_ns)
+        for wire in port.wires:
+            self.write(wire, time_ns)
 
     def close(self):
         if self._vcd_writer is not None:

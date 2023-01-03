@@ -49,10 +49,10 @@ class JsonComponent(MultiComponent):
             cell = self.COMPONENT_MAP.get(cell_type)
             if cell is None:
                 raise Exception(f"Cell '{cell_type}' not implemented yet...")
-            ComponentClass = cell["class"]
+            component_class = cell["class"]
             cell_count = self._component_id.get(cell["name"], 0)
             self._component_id[cell["name"]] = cell_count + 1
-            component = ComponentClass(
+            component = component_class(
                 self._circuit, name=f"{cell['name']}_{cell_count}"
             )
             self.add(component)
