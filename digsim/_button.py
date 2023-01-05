@@ -11,6 +11,7 @@ class PushButton(Component):
         self.add_port(ComponentPort(self, "O", PortDirection.OUT))
 
     def init(self):
+        super().init()
         self.release()
 
     def push(self):
@@ -24,6 +25,10 @@ class PushButton(Component):
             self.O.level = SignalLevel.HIGH
         else:
             self.O.level = SignalLevel.LOW
+
+    @property
+    def has_action(self):
+        return True
 
     @property
     def active(self):

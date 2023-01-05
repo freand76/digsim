@@ -18,6 +18,7 @@ class OnOffSwitch(CallbackComponent):
             self.turn_off()
 
     def init(self):
+        super().init()
         self._set(self._start_on)
 
     def turn_on(self):
@@ -33,6 +34,10 @@ class OnOffSwitch(CallbackComponent):
 
     def onpress(self):
         self.toggle()
+
+    @property
+    def has_action(self):
+        return True
 
     @property
     def active(self):

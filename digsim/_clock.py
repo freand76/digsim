@@ -1,10 +1,10 @@
 # pylint: disable=no-member
 
-from ._component import Component
+from ._component import CallbackComponent
 from ._port import ComponentPort, OutputPort, PortDirection, SignalLevel
 
 
-class Clock(Component):
+class Clock(CallbackComponent):
     def __init__(self, circuit, frequency, name="Clock"):
         super().__init__(circuit, name)
         self.add_port(OutputPort(self, "O", propagation_delay_ns=0))
@@ -15,6 +15,7 @@ class Clock(Component):
         self.set_frequency(frequency)
 
     def init(self):
+        super().init()
         self._feedback_out.level = SignalLevel.HIGH
         self.O.level = SignalLevel.LOW
 
@@ -23,10 +24,15 @@ class Clock(Component):
             self._feedback_out.level = SignalLevel.LOW
         else:
             self._feedback_out.level = SignalLevel.HIGH
+        super().update()
 
     def set_frequency(self, frequency):
         half_period_ns = int(1000000000 / (frequency * 2))
         self._feedback_out.set_propagation_delay_ns(half_period_ns)
+
+    @property
+    def active(self):
+        return self.O.level == SignalLevel.HIGH
 
     @property
     def wire(self):

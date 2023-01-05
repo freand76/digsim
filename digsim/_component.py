@@ -94,6 +94,10 @@ class Component(abc.ABC):
         return class_(circuit=circuit, name=component_name)
 
     @property
+    def has_action(self):
+        return False
+
+    @property
     def active(self):
         return False
 

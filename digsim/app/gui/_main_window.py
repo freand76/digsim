@@ -1,38 +1,37 @@
 from PySide6.QtCore import (QByteArray, QDataStream, QIODevice, QMimeData,
                             QPoint, QRectF, Qt)
 from PySide6.QtGui import QDrag, QFont, QPainter, QStaticText
-from PySide6.QtWidgets import (QFrame, QHBoxLayout, QMainWindow, QPushButton,
-                               QSplitter, QStatusBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLineEdit, QMainWindow,
+                               QPushButton, QSplitter, QStatusBar, QVBoxLayout,
+                               QWidget)
 
 
 class ComponentWidget(QPushButton):
-    TOP_BOTTOM_MARGIN = 20
-    PORT_SIDE = 8
-
     def __init__(self, app_model, placed_component, parent):
         super().__init__(parent, objectName=placed_component.component.name)
-        self.resize(120, 100)
         self._app_model = app_model
         self._placed_component = placed_component
         self._name = placed_component.component.name
-        self._app_model.sig_notify.connect(self._component_update)
+        self._app_model.sig_component_notify.connect(self._component_notify)
+        self.resize(self._placed_component.size)
         self.move(self._placed_component.pos)
+        self.setMouseTracking(True)
         self._mouse_grab_pos = None
+        self._active_port = None
 
     @property
     def component(self):
         return self._placed_component.component
 
-    def _component_update(self, component):
+    def _component_notify(self, component):
         if component == self.component:
             self.update()
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        comp_rect = QRectF(event.rect())
-        comp_rect.setBottom(comp_rect.bottom() - 1)
-        comp_rect.setRight(comp_rect.right() - 4)
-        comp_rect.setLeft(comp_rect.left() + 4)
+
+        # Draw component
+        comp_rect = self._placed_component.get_rect()
         painter.setPen(Qt.black)
         painter.setBrush(Qt.SolidPattern)
         if self.component.active:
@@ -43,46 +42,66 @@ class ComponentWidget(QPushButton):
         painter.setFont(QFont("Arial", 8))
         painter.drawText(comp_rect, Qt.AlignCenter, self._name)
 
-        port_rect = QRectF(event.rect())
+        # Draw ports
         painter.setBrush(Qt.SolidPattern)
-        painter.setBrush(Qt.gray)
         painter.setFont(QFont("Arial", 8))
-        for portname, point in self._placed_component.ports.items():
-            painter.drawRect(
-                point.x(),
-                point.y() - self.PORT_SIDE / 2,
-                self.PORT_SIDE,
-                self.PORT_SIDE,
-            )
+        for portname, rect in self._placed_component.port_rects.items():
+            if portname == self._active_port:
+                painter.setBrush(Qt.red)
+            else:
+                painter.setBrush(Qt.gray)
+            painter.drawRect(rect)
         painter.end()
+
+    def enterEvent(self, event):
+        if self._app_model.is_running and self.component.has_action:
+            self.setCursor(Qt.PointingHandCursor)
+
+    def leaveEvent(self, event):
+        self.setCursor(Qt.ArrowCursor)
+        self._active_port = None
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         if event.button() == Qt.LeftButton:
-            # print(f"press {self._name}")
-            self.component.onpress()
-            self.component.circuit.run(ms=1)
-        elif event.button() == Qt.RightButton:
-            # save the click position to keep it consistent when dragging
-            self._mouse_grab_pos = event.pos()
-            # self.move(self._mouse_grab_pos)
+            if self._app_model.is_running:
+                self.component.onpress()
+                self.update()
+            else:
+                if self._active_port is None:
+                    # Prepare to move
+                    self.setCursor(Qt.ClosedHandCursor)
+                    self._mouse_grab_pos = event.pos()
+                else:
+                    print("Start Wire")
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
         if event.button() == Qt.LeftButton:
-            # print(f"release {self._name}")
-            self.component.onrelease()
-            self.component.circuit.run(ms=1)
-        elif event.button() == Qt.RightButton:
-            # save the click position to keep it consistent when dragging
-            self._mouse_grab_pos = None
-            self._placed_component.pos = self.pos()
-            self._app_model.update_wires()
-            self.parent().update()
+            if self._app_model.is_running:
+                self.component.onrelease()
+                self.update()
+            else:
+                # Move complete
+                self.setCursor(Qt.ArrowCursor)
+                self._mouse_grab_pos = None
+                self._placed_component.pos = self.pos()
+                self._app_model.update_wires()
+                self.parent().update()
 
     def mouseMoveEvent(self, event):
-        if event.buttons() != Qt.RightButton:
+        if self._app_model.is_running:
             return
+
+        active_port = self._placed_component.get_port_for_point(event.pos())
+        if active_port != self._active_port:
+            self._active_port = active_port
+            if self._active_port is not None:
+                self.setCursor(Qt.CrossCursor)
+            else:
+                self.setCursor(Qt.ArrowCursor)
+            self.update()
+
         if self._mouse_grab_pos is not None:
             self.move(self.pos() + event.pos() - self._mouse_grab_pos)
             self._placed_component.pos = self.pos()
@@ -136,11 +155,59 @@ class TopBar(QFrame):
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self._app_model = app_model
+        self._app_model.sig_control_notify.connect(self._control_notify)
+        self._app_model.sig_sim_time_ms_notify.connect(self._sim_time_ms_notify)
+        self._time_ms = 0
 
         self.setObjectName("TopBar")
         self.setStyleSheet("QFrame#TopBar {background: #ebebeb;}")
 
         self.setLayout(QHBoxLayout(self))
+        self._start_button = QPushButton("Start Simulation", self)
+        self._start_button.clicked.connect(self.start)
+        self.layout().addWidget(self._start_button)
+        self._reset_button = QPushButton("Reset Simulation", self)
+        self._reset_button.clicked.connect(self.reset)
+        self._reset_button.setEnabled(False)
+        self.layout().addWidget(self._reset_button)
+        self._sim_time = QLineEdit("0 ms")
+        self._sim_time.setReadOnly(True)
+        self._sim_time.selectionChanged.connect(
+            lambda: self._sim_time.setSelection(0, 0)
+        )
+        self.layout().addWidget(self._sim_time)
+        self.layout().setStretchFactor(self._start_button, 0)
+        self.layout().addStretch(1)
+
+    def start(self):
+        self._start_button.setEnabled(False)
+        self._app_model.model_start()
+
+    def stop(self):
+        self._start_button.setEnabled(False)
+        self._app_model.model_stop()
+
+    def reset(self):
+        self._time_ms = 0
+        self._sim_time.setText("0 ms")
+        self._app_model.model_reset()
+        self._reset_button.setEnabled(False)
+
+    def _control_notify(self, started):
+        if started:
+            self._start_button.setText("Stop Similation")
+            self._start_button.clicked.connect(self.stop)
+            self._start_button.setEnabled(True)
+        else:
+            self._start_button.setText("Start Similation")
+            self._start_button.clicked.connect(self.start)
+            self._start_button.setEnabled(True)
+            if self._time_ms > 0:
+                self._reset_button.setEnabled(True)
+
+    def _sim_time_ms_notify(self, time_ms):
+        self._sim_time.setText(f"{time_ms} ms")
+        self._time_ms = time_ms
 
 
 class CentralWidget(QWidget):

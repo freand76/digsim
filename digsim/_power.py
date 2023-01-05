@@ -10,6 +10,7 @@ class VDD(Component):
         self.add_port(ComponentPort(self, "O", PortDirection.OUT))
 
     def init(self):
+        super().init()
         self.O.level = SignalLevel.HIGH
 
     @property
@@ -27,6 +28,7 @@ class GND(Component):
         self.add_port(ComponentPort(self, "O", PortDirection.OUT))
 
     def init(self):
+        super().init()
         self.O.level = SignalLevel.LOW
 
     @property

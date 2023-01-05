@@ -1,8 +1,10 @@
+import time
 from functools import partial
 
-from PySide6.QtCore import QObject, QPoint, Signal
+from PySide6.QtCore import QPoint, QRect, QSize, QThread, Signal
 
-from digsim import AND, CallbackComponent, Circuit, Component, Led, OnOffSwitch
+from digsim import (AND, CallbackComponent, Circuit, Clock, Component, Led,
+                    OnOffSwitch, PushButton)
 
 
 class PlacedComponent:
@@ -11,46 +13,76 @@ class PlacedComponent:
     DEFAULT_HEIGHT = 100
     BORDER_MARGIN = 20
     PORT_SIDE = 8
+    COMPONENT_BORDER = 5
+    PORT_CLICK_EXTRA_PIXELS = 5
 
     def __init__(self, component, x, y):
         self._component = component
         self._pos = QPoint(x, y)
         self._height = self.DEFAULT_HEIGHT
         self._width = self.DEFAULT_WIDTH
-        self._ports = self.get_port_points(self._component.inports, 0, self._height)
-        self._ports.update(
-            self.get_port_points(
-                self._component.outports, self._width - self.PORT_SIDE - 1, self._height
+        self._port_rects = {}
+        self._add_port_rects(self._component.inports, 0)
+        self._add_port_rects(self._component.outports, self._width - self.PORT_SIDE - 1)
+
+    def _add_port_rects(self, ports, x):
+        if len(ports) == 1:
+            self._port_rects[ports[0].name] = QRect(
+                x,
+                self._height / 2 - self.PORT_SIDE / 2,
+                self.PORT_SIDE,
+                self.PORT_SIDE,
             )
+        elif len(ports) > 1:
+            port_distance = (self._height - 2 * self.BORDER_MARGIN) / (len(ports) - 1)
+            for idx, port in enumerate(ports):
+                self._port_rects[port.name] = QRect(
+                    x,
+                    self.BORDER_MARGIN + idx * port_distance - self.PORT_SIDE / 2,
+                    self.PORT_SIDE,
+                    self.PORT_SIDE,
+                )
+
+    def get_rect(self):
+        return QRect(
+            self.COMPONENT_BORDER,
+            self.COMPONENT_BORDER,
+            self._width - 2 * self.COMPONENT_BORDER,
+            self._height - 2 * self.COMPONENT_BORDER,
         )
 
-    @classmethod
-    def get_port_points(cls, ports, x, height):
-        port_dict = {}
-        if len(ports) == 1:
-            port_dict[ports[0].name] = QPoint(x, height / 2)
-        elif len(ports) > 1:
-            port_distance = (height - 2 * cls.BORDER_MARGIN) / (len(ports) - 1)
-            for idx, port in enumerate(ports):
-                port_dict[port.name] = QPoint(
-                    x, cls.BORDER_MARGIN + idx * port_distance
-                )
-        return port_dict
-
     def get_port_pos(self, portname):
-        return self._ports[portname]
+        rect = self._port_rects[portname]
+        return QPoint(rect.x(), rect.y()) + QPoint(
+            self.PORT_SIDE / 2, self.PORT_SIDE / 2
+        )
+
+    def get_port_for_point(self, point):
+        for portname, rect in self.port_rects.items():
+            if (
+                point.x() > rect.x() - self.PORT_CLICK_EXTRA_PIXELS
+                and point.x() < rect.x() + rect.width() + self.PORT_CLICK_EXTRA_PIXELS
+                and point.y() > rect.y() - self.PORT_CLICK_EXTRA_PIXELS
+                and point.y() < rect.y() + rect.height() + self.PORT_CLICK_EXTRA_PIXELS
+            ):
+                return portname
+        return None
 
     @property
     def component(self):
         return self._component
 
     @property
-    def ports(self):
-        return self._ports
+    def port_rects(self):
+        return self._port_rects
 
     @property
     def pos(self):
         return self._pos
+
+    @property
+    def size(self):
+        return QSize(self._width, self._height)
 
     @pos.setter
     def pos(self, point):
@@ -85,20 +117,24 @@ class PlacedWire:
         return self._dst_point
 
 
-class AppModel(QObject):
+class AppModel(QThread):
 
-    sig_notify = Signal(Component)
+    sig_component_notify = Signal(Component)
+    sig_control_notify = Signal(bool)
+    sig_sim_time_ms_notify = Signal(float)
 
     def __init__(self):
         super().__init__()
         self._placed_components = {}
         self._placed_wires = {}
         self._circuit = Circuit()
+        self._started = False
+        self._sim_tick_ms = 20
         self.setup_circuit()
 
     @staticmethod
     def comp_cb(self, comp):
-        self.sig_notify.emit(comp)
+        self.sig_component_notify.emit(comp)
 
     def get_placed_component(self, component):
         return self._placed_components[component]
@@ -130,15 +166,55 @@ class AppModel(QObject):
             wire.update()
 
     def setup_circuit(self):
-        _bu_a = self.add_component(OnOffSwitch(self._circuit, "SwitchA"), 20, 20)
-        _bu_b = self.add_component(OnOffSwitch(self._circuit, "SwitchB"), 20, 220)
+        _on_off = self.add_component(OnOffSwitch(self._circuit, "Switch"), 20, 20)
+        _push_button = self.add_component(
+            PushButton(self._circuit, "PushButton"), 20, 220
+        )
         _and = self.add_component(AND(self._circuit), 200, 100)
         _led = self.add_component(Led(self._circuit, "Led"), 400, 140)
-        self.add_wire(_bu_a.O, _and.A)
-        self.add_wire(_bu_b.O, _and.B)
+        _clk = self.add_component(Clock(self._circuit, 2.0, "Clock"), 20, 340)
+        _and2 = self.add_component(AND(self._circuit, "AND2"), 200, 300)
+        _led2 = self.add_component(Led(self._circuit, "Led2"), 400, 340)
+        self.add_wire(_on_off.O, _and.A)
+        self.add_wire(_push_button.O, _and.B)
         self.add_wire(_and.Y, _led.I)
+
+        self.add_wire(_push_button.O, _and2.A)
+        self.add_wire(_clk.O, _and2.B)
+        self.add_wire(_and2.Y, _led2.I)
+
         self._circuit.init()
 
     @property
     def circuit(self):
         return self._circuit
+
+    def model_start(self):
+        self._started = True
+        self.start()
+        self.sig_control_notify.emit(self._started)
+
+    def model_stop(self):
+        self._started = False
+
+    def model_reset(self):
+        if not self._started:
+            self._circuit.init()
+
+    def run(self):
+        start_time = time.perf_counter()
+        next_tick = start_time
+        while self._started:
+            next_tick += self._sim_tick_ms / 1000
+            self._circuit.run(ms=self._sim_tick_ms)
+            now = time.perf_counter()
+            sleep_time = next_tick - now
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+            self.sig_sim_time_ms_notify.emit(self._circuit.time_ns / 1000000)
+
+        self.sig_control_notify.emit(self._started)
+
+    @property
+    def is_running(self):
+        return self._started
