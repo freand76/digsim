@@ -3,7 +3,7 @@ import time
 from functools import partial
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, QThread, Signal
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QPainterPath
 
 from digsim import (AND, CallbackComponent, Circuit, Clock, Component,
                     HexDigit, JsonComponent, Led, OnOffSwitch, PushButton)
@@ -45,6 +45,7 @@ class PlacedComponent:
 
     def paintPorts(self, painter, active_port):
         # Draw ports
+        painter.setPen(Qt.black)
         painter.setBrush(Qt.SolidPattern)
         painter.setFont(QFont("Arial", 8))
         for portname, rect in self.port_rects.items():
@@ -122,15 +123,79 @@ class PlacedComponent:
 
 
 class PlacedHexDigit(PlacedComponent):
+    VAL_TO_SEGMENTS = {
+        0: "ABCDEF",
+        1: "BC",
+        2: "ABDEG",
+        3: "ABCDG",
+        4: "BCFG",
+        5: "ACDFG",
+        6: "ACDEFG",
+        7: "ABC",
+        8: "ABCDEFG",
+        9: "ABCDFG",
+        10: "ABCEFG",
+        11: "CDEFG",
+        12: "ADEF",
+        13: "BCDEG",
+        14: "ADEFG",
+        15: "AEFG",
+        -1: "",
+    }
+
+    SEGMENT_TYPE_AND_POS = {
+        "A": ("H", QPoint(51, 20)),
+        "B": ("V", QPoint(79, 23)),
+        "C": ("V", QPoint(79, 53)),
+        "D": ("H", QPoint(51, 81)),
+        "E": ("V", QPoint(48, 53)),
+        "F": ("V", QPoint(48, 23)),
+        "G": ("H", QPoint(51, 51)),
+    }
+
+    SEGMENT_CORDS = {
+        "V": [
+            QPoint(3, 3),
+            QPoint(3, 20),
+            QPoint(0, 25),
+            QPoint(-3, 20),
+            QPoint(-3, 3),
+            QPoint(0, 0),
+        ],
+        "H": [
+            QPoint(3, 3),
+            QPoint(20, 3),
+            QPoint(25, 0),
+            QPoint(20, -3),
+            QPoint(3, -3),
+            QPoint(0, 0),
+        ],
+    }
+
     def paintComponent(self, painter):
         self.paintComponentBase(painter)
-        painter.setFont(QFont("Arial", 16))
+        painter.setBrush(Qt.SolidPattern)
+        painter.setPen(Qt.black)
+        painter.setBrush(Qt.black)
+        painter.drawRoundedRect(33, 10, 60, 80, 3, 3)
+
         value = self.component.value()
-        if value < 10:
-            value_str = f"{value}"
-        else:
-            value_str = chr(ord("A") + value - 10)
-        painter.drawText(self.get_rect(), Qt.AlignCenter, value_str)
+        active_segments = self.VAL_TO_SEGMENTS[value]
+        for seg, type_pos in self.SEGMENT_TYPE_AND_POS.items():
+            if seg in active_segments:
+                painter.setPen(Qt.red)
+                painter.setBrush(Qt.red)
+            else:
+                painter.setPen(Qt.darkRed)
+                painter.setBrush(Qt.darkRed)
+            pos_vector = self.SEGMENT_CORDS[type_pos[0]]
+            offset = type_pos[1]
+            path = QPainterPath()
+            path.moveTo(offset)
+            for point in pos_vector:
+                path.lineTo(offset + point)
+            path.closeSubpath()
+            painter.drawPath(path)
 
 
 class PlacedWire:
@@ -220,7 +285,7 @@ class AppModel(QThread):
         )
         _and = self.add_component(AND(self._circuit), 200, 100)
         _led = self.add_component(Led(self._circuit, "Led"), 400, 140)
-        _clk = self.add_component(Clock(self._circuit, 1.0, "Clock"), 20, 340)
+        _clk = self.add_component(Clock(self._circuit, 5.0, "Clock"), 20, 340)
         _and2 = self.add_component(AND(self._circuit, "AND2"), 200, 300)
         _led2 = self.add_component(Led(self._circuit, "Led2"), 400, 340)
 

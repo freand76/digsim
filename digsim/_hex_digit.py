@@ -1,7 +1,7 @@
 # pylint: disable=no-member
 
 from ._component import CallbackComponent
-from ._port import ComponentPort, PortDirection
+from ._port import ComponentPort, PortDirection, SignalLevel
 
 
 class HexDigit(CallbackComponent):
@@ -13,6 +13,14 @@ class HexDigit(CallbackComponent):
         self.add_port(ComponentPort(self, "I3", PortDirection.IN))
 
     def value(self):
+        if SignalLevel.UNKNOWN in [
+            self.I0.level,
+            self.I1.level,
+            self.I2.level,
+            self.I3.level,
+        ]:
+            return -1
+
         return (
             self.I3.intval << 3
             | self.I2.intval << 2
