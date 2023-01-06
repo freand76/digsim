@@ -29,7 +29,8 @@ class ComponentWidget(QPushButton):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        self._placed_component.paint(painter, self._active_port)
+        self._placed_component.paintComponent(painter)
+        self._placed_component.paintPorts(painter, self._active_port)
         painter.end()
 
     def enterEvent(self, event):

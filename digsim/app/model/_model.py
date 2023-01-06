@@ -6,7 +6,7 @@ from PySide6.QtCore import QPoint, QRect, QSize, Qt, QThread, Signal
 from PySide6.QtGui import QFont
 
 from digsim import (AND, CallbackComponent, Circuit, Clock, Component,
-                    JsonComponent, Led, OnOffSwitch, PushButton)
+                    HexDigit, JsonComponent, Led, OnOffSwitch, PushButton)
 
 
 class PlacedComponent:
@@ -27,7 +27,7 @@ class PlacedComponent:
         self._add_port_rects(self._component.inports, 0)
         self._add_port_rects(self._component.outports, self._width - self.PORT_SIDE - 1)
 
-    def paint(self, painter, active_port):
+    def paintComponentBase(self, painter):
         # Draw component
         comp_rect = self.get_rect()
         painter.setPen(Qt.black)
@@ -37,9 +37,13 @@ class PlacedComponent:
         else:
             painter.setBrush(Qt.gray)
         painter.drawRoundedRect(comp_rect, 5, 5)
-        painter.setFont(QFont("Arial", 8))
-        painter.drawText(comp_rect, Qt.AlignCenter, self._component.name)
 
+    def paintComponent(self, painter):
+        self.paintComponentBase(painter)
+        painter.setFont(QFont("Arial", 8))
+        painter.drawText(self.get_rect(), Qt.AlignCenter, self._component.name)
+
+    def paintPorts(self, painter, active_port):
         # Draw ports
         painter.setBrush(Qt.SolidPattern)
         painter.setFont(QFont("Arial", 8))
@@ -117,6 +121,18 @@ class PlacedComponent:
         return f'{{ "name": "{self.component.name}", "x": {self.pos.x()}, "y": {self.pos.y()} }}'
 
 
+class PlacedHexDigit(PlacedComponent):
+    def paintComponent(self, painter):
+        self.paintComponentBase(painter)
+        painter.setFont(QFont("Arial", 16))
+        value = self.component.value()
+        if value < 10:
+            value_str = f"{value}"
+        else:
+            value_str = chr(ord("A") + value - 10)
+        painter.drawText(self.get_rect(), Qt.AlignCenter, value_str)
+
+
 class PlacedWire:
     def __init__(self, app_model, src_port, dst_port):
         self._app_model = app_model
@@ -161,13 +177,18 @@ class AppModel(QThread):
 
     @staticmethod
     def comp_cb(self, comp):
-        self._component_callback_list.append(comp)
+        if comp not in self._component_callback_list:
+            self._component_callback_list.append(comp)
 
     def get_placed_component(self, component):
         return self._placed_components[component]
 
     def add_component(self, component, x, y):
-        placed_component = PlacedComponent(component, x, y)
+        if isinstance(component, HexDigit):
+            placed_component = PlacedHexDigit(component, x, y)
+        else:
+            placed_component = PlacedComponent(component, x, y)
+
         self._placed_components[component] = placed_component
         if isinstance(component, CallbackComponent):
             component.set_callback(partial(self.comp_cb, self))
@@ -206,10 +227,8 @@ class AppModel(QThread):
         _counter = self.add_component(
             JsonComponent(self._circuit, "json_modules/counter.json"), 600, 300
         )
-        _cnt0 = self.add_component(Led(self._circuit, "C0"), 800, 100)
-        _cnt1 = self.add_component(Led(self._circuit, "C1"), 800, 200)
-        _cnt2 = self.add_component(Led(self._circuit, "C2"), 800, 300)
-        _cnt3 = self.add_component(Led(self._circuit, "C3"), 800, 400)
+        _hex = self.add_component(HexDigit(self._circuit, "HexDigit"), 800, 100)
+        self._hex = _hex
         self.add_wire(_on_off.O, _and.A)
         self.add_wire(_push_button.O, _and.B)
         self.add_wire(_and.Y, _led.I)
@@ -221,10 +240,10 @@ class AppModel(QThread):
         self.add_wire(_clk.O, _counter.clk)
         self.add_wire(_on_off.O, _counter.up)
         self.add_wire(_push_button.O, _counter.reset)
-        self.add_wire(_counter.cnt0, _cnt0.I)
-        self.add_wire(_counter.cnt1, _cnt1.I)
-        self.add_wire(_counter.cnt2, _cnt2.I)
-        self.add_wire(_counter.cnt3, _cnt3.I)
+        self.add_wire(_counter.cnt0, _hex.I0)
+        self.add_wire(_counter.cnt1, _hex.I1)
+        self.add_wire(_counter.cnt2, _hex.I2)
+        self.add_wire(_counter.cnt3, _hex.I3)
         self._circuit.init()
 
     @property
