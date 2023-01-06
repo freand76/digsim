@@ -123,13 +123,16 @@ class ComponentPort(Port):
 
 
 class OutputPort(Port):
-    def __init__(self, parent, name, propagation_delay_ns=10):
+    def __init__(
+        self, parent, name, propagation_delay_ns=10, update_parent_on_delta=False
+    ):
         super().__init__(
             parent=parent,
             name=name,
             direction=PortDirection.OUT,
         )
         self._propagation_delay_ns = propagation_delay_ns
+        self._update_parent_on_delta = update_parent_on_delta
 
     def set_propagation_delay_ns(self, propagation_delay_ns):
         self._propagation_delay_ns = propagation_delay_ns
@@ -139,3 +142,5 @@ class OutputPort(Port):
 
     def delta_cycle(self, level):
         self.update_wires(level)
+        if self._update_parent_on_delta:
+            self.parent.update()

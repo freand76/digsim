@@ -1,16 +1,16 @@
 # pylint: disable=no-member
 
 from ._component import CallbackComponent
-from ._port import ComponentPort, OutputPort, PortDirection, SignalLevel
+from ._port import OutputPort, SignalLevel
 
 
 class PushButton(CallbackComponent):
     def __init__(self, circuit, name="PushButton", inverted=False):
         super().__init__(circuit, name)
         self._inverted = inverted
-        self.add_port(OutputPort(self, "O", propagation_delay_ns=10))
-        self._feedback_in = ComponentPort(self, "FI", PortDirection.IN)
-        self.O.wire = self._feedback_in
+        self.add_port(
+            OutputPort(self, "O", propagation_delay_ns=0, update_parent_on_delta=True)
+        )
 
     def init(self):
         super().init()

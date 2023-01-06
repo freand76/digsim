@@ -7,31 +7,32 @@ from ._port import ComponentPort, OutputPort, PortDirection, SignalLevel
 class Clock(CallbackComponent):
     def __init__(self, circuit, frequency, name="Clock"):
         super().__init__(circuit, name)
-        self.add_port(OutputPort(self, "O", propagation_delay_ns=0))
-        self._feedback_out = OutputPort(self, "FO")
-        self._feedback_in = ComponentPort(self, "FI", PortDirection.IN)
-        self._feedback_out.wire = self._feedback_in
-        self._feedback_out.wire = self.O
+        self._clock_port = OutputPort(
+            self, "Clock", propagation_delay_ns=0, update_parent_on_delta=True
+        )
+        self.add_port(ComponentPort(self, "O", PortDirection.OUT))
+        self._clock_port.wire = self.O
         self.set_frequency(frequency)
 
     def init(self):
         super().init()
-        self._feedback_out.level = SignalLevel.LOW
+        self.O.level = SignalLevel.LOW
+        self._clock_port.level = SignalLevel.HIGH
 
     def update(self):
-        if self._feedback_in.level == SignalLevel.HIGH:
-            self._feedback_out.level = SignalLevel.LOW
+        if self._clock_port.level == SignalLevel.HIGH:
+            self._clock_port.level = SignalLevel.LOW
         else:
-            self._feedback_out.level = SignalLevel.HIGH
+            self._clock_port.level = SignalLevel.HIGH
         super().update()
 
     def set_frequency(self, frequency):
         half_period_ns = int(1000000000 / (frequency * 2))
-        self._feedback_out.set_propagation_delay_ns(half_period_ns)
+        self._clock_port.set_propagation_delay_ns(half_period_ns)
 
     @property
     def active(self):
-        return self._feedback_out.level == SignalLevel.HIGH
+        return self.O.level == SignalLevel.HIGH
 
     @property
     def wire(self):
