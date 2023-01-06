@@ -29,8 +29,8 @@ class ComponentWidget(QPushButton):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        self._placed_component.paintComponent(painter)
-        self._placed_component.paintPorts(painter, self._active_port)
+        self._placed_component.paint_component(painter)
+        self._placed_component.paint_ports(painter, self._active_port)
         painter.end()
 
     def enterEvent(self, event):
@@ -97,9 +97,7 @@ class CircuitArea(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        wires = self._app_model.get_wires()
-        for wire in wires:
-            painter.drawLine(wire.src, wire.dst)
+        self._app_model.paint_wires(painter)
         painter.end()
 
 

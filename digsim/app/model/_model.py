@@ -3,7 +3,7 @@ import time
 from functools import partial
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, QThread, Signal
-from PySide6.QtGui import QFont, QPainterPath
+from PySide6.QtGui import QFont, QPainterPath, QPen
 
 from digsim import (AND, CallbackComponent, Circuit, Clock, Component,
                     HexDigit, JsonComponent, Led, OnOffSwitch, PushButton)
@@ -27,7 +27,7 @@ class PlacedComponent:
         self._add_port_rects(self._component.inports, 0)
         self._add_port_rects(self._component.outports, self._width - self.PORT_SIDE - 1)
 
-    def paintComponentBase(self, painter):
+    def paint_component_base(self, painter):
         # Draw component
         comp_rect = self.get_rect()
         painter.setPen(Qt.black)
@@ -38,12 +38,12 @@ class PlacedComponent:
             painter.setBrush(Qt.gray)
         painter.drawRoundedRect(comp_rect, 5, 5)
 
-    def paintComponent(self, painter):
-        self.paintComponentBase(painter)
+    def paint_component(self, painter):
+        self.paint_component_base(painter)
         painter.setFont(QFont("Arial", 8))
         painter.drawText(self.get_rect(), Qt.AlignCenter, self._component.name)
 
-    def paintPorts(self, painter, active_port):
+    def paint_ports(self, painter, active_port):
         # Draw ports
         painter.setPen(Qt.black)
         painter.setBrush(Qt.SolidPattern)
@@ -172,8 +172,8 @@ class PlacedHexDigit(PlacedComponent):
         ],
     }
 
-    def paintComponent(self, painter):
-        self.paintComponentBase(painter)
+    def paint_component(self, painter):
+        self.paint_component_base(painter)
         painter.setBrush(Qt.SolidPattern)
         painter.setPen(Qt.black)
         painter.setBrush(Qt.black)
@@ -277,6 +277,15 @@ class AppModel(QThread):
     def update_wires(self):
         for _, wire in self._placed_wires.items():
             wire.update()
+
+    def paint_wires(self, painter):
+        pen = QPen()
+        pen.setWidth(2)
+        pen.setColor(Qt.darkGray)
+        painter.setPen(pen)
+        wires = self.get_wires()
+        for wire in wires:
+            painter.drawLine(wire.src, wire.dst)
 
     def setup_circuit(self):
         _on_off = self.add_component(OnOffSwitch(self._circuit, "Switch"), 20, 20)
