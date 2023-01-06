@@ -1,3 +1,4 @@
+import queue
 import time
 from functools import partial
 
@@ -127,9 +128,10 @@ class AppModel(QThread):
         super().__init__()
         self._placed_components = {}
         self._placed_wires = {}
-        self._circuit = Circuit()
+        self._circuit = Circuit(vcd="gui.vcd")
         self._started = False
-        self._sim_tick_ms = 20
+        self._sim_tick_ms = 50
+        self._gui_event_queue = queue.Queue()
         self.setup_circuit()
 
     @staticmethod
@@ -172,7 +174,7 @@ class AppModel(QThread):
         )
         _and = self.add_component(AND(self._circuit), 200, 100)
         _led = self.add_component(Led(self._circuit, "Led"), 400, 140)
-        _clk = self.add_component(Clock(self._circuit, 2.0, "Clock"), 20, 340)
+        _clk = self.add_component(Clock(self._circuit, 1.0, "Clock"), 20, 340)
         _and2 = self.add_component(AND(self._circuit, "AND2"), 200, 300)
         _led2 = self.add_component(Led(self._circuit, "Led2"), 400, 340)
         self.add_wire(_on_off.O, _and.A)
@@ -201,11 +203,20 @@ class AppModel(QThread):
         if not self._started:
             self._circuit.init()
 
+    def add_gui_event(self, func):
+        self._gui_event_queue.put(func)
+
     def run(self):
         start_time = time.perf_counter()
         next_tick = start_time
         while self._started:
             next_tick += self._sim_tick_ms / 1000
+
+            # Execute one GUI event at a time
+            if not self._gui_event_queue.empty():
+                gui_event_func = self._gui_event_queue.get()
+                gui_event_func()
+
             self._circuit.run(ms=self._sim_tick_ms)
             now = time.perf_counter()
             sleep_time = next_tick - now

@@ -65,8 +65,7 @@ class ComponentWidget(QPushButton):
         super().mousePressEvent(event)
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
-                self.component.onpress()
-                self.update()
+                self._app_model.add_gui_event(self.component.onpress)
             else:
                 if self._active_port is None:
                     # Prepare to move
@@ -79,8 +78,7 @@ class ComponentWidget(QPushButton):
         super().mouseReleaseEvent(event)
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
-                self.component.onrelease()
-                self.update()
+                self._app_model.add_gui_event(self.component.onrelease)
             else:
                 # Move complete
                 self.setCursor(Qt.ArrowCursor)

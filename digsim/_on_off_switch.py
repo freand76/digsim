@@ -1,13 +1,15 @@
 # pylint: disable=no-member
 
 from ._component import CallbackComponent
-from ._port import ComponentPort, PortDirection, SignalLevel
+from ._port import ComponentPort, OutputPort, PortDirection, SignalLevel
 
 
 class OnOffSwitch(CallbackComponent):
     def __init__(self, circuit, name="OnOffSwitch", start_on=False):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "O", PortDirection.OUT))
+        self.add_port(OutputPort(self, "O", propagation_delay_ns=0))
+        self._feedback_in = ComponentPort(self, "FI", PortDirection.IN)
+        self.O.wire = self._feedback_in
         self._on = False
         self._start_on = start_on
 

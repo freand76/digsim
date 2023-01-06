@@ -36,7 +36,7 @@ class CircuitEvent:
         self._level = level
 
     def __lt__(self, other):
-        return other.time_ns < self.time_ns
+        return other.time_ns > self.time_ns
 
 
 class Circuit:
@@ -106,7 +106,7 @@ class Circuit:
         self._circuit_events.sort()
         if stop_time_ns is None or self._circuit_events[0].time_ns > stop_time_ns:
             return False
-        event = self._circuit_events.pop()
+        event = self._circuit_events.pop(0)
         # print(f"Execute event {event.port.path}.{event.port.name} {event.time_ns}")
         self._time_ns = event.time_ns
         event.port.delta_cycle(event.level)
@@ -116,7 +116,6 @@ class Circuit:
 
     def run(self, s=None, ms=None, us=None, ns=None):
         stop_time_ns = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
-
         while len(self._circuit_events) > 0 and self._time_ns < stop_time_ns:
             if not self.process_single_event(stop_time_ns):
                 break
@@ -134,7 +133,6 @@ class Circuit:
             if event.is_same_event(port):
                 event.update(event_time_ns, level)
                 return
-
         self._circuit_events.append(CircuitEvent(event_time_ns, port, level))
 
     def add_component(self, component):

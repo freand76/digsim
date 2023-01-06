@@ -16,8 +16,7 @@ class Clock(CallbackComponent):
 
     def init(self):
         super().init()
-        self._feedback_out.level = SignalLevel.HIGH
-        self.O.level = SignalLevel.LOW
+        self._feedback_out.level = SignalLevel.LOW
 
     def update(self):
         if self._feedback_in.level == SignalLevel.HIGH:
@@ -32,7 +31,7 @@ class Clock(CallbackComponent):
 
     @property
     def active(self):
-        return self.O.level == SignalLevel.HIGH
+        return self._feedback_out.level == SignalLevel.HIGH
 
     @property
     def wire(self):
