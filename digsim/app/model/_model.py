@@ -2,7 +2,8 @@ import queue
 import time
 from functools import partial
 
-from PySide6.QtCore import QPoint, QRect, QSize, QThread, Signal
+from PySide6.QtCore import QPoint, QRect, QSize, Qt, QThread, Signal
+from PySide6.QtGui import QFont
 
 from digsim import (AND, CallbackComponent, Circuit, Clock, Component,
                     JsonComponent, Led, OnOffSwitch, PushButton)
@@ -25,6 +26,29 @@ class PlacedComponent:
         self._port_rects = {}
         self._add_port_rects(self._component.inports, 0)
         self._add_port_rects(self._component.outports, self._width - self.PORT_SIDE - 1)
+
+    def paint(self, painter, active_port):
+        # Draw component
+        comp_rect = self.get_rect()
+        painter.setPen(Qt.black)
+        painter.setBrush(Qt.SolidPattern)
+        if self.component.active:
+            painter.setBrush(Qt.green)
+        else:
+            painter.setBrush(Qt.gray)
+        painter.drawRoundedRect(comp_rect, 5, 5)
+        painter.setFont(QFont("Arial", 8))
+        painter.drawText(comp_rect, Qt.AlignCenter, self._component.name)
+
+        # Draw ports
+        painter.setBrush(Qt.SolidPattern)
+        painter.setFont(QFont("Arial", 8))
+        for portname, rect in self.port_rects.items():
+            if portname == active_port:
+                painter.setBrush(Qt.red)
+            else:
+                painter.setBrush(Qt.gray)
+            painter.drawRect(rect)
 
     def _add_port_rects(self, ports, x):
         if len(ports) == 1:

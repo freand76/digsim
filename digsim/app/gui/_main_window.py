@@ -10,14 +10,14 @@ class ComponentWidget(QPushButton):
     def __init__(self, app_model, placed_component, parent):
         super().__init__(parent, objectName=placed_component.component.name)
         self._app_model = app_model
-        self._placed_component = placed_component
-        self._name = placed_component.component.name
         self._app_model.sig_component_notify.connect(self._component_notify)
-        self.resize(self._placed_component.size)
-        self.move(self._placed_component.pos)
-        self.setMouseTracking(True)
+        self._placed_component = placed_component
         self._mouse_grab_pos = None
         self._active_port = None
+
+        self.setMouseTracking(True)
+        self.resize(self._placed_component.size)
+        self.move(self._placed_component.pos)
 
     @property
     def component(self):
@@ -29,28 +29,7 @@ class ComponentWidget(QPushButton):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-
-        # Draw component
-        comp_rect = self._placed_component.get_rect()
-        painter.setPen(Qt.black)
-        painter.setBrush(Qt.SolidPattern)
-        if self.component.active:
-            painter.setBrush(Qt.green)
-        else:
-            painter.setBrush(Qt.gray)
-        painter.drawRoundedRect(comp_rect, 5, 5)
-        painter.setFont(QFont("Arial", 8))
-        painter.drawText(comp_rect, Qt.AlignCenter, self._name)
-
-        # Draw ports
-        painter.setBrush(Qt.SolidPattern)
-        painter.setFont(QFont("Arial", 8))
-        for portname, rect in self._placed_component.port_rects.items():
-            if portname == self._active_port:
-                painter.setBrush(Qt.red)
-            else:
-                painter.setBrush(Qt.gray)
-            painter.drawRect(rect)
+        self._placed_component.paint(painter, self._active_port)
         painter.end()
 
     def enterEvent(self, event):
