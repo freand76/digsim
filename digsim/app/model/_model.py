@@ -6,7 +6,8 @@ from PySide6.QtCore import QPoint, QRect, QSize, Qt, QThread, Signal
 from PySide6.QtGui import QFont, QPainterPath, QPen
 
 from digsim import (AND, CallbackComponent, Circuit, Clock, Component,
-                    HexDigit, JsonComponent, Led, OnOffSwitch, PushButton)
+                    HexDigit, JsonComponent, Led, OnOffSwitch, PortDirection,
+                    PushButton)
 
 
 class PlacedComponent:
@@ -199,20 +200,71 @@ class PlacedHexDigit(PlacedComponent):
 
 
 class PlacedWire:
-    def __init__(self, app_model, src_port, dst_port):
+    def __init__(self, app_model, port_a, port_b=None):
         self._app_model = app_model
-        self._src_port = src_port
-        self._dst_port = dst_port
-        self._src_port.wire = self._dst_port
+        self._src_port = None
+        self._dst_port = None
+        self._connected = False
+
+        if port_a is None:
+            raise Exception("Cannot start a wire without a port")
+
+        if port_b is not None:
+            if (
+                port_a.direction == PortDirection.OUT
+                and port_b.direction == PortDirection.IN
+            ):
+                self._src_port = port_a
+                self._dst_port = port_b
+            elif (
+                port_a.direction == PortDirection.IN
+                and port_b.direction == PortDirection.OUT
+            ):
+                self._src_port = port_b
+                self._dst_port = port_a
+            else:
+                raise Exception("Cannot connect to power of same type")
+        else:
+            if port_a.direction == PortDirection.OUT:
+                self._src_port = port_a
+            else:
+                self._dst_port = port_a
+
         self._src_point = None
         self._dst_point = None
         self.update()
+        self.connect()
+
+    def connect(self):
+        if self._src_port is not None and self._dst_port is not None:
+            self._src_port.wire = self._dst_port
+            self._connected = True
+
+    def set_end_port(self, port):
+        if port.direction == PortDirection.OUT and self._src_port is None:
+            self._src_port = port
+        elif port.direction == PortDirection.IN and self._dst_port is None:
+            self._dst_port = port
+        else:
+            raise Exception("Cannot connect to power of same type")
+
+        self.update()
 
     def update(self):
-        src_comp = self._app_model.get_placed_component(self._src_port.parent)
-        dst_comp = self._app_model.get_placed_component(self._dst_port.parent)
-        self._src_point = src_comp.pos + src_comp.get_port_pos(self._src_port.name)
-        self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name)
+        if self._src_port is not None:
+            src_comp = self._app_model.get_placed_component(self._src_port.parent)
+            self._src_point = src_comp.pos + src_comp.get_port_pos(self._src_port.name)
+        if self._dst_port is not None:
+            dst_comp = self._app_model.get_placed_component(self._dst_port.parent)
+            self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name)
+
+    @property
+    def src_port(self):
+        return self._src_port
+
+    @property
+    def dst_port(self):
+        return self._dst_port
 
     @property
     def src(self):
@@ -220,6 +272,12 @@ class PlacedWire:
 
     @property
     def dst(self):
+        return self._dst_point
+
+    @property
+    def start_pos(self):
+        if self._src_point is not None:
+            return self._src_point
         return self._dst_point
 
 
@@ -239,6 +297,8 @@ class AppModel(QThread):
         self._gui_event_queue = queue.Queue()
         self._component_callback_list = []
         self.setup_circuit()
+        self._new_wire = None
+        self._new_wire_end_pos = None
 
     @staticmethod
     def comp_cb(self, comp):
@@ -286,6 +346,31 @@ class AppModel(QThread):
         wires = self.get_wires()
         for wire in wires:
             painter.drawLine(wire.src, wire.dst)
+
+        if self._new_wire is not None and self._new_wire_end_pos is not None:
+            painter.drawLine(self._new_wire.start_pos, self._new_wire_end_pos)
+
+    def new_wire_start(self, component, portname):
+        self._new_wire = PlacedWire(self, component.port(portname))
+
+    def new_wire_end(self, component, portname):
+        try:
+            self._new_wire.set_end_port(component.port(portname))
+            self._new_wire.connect()
+            self._placed_wires[
+                (self._new_wire.src_port, self._new_wire.dst_port)
+            ] = self._new_wire
+        except Exception as e:
+            print("ERROR:", str(e))
+
+        self._new_wire = None
+        self._new_wire_end_pos = None
+
+    def set_new_wire_end_pos(self, pos):
+        self._new_wire_end_pos = pos
+
+    def has_new_wire(self):
+        return self._new_wire is not None
 
     def setup_circuit(self):
         _on_off = self.add_component(OnOffSwitch(self._circuit, "Switch"), 20, 20)

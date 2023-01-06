@@ -46,13 +46,16 @@ class ComponentWidget(QPushButton):
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
                 self._app_model.add_gui_event(self.component.onpress)
+            elif self._app_model.has_new_wire():
+                if self._active_port is not None:
+                    self._app_model.new_wire_end(self.component, self._active_port)
             else:
                 if self._active_port is None:
                     # Prepare to move
                     self.setCursor(Qt.ClosedHandCursor)
                     self._mouse_grab_pos = event.pos()
                 else:
-                    print("Start Wire")
+                    self._app_model.new_wire_start(self.component, self._active_port)
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
@@ -80,7 +83,11 @@ class ComponentWidget(QPushButton):
                 self.setCursor(Qt.ArrowCursor)
             self.update()
 
-        if self._mouse_grab_pos is not None:
+        if self._app_model.has_new_wire():
+            self._app_model.set_new_wire_end_pos(self.pos() + event.pos())
+            self.parent().update()
+
+        elif self._mouse_grab_pos is not None:
             self.move(self.pos() + event.pos() - self._mouse_grab_pos)
             self._placed_component.pos = self.pos()
             self._app_model.update_wires()
@@ -95,10 +102,20 @@ class CircuitArea(QWidget):
         for placed_comp in self._app_model.get_placed_components():
             compWidget = ComponentWidget(app_model, placed_comp, self)
 
+        self.setMouseTracking(True)
+
     def paintEvent(self, event):
         painter = QPainter(self)
         self._app_model.paint_wires(painter)
         painter.end()
+
+    def mouseMoveEvent(self, event):
+        if self._app_model.is_running:
+            return
+
+        if self._app_model.has_new_wire():
+            self._app_model.set_new_wire_end_pos(event.pos())
+            self.update()
 
 
 class ComponentSelection(QWidget):
