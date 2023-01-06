@@ -66,7 +66,6 @@ class Circuit:
             self._vcd_init()
         for comp in self._components:
             comp.init()
-            comp.update()
 
     def vcd(self, filename):
         if self._vcd is not None:

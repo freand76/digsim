@@ -8,9 +8,8 @@ class PushButton(CallbackComponent):
     def __init__(self, circuit, name="PushButton", inverted=False):
         super().__init__(circuit, name)
         self._inverted = inverted
-        self.add_port(
-            OutputPort(self, "O", propagation_delay_ns=0, update_parent_on_delta=True)
-        )
+        self.add_port(OutputPort(self, "O", update_parent_on_delta=True))
+        self.O.set_propagation_delay_ns(0)
 
     def init(self):
         super().init()

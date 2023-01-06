@@ -154,8 +154,8 @@ class TopBar(QFrame):
         super().__init__(parent)
         self._app_model = app_model
         self._app_model.sig_control_notify.connect(self._control_notify)
-        self._app_model.sig_sim_time_ms_notify.connect(self._sim_time_ms_notify)
-        self._time_ms = 0
+        self._app_model.sig_sim_time_notify.connect(self._sim_time_notify)
+        self._time_s = 0
 
         self.setObjectName("TopBar")
         self.setStyleSheet("QFrame#TopBar {background: #ebebeb;}")
@@ -168,7 +168,7 @@ class TopBar(QFrame):
         self._reset_button.clicked.connect(self.reset)
         self._reset_button.setEnabled(False)
         self.layout().addWidget(self._reset_button)
-        self._sim_time = QLineEdit("0 ms")
+        self._sim_time = QLineEdit("0 s")
         self._sim_time.setReadOnly(True)
         self._sim_time.selectionChanged.connect(
             lambda: self._sim_time.setSelection(0, 0)
@@ -186,8 +186,8 @@ class TopBar(QFrame):
         self._app_model.model_stop()
 
     def reset(self):
-        self._time_ms = 0
-        self._sim_time.setText("0 ms")
+        self._time_s = 0
+        self._sim_time.setText("0 s")
         self._app_model.model_reset()
         self._reset_button.setEnabled(False)
 
@@ -200,12 +200,12 @@ class TopBar(QFrame):
             self._start_button.setText("Start Similation")
             self._start_button.clicked.connect(self.start)
             self._start_button.setEnabled(True)
-            if self._time_ms > 0:
+            if self._time_s > 0:
                 self._reset_button.setEnabled(True)
 
-    def _sim_time_ms_notify(self, time_ms):
-        self._sim_time.setText(f"{time_ms} ms")
-        self._time_ms = time_ms
+    def _sim_time_notify(self, time_s):
+        self._sim_time.setText(f"{time_s:.2f} s")
+        self._time_s = time_s
 
 
 class CentralWidget(QWidget):
@@ -242,3 +242,8 @@ class MainWindow(QMainWindow):
 
         self.setStatusBar(StatusBar(app_model, self))
         self.setWindowTitle("DigSim Logic Simulator")
+
+    def closeEvent(self, event):
+        self._app_model.model_stop()
+        self._app_model.wait()
+        super().closeEvent(event)

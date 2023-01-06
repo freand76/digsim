@@ -10,17 +10,18 @@ SIGNAL_LEVEL_TO_STR = {
 
 
 class Port(abc.ABC):
-    def __init__(self, parent, name, direction):
+    def __init__(self, parent, name, direction, default_level=SignalLevel.UNKNOWN):
         self._parent = parent
         self._direction = direction
         self._name = name
         self._connected = False
         self._wired_ports = []
         self._level = None
+        self._default_level = default_level
         self.init()
 
     def init(self):
-        self._level = SignalLevel.UNKNOWN
+        self._level = self._default_level
 
     @property
     def name(self):
@@ -124,21 +125,26 @@ class ComponentPort(Port):
 
 class OutputPort(Port):
     def __init__(
-        self, parent, name, propagation_delay_ns=10, update_parent_on_delta=False
+        self,
+        parent,
+        name,
+        update_parent_on_delta=False,
+        default_level=SignalLevel.UNKNOWN,
     ):
         super().__init__(
             parent=parent,
             name=name,
             direction=PortDirection.OUT,
+            default_level=default_level,
         )
-        self._propagation_delay_ns = propagation_delay_ns
+        self._propagation_delay_ns = 10
         self._update_parent_on_delta = update_parent_on_delta
 
     def set_propagation_delay_ns(self, propagation_delay_ns):
         self._propagation_delay_ns = propagation_delay_ns
 
     def set_level(self, level):
-        self._parent.add_event(self, level, self._propagation_delay_ns)
+        self.parent.add_event(self, level, self._propagation_delay_ns)
 
     def delta_cycle(self, level):
         self.update_wires(level)

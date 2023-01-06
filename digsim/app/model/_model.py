@@ -4,8 +4,8 @@ from functools import partial
 
 from PySide6.QtCore import QPoint, QRect, QSize, QThread, Signal
 
-from digsim import (AND, CallbackComponent, Circuit, Clock, Component, Led,
-                    OnOffSwitch, PushButton)
+from digsim import (AND, CallbackComponent, Circuit, Clock, Component,
+                    JsonComponent, Led, OnOffSwitch, PushButton)
 
 
 class PlacedComponent:
@@ -122,7 +122,7 @@ class AppModel(QThread):
 
     sig_component_notify = Signal(Component)
     sig_control_notify = Signal(bool)
-    sig_sim_time_ms_notify = Signal(float)
+    sig_sim_time_notify = Signal(float)
 
     def __init__(self):
         super().__init__()
@@ -132,11 +132,12 @@ class AppModel(QThread):
         self._started = False
         self._sim_tick_ms = 50
         self._gui_event_queue = queue.Queue()
+        self._component_callback_list = []
         self.setup_circuit()
 
     @staticmethod
     def comp_cb(self, comp):
-        self.sig_component_notify.emit(comp)
+        self._component_callback_list.append(comp)
 
     def get_placed_component(self, component):
         return self._placed_components[component]
@@ -177,6 +178,14 @@ class AppModel(QThread):
         _clk = self.add_component(Clock(self._circuit, 1.0, "Clock"), 20, 340)
         _and2 = self.add_component(AND(self._circuit, "AND2"), 200, 300)
         _led2 = self.add_component(Led(self._circuit, "Led2"), 400, 340)
+
+        _counter = self.add_component(
+            JsonComponent(self._circuit, "json_modules/counter.json"), 600, 300
+        )
+        _cnt0 = self.add_component(Led(self._circuit, "C0"), 800, 100)
+        _cnt1 = self.add_component(Led(self._circuit, "C1"), 800, 200)
+        _cnt2 = self.add_component(Led(self._circuit, "C2"), 800, 300)
+        _cnt3 = self.add_component(Led(self._circuit, "C3"), 800, 400)
         self.add_wire(_on_off.O, _and.A)
         self.add_wire(_push_button.O, _and.B)
         self.add_wire(_and.Y, _led.I)
@@ -185,6 +194,13 @@ class AppModel(QThread):
         self.add_wire(_clk.O, _and2.B)
         self.add_wire(_and2.Y, _led2.I)
 
+        self.add_wire(_clk.O, _counter.clk)
+        self.add_wire(_on_off.O, _counter.up)
+        self.add_wire(_push_button.O, _counter.reset)
+        self.add_wire(_counter.cnt0, _cnt0.I)
+        self.add_wire(_counter.cnt1, _cnt1.I)
+        self.add_wire(_counter.cnt2, _cnt2.I)
+        self.add_wire(_counter.cnt3, _cnt3.I)
         self._circuit.init()
 
     @property
@@ -202,6 +218,8 @@ class AppModel(QThread):
     def model_reset(self):
         if not self._started:
             self._circuit.init()
+            for _, comp in self._placed_components.items():
+                self.sig_component_notify.emit(comp.component)
 
     def add_gui_event(self, func):
         self._gui_event_queue.put(func)
@@ -212,17 +230,23 @@ class AppModel(QThread):
         while self._started:
             next_tick += self._sim_tick_ms / 1000
 
+            self._component_callback_list = []
+
             # Execute one GUI event at a time
             if not self._gui_event_queue.empty():
                 gui_event_func = self._gui_event_queue.get()
                 gui_event_func()
 
             self._circuit.run(ms=self._sim_tick_ms)
+
+            for comp in self._component_callback_list:
+                self.sig_component_notify.emit(comp)
+
             now = time.perf_counter()
             sleep_time = next_tick - now
             if sleep_time > 0:
                 time.sleep(sleep_time)
-            self.sig_sim_time_ms_notify.emit(self._circuit.time_ns / 1000000)
+            self.sig_sim_time_notify.emit(self._circuit.time_ns / 1000000000)
 
         self.sig_control_notify.emit(self._started)
 

@@ -7,9 +7,8 @@ from ._port import OutputPort, SignalLevel
 class OnOffSwitch(CallbackComponent):
     def __init__(self, circuit, name="OnOffSwitch", start_on=False):
         super().__init__(circuit, name)
-        self.add_port(
-            OutputPort(self, "O", propagation_delay_ns=0, update_parent_on_delta=True)
-        )
+        self.add_port(OutputPort(self, "O", update_parent_on_delta=True))
+        self.O.set_propagation_delay_ns(0)
         self._on = False
         self._start_on = start_on
 
