@@ -2,7 +2,7 @@ import json
 
 from ._component import MultiComponent
 from ._gates import AND, DFFE_PP0P, NOT, XOR
-from ._port import ComponentPort, PortDirection
+from ._port import BusOutPort, ComponentPort, PortDirection
 
 
 class JsonComponentException(Exception):
@@ -79,11 +79,10 @@ class JsonComponent(MultiComponent):
             port_direction = (
                 PortDirection.IN if port_dict["direction"] == "input" else PortDirection.OUT
             )
-            for idx, connection_id in enumerate(port_dict["bits"]):
-                if len(port_dict["bits"]) == 1:
-                    portbitname = f"{portname}"
-                else:
-                    portbitname = f"{portname}{idx}"
+            portbitname = f"{portname}"
+            port_width = len(port_dict["bits"])
+            if port_width == 1:
+                connection_id = port_dict["bits"][0]
                 portlist = self._port_tag_dict[connection_id]
                 external_port = ComponentPort(self, portbitname, port_direction)
                 self.add_port(external_port)
@@ -95,3 +94,14 @@ class JsonComponent(MultiComponent):
                     out_index = port_iotype.index(True)
                     port_instance = portlist[out_index]
                     port_instance.wire = external_port
+
+            else:
+                if port_direction == PortDirection.OUT:
+                    external_port = BusOutPort(self, portbitname, width=port_width)
+                    for idx, connection_id in enumerate(port_dict["bits"]):
+                        portlist = self._port_tag_dict[connection_id]
+                        port_iotype = [port.direction == PortDirection.OUT for port in portlist]
+                        out_index = port_iotype.index(True)
+                        port_instance = portlist[out_index]
+                        external_port.connect_bit(idx, port_instance)
+                self.add_port(external_port)

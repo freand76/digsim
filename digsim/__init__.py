@@ -8,5 +8,5 @@ from ._hexdigit import HexDigit  # noqa: F401
 from ._json_component import JsonComponent  # noqa: F401
 from ._led import Led  # noqa: F401
 from ._on_off_switch import OnOffSwitch  # noqa: F401
-from ._port import ComponentPort, OutputPort  # noqa: F401
+from ._port import BusInPort, BusOutPort, ComponentPort, OutputPort  # noqa: F401
 from ._power import GND, VDD  # noqa: F401

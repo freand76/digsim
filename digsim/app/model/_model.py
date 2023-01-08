@@ -131,10 +131,7 @@ class AppModel(QThread):
         self.add_wire(_clk.O, _counter.clk)
         self.add_wire(_on_off.O, _counter.up)
         self.add_wire(_push_button.O, _counter.reset)
-        self.add_wire(_counter.cnt0, _hex.I0)
-        self.add_wire(_counter.cnt1, _hex.I1)
-        self.add_wire(_counter.cnt2, _hex.I2)
-        self.add_wire(_counter.cnt3, _hex.I3)
+        self.add_wire(_counter.cnt, _hex.val)
         self.add_wire(_clk.O, _hex.dot)
         self._circuit.init()
 

@@ -35,7 +35,10 @@ class PlacedWire:
 
     def paint(self, painter):
         pen = QPen()
-        pen.setWidth(2)
+        if self._src_port.width == 1:
+            pen.setWidth(2)
+        else:
+            pen.setWidth(4)
         pen.setColor(Qt.darkGray)
         painter.setPen(pen)
         painter.drawLine(self._src_point, self._dst_point)
