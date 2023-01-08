@@ -1,6 +1,6 @@
 import nox
 
-BLACK_SPEC = "black>=22.3.0"
+BLACK_SPEC = "black==22.12.0"
 ISORT_SPEC = "isort==5.6.3"
 PYLINT_SPEC = "pylint==2.15.9"
 
@@ -18,6 +18,7 @@ def reformat(session):
 @nox.session
 def lint(session):
     session.install(
+        "typing-extensions==4.4.0",
         PYLINT_SPEC,
     )
     session.run(

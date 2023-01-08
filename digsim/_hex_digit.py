@@ -5,12 +5,36 @@ from ._port import ComponentPort, PortDirection, SignalLevel
 
 
 class HexDigit(CallbackComponent):
-    def __init__(self, circuit, name="LED", callback=None):
+
+    VAL_TO_SEGMENTS = {
+        0: "ABCDEF",
+        1: "BC",
+        2: "ABDEG",
+        3: "ABCDG",
+        4: "BCFG",
+        5: "ACDFG",
+        6: "ACDEFG",
+        7: "ABC",
+        8: "ABCDEFG",
+        9: "ABCDFG",
+        10: "ABCEFG",
+        11: "CDEFG",
+        12: "ADEF",
+        13: "BCDEG",
+        14: "ADEFG",
+        15: "AEFG",
+        -1: "",
+    }
+
+    def __init__(self, circuit, name="LED", callback=None, dot=False):
         super().__init__(circuit, name, callback)
+        self._dot = dot
         self.add_port(ComponentPort(self, "I0", PortDirection.IN))
         self.add_port(ComponentPort(self, "I1", PortDirection.IN))
         self.add_port(ComponentPort(self, "I2", PortDirection.IN))
         self.add_port(ComponentPort(self, "I3", PortDirection.IN))
+        if self._dot:
+            self.add_port(ComponentPort(self, "dot", PortDirection.IN))
 
     def value(self):
         if SignalLevel.UNKNOWN in [
@@ -27,3 +51,14 @@ class HexDigit(CallbackComponent):
             | self.I1.intval << 1
             | self.I0.intval
         )
+
+    def dot_active(self):
+        if self._dot:
+            return self.dot.level == SignalLevel.HIGH
+        return False
+
+    def segments(self):
+        segments = self.VAL_TO_SEGMENTS[self.value()]
+        if self.dot_active():
+            segments += "."
+        return segments

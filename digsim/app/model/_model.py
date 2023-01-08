@@ -124,25 +124,6 @@ class PlacedComponent:
 
 
 class PlacedHexDigit(PlacedComponent):
-    VAL_TO_SEGMENTS = {
-        0: "ABCDEF",
-        1: "BC",
-        2: "ABDEG",
-        3: "ABCDG",
-        4: "BCFG",
-        5: "ACDFG",
-        6: "ACDEFG",
-        7: "ABC",
-        8: "ABCDEFG",
-        9: "ABCDFG",
-        10: "ABCEFG",
-        11: "CDEFG",
-        12: "ADEF",
-        13: "BCDEG",
-        14: "ADEFG",
-        15: "AEFG",
-        -1: "",
-    }
 
     SEGMENT_TYPE_AND_POS = {
         "A": ("H", QPoint(51, 20)),
@@ -180,8 +161,7 @@ class PlacedHexDigit(PlacedComponent):
         painter.setBrush(Qt.black)
         painter.drawRoundedRect(33, 10, 60, 80, 3, 3)
 
-        value = self.component.value()
-        active_segments = self.VAL_TO_SEGMENTS[value]
+        active_segments = self.component.segments()
         for seg, type_pos in self.SEGMENT_TYPE_AND_POS.items():
             if seg in active_segments:
                 painter.setPen(Qt.red)
@@ -197,6 +177,14 @@ class PlacedHexDigit(PlacedComponent):
                 path.lineTo(offset + point)
             path.closeSubpath()
             painter.drawPath(path)
+
+        if "." in active_segments:
+            painter.setPen(Qt.red)
+            painter.setBrush(Qt.red)
+        else:
+            painter.setPen(Qt.darkRed)
+            painter.setBrush(Qt.darkRed)
+        painter.drawEllipse(80, 80, 5, 5)
 
 
 class PlacedWire:
@@ -386,7 +374,9 @@ class AppModel(QThread):
         _counter = self.add_component(
             JsonComponent(self._circuit, "json_modules/counter.json"), 600, 300
         )
-        _hex = self.add_component(HexDigit(self._circuit, "HexDigit"), 800, 100)
+        _hex = self.add_component(
+            HexDigit(self._circuit, "HexDigit", dot=True), 800, 100
+        )
         self._hex = _hex
         self.add_wire(_on_off.O, _and.A)
         self.add_wire(_push_button.O, _and.B)
@@ -403,6 +393,7 @@ class AppModel(QThread):
         self.add_wire(_counter.cnt1, _hex.I1)
         self.add_wire(_counter.cnt2, _hex.I2)
         self.add_wire(_counter.cnt3, _hex.I3)
+        self.add_wire(_clk.O, _hex.dot)
         self._circuit.init()
 
     @property
