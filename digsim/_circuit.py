@@ -78,11 +78,11 @@ class Circuit:
         self._vcd = None
 
     def _vcd_init(self):
-        port_paths = []
+        port_info = []
         for comp in self._components:
             for port in comp.ports:
-                port_paths.append((port.path, port.name))
-        self._vcd.init(port_paths)
+                port_info.append((port.path, port.name, port.width))
+        self._vcd.init(port_info)
 
         # Dump initial state in vcd
         for comp in self._components:

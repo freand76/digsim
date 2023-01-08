@@ -1,8 +1,8 @@
 import json
 
 from ._component import MultiComponent
-from ._gates import AND, DFFE_PP0P, NOT, XOR
-from ._port import BusOutPort, ComponentPort, PortDirection
+from ._gates import ALDFFE_PPP, AND, DFFE_PP0P, NOT, XOR
+from ._port import BusInPort, BusOutPort, ComponentPort, PortDirection
 
 
 class JsonComponentException(Exception):
@@ -16,6 +16,7 @@ class JsonComponent(MultiComponent):
         "$_AND_": {"class": AND, "name": "and"},
         "$_XOR_": {"class": XOR, "name": "xor"},
         "$_DFFE_PP0P_": {"class": DFFE_PP0P, "name": "dffe_pp0p"},
+        "$_ALDFFE_PPP_": {"class": ALDFFE_PPP, "name": "aldffe_ppp"},
     }
 
     def __init__(self, circuit, filename):
@@ -96,7 +97,13 @@ class JsonComponent(MultiComponent):
                     port_instance.wire = external_port
 
             else:
-                if port_direction == PortDirection.OUT:
+                if port_direction == PortDirection.IN:
+                    external_port = BusInPort(self, portbitname, width=port_width)
+                    for idx, connection_id in enumerate(port_dict["bits"]):
+                        portlist = self._port_tag_dict[connection_id]
+                        for port in portlist:
+                            external_port.connect_bit(idx, port)
+                else:
                     external_port = BusOutPort(self, portbitname, width=port_width)
                     for idx, connection_id in enumerate(port_dict["bits"]):
                         portlist = self._port_tag_dict[connection_id]

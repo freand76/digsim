@@ -191,3 +191,27 @@ class DFFE_PP0P(Component):
             self.Q.level = self.D.level
 
         self._old_C_level = self.C.level
+
+
+class ALDFFE_PPP(Component):
+    def __init__(self, circuit, name="ALDFFE"):
+        super().__init__(circuit, name)
+        self.add_port(ComponentPort(self, "AD", PortDirection.IN, update_parent=False))
+        self.add_port(ComponentPort(self, "C", PortDirection.IN))
+        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
+        self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
+        self.add_port(ComponentPort(self, "L", PortDirection.IN))
+        self.add_port(OutputPort(self, "Q"))
+        self._old_C_level = self.C.level
+
+    def update(self):
+        if self.L.level == SignalLevel.HIGH:
+            self.Q.level = self.AD.level
+        elif (
+            self.C.level != self._old_C_level
+            and self.C.level == SignalLevel.HIGH
+            and self.E.level == SignalLevel.HIGH
+        ):
+            self.Q.level = self.D.level
+
+        self._old_C_level = self.C.level

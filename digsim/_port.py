@@ -47,6 +47,10 @@ class Port(abc.ABC):
         return f"{self._parent.path}"
 
     @property
+    def busbit(self):
+        return False
+
+    @property
     def level(self):
         return self._level
 
@@ -133,6 +137,14 @@ class BusBit(Port):
         super().__init__(parent=parent, name=name, direction=direction)
         self._bus_port = bus_port
 
+    @property
+    def busbit(self):
+        return True
+
+    @property
+    def bus_port(self):
+        return self._bus_port
+
     def set_level(self, level=None, value=None):
         self._level = level
         self._bus_port.update()
@@ -142,6 +154,7 @@ class BusPort(Port):
     def __init__(self, parent, name, direction, width=1):
         super().__init__(parent=parent, name=name, direction=direction)
         self._width = width
+        self._bus_value = -1
         self._bit_ports = []
         bit_direction = PortDirection.IN if direction == PortDirection.OUT else PortDirection.OUT
         for bit in range(width):
@@ -151,18 +164,26 @@ class BusPort(Port):
         return self._bit_ports[bit]
 
     def set_level(self, level=None, value=None):
-        pass
+        self._bus_value = value
+
+    @property
+    def intval(self):
+        return self._bus_value
+
+    @property
+    def vcdval(self):
+        if self.intval == -1:
+            return "x"
+        return self.intval
 
 
 class BusOutPort(BusPort):
     def __init__(self, parent, name, width=1):
         super().__init__(parent, name, PortDirection.OUT, width)
+        self._bus_value = -1
 
     def connect_bit(self, bit, port):
         port.wire = self.port_bit(bit)
-
-    def set_level(self, level=None, value=None):
-        pass
 
     def value(self):
         value = 0
@@ -178,6 +199,7 @@ class BusOutPort(BusPort):
 
     def update(self):
         value = self.value()
+        super().set_level(value=value)
         for port in self._wired_ports:
             port.set_level(value=value)
 
@@ -191,20 +213,26 @@ class BusInPort(BusPort):
         self.port_bit(bit).wire = port
 
     def set_level(self, level=None, value=None):
-        self._bus_value = value
+        if self._bus_value == value:
+            return
+
+        super().set_level(value=value)
         if value == -1:
             for bit_port in self._bit_ports:
                 bit_port.level = SignalLevel.UNKNOWN
         else:
             for bit_port in self._bit_ports:
+                old_level = bit_port.level
                 if value & 1 == 1:
-                    bit_port.level = SignalLevel.HIGH
+                    new_level = SignalLevel.HIGH
                 else:
-                    bit_port.level = SignalLevel.LOW
-                value = value > 1
+                    new_level = SignalLevel.LOW
 
-    def value(self):
-        return self._bus_value
+                if old_level != new_level:
+                    bit_port.level = new_level
+                    bit_port.update_wires(new_level)
+
+                value = value >> 1
 
     def update(self):
         pass

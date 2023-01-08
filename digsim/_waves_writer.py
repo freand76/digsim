@@ -11,16 +11,18 @@ class WavesWriter:
         self._vcd_writer = None
         self._vcd_dict = {}
 
-    def init(self, port_paths):
+    def init(self, port_info):
         if self._vcd_file is not None or self._vcd_writer is not None:
             self.close()
         self._vcd_file = open(self._vcd_name, mode="w", encoding="utf-8")
         self._vcd_writer = VCDWriter(self._vcd_file, timescale="1 ns", date="today")
-        for port_path, port_name in port_paths:
-            var = self._vcd_writer.register_var(port_path, port_name, "integer", size=1)
+        for port_path, port_name, port_width in port_info:
+            var = self._vcd_writer.register_var(port_path, port_name, "wire", size=port_width)
             self._vcd_dict[f"{port_path}.{port_name}"] = var
 
     def write(self, port, time_ns):
+        if port.busbit:
+            port = port.bus_port
         var = self._vcd_dict.get(f"{port.path}.{port.name}")
         if var is None:
             return

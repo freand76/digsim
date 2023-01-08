@@ -29,8 +29,9 @@ print(json_component)
 print("\n===================== Start ==========================\n")
 
 for _ in range(0, 16):
+    print("OUT", json_component.cnt.value())
+
     clk.push()
     circuit.run(ms=10)
     clk.release()
     circuit.run(ms=10)
-    print("OUT", json_component.cnt.value())
