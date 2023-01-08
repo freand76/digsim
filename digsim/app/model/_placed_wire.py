@@ -76,20 +76,16 @@ class PlacedWire:
             self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name)
 
     @property
+    def key(self):
+        return (self._src_port, self._dst_port)
+
+    @property
     def src_port(self):
         return self._src_port
 
     @property
     def dst_port(self):
         return self._dst_port
-
-    @property
-    def src(self):
-        return self._src_point
-
-    @property
-    def dst(self):
-        return self._dst_point
 
     @property
     def start_pos(self):

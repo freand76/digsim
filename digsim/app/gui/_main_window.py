@@ -91,7 +91,10 @@ class ComponentWidget(QPushButton):
             self.update()
 
         if self._app_model.has_new_wire():
-            self._app_model.set_new_wire_end_pos(self.pos() + event.pos())
+            end_pos = event.pos()
+            if self._active_port:
+                end_pos = self._placed_component.get_port_pos(self._active_port)
+            self._app_model.set_new_wire_end_pos(self.pos() + end_pos)
             self.parent().update()
 
         elif self._mouse_grab_pos is not None:

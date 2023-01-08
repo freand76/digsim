@@ -9,7 +9,7 @@ class PlacedComponent:
     BORDER_MARGIN = 20
     PORT_SIDE = 8
     COMPONENT_BORDER = 5
-    PORT_CLICK_EXTRA_PIXELS = 5
+    PORT_CLICK_EXTRA_PIXELS = 10
 
     def __init__(self, component, x, y):
         self._component = component
@@ -41,7 +41,7 @@ class PlacedComponent:
         painter.setPen(Qt.black)
         painter.setBrush(Qt.SolidPattern)
         painter.setFont(QFont("Arial", 8))
-        for portname, rect in self.port_rects.items():
+        for portname, rect in self._port_rects.items():
             if portname == active_port:
                 painter.setBrush(Qt.red)
             else:
@@ -79,7 +79,7 @@ class PlacedComponent:
         return QPoint(rect.x(), rect.y()) + QPoint(self.PORT_SIDE / 2, self.PORT_SIDE / 2)
 
     def get_port_for_point(self, point):
-        for portname, rect in self.port_rects.items():
+        for portname, rect in self._port_rects.items():
             if (
                 point.x() > rect.x() - self.PORT_CLICK_EXTRA_PIXELS
                 and point.x() < rect.x() + rect.width() + self.PORT_CLICK_EXTRA_PIXELS
@@ -92,10 +92,6 @@ class PlacedComponent:
     @property
     def component(self):
         return self._component
-
-    @property
-    def port_rects(self):
-        return self._port_rects
 
     @property
     def pos(self):

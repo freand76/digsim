@@ -60,7 +60,8 @@ class AppModel(QThread):
         return component
 
     def add_wire(self, src_port, dst_port):
-        self._placed_wires[(src_port, dst_port)] = PlacedWire(self, src_port, dst_port)
+        wire = PlacedWire(self, src_port, dst_port)
+        self._placed_wires[wire.key] = wire
 
     def get_placed_components(self):
         placed_components = []
@@ -93,7 +94,7 @@ class AppModel(QThread):
         try:
             self._new_wire.set_end_port(component.port(portname))
             self._new_wire.connect()
-            self._placed_wires[(self._new_wire.src_port, self._new_wire.dst_port)] = self._new_wire
+            self._placed_wires[self._new_wire.key] = self._new_wire
         except Exception as e:
             print("ERROR:", str(e))
 
@@ -131,7 +132,7 @@ class AppModel(QThread):
         self.add_wire(_clk.O, _counter.clk)
         self.add_wire(_on_off.O, _counter.up)
         self.add_wire(_push_button.O, _counter.reset)
-        # self.add_wire(_counter.cnt, _hex.val)
+        self.add_wire(_counter.cnt, _hex.val)
         self.add_wire(_clk.O, _hex.dot)
         self._circuit.init()
 
