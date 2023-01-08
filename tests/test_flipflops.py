@@ -1,4 +1,3 @@
-import pytest
 from digsim import DFFE_PP0P, Circuit, SignalLevel
 
 

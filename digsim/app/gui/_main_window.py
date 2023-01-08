@@ -1,5 +1,5 @@
-from PySide6.QtCore import QByteArray, QDataStream, QIODevice, QMimeData, QPoint, QRectF, Qt
-from PySide6.QtGui import QDrag, QFont, QPainter, QStaticText
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -107,7 +107,7 @@ class CircuitArea(QWidget):
         self._app_model = app_model
 
         for placed_comp in self._app_model.get_placed_components():
-            compWidget = ComponentWidget(app_model, placed_comp, self)
+            ComponentWidget(app_model, placed_comp, self)
 
         self.setMouseTracking(True)
 

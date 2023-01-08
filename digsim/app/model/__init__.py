@@ -1,1 +1,1 @@
-from ._model import AppModel
+from ._model import AppModel  # noqa: F401

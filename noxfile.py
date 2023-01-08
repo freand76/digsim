@@ -1,5 +1,3 @@
-import os
-
 import nox
 
 
@@ -18,6 +16,8 @@ def lint(session):
     session.install(
         "typing-extensions==4.4.0",
         "pylint==2.15.9",
+        "flake8-pyproject==1.2.2",
+        "flake8==6.0.0",
     )
     session.run(
         "python",
@@ -25,3 +25,4 @@ def lint(session):
         "pylint",
         "digsim/.",
     )
+    session.run("python", "-m", "flake8")
