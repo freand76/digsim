@@ -16,7 +16,7 @@ class Port(abc.ABC):
         self._parent = parent
         self._direction = direction
         self._name = name
-        self._connected = False
+        self._driver_port = None
         self._wired_ports = []
         self._level = None
         self._width = 1
@@ -59,23 +59,23 @@ class Port(abc.ABC):
         self.set_level(level=level)
 
     @property
-    def connected(self):
-        return self._connected
-
-    @connected.setter
-    def connected(self, connect):
-        if connect and self._connected:
-            raise ConnectionError(f"The port {self.path}.{self.name} is alread connected")
-        self._connected = connect
-
-    @property
     def wire(self):
         raise ConnectionError("Cannot get a wire")
 
+    def has_driver(self):
+        return self._driver_port is not None
+
+    def set_driver(self, port):
+        self._driver_port = port
+
     @wire.setter
     def wire(self, port):
-        port.connected = True
-        return self._wired_ports.append(port)
+        if port.has_driver():
+            raise ConnectionError(f"The port {port.path}.{port.name} already has a driver")
+        if self.width != port.width:
+            raise ConnectionError("Cannot connect ports with different widths")
+        port.set_driver(self)
+        self._wired_ports.append(port)
 
     @property
     def wires(self):
