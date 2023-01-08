@@ -84,7 +84,7 @@ class AppModel(QThread):
             wire.paint(painter)
 
         if self._new_wire is not None and self._new_wire_end_pos is not None:
-            self._new_wire.paint_new(self._new_wire_end_pos)
+            self._new_wire.paint_new(painter, self._new_wire_end_pos)
 
     def new_wire_start(self, component, portname):
         self._new_wire = PlacedWire(self, component.port(portname))
@@ -131,7 +131,7 @@ class AppModel(QThread):
         self.add_wire(_clk.O, _counter.clk)
         self.add_wire(_on_off.O, _counter.up)
         self.add_wire(_push_button.O, _counter.reset)
-        self.add_wire(_counter.cnt, _hex.val)
+        # self.add_wire(_counter.cnt, _hex.val)
         self.add_wire(_clk.O, _hex.dot)
         self._circuit.init()
 

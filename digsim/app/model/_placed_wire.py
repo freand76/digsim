@@ -9,6 +9,7 @@ class PlacedWire:
         self._src_port = None
         self._dst_port = None
         self._connected = False
+        self._is_bus = False
 
         if port_a is None:
             raise Exception("Cannot start a wire without a port")
@@ -33,19 +34,21 @@ class PlacedWire:
         self.update()
         self.connect()
 
-    def paint(self, painter):
+    def _paint_wire(self, painter, src, dst):
         pen = QPen()
-        if self._src_port.width == 1:
-            pen.setWidth(2)
-        else:
+        if self._is_bus:
             pen.setWidth(4)
+        else:
+            pen.setWidth(2)
         pen.setColor(Qt.darkGray)
         painter.setPen(pen)
-        painter.drawLine(self._src_point, self._dst_point)
+        painter.drawLine(src, dst)
+
+    def paint(self, painter):
+        self._paint_wire(painter, self._src_point, self._dst_point)
 
     def paint_new(self, painter, end_pos):
-        painter.setPen(Qt.darkGray)
-        painter.drawLine(self.start_pos, end_pos)
+        self._paint_wire(painter, self.start_pos, end_pos)
 
     def connect(self):
         if self._src_port is not None and self._dst_port is not None:
@@ -64,9 +67,11 @@ class PlacedWire:
 
     def update(self):
         if self._src_port is not None:
+            self._is_bus = self._src_port.width > 1
             src_comp = self._app_model.get_placed_component(self._src_port.parent)
             self._src_point = src_comp.pos + src_comp.get_port_pos(self._src_port.name)
         if self._dst_port is not None:
+            self._is_bus = self._dst_port.width > 1
             dst_comp = self._app_model.get_placed_component(self._dst_port.parent)
             self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name)
 
