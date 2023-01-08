@@ -34,7 +34,7 @@ class HexDigit(CallbackComponent):
             self.add_port(ComponentPort(self, "dot", PortDirection.IN))
 
     def value(self):
-        return self.val.value()
+        return self.val.intval
 
     def dot_active(self):
         if self._dot:
