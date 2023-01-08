@@ -45,12 +45,7 @@ class HexDigit(CallbackComponent):
         ]:
             return -1
 
-        return (
-            self.I3.intval << 3
-            | self.I2.intval << 2
-            | self.I1.intval << 1
-            | self.I0.intval
-        )
+        return self.I3.intval << 3 | self.I2.intval << 2 | self.I1.intval << 1 | self.I0.intval
 
     def dot_active(self):
         if self._dot:

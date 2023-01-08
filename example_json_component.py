@@ -1,5 +1,6 @@
 from digsim import VDD, Circuit, JsonComponent, PushButton
 
+
 circuit = Circuit()
 json_component = JsonComponent(circuit, "json_modules/counter.json")
 

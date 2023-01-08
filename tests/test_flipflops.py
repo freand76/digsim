@@ -1,6 +1,6 @@
 import pytest
-
 from digsim import DFFE_PP0P, Circuit, SignalLevel
+
 
 UNKNOWN = SignalLevel.UNKNOWN
 HIGH = SignalLevel.HIGH

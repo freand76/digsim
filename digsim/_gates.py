@@ -65,9 +65,9 @@ class XOR(Component):
             self.A.level == SignalLevel.LOW and self.B.level == SignalLevel.HIGH
         ):
             self.Y.level = SignalLevel.HIGH
-        elif (
-            self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH
-        ) or (self.A.level == SignalLevel.LOW and self.B.level == SignalLevel.LOW):
+        elif (self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH) or (
+            self.A.level == SignalLevel.LOW and self.B.level == SignalLevel.LOW
+        ):
             self.Y.level = SignalLevel.LOW
         else:
             self.Y.level = SignalLevel.UNKNOWN

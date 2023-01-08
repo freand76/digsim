@@ -3,10 +3,12 @@ import sys
 
 from PySide6.QtWidgets import QApplication
 
+
 sys.path.append(str(pathlib.Path(__file__).parent.parent.parent.resolve()))
 
 from digsim.app.gui import MainWindow
 from digsim.app.model import AppModel
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

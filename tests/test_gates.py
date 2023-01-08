@@ -1,6 +1,6 @@
 import pytest
-
 from digsim import AND, NAND, NOT, NOT_AND, XOR, Circuit, SignalLevel
+
 
 UNKNOWN = SignalLevel.UNKNOWN
 HIGH = SignalLevel.HIGH

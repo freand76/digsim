@@ -52,17 +52,13 @@ class JsonComponent(MultiComponent):
             component_class = cell["class"]
             cell_count = self._component_id.get(cell["name"], 0)
             self._component_id[cell["name"]] = cell_count + 1
-            component = component_class(
-                self._circuit, name=f"{cell['name']}_{cell_count}"
-            )
+            component = component_class(self._circuit, name=f"{cell['name']}_{cell_count}")
             self.add(component)
             cell_connections = cell_dict["connections"]
             for portname, connection in cell_connections.items():
 
                 if len(connection) > 1:
-                    raise Exception(
-                        f"Cannot handle multibit connection for cell '{cell_type}'"
-                    )
+                    raise Exception(f"Cannot handle multibit connection for cell '{cell_type}'")
                 connection_id = connection[0]
                 port_instance = component.port(portname)
                 self._add_connection(connection_id, port_instance)
@@ -81,9 +77,7 @@ class JsonComponent(MultiComponent):
         ports = self._json["modules"][self.name]["ports"]
         for portname, port_dict in ports.items():
             port_direction = (
-                PortDirection.IN
-                if port_dict["direction"] == "input"
-                else PortDirection.OUT
+                PortDirection.IN if port_dict["direction"] == "input" else PortDirection.OUT
             )
             for idx, connection_id in enumerate(port_dict["bits"]):
                 if len(port_dict["bits"]) == 1:
@@ -97,9 +91,7 @@ class JsonComponent(MultiComponent):
                     for port in portlist:
                         external_port.wire = port
                 else:
-                    port_iotype = [
-                        port.direction == PortDirection.OUT for port in portlist
-                    ]
+                    port_iotype = [port.direction == PortDirection.OUT for port in portlist]
                     out_index = port_iotype.index(True)
                     port_instance = portlist[out_index]
                     port_instance.wire = external_port

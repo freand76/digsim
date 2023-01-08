@@ -2,12 +2,21 @@ import queue
 import time
 from functools import partial
 
+from digsim import (
+    AND,
+    CallbackComponent,
+    Circuit,
+    Clock,
+    Component,
+    HexDigit,
+    JsonComponent,
+    Led,
+    OnOffSwitch,
+    PortDirection,
+    PushButton,
+)
 from PySide6.QtCore import QPoint, QRect, QSize, Qt, QThread, Signal
 from PySide6.QtGui import QFont, QPainterPath, QPen
-
-from digsim import (AND, CallbackComponent, Circuit, Clock, Component,
-                    HexDigit, JsonComponent, Led, OnOffSwitch, PortDirection,
-                    PushButton)
 
 
 class PlacedComponent:
@@ -84,9 +93,7 @@ class PlacedComponent:
 
     def get_port_pos(self, portname):
         rect = self._port_rects[portname]
-        return QPoint(rect.x(), rect.y()) + QPoint(
-            self.PORT_SIDE / 2, self.PORT_SIDE / 2
-        )
+        return QPoint(rect.x(), rect.y()) + QPoint(self.PORT_SIDE / 2, self.PORT_SIDE / 2)
 
     def get_port_for_point(self, point):
         for portname, rect in self.port_rects.items():
@@ -198,16 +205,10 @@ class PlacedWire:
             raise Exception("Cannot start a wire without a port")
 
         if port_b is not None:
-            if (
-                port_a.direction == PortDirection.OUT
-                and port_b.direction == PortDirection.IN
-            ):
+            if port_a.direction == PortDirection.OUT and port_b.direction == PortDirection.IN:
                 self._src_port = port_a
                 self._dst_port = port_b
-            elif (
-                port_a.direction == PortDirection.IN
-                and port_b.direction == PortDirection.OUT
-            ):
+            elif port_a.direction == PortDirection.IN and port_b.direction == PortDirection.OUT:
                 self._src_port = port_b
                 self._dst_port = port_a
             else:
@@ -345,9 +346,7 @@ class AppModel(QThread):
         try:
             self._new_wire.set_end_port(component.port(portname))
             self._new_wire.connect()
-            self._placed_wires[
-                (self._new_wire.src_port, self._new_wire.dst_port)
-            ] = self._new_wire
+            self._placed_wires[(self._new_wire.src_port, self._new_wire.dst_port)] = self._new_wire
         except Exception as e:
             print("ERROR:", str(e))
 
@@ -362,9 +361,7 @@ class AppModel(QThread):
 
     def setup_circuit(self):
         _on_off = self.add_component(OnOffSwitch(self._circuit, "Switch"), 20, 20)
-        _push_button = self.add_component(
-            PushButton(self._circuit, "PushButton"), 20, 220
-        )
+        _push_button = self.add_component(PushButton(self._circuit, "PushButton"), 20, 220)
         _and = self.add_component(AND(self._circuit), 200, 100)
         _led = self.add_component(Led(self._circuit, "Led"), 400, 140)
         _clk = self.add_component(Clock(self._circuit, 5.0, "Clock"), 20, 340)
@@ -374,9 +371,7 @@ class AppModel(QThread):
         _counter = self.add_component(
             JsonComponent(self._circuit, "json_modules/counter.json"), 600, 300
         )
-        _hex = self.add_component(
-            HexDigit(self._circuit, "HexDigit", dot=True), 800, 100
-        )
+        _hex = self.add_component(HexDigit(self._circuit, "HexDigit", dot=True), 800, 100)
         self._hex = _hex
         self.add_wire(_on_off.O, _and.A)
         self.add_wire(_push_button.O, _and.B)

@@ -2,6 +2,7 @@ import abc
 
 from ._enum import PortDirection, SignalLevel
 
+
 SIGNAL_LEVEL_TO_STR = {
     SignalLevel.UNKNOWN: "X",
     SignalLevel.HIGH: "1",
@@ -54,9 +55,7 @@ class Port(abc.ABC):
     @connected.setter
     def connected(self, connect):
         if connect and self._connected:
-            raise ConnectionError(
-                f"The port {self.path}.{self.name} is alread connected"
-            )
+            raise ConnectionError(f"The port {self.path}.{self.name} is alread connected")
         self._connected = connect
 
     @property

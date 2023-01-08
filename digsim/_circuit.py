@@ -155,9 +155,7 @@ class Circuit:
 
         source_component = self.get_component(source_component_name)
         dest_componment = self.get_component(dest_component_name)
-        source_component.port(source_port_name).wire = dest_componment.port(
-            dest_port_name
-        )
+        source_component.port(source_port_name).wire = dest_componment.port(dest_port_name)
 
     def from_json_file(self, filename):
         with open(filename, mode="r", encoding="utf-8") as json_file:

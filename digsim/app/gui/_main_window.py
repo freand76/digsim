@@ -1,9 +1,16 @@
-from PySide6.QtCore import (QByteArray, QDataStream, QIODevice, QMimeData,
-                            QPoint, QRectF, Qt)
+from PySide6.QtCore import QByteArray, QDataStream, QIODevice, QMimeData, QPoint, QRectF, Qt
 from PySide6.QtGui import QDrag, QFont, QPainter, QStaticText
-from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLineEdit, QMainWindow,
-                               QPushButton, QSplitter, QStatusBar, QVBoxLayout,
-                               QWidget)
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLineEdit,
+    QMainWindow,
+    QPushButton,
+    QSplitter,
+    QStatusBar,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 class ComponentWidget(QPushButton):
@@ -165,9 +172,7 @@ class TopBar(QFrame):
         self.layout().addWidget(self._reset_button)
         self._sim_time = QLineEdit("0 s")
         self._sim_time.setReadOnly(True)
-        self._sim_time.selectionChanged.connect(
-            lambda: self._sim_time.setSelection(0, 0)
-        )
+        self._sim_time.selectionChanged.connect(lambda: self._sim_time.setSelection(0, 0))
         self.layout().addWidget(self._sim_time)
         self.layout().setStretchFactor(self._start_button, 0)
         self.layout().addStretch(1)
