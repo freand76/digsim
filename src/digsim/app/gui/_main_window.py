@@ -4,7 +4,7 @@
 # pylint: disable=too-few-public-methods
 # pylint: disable=invalid-name
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QFrame,
@@ -12,8 +12,8 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMainWindow,
     QPushButton,
+    QScrollArea,
     QSplitter,
-    QStatusBar,
     QVBoxLayout,
     QWidget,
 )
@@ -134,30 +134,63 @@ class CircuitArea(QWidget):
             self.update()
 
 
+class SelectableComponentWidget(QPushButton):
+    def __init__(self, app_model, name, parent):
+        super().__init__(parent)
+        self._app_model = app_model
+        self.setText(name)
+
+    def sizeHint(self):
+        return QSize(70, 70)
+
+
 class ComponentSelection(QWidget):
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self.app_model = app_model
+        self.setLayout(QVBoxLayout(self))
+        self.layout().setContentsMargins(5, 5, 5, 5)
+        self.layout().setSpacing(5)
+        self.layout().addWidget(SelectableComponentWidget(app_model, "1", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "2", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "3", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "4", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "5", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "6", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "7", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "8", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "9", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "10", self))
 
 
 class CircuitEditor(QSplitter):
     def __init__(self, app_model, parent):
         super().__init__(parent)
+        self._app_model = app_model
+        self._app_model.sig_control_notify.connect(self._control_notify)
 
-        self.app_model = app_model
         self.setLayout(QHBoxLayout(self))
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
 
-        selection_area = ComponentSelection(app_model, self)
-        selection_area.setMinimumWidth(250)
-        selection_area.setMaximumWidth(350)
-        self.layout().addWidget(selection_area)
-        self.layout().setStretchFactor(selection_area, 0)
+        selection_panel = ComponentSelection(app_model, self)
+        self._selection_area = QScrollArea(self)
+        self._selection_area.setFixedWidth(96)
+        self._selection_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self._selection_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._selection_area.setWidget(selection_panel)
+        self.layout().addWidget(self._selection_area)
+        self.layout().setStretchFactor(self._selection_area, 0)
 
         circuit_area = CircuitArea(app_model, self)
         self.layout().addWidget(circuit_area)
         self.layout().setStretchFactor(circuit_area, 1)
+
+    def _control_notify(self, started):
+        if started:
+            self._selection_area.hide()
+        else:
+            self._selection_area.show()
 
 
 class TopBar(QFrame):
@@ -232,28 +265,19 @@ class CentralWidget(QWidget):
         self.layout().addWidget(top_bar)
         self.layout().setStretchFactor(top_bar, 0)
 
-        working_area = CircuitArea(app_model, self)
+        working_area = CircuitEditor(app_model, self)
         self.layout().addWidget(working_area)
         self.layout().setStretchFactor(working_area, 1)
-
-
-class StatusBar(QStatusBar):
-    def __init__(self, app_model, parent):
-        super().__init__(parent)
-        self._app_model = app_model
 
 
 class MainWindow(QMainWindow):
     def __init__(self, app_model):
         super().__init__()
         self._app_model = app_model
-
         self.resize(1280, 720)
         central_widget = CentralWidget(app_model, self)
+        self.setWindowTitle("DigSim - Interactive Digital Logic Simulator")
         self.setCentralWidget(central_widget)
-
-        self.setStatusBar(StatusBar(app_model, self))
-        self.setWindowTitle("DigSim Logic Simulator")
 
     def closeEvent(self, event):
         self._app_model.model_stop()
