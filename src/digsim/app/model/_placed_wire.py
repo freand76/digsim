@@ -1,6 +1,14 @@
-from digsim import PortDirection
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPen
+
+from digsim import PortDirection
+
+
+class WireException(Exception):
+    pass
 
 
 class PlacedWire:
@@ -12,7 +20,7 @@ class PlacedWire:
         self._is_bus = False
 
         if port_a is None:
-            raise Exception("Cannot start a wire without a port")
+            raise WireException("Cannot start a wire without a port")
 
         if port_b is not None:
             if port_a.direction == PortDirection.OUT and port_b.direction == PortDirection.IN:
@@ -22,7 +30,7 @@ class PlacedWire:
                 self._src_port = port_b
                 self._dst_port = port_a
             else:
-                raise Exception("Cannot connect to power of same type")
+                raise WireException("Cannot connect to power of same type")
         else:
             if port_a.direction == PortDirection.OUT:
                 self._src_port = port_a
@@ -61,7 +69,7 @@ class PlacedWire:
         elif port.direction == PortDirection.IN and self._dst_port is None:
             self._dst_port = port
         else:
-            raise Exception("Cannot connect to power of same type")
+            raise WireException("Cannot connect to power of same type")
 
         self.update()
 

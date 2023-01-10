@@ -1,3 +1,6 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QFont
 
@@ -11,9 +14,9 @@ class PlacedComponent:
     COMPONENT_BORDER = 5
     PORT_CLICK_EXTRA_PIXELS = 10
 
-    def __init__(self, component, x, y):
+    def __init__(self, component, xpos, ypos):
         self._component = component
-        self._pos = QPoint(x, y)
+        self._pos = QPoint(xpos, ypos)
         self._height = self.DEFAULT_HEIGHT
         self._width = self.DEFAULT_WIDTH
         self._port_rects = {}
@@ -48,10 +51,10 @@ class PlacedComponent:
                 painter.setBrush(Qt.gray)
             painter.drawRect(rect)
 
-    def _add_port_rects(self, ports, x):
+    def _add_port_rects(self, ports, xpos):
         if len(ports) == 1:
             self._port_rects[ports[0].name] = QRect(
-                x,
+                xpos,
                 self._height / 2 - self.PORT_SIDE / 2,
                 self.PORT_SIDE,
                 self.PORT_SIDE,
@@ -60,7 +63,7 @@ class PlacedComponent:
             port_distance = (self._height - 2 * self.BORDER_MARGIN) / (len(ports) - 1)
             for idx, port in enumerate(ports):
                 self._port_rects[port.name] = QRect(
-                    x,
+                    xpos,
                     self.BORDER_MARGIN + idx * port_distance - self.PORT_SIDE / 2,
                     self.PORT_SIDE,
                     self.PORT_SIDE,

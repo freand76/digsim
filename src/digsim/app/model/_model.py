@@ -1,6 +1,15 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
+# pylint: disable=no-member
+# pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-public-methods
+
 import queue
 import time
 from functools import partial
+
+from PySide6.QtCore import QThread, Signal
 
 from digsim import (
     AND,
@@ -14,11 +23,10 @@ from digsim import (
     OnOffSwitch,
     PushButton,
 )
-from PySide6.QtCore import QThread, Signal
 
 from ._placed_component import PlacedComponent
 from ._placed_hexdigit import PlacedHexDigit
-from ._placed_wire import PlacedWire
+from ._placed_wire import PlacedWire, WireException
 
 
 class AppModel(QThread):
@@ -40,23 +48,27 @@ class AppModel(QThread):
         self._new_wire = None
         self._new_wire_end_pos = None
 
+    @property
+    def callback_list(self):
+        return self._component_callback_list
+
     @staticmethod
-    def comp_cb(self, comp):
-        if comp not in self._component_callback_list:
-            self._component_callback_list.append(comp)
+    def comp_cb(model, comp):
+        if comp not in model.callback_list:
+            model.callback_list.append(comp)
 
     def get_placed_component(self, component):
         return self._placed_components[component]
 
-    def add_component(self, component, x, y):
+    def add_component(self, component, xpos, ypos):
         if isinstance(component, HexDigit):
-            placed_component = PlacedHexDigit(component, x, y)
+            placed_component = PlacedHexDigit(component, xpos, ypos)
         else:
-            placed_component = PlacedComponent(component, x, y)
+            placed_component = PlacedComponent(component, xpos, ypos)
 
         self._placed_components[component] = placed_component
         if isinstance(component, CallbackComponent):
-            component.set_callback(partial(self.comp_cb, self))
+            component.set_callback(partial(AppModel.comp_cb, self))
         return component
 
     def add_wire(self, src_port, dst_port):
@@ -95,8 +107,8 @@ class AppModel(QThread):
             self._new_wire.set_end_port(component.port(portname))
             self._new_wire.connect()
             self._placed_wires[self._new_wire.key] = self._new_wire
-        except Exception as e:
-            print("ERROR:", str(e))
+        except WireException as exc:
+            print("ERROR:", str(exc))
 
         self._new_wire = None
         self._new_wire_end_pos = None

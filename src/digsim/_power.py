@@ -1,3 +1,6 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
 # pylint: disable=no-member
 
 from ._component import Component

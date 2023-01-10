@@ -8,6 +8,15 @@ multi_line_output = 3
 indent = 4
 default_section = "FIRSTPARTY"
 include_trailing_comma = true
+known_qt = "PySide6"
+sections = [
+    "FUTURE",
+    "STDLIB",
+    "THIRDPARTY",
+    "QT",
+    "FIRSTPARTY",
+    "LOCALFOLDER",
+]
 
 [tool.pylint.'MESSAGES CONTROL']
 max-line-length = 99
@@ -15,6 +24,9 @@ disable = """
     missing-module-docstring,
     missing-class-docstring,
     missing-function-docstring,
+"""
+ignored-modules = """
+   PySide6
 """
 
 [tool.flake8]

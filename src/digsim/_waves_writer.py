@@ -1,3 +1,6 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
 # pylint: disable=consider-using-with
 # pylint: disable=import-error
 

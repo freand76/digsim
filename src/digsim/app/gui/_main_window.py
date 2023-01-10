@@ -1,3 +1,9 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
+# pylint: disable=too-few-public-methods
+# pylint: disable=invalid-name
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
@@ -34,17 +40,17 @@ class ComponentWidget(QPushButton):
         if component == self.component:
             self.update()
 
-    def paintEvent(self, event):
+    def paintEvent(self, _):
         painter = QPainter(self)
         self._placed_component.paint_component(painter)
         self._placed_component.paint_ports(painter, self._active_port)
         painter.end()
 
-    def enterEvent(self, event):
+    def enterEvent(self, _):
         if self._app_model.is_running and self.component.has_action:
             self.setCursor(Qt.PointingHandCursor)
 
-    def leaveEvent(self, event):
+    def leaveEvent(self, _):
         self.setCursor(Qt.ArrowCursor)
         self._active_port = None
 
@@ -114,7 +120,7 @@ class CircuitArea(QWidget):
 
         self.setMouseTracking(True)
 
-    def paintEvent(self, event):
+    def paintEvent(self, _):
         painter = QPainter(self)
         self._app_model.paint_wires(painter)
         painter.end()
@@ -175,6 +181,8 @@ class TopBar(QFrame):
         self.layout().addWidget(self._reset_button)
         self._sim_time = QLineEdit("0 s")
         self._sim_time.setReadOnly(True)
+        self._sim_time.setAlignment(Qt.AlignRight)
+        self._sim_time.setFrame(False)
         self._sim_time.selectionChanged.connect(lambda: self._sim_time.setSelection(0, 0))
         self.layout().addWidget(self._sim_time)
         self.layout().setStretchFactor(self._start_button, 0)
@@ -232,6 +240,7 @@ class CentralWidget(QWidget):
 class StatusBar(QStatusBar):
     def __init__(self, app_model, parent):
         super().__init__(parent)
+        self._app_model = app_model
 
 
 class MainWindow(QMainWindow):
@@ -240,8 +249,8 @@ class MainWindow(QMainWindow):
         self._app_model = app_model
 
         self.resize(1280, 720)
-        centralWidget = CentralWidget(app_model, self)
-        self.setCentralWidget(centralWidget)
+        central_widget = CentralWidget(app_model, self)
+        self.setCentralWidget(central_widget)
 
         self.setStatusBar(StatusBar(app_model, self))
         self.setWindowTitle("DigSim Logic Simulator")

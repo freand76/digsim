@@ -1,3 +1,6 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
 from enum import Enum, auto
 
 

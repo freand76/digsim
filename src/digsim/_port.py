@@ -1,3 +1,6 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
 import abc
 
 from ._enum import PortDirection, SignalLevel

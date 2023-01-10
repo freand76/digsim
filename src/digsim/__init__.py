@@ -1,3 +1,6 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
 from ._button import PushButton  # noqa: F401
 from ._circuit import Circuit  # noqa: F401
 from ._clock import Clock  # noqa: F401

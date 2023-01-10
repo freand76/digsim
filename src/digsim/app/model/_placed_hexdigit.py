@@ -1,3 +1,6 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QPainterPath
 

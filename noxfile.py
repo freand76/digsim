@@ -23,6 +23,6 @@ def lint(session):
         "python",
         "-m",
         "pylint",
-        "digsim/.",
+        "src",
     )
     session.run("python", "-m", "flake8")
