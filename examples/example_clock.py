@@ -1,4 +1,8 @@
-from digsim import Circuit, Clock, Led
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
+from digsim.circuit import Circuit
+from digsim.circuit.components import Clock, Led
 
 
 def led_callback(comp):

@@ -3,8 +3,7 @@
 
 # pylint: disable=no-member
 
-from ._component import Component
-from ._port import ComponentPort, PortDirection, SignalLevel
+from .atoms import Component, ComponentPort, PortDirection, SignalLevel
 
 
 class VDD(Component):

@@ -1,16 +1,24 @@
-from digsim import VDD, Circuit, JsonComponent, PushButton
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
+import os
+
+from digsim.circuit import Circuit
+from digsim.circuit.components import VDD, PushButton, YosysComponent
 
 
 circuit = Circuit()
-json_component = JsonComponent(circuit, "json_modules/counter.json")
+yosys_counter = YosysComponent(
+    circuit, f"{os.path.dirname(__file__)}/../yosys_modules/counter.json"
+)
 
 clk = PushButton(circuit, "clk")
 reset = PushButton(circuit, "reset")
 
 vdd = VDD(circuit)
-clk.O.wire = json_component.clk
-reset.O.wire = json_component.reset
-vdd.wire = json_component.up
+clk.O.wire = yosys_counter.clk
+reset.O.wire = yosys_counter.reset
+vdd.wire = yosys_counter.up
 circuit.init()
 
 
@@ -24,12 +32,12 @@ circuit.vcd("counter.vcd")
 
 print("\n===================== Reset ==========================\n")
 
-print(json_component)
+print(yosys_counter)
 
 print("\n===================== Start ==========================\n")
 
 for _ in range(0, 16):
-    print("OUT", json_component.cnt.value())
+    print("OUT", yosys_counter.cnt.value())
 
     clk.push()
     circuit.run(ms=10)

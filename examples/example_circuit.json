@@ -3,14 +3,14 @@
     {
         "name": "example_circuit",
         "components": [
-            { "name": "button1", "type": "digsim.PushButton" } ,           
-            { "name": "button2", "type": "digsim.PushButton" },            
-            { "name": "and1", "type": "digsim.AND" },
-            { "name": "not1", "type": "digsim.NOT" },
-            { "name": "xor1", "type": "digsim.XOR" },
-            { "name": "and_led", "type": "digsim.Led" },
-            { "name": "not_led", "type": "digsim.Led" },
-            { "name": "xor_led", "type": "digsim.Led" }
+            { "name": "button1", "type": "digsim.circuit.components.PushButton" } ,           
+            { "name": "button2", "type": "digsim.circuit.components.PushButton" },            
+            { "name": "and1", "type": "digsim.circuit.components.AND" },
+            { "name": "not1", "type": "digsim.circuit.components.NOT" },
+            { "name": "xor1", "type": "digsim.circuit.components.XOR" },
+            { "name": "and_led", "type": "digsim.circuit.components.Led" },
+            { "name": "not_led", "type": "digsim.circuit.components.Led" },
+            { "name": "xor_led", "type": "digsim.circuit.components.Led" }
         ],
         "wires": [
             { "src": "button1.O", "dst": "and1.A" },

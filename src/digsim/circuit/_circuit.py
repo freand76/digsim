@@ -5,8 +5,8 @@
 
 import json
 
-from ._component import Component
 from ._waves_writer import WavesWriter
+from .components.atoms import Component
 
 
 class CircuitError(Exception):

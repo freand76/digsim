@@ -1,5 +1,10 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
 import pytest
-from digsim import AND, NAND, NOT, NOT_AND, XOR, Circuit, SignalLevel
+from digsim.circuit import Circuit
+from digsim.circuit.components import AND, NAND, NOT, NOT_AND, XOR
+from digsim.circuit.components.atoms import SignalLevel
 
 
 UNKNOWN = SignalLevel.UNKNOWN

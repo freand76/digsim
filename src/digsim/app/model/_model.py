@@ -11,18 +11,17 @@ from functools import partial
 
 from PySide6.QtCore import QThread, Signal
 
-from digsim import (
+from digsim.circuit import Circuit
+from digsim.circuit.components import (
     AND,
-    CallbackComponent,
-    Circuit,
     Clock,
-    Component,
     HexDigit,
-    JsonComponent,
     Led,
     OnOffSwitch,
     PushButton,
+    YosysComponent,
 )
+from digsim.circuit.components.atoms import CallbackComponent, Component
 
 from ._placed_component import PlacedComponent
 from ._placed_hexdigit import PlacedHexDigit
@@ -129,7 +128,7 @@ class AppModel(QThread):
         _led2 = self.add_component(Led(self._circuit, "Led2"), 400, 340)
 
         _counter = self.add_component(
-            JsonComponent(self._circuit, "json_modules/counter.json"), 600, 300
+            YosysComponent(self._circuit, "yosys_modules/counter.json"), 600, 300
         )
         _hex = self.add_component(HexDigit(self._circuit, "HexDigit", dot=True), 800, 100)
         self._hex = _hex

@@ -4,8 +4,7 @@
 # pylint: disable=no-member
 # pylint: disable=invalid-name
 
-from ._component import Component, MultiComponent
-from ._port import ComponentPort, OutputPort, PortDirection, SignalLevel
+from .atoms import Component, ComponentPort, MultiComponent, OutputPort, PortDirection, SignalLevel
 
 
 class NOT(Component):
@@ -133,44 +132,6 @@ class SR(MultiComponent):
         self.nR.wire = _nandr.B
         _nands.Y.wire = self.Q
         _nandr.Y.wire = self.nQ
-
-
-class JK_MS(MultiComponent):
-    def __init__(self, circuit, name="JK"):
-        super().__init__(circuit, name)
-
-        notclk = NOT(circuit, name=f"{name}_NOT_CLK")
-        mnandj = NAND3(circuit, name=f"{name}_M_J")
-        mnandk = NAND3(circuit, name=f"{name}_M_K")
-        master = SR(circuit, name=f"{name}_SR_M")
-
-        snandj = NAND(circuit, name=f"{name}_S_J")
-        snandk = NAND(circuit, name=f"{name}_S_K")
-        slave = SR(circuit, name=f"{name}_SR_S")
-
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(ComponentPort(self, "J", PortDirection.IN))
-        self.add_port(ComponentPort(self, "K", PortDirection.IN))
-        self.add_port(ComponentPort(self, "Q", PortDirection.IN))
-
-        self.J.wire = mnandj.C
-        self.K.wire = mnandk.C
-        slave.Q.wire = self.Q
-
-        self.C.wire = mnandj.A
-        self.C.wire = mnandk.A
-        self.C.wire = notclk.A
-
-        mnandj.Y.wire = master.nS
-        mnandk.Y.wire = master.nR
-        master.Q.wire = snandj.A
-        master.nQ.wire = snandk.A
-        notclk.Y.wire = snandj.B
-        notclk.Y.wire = snandk.B
-        snandj.Y.wire = slave.nS
-        snandk.Y.wire = slave.nR
-        slave.Q.wire = mnandk.B
-        slave.nQ.wire = mnandj.B
 
 
 class DFFE_PP0P(Component):

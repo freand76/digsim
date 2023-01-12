@@ -3,8 +3,7 @@
 
 # pylint: disable=no-member
 
-from ._component import CallbackComponent
-from ._port import ComponentPort, PortDirection, SignalLevel
+from .atoms import CallbackComponent, ComponentPort, PortDirection, SignalLevel
 
 
 class Led(CallbackComponent):

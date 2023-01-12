@@ -3,8 +3,7 @@
 
 # pylint: disable=no-member
 
-from ._component import CallbackComponent
-from ._port import BusInPort, ComponentPort, PortDirection, SignalLevel
+from .atoms import BusInPort, CallbackComponent, ComponentPort, PortDirection, SignalLevel
 
 
 class HexDigit(CallbackComponent):

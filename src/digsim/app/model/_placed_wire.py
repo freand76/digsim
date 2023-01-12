@@ -4,7 +4,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPen
 
-from digsim import PortDirection
+from digsim.circuit.components.atoms import PortDirection
 
 
 class WireException(Exception):

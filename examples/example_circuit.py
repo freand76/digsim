@@ -1,3 +1,8 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
+import os
+
 from digsim import Circuit
 
 
@@ -12,7 +17,7 @@ def led_callback(comp):
 
 
 circuit = Circuit(vcd="circuit.vcd")
-circuit.from_json_file("examples/example_circuit.json")
+circuit.from_json_file(f"{os.path.dirname(__file__)}/example_circuit.json")
 circuit.init()
 led1 = circuit.get_component("and_led")
 led2 = circuit.get_component("not_led")

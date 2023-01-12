@@ -3,8 +3,7 @@
 
 # pylint: disable=no-member
 
-from ._component import CallbackComponent
-from ._port import OutputPort, SignalLevel
+from .atoms import CallbackComponent, OutputPort, SignalLevel
 
 
 class OnOffSwitch(CallbackComponent):

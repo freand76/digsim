@@ -1,4 +1,8 @@
-from digsim import SR, Circuit, Led, PushButton
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
+from digsim.circuit import Circuit
+from digsim.circuit.components import SR, Led, PushButton
 
 
 def led_callback(comp):

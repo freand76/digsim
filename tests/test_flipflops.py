@@ -1,4 +1,9 @@
-from digsim import DFFE_PP0P, Circuit, SignalLevel
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
+from digsim.circuit import Circuit
+from digsim.circuit.components import DFFE_PP0P
+from digsim.circuit.components.atoms import SignalLevel
 
 
 UNKNOWN = SignalLevel.UNKNOWN

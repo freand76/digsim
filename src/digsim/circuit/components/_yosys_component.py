@@ -3,16 +3,15 @@
 
 import json
 
-from ._component import MultiComponent
 from ._gates import ALDFFE_PPP, AND, DFFE_PP0P, NOT, XOR
-from ._port import BusInPort, BusOutPort, ComponentPort, PortDirection
+from .atoms import BusInPort, BusOutPort, ComponentPort, MultiComponent, PortDirection
 
 
-class JsonComponentException(Exception):
+class YosysComponentException(Exception):
     pass
 
 
-class JsonComponent(MultiComponent):
+class YosysComponent(MultiComponent):
 
     COMPONENT_MAP = {
         "$_NOT_": {"class": NOT, "name": "not"},
@@ -43,7 +42,7 @@ class JsonComponent(MultiComponent):
     def _get_component_name(self):
         modules = self._json["modules"]
         if len(modules) > 1:
-            raise JsonComponentException("Only one module per file is supported")
+            raise YosysComponentException("Only one module per file is supported")
         return list(modules.keys())[0]
 
     def _parse_cells(self):
