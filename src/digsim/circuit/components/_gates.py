@@ -1,9 +1,6 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-# pylint: disable=no-member
-# pylint: disable=invalid-name
-
 from .atoms import Component, ComponentPort, MultiComponent, OutputPort, PortDirection, SignalLevel
 
 

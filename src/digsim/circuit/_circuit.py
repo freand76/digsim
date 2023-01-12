@@ -1,8 +1,6 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-# pylint: disable=invalid-name
-
 import json
 
 from ._waves_writer import WavesWriter

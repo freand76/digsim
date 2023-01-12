@@ -24,8 +24,12 @@ disable = """
     missing-module-docstring,
     missing-class-docstring,
     missing-function-docstring,
+    no-member,
+    invalid-name,
+    duplicate-code,
 """
 ignored-modules = """
+   pytest,
    PySide6
 """
 

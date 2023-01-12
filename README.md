@@ -2,7 +2,7 @@
 
 ## Install
 ```
-> python -m pip install .
+> python -m pip install .[app]
 ```
 
 ## Start Interactive GUI

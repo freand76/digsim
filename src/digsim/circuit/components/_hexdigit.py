@@ -1,8 +1,6 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-# pylint: disable=no-member
-
 from .atoms import BusInPort, CallbackComponent, ComponentPort, PortDirection, SignalLevel
 
 

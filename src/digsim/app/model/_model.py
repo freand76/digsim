@@ -1,7 +1,6 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-# pylint: disable=no-member
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-public-methods
 

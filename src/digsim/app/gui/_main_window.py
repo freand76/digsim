@@ -2,7 +2,6 @@
 # All rights reserved
 
 # pylint: disable=too-few-public-methods
-# pylint: disable=invalid-name
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QPainter
