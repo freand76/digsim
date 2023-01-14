@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-from .atoms import CallbackComponent, OutputPort, SignalLevel
+from .atoms import CallbackComponent, OutputPort, SignalLevel, WireConnectionError
 
 
 class Clock(CallbackComponent):
@@ -38,7 +38,7 @@ class Clock(CallbackComponent):
 
     @property
     def wire(self):
-        raise ConnectionError("Cannot get a wire")
+        raise WireConnectionError("Cannot get a wire")
 
     @wire.setter
     def wire(self, port):

@@ -13,6 +13,10 @@ SIGNAL_LEVEL_TO_STR = {
 }
 
 
+class WireConnectionError(Exception):
+    """Exception for illegal connections"""
+
+
 # pylint: disable=too-many-instance-attributes
 class Port(abc.ABC):
     def __init__(self, parent, name, direction, default_level=SignalLevel.UNKNOWN):
@@ -63,7 +67,7 @@ class Port(abc.ABC):
 
     @property
     def wire(self):
-        raise ConnectionError("Cannot get a wire")
+        raise WireConnectionError("Cannot get a wire")
 
     def has_driver(self):
         return self._driver_port is not None
@@ -74,11 +78,12 @@ class Port(abc.ABC):
     @wire.setter
     def wire(self, port):
         if port.has_driver():
-            raise ConnectionError(f"The port {port.path}.{port.name} already has a driver")
+            raise WireConnectionError(f"The port {port.path}.{port.name} already has a driver")
         if self.width != port.width:
-            raise ConnectionError("Cannot connect ports with different widths")
+            raise WireConnectionError("Cannot connect ports with different widths")
         port.set_driver(self)
         self._wired_ports.append(port)
+        port.level = self._level
 
     @property
     def wires(self):

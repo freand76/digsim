@@ -46,6 +46,7 @@ class Circuit:
         self._circuit_events = []
         self._name = name
         self._time_ns = 0
+        self._initialized = False
 
         if vcd is not None:
             self._vcd = WavesWriter(filename=vcd)
@@ -60,6 +61,10 @@ class Circuit:
     def components(self):
         return self._components
 
+    @property
+    def initialized(self):
+        return self._initialized
+
     def init(self):
         self._time_ns = 0
         self._circuit_events = []
@@ -67,6 +72,8 @@ class Circuit:
             self._vcd_init()
         for comp in self._components:
             comp.init()
+        self._initialized = True
+        self.run_until(ns=0)  # Handle all time zero events
 
     def vcd(self, filename):
         if self._vcd is not None:
@@ -117,7 +124,7 @@ class Circuit:
 
     def run(self, s=None, ms=None, us=None, ns=None):
         stop_time_ns = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
-        while len(self._circuit_events) > 0 and self._time_ns < stop_time_ns:
+        while len(self._circuit_events) > 0 and self._time_ns <= stop_time_ns:
             if not self.process_single_event(stop_time_ns):
                 break
 
@@ -125,7 +132,7 @@ class Circuit:
 
     def run_until(self, s=None, ms=None, us=None, ns=None):
         stop_time_ns = self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
-        if stop_time_ns > self._time_ns:
+        if stop_time_ns >= self._time_ns:
             self.run(ns=stop_time_ns - self._time_ns)
 
     def add_event(self, port, level, propagation_delay_ns):
@@ -137,6 +144,7 @@ class Circuit:
         self._circuit_events.append(CircuitEvent(event_time_ns, port, level))
 
     def add_component(self, component):
+        self._initialized = False
         for comp in self._components:
             if component.name == comp.name:
                 raise CircuitError("Component already in circuit")

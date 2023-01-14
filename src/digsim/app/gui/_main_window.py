@@ -3,8 +3,8 @@
 
 # pylint: disable=too-few-public-methods
 
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QPainter
+from PySide6.QtCore import QMimeData, QSize, Qt
+from PySide6.QtGui import QDrag, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from digsim.circuit import WireConnectionError
+
 
 class ComponentWidget(QPushButton):
     def __init__(self, app_model, placed_component, parent):
@@ -28,8 +30,10 @@ class ComponentWidget(QPushButton):
         self._active_port = None
 
         self.setMouseTracking(True)
-        self.resize(self._placed_component.size)
         self.move(self._placed_component.pos)
+
+    def sizeHint(self):
+        return self._placed_component.size
 
     @property
     def component(self):
@@ -60,7 +64,10 @@ class ComponentWidget(QPushButton):
                 self._app_model.add_gui_event(self.component.onpress)
             elif self._app_model.has_new_wire():
                 if self._active_port is not None:
-                    self._app_model.new_wire_end(self.component, self._active_port)
+                    try:
+                        self._app_model.new_wire_end(self.component, self._active_port)
+                    except WireConnectionError as exc:
+                        print(f"ERROR: {str(exc)}")
             else:
                 if self._active_port is None:
                     # Prepare to move
@@ -68,6 +75,11 @@ class ComponentWidget(QPushButton):
                     self._mouse_grab_pos = event.pos()
                 else:
                     self._app_model.new_wire_start(self.component, self._active_port)
+        elif event.button() == Qt.RightButton:
+            if self._app_model.is_running:
+                return
+            if self._app_model.has_new_wire():
+                self._app_model.new_wire_abort()
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
@@ -118,11 +130,21 @@ class CircuitArea(QWidget):
             ComponentWidget(app_model, placed_comp, self)
 
         self.setMouseTracking(True)
+        self.setAcceptDrops(True)
 
     def paintEvent(self, _):
         painter = QPainter(self)
         self._app_model.paint_wires(painter)
         painter.end()
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if event.button() == Qt.RightButton:
+            if self._app_model.is_running:
+                return
+            if self._app_model.has_new_wire():
+                self._app_model.new_wire_abort()
+                self.update()
 
     def mouseMoveEvent(self, event):
         if self._app_model.is_running:
@@ -132,15 +154,42 @@ class CircuitArea(QWidget):
             self._app_model.set_new_wire_end_pos(event.pos())
             self.update()
 
+    def dragEnterEvent(self, event):
+        event.accept()
+
+    def dropEvent(self, event):
+        event.setDropAction(Qt.IgnoreAction)
+        event.accept()
+        self.setFocus()
+
+        component_name = event.mimeData().text()
+        position = event.pos()
+        placed_component = self._app_model.add_component_by_name(component_name, position)
+        comp = ComponentWidget(self._app_model, placed_component, self)
+        comp.show()
+
 
 class SelectableComponentWidget(QPushButton):
     def __init__(self, app_model, name, parent):
         super().__init__(parent)
         self._app_model = app_model
+        self._name = name
         self.setText(name)
 
     def sizeHint(self):
         return QSize(70, 70)
+
+    def mousePressEvent(self, event):
+        if event.buttons() == Qt.LeftButton:
+            drag = QDrag(self)
+            mime = QMimeData()
+            mime.setText(self._name)
+            drag.setMimeData(mime)
+            drag.setHotSpot(event.pos() - self.rect().topLeft())
+            pixmap = QPixmap(self.size())
+            self.render(pixmap)
+            drag.setPixmap(pixmap)
+            drag.exec_(Qt.CopyAction | Qt.MoveAction, Qt.CopyAction)
 
 
 class ComponentSelection(QWidget):
@@ -150,16 +199,16 @@ class ComponentSelection(QWidget):
         self.setLayout(QVBoxLayout(self))
         self.layout().setContentsMargins(5, 5, 5, 5)
         self.layout().setSpacing(5)
-        self.layout().addWidget(SelectableComponentWidget(app_model, "1", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "2", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "3", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "4", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "5", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "6", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "7", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "8", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "9", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "10", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "AND", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "NOT", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "XOR", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "VDD", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "GND", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "Clock", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "PushButton", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "OnOffSwitch", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "HexDigit", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "Led", self))
 
 
 class CircuitEditor(QSplitter):
@@ -186,10 +235,7 @@ class CircuitEditor(QSplitter):
         self.layout().setStretchFactor(circuit_area, 1)
 
     def _control_notify(self, started):
-        if started:
-            self._selection_area.hide()
-        else:
-            self._selection_area.show()
+        self._selection_area.setEnabled(not started)
 
 
 class TopBar(QFrame):
@@ -230,7 +276,6 @@ class TopBar(QFrame):
 
     def reset(self):
         self._time_s = 0
-        self._sim_time.setText("0 s")
         self._app_model.model_reset()
         self._reset_button.setEnabled(False)
 
@@ -249,6 +294,10 @@ class TopBar(QFrame):
     def _sim_time_notify(self, time_s):
         self._sim_time.setText(f"{time_s:.2f} s")
         self._time_s = time_s
+        if self._time_s and not self._app_model.model_running():
+            self._reset_button.setEnabled(True)
+        else:
+            self._reset_button.setEnabled(False)
 
 
 class CentralWidget(QWidget):
@@ -277,6 +326,7 @@ class MainWindow(QMainWindow):
         central_widget = CentralWidget(app_model, self)
         self.setWindowTitle("DigSim - Interactive Digital Logic Simulator")
         self.setCentralWidget(central_widget)
+        self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
 
     def closeEvent(self, event):
         self._app_model.model_stop()

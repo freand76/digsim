@@ -9,3 +9,4 @@ from ._led import Led  # noqa: F401
 from ._on_off_switch import OnOffSwitch  # noqa: F401
 from ._power import GND, VDD  # noqa: F401
 from ._yosys_component import YosysComponent  # noqa: F401
+from .atoms import WireConnectionError  # noqa: F401
