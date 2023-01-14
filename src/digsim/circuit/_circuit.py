@@ -60,6 +60,11 @@ class Circuit:
     def components(self):
         return self._components
 
+    def delete_component(self, component):
+        index = self._components.index(component)
+        del self._components[index]
+        component.remove_connections()
+
     def component_dict(self):
         comp_dict = {}
         for comp in self._components:
@@ -174,13 +179,15 @@ class Circuit:
 
         components_list = []
         for comp in self._components:
-            components_list.append(comp.to_dict())
+            if comp.parent is None:
+                components_list.append(comp.to_dict())
 
         connection_list = []
         for comp in self._components:
-            for port in comp.ports:
-                port_conn_list = port.to_dict_list()
-                connection_list.extend(port_conn_list)
+            if comp.parent is None:
+                for port in comp.ports:
+                    port_conn_list = port.to_dict_list()
+                    connection_list.extend(port_conn_list)
 
         circuit_dict = {
             "circuit": {

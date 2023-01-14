@@ -7,6 +7,10 @@ from PySide6.QtGui import QFont, QPen
 from ._placed_object import PlacedObject
 
 
+class CompenentException(Exception):
+    pass
+
+
 class PlacedComponent(PlacedObject):
 
     DEFAULT_WIDTH = 120
@@ -16,12 +20,17 @@ class PlacedComponent(PlacedObject):
     COMPONENT_BORDER = 5
     PORT_CLICK_EXTRA_PIXELS = 10
 
-    def __init__(self, component, xpos, ypos):
+    def __init__(self, component, xpos, ypos, settings=False):
         super().__init__()
         self._component = component
         self._pos = QPoint(xpos, ypos)
+        self._settings = settings
         self._height = self.DEFAULT_HEIGHT
         self._width = self.DEFAULT_WIDTH
+        self._port_rects = {}
+        self.update_ports()
+
+    def update_ports(self):
         self._port_rects = {}
         self._add_port_rects(self._component.inports, 0)
         self._add_port_rects(self._component.outports, self._width - self.PORT_SIDE - 1)
@@ -59,6 +68,7 @@ class PlacedComponent(PlacedObject):
             else:
                 painter.setBrush(Qt.gray)
             painter.drawRect(rect)
+            painter.drawText(rect.x(), rect.y(), portname)
 
     def _add_port_rects(self, ports, xpos):
         if len(ports) == 1:
@@ -101,6 +111,9 @@ class PlacedComponent(PlacedObject):
                 return portname
         return None
 
+    def create_context_menu(self, parent, event):
+        pass
+
     @property
     def component(self):
         return self._component
@@ -110,6 +123,10 @@ class PlacedComponent(PlacedObject):
         return self._pos
 
     @property
+    def settings(self):
+        return self._settings
+
+    @property
     def size(self):
         return QSize(self._width, self._height)
 
@@ -117,5 +134,8 @@ class PlacedComponent(PlacedObject):
     def pos(self, point):
         self._pos = point
 
-    def __str__(self):
-        return f'{{ "name": "{self.component.name}", "x": {self.pos.x()}, "y": {self.pos.y()} }}'
+    def settings_dict(self):
+        return {}
+
+    def to_dict(self):
+        return {"x": self.pos.x(), "y": self.pos.y()}

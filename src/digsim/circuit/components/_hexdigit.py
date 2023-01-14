@@ -42,7 +42,7 @@ class HexDigit(CallbackComponent):
         return False
 
     def segments(self):
-        segments = self.VAL_TO_SEGMENTS[self.value()]
+        segments = self.VAL_TO_SEGMENTS.get(self.value(), "")
         if self.dot_active():
             segments += "."
         return segments

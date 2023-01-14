@@ -21,8 +21,8 @@ class YosysComponent(MultiComponent):
         "$_ALDFFE_PPP_": {"class": ALDFFE_PPP, "name": "aldffe_ppp"},
     }
 
-    def __init__(self, circuit, filename=None):
-        super().__init__(circuit, name="Yosys")
+    def __init__(self, circuit, name="Yosys", filename=None):
+        super().__init__(circuit, name)
         self._filename = filename
         self._port_tag_dict = {}
         self._circuit = circuit
@@ -30,9 +30,10 @@ class YosysComponent(MultiComponent):
         self._json = None
         self._yosys_name = None
         if filename is not None:
-            self.load()
+            self.load(filename)
 
-    def load(self):
+    def load(self, filename):
+        self._filename = filename
         with open(self._filename, encoding="utf-8") as json_file:
             self._json = json.load(json_file)
         self._yosys_name = self._get_component_name()
@@ -121,3 +122,9 @@ class YosysComponent(MultiComponent):
                         port_instance = portlist[out_index]
                         external_port.connect_bit(idx, port_instance)
                 self.add_port(external_port)
+
+    def settings_from_dict(self, settings):
+        self._filename = settings.get("path")
+
+    def settings_to_dict(self):
+        return {"path": self._filename}

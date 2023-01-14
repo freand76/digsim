@@ -15,6 +15,7 @@ class Clock(CallbackComponent):
                 default_level=SignalLevel.LOW,
             )
         )
+        self._frequency = None
         self.set_frequency(frequency)
 
     def init(self):
@@ -29,6 +30,7 @@ class Clock(CallbackComponent):
         super().update()
 
     def set_frequency(self, frequency):
+        self._frequency = frequency
         half_period_ns = int(1000000000 / (frequency * 2))
         self.O.set_propagation_delay_ns(half_period_ns)
 
@@ -43,3 +45,10 @@ class Clock(CallbackComponent):
     @wire.setter
     def wire(self, port):
         self.O.wire = port
+
+    def settings_from_dict(self, settings):
+        if "frequency" in settings:
+            self.set_frequency(settings["frequency"])
+
+    def settings_to_dict(self):
+        return {"frequency": self._frequency}

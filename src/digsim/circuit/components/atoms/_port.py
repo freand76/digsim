@@ -75,6 +75,10 @@ class Port(abc.ABC):
     def set_driver(self, port):
         self._driver_port = port
 
+    @property
+    def driver(self):
+        return self._driver_port
+
     @wire.setter
     def wire(self, port):
         if port.has_driver():
@@ -83,7 +87,10 @@ class Port(abc.ABC):
             raise WireConnectionError("Cannot connect ports with different widths")
         port.set_driver(self)
         self._wired_ports.append(port)
-        port.level = self._level
+        if port.width == 1:
+            port.level = self._level
+        else:
+            port.set_level(value=self.intval)
 
     def disconnect(self, port):
         index = self._wired_ports.index(port)
@@ -248,7 +255,7 @@ class BusInPort(BusPort):
                 value = value >> 1
 
     def update(self):
-        pass
+        self.parent.update()
 
 
 class OutputPort(Port):

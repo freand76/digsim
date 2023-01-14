@@ -13,12 +13,13 @@ from PySide6.QtCore import QThread, Signal
 
 import digsim.circuit.components
 from digsim.circuit import Circuit
-from digsim.circuit.components import HexDigit
+from digsim.circuit.components import HexDigit, YosysComponent
 from digsim.circuit.components.atoms import CallbackComponent, Component
 
 from ._placed_component import PlacedComponent
 from ._placed_hexdigit import PlacedHexDigit
 from ._placed_wire import PlacedWire, WireException
+from ._placed_yosys import PlacedYosys
 
 
 class AppModel(QThread):
@@ -73,6 +74,8 @@ class AppModel(QThread):
     def add_component(self, component, xpos, ypos):
         if isinstance(component, HexDigit):
             placed_component = PlacedHexDigit(component, xpos, ypos)
+        elif isinstance(component, YosysComponent):
+            placed_component = PlacedYosys(component, xpos, ypos)
         else:
             placed_component = PlacedComponent(component, xpos, ypos)
 
@@ -133,10 +136,11 @@ class AppModel(QThread):
 
     def _delete_component(self, placed_component):
         for port in placed_component.component.ports:
-            for wire in self.get_wires():
+            for wire in self.get_placed_wires():
                 if wire.has_port(port):
                     self._delete_wire(wire)
         del self._placed_components[placed_component.component]
+        self._circuit.delete_component(placed_component.component)
 
     def delete(self):
         selected_objects = self.get_selected_objects()
@@ -147,18 +151,12 @@ class AppModel(QThread):
                 self._delete_component(obj)
         self.sig_update_gui_components.emit()
 
-    def get_wires(self):
-        wires = []
-        for _, wire in self._placed_wires.items():
-            wires.append(wire)
-        return wires
-
     def update_wires(self):
         for _, wire in self._placed_wires.items():
             wire.update()
 
     def paint_wires(self, painter):
-        wires = self.get_wires()
+        wires = self.get_placed_wires()
         for wire in wires:
             wire.paint(painter)
 
@@ -241,10 +239,8 @@ class AppModel(QThread):
         circuit_dict = self._circuit.to_dict()
         circuit_dict["gui"] = {}
         for comp, placed_comp in self._placed_components.items():
-            circuit_dict["gui"][comp.name] = {
-                "x": placed_comp.pos.x(),
-                "y": placed_comp.pos.y(),
-            }
+            circuit_dict["gui"][comp.name] = placed_comp.to_dict()
+        circuit_dict["gui"]["next_id"] = self._component_id
         json_object = json.dumps(circuit_dict, indent=4)
         with open(path, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)
@@ -258,9 +254,11 @@ class AppModel(QThread):
             x = circuit_dict["gui"][name]["x"]
             y = circuit_dict["gui"][name]["y"]
             self.add_component(comp, x, y)
+
         for name, comp in self._circuit.component_dict().items():
             for src_port in comp.outports:
                 for dst_port in src_port.wires:
                     self.add_wire(src_port, dst_port, connect=False)
             self._circuit_init()
+        self._component_id = circuit_dict["gui"]["next_id"]
         self.sig_update_gui_components.emit()

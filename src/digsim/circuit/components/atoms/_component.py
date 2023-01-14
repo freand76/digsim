@@ -1,10 +1,16 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+# pylint: disable=too-many-public-methods
+
 import abc
 import importlib
 
 from ._enum import PortDirection
+
+
+class ComponentException(Exception):
+    pass
 
 
 class Component(abc.ABC):
@@ -53,7 +59,7 @@ class Component(abc.ABC):
         for port in self._ports:
             if port.name == portname:
                 return port
-        raise ValueError("Port not found")
+        raise ComponentException("Port not found")
 
     @property
     def circuit(self):
@@ -82,6 +88,15 @@ class Component(abc.ABC):
     def update(self):
         pass
 
+    def remove_connections(self):
+        for src_port in self.outports:
+            for dst_port in src_port.wires:
+                dst_port.set_driver(None)
+
+        for dst_port in self.inports:
+            if dst_port.has_driver():
+                dst_port.driver.disconnect(dst_port)
+
     def add_event(self, port, level, propagation_delay_ns):
         self.circuit.add_event(port, level, propagation_delay_ns)
 
@@ -93,18 +108,36 @@ class Component(abc.ABC):
             comp_str += f"\n - O:{port.name}={port.bitval}"
         return comp_str
 
+    def to_dict(self):
+        component_dict = {
+            "name": self.name,
+            "display_name": self.display_name,
+        }
+
+        module_split = type(self).__module__.split(".")
+        type_str = ""
+        for module in module_split:
+            if not module.startswith("_"):
+                type_str += f"{module}."
+        type_str += type(self).__name__
+        component_dict["type"] = type_str
+        component_dict["settings"] = self.settings_to_dict()
+        return component_dict
+
     @classmethod
     def from_dict(cls, circuit, json_component):
         component_name = json_component["name"]
         component_type = json_component["type"]
         display_name = json_component.get("display_name")
-
+        component_settings = json_component.get("settings")
         py_module_name = ".".join(component_type.split(".")[0:-1])
         py_class_name = component_type.split(".")[-1]
 
         module = importlib.import_module(py_module_name)
         class_ = getattr(module, py_class_name)
         component = class_(circuit=circuit, name=component_name)
+        if component_settings is not None and bool(component_settings):
+            component.settings_from_dict(component_settings)
         if display_name is not None:
             component.display_name = display_name
         return component
@@ -123,20 +156,11 @@ class Component(abc.ABC):
     def onrelease(self):
         pass
 
-    def to_dict(self):
-        component_dict = {
-            "name": self.name,
-            "display_name": self.display_name,
-        }
+    def settings_from_dict(self, settings):
+        raise ComponentException(f"No setup for component '{self.display_name}'")
 
-        module_split = type(self).__module__.split(".")
-        type_str = ""
-        for module in module_split:
-            if not module.startswith("_"):
-                type_str += f"{module}."
-        type_str += type(self).__name__
-        component_dict["type"] = type_str
-        return component_dict
+    def settings_to_dict(self):
+        return {}
 
 
 class MultiComponent(Component):

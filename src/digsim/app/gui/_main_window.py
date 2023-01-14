@@ -82,6 +82,9 @@ class ComponentWidget(QPushButton):
                 return
             if self._app_model.has_new_wire():
                 self._app_model.new_wire_abort()
+            else:
+                self._placed_component.create_context_menu(self, event)
+                self.update()
 
     def mouseReleaseEvent(self, event):
         super().mouseReleaseEvent(event)
@@ -183,7 +186,7 @@ class CircuitArea(QWidget):
         placed_component = self._app_model.add_component_by_name(component_name, position)
         comp = ComponentWidget(self._app_model, placed_component, self)
         comp.show()
-        placed_component.select()
+        self._app_model.select(placed_component)
 
     def _update_gui_components(self):
         children = self.findChildren(ComponentWidget)
@@ -238,6 +241,7 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(SelectableComponentWidget(app_model, "OnOffSwitch", self))
         self.layout().addWidget(SelectableComponentWidget(app_model, "HexDigit", self))
         self.layout().addWidget(SelectableComponentWidget(app_model, "Led", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "YosysComponent", self))
 
 
 class CircuitEditor(QSplitter):
