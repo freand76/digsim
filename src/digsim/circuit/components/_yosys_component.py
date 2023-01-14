@@ -125,6 +125,8 @@ class YosysComponent(MultiComponent):
 
     def settings_from_dict(self, settings):
         self._filename = settings.get("path")
+        if self._filename is not None:
+            self.load(self._filename)
 
     def settings_to_dict(self):
         return {"path": self._filename}

@@ -81,6 +81,9 @@ class Component(abc.ABC):
     def parent(self):
         return self._parent
 
+    def is_toplevel(self):
+        return self._parent is None
+
     @parent.setter
     def parent(self, parent):
         self._parent = parent

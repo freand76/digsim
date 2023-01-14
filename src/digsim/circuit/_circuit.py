@@ -65,11 +65,12 @@ class Circuit:
         del self._components[index]
         component.remove_connections()
 
-    def component_dict(self):
-        comp_dict = {}
+    def get_toplevel_components(self):
+        toplevel_components = []
         for comp in self._components:
-            comp_dict[comp.name] = comp
-        return comp_dict
+            if comp.is_toplevel():
+                toplevel_components.append(comp)
+        return toplevel_components
 
     def init(self):
         self._time_ns = 0
@@ -178,16 +179,14 @@ class Circuit:
             raise CircuitError("Circuit must have a name")
 
         components_list = []
-        for comp in self._components:
-            if comp.parent is None:
-                components_list.append(comp.to_dict())
+        for comp in self.get_toplevel_components():
+            components_list.append(comp.to_dict())
 
         connection_list = []
-        for comp in self._components:
-            if comp.parent is None:
-                for port in comp.ports:
-                    port_conn_list = port.to_dict_list()
-                    connection_list.extend(port_conn_list)
+        for comp in self.get_toplevel_components():
+            for port in comp.ports:
+                port_conn_list = port.to_dict_list()
+                connection_list.extend(port_conn_list)
 
         circuit_dict = {
             "circuit": {

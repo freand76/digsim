@@ -10,13 +10,13 @@ from ._placed_component import PlacedComponent
 class PlacedHexDigit(PlacedComponent):
 
     SEGMENT_TYPE_AND_POS = {
-        "A": ("H", QPoint(51, 20)),
-        "B": ("V", QPoint(79, 23)),
-        "C": ("V", QPoint(79, 53)),
-        "D": ("H", QPoint(51, 81)),
-        "E": ("V", QPoint(48, 53)),
-        "F": ("V", QPoint(48, 23)),
-        "G": ("H", QPoint(51, 51)),
+        "A": ("H", QPoint(3, 0)),
+        "B": ("V", QPoint(31, 3)),
+        "C": ("V", QPoint(31, 33)),
+        "D": ("H", QPoint(3, 61)),
+        "E": ("V", QPoint(0, 33)),
+        "F": ("V", QPoint(0, 3)),
+        "G": ("H", QPoint(3, 31)),
     }
 
     SEGMENT_CORDS = {
@@ -38,13 +38,20 @@ class PlacedHexDigit(PlacedComponent):
         ],
     }
 
+    PORT_TO_RECT_MARGIN = 10
+    RECT_TO_DIGIT_MARGIN = 10
+
     def paint_component(self, painter):
         self.paint_component_base(painter)
         painter.setBrush(Qt.SolidPattern)
         painter.setPen(Qt.black)
         painter.setBrush(Qt.black)
-        painter.drawRoundedRect(33, 10, 60, 80, 3, 3)
+        _, str_pixels_w, _ = self.get_port_display_name_metrics("val")
+        first_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
+        painter.drawRoundedRect(first_left, 10, 50, 80, 3, 3)
+        self.draw_digit(painter, QPoint(first_left + self.RECT_TO_DIGIT_MARGIN, 20))
 
+    def draw_digit(self, painter, start_point):
         active_segments = self.component.segments()
         for seg, type_pos in self.SEGMENT_TYPE_AND_POS.items():
             if seg in active_segments:
@@ -56,9 +63,9 @@ class PlacedHexDigit(PlacedComponent):
             pos_vector = self.SEGMENT_CORDS[type_pos[0]]
             offset = type_pos[1]
             path = QPainterPath()
-            path.moveTo(offset)
+            path.moveTo(offset + start_point)
             for point in pos_vector:
-                path.lineTo(offset + point)
+                path.lineTo(offset + point + start_point)
             path.closeSubpath()
             painter.drawPath(path)
 
@@ -68,4 +75,5 @@ class PlacedHexDigit(PlacedComponent):
         else:
             painter.setPen(Qt.darkRed)
             painter.setBrush(Qt.darkRed)
-        painter.drawEllipse(80, 80, 5, 5)
+        dotPoint = QPoint(80, 80) + start_point
+        painter.drawEllipse(dotPoint, 5, 5)

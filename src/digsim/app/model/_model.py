@@ -250,12 +250,12 @@ class AppModel(QThread):
         with open(path, mode="r", encoding="utf-8") as json_file:
             circuit_dict = json.load(json_file)
         self._circuit.from_dict(circuit_dict)
-        for name, comp in self._circuit.component_dict().items():
-            x = circuit_dict["gui"][name]["x"]
-            y = circuit_dict["gui"][name]["y"]
+        for comp in self._circuit.get_toplevel_components():
+            x = circuit_dict["gui"][comp.name]["x"]
+            y = circuit_dict["gui"][comp.name]["y"]
             self.add_component(comp, x, y)
 
-        for name, comp in self._circuit.component_dict().items():
+        for comp in self._circuit.get_toplevel_components():
             for src_port in comp.outports:
                 for dst_port in src_port.wires:
                     self.add_wire(src_port, dst_port, connect=False)

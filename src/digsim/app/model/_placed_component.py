@@ -2,7 +2,7 @@
 # All rights reserved
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
-from PySide6.QtGui import QFont, QPen
+from PySide6.QtGui import QFont, QFontMetrics, QPen
 
 from ._placed_object import PlacedObject
 
@@ -20,20 +20,34 @@ class PlacedComponent(PlacedObject):
     COMPONENT_BORDER = 5
     PORT_CLICK_EXTRA_PIXELS = 10
 
-    def __init__(self, component, xpos, ypos, settings=False):
+    def __init__(self, component, xpos, ypos):
         super().__init__()
         self._component = component
         self._pos = QPoint(xpos, ypos)
-        self._settings = settings
         self._height = self.DEFAULT_HEIGHT
         self._width = self.DEFAULT_WIDTH
         self._port_rects = {}
+        self._port_display_name = {}
         self.update_ports()
 
     def update_ports(self):
         self._port_rects = {}
+        self._port_display_name = {}
         self._add_port_rects(self._component.inports, 0)
         self._add_port_rects(self._component.outports, self._width - self.PORT_SIDE - 1)
+        for port in self._component.ports:
+            if port.width == 1:
+                self._port_display_name[port.name] = port.name
+            else:
+                self._port_display_name[port.name] = f"{port.name}[{port.width}:0]"
+
+    def get_port_display_name_metrics(self, portname):
+        font = QFont("Arial", 8)
+        fm = QFontMetrics(font)
+        display_name_str = self._port_display_name[portname]
+        str_pixels_w = fm.horizontalAdvance(display_name_str)
+        str_pixels_h = fm.height()
+        return display_name_str, str_pixels_w, str_pixels_h
 
     def paint_component_base(self, painter):
         # Draw component
@@ -54,21 +68,43 @@ class PlacedComponent(PlacedObject):
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
-        painter.setFont(QFont("Arial", 8))
-        painter.drawText(self.get_rect(), Qt.AlignCenter, self._component.display_name)
+        font = QFont("Arial", 8)
+        painter.setFont(font)
+        fm = QFontMetrics(font)
+        display_name_str = self._component.display_name
+        str_pixels_w = fm.horizontalAdvance(display_name_str)
+        str_pixels_h = fm.height()
+        painter.drawText(
+            self.get_rect().x() + self.get_rect().width() / 2 - str_pixels_w / 2,
+            self.get_rect().y() + str_pixels_h,
+            display_name_str,
+        )
+
+    def inport_x_pos(self):
+        return 1.5 * self.PORT_SIDE
 
     def paint_ports(self, painter, active_port):
         # Draw ports
         painter.setPen(Qt.black)
         painter.setBrush(Qt.SolidPattern)
-        painter.setFont(QFont("Arial", 8))
+        font = QFont("Arial", 8)
+        painter.setFont(font)
+        fm = QFontMetrics(font)
         for portname, rect in self._port_rects.items():
             if portname == active_port:
                 painter.setBrush(Qt.red)
             else:
                 painter.setBrush(Qt.gray)
             painter.drawRect(rect)
-            painter.drawText(rect.x(), rect.y(), portname)
+            port_str, str_pixels_w, str_pixels_h = self.get_port_display_name_metrics(portname)
+            str_pixels_w = fm.horizontalAdvance(port_str)
+            str_pixels_h = fm.height()
+            text_y = rect.y() + str_pixels_h - self.PORT_SIDE / 2
+            if rect.x() == 0:
+                text_pos = QPoint(self.inport_x_pos(), text_y)
+            else:
+                text_pos = QPoint(rect.x() - str_pixels_w - self.PORT_SIDE / 2, text_y)
+            painter.drawText(text_pos, port_str)
 
     def _add_port_rects(self, ports, xpos):
         if len(ports) == 1:
@@ -123,19 +159,12 @@ class PlacedComponent(PlacedObject):
         return self._pos
 
     @property
-    def settings(self):
-        return self._settings
-
-    @property
     def size(self):
         return QSize(self._width, self._height)
 
     @pos.setter
     def pos(self, point):
         self._pos = point
-
-    def settings_dict(self):
-        return {}
 
     def to_dict(self):
         return {"x": self.pos.x(), "y": self.pos.y()}

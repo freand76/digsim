@@ -130,12 +130,14 @@ class Port(abc.ABC):
     def to_dict_list(self):
         port_conn_list = []
         for port in self._wired_ports:
-            port_conn_list.append(
-                {
-                    "src": f"{self.parent.name}.{self.name}",
-                    "dst": f"{port.parent.name}.{port.name}",
-                }
-            )
+            # Only add port on top-level components
+            if port.parent.is_toplevel():
+                port_conn_list.append(
+                    {
+                        "src": f"{self.parent.name}.{self.name}",
+                        "dst": f"{port.parent.name}.{port.name}",
+                    }
+                )
         return port_conn_list
 
 

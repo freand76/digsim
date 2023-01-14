@@ -306,6 +306,8 @@ class TopBar(QFrame):
 
     def start(self):
         self._start_button.setEnabled(False)
+        self._load_button.setEnabled(False)
+        self._save_button.setEnabled(False)
         self._app_model.model_start()
 
     def stop(self):
@@ -338,6 +340,8 @@ class TopBar(QFrame):
             self._start_button.setText("Start Similation")
             self._start_button.clicked.connect(self.start)
             self._start_button.setEnabled(True)
+            self._load_button.setEnabled(True)
+            self._save_button.setEnabled(True)
             if self._time_s > 0:
                 self._reset_button.setEnabled(True)
 
