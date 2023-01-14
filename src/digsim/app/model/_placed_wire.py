@@ -1,18 +1,25 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+import math
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPen
 
 from digsim.circuit.components.atoms import PortDirection
+
+from ._placed_object import PlacedObject
 
 
 class WireException(Exception):
     pass
 
 
-class PlacedWire:
+class PlacedWire(PlacedObject):
+    WIRE_CLICK_CLOSE_PIXELS = 10
+
     def __init__(self, app_model, port_a, port_b=None, connect=True):
+        super().__init__()
         self._app_model = app_model
         self._src_port = None
         self._dst_port = None
@@ -45,11 +52,14 @@ class PlacedWire:
 
     def _paint_wire(self, painter, src, dst):
         pen = QPen()
-        if self._is_bus:
+        pen.setColor(Qt.darkGray)
+        if self.selected:
+            pen.setWidth(6)
+            pen.setColor(Qt.black)
+        elif self._is_bus:
             pen.setWidth(4)
         else:
             pen.setWidth(2)
-        pen.setColor(Qt.darkGray)
         painter.setPen(pen)
         painter.drawLine(src, dst)
 
@@ -63,6 +73,9 @@ class PlacedWire:
         if self._src_port is not None and self._dst_port is not None:
             self._src_port.wire = self._dst_port
             self._connected = True
+
+    def disconnect(self):
+        self._src_port.disconnect(self._dst_port)
 
     def set_end_port(self, port):
         if port.direction == PortDirection.OUT and self._src_port is None:
@@ -83,6 +96,21 @@ class PlacedWire:
             self._is_bus = self._dst_port.width > 1
             dst_comp = self._app_model.get_placed_component(self._dst_port.parent)
             self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name)
+
+    def is_close(self, point):
+        p1_x = self._src_point.x()
+        p1_y = self._src_point.y()
+        p2_x = self._dst_point.x()
+        p2_y = self._dst_point.y()
+        p3_x = point.x()
+        p3_y = point.y()
+        nom = abs((p2_x - p1_x) * (p1_y - p3_y) - (p1_x - p3_x) * (p2_y - p1_y))
+        denom = math.sqrt((p2_x - p1_x) ** 2 + (p2_y - p1_y) ** 2)
+
+        return (nom / denom) < self.WIRE_CLICK_CLOSE_PIXELS
+
+    def has_port(self, port):
+        return port in [self._src_port, self._dst_port]
 
     @property
     def key(self):

@@ -11,4 +11,4 @@ class Led(CallbackComponent):
 
     @property
     def active(self):
-        return self.I.level == SignalLevel.HIGH
+        return self.I.has_driver() and self.I.level == SignalLevel.HIGH

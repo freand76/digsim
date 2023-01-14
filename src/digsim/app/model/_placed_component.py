@@ -2,10 +2,12 @@
 # All rights reserved
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QPen
+
+from ._placed_object import PlacedObject
 
 
-class PlacedComponent:
+class PlacedComponent(PlacedObject):
 
     DEFAULT_WIDTH = 120
     DEFAULT_HEIGHT = 100
@@ -15,6 +17,7 @@ class PlacedComponent:
     PORT_CLICK_EXTRA_PIXELS = 10
 
     def __init__(self, component, xpos, ypos):
+        super().__init__()
         self._component = component
         self._pos = QPoint(xpos, ypos)
         self._height = self.DEFAULT_HEIGHT
@@ -26,7 +29,13 @@ class PlacedComponent:
     def paint_component_base(self, painter):
         # Draw component
         comp_rect = self.get_rect()
-        painter.setPen(Qt.black)
+        pen = QPen()
+        if self.selected:
+            pen.setWidth(4)
+        else:
+            pen.setWidth(1)
+        pen.setColor(Qt.black)
+        painter.setPen(pen)
         painter.setBrush(Qt.SolidPattern)
         if self.component.active:
             painter.setBrush(Qt.green)

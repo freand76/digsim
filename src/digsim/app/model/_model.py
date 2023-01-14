@@ -93,6 +93,60 @@ class AppModel(QThread):
             placed_components.append(comp)
         return placed_components
 
+    def get_placed_wires(self):
+        placed_wires = []
+        for _, wire in self._placed_wires.items():
+            placed_wires.append(wire)
+        return placed_wires
+
+    def get_placed_objects(self):
+        placed_objects = self.get_placed_components()
+        placed_objects.extend(self.get_placed_wires())
+        return placed_objects
+
+    def select(self, placed_object=None):
+        for comp in self.get_placed_objects():
+            if comp == placed_object:
+                comp.select(True)
+            else:
+                comp.select(False)
+
+    def select_pos(self, pos):
+        self.select(None)
+        for wire in self.get_placed_wires():
+            if wire.is_close(pos):
+                wire.select(True)
+            else:
+                wire.select(False)
+
+    def get_selected_objects(self):
+        objects = []
+        placed_objects = self.get_placed_objects()
+        for obj in placed_objects:
+            if obj.selected:
+                objects.append(obj)
+        return objects
+
+    def _delete_wire(self, placed_wire):
+        placed_wire.disconnect()
+        del self._placed_wires[placed_wire.key]
+
+    def _delete_component(self, placed_component):
+        for port in placed_component.component.ports:
+            for wire in self.get_wires():
+                if wire.has_port(port):
+                    self._delete_wire(wire)
+        del self._placed_components[placed_component.component]
+
+    def delete(self):
+        selected_objects = self.get_selected_objects()
+        for obj in selected_objects:
+            if isinstance(obj, PlacedWire):
+                self._delete_wire(obj)
+            elif isinstance(obj, PlacedComponent):
+                self._delete_component(obj)
+        self.sig_update_gui_components.emit()
+
     def get_wires(self):
         wires = []
         for _, wire in self._placed_wires.items():

@@ -85,6 +85,11 @@ class Port(abc.ABC):
         self._wired_ports.append(port)
         port.level = self._level
 
+    def disconnect(self, port):
+        index = self._wired_ports.index(port)
+        del self._wired_ports[index]
+        port.set_driver(None)
+
     @property
     def wires(self):
         return self._wired_ports

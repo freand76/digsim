@@ -38,7 +38,7 @@ class HexDigit(CallbackComponent):
 
     def dot_active(self):
         if self._dot:
-            return self.dot.level == SignalLevel.HIGH
+            return self.dot.has_driver() and self.dot.level == SignalLevel.HIGH
         return False
 
     def segments(self):

@@ -70,6 +70,7 @@ class ComponentWidget(QPushButton):
                     except WireConnectionError as exc:
                         print(f"ERROR: {str(exc)}")
             else:
+                self._app_model.select(self._placed_component)
                 if self._active_port is None:
                     # Prepare to move
                     self.setCursor(Qt.ClosedHandCursor)
@@ -134,6 +135,11 @@ class CircuitArea(QWidget):
         self.setMouseTracking(True)
         self.setAcceptDrops(True)
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Delete:
+            self._app_model.delete()
+        event.accept()
+
     def paintEvent(self, _):
         painter = QPainter(self)
         self._app_model.paint_wires(painter)
@@ -141,7 +147,15 @@ class CircuitArea(QWidget):
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
-        if event.button() == Qt.RightButton:
+        if event.button() == Qt.LeftButton:
+            if self._app_model.is_running:
+                return
+            if self._app_model.has_new_wire():
+                return
+            self._app_model.select_pos(event.pos())
+            self.setFocus()
+            self.update()
+        elif event.button() == Qt.RightButton:
             if self._app_model.is_running:
                 return
             if self._app_model.has_new_wire():
@@ -169,6 +183,7 @@ class CircuitArea(QWidget):
         placed_component = self._app_model.add_component_by_name(component_name, position)
         comp = ComponentWidget(self._app_model, placed_component, self)
         comp.show()
+        placed_component.select()
 
     def _update_gui_components(self):
         children = self.findChildren(ComponentWidget)
