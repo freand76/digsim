@@ -12,7 +12,7 @@ class WireException(Exception):
 
 
 class PlacedWire:
-    def __init__(self, app_model, port_a, port_b=None):
+    def __init__(self, app_model, port_a, port_b=None, connect=True):
         self._app_model = app_model
         self._src_port = None
         self._dst_port = None
@@ -40,7 +40,8 @@ class PlacedWire:
         self._src_point = None
         self._dst_point = None
         self.update()
-        self.connect()
+        if connect:
+            self.connect()
 
     def _paint_wire(self, painter, src, dst):
         pen = QPen()

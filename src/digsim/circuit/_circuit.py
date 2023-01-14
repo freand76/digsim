@@ -46,7 +46,6 @@ class Circuit:
         self._circuit_events = []
         self._name = name
         self._time_ns = 0
-        self._initialized = False
 
         if vcd is not None:
             self._vcd = WavesWriter(filename=vcd)
@@ -61,9 +60,11 @@ class Circuit:
     def components(self):
         return self._components
 
-    @property
-    def initialized(self):
-        return self._initialized
+    def component_dict(self):
+        comp_dict = {}
+        for comp in self._components:
+            comp_dict[comp.name] = comp
+        return comp_dict
 
     def init(self):
         self._time_ns = 0
@@ -72,8 +73,10 @@ class Circuit:
             self._vcd_init()
         for comp in self._components:
             comp.init()
-        self._initialized = True
         self.run_until(ns=0)  # Handle all time zero events
+
+    def clear(self):
+        self._components = []
 
     def vcd(self, filename):
         if self._vcd is not None:
@@ -144,7 +147,6 @@ class Circuit:
         self._circuit_events.append(CircuitEvent(event_time_ns, port, level))
 
     def add_component(self, component):
-        self._initialized = False
         for comp in self._components:
             if component.name == comp.name:
                 raise CircuitError("Component already in circuit")
@@ -166,30 +168,7 @@ class Circuit:
         dest_componment = self.get_component(dest_component_name)
         source_component.port(source_port_name).wire = dest_componment.port(dest_port_name)
 
-    def from_json_file(self, filename):
-        with open(filename, mode="r", encoding="utf-8") as json_file:
-            json_file = json.load(json_file)
-
-        if "circuit" not in json_file:
-            raise CircuitError(f"No 'circuit' in '{filename}'")
-        json_circuit = json_file["circuit"]
-        if "name" not in json_circuit:
-            raise CircuitError(f"No 'circuit/name' in '{filename}'")
-        self._name = json_circuit["name"]
-        if "components" not in json_circuit:
-            raise CircuitError(f"No 'circuit/components' in '{filename}'")
-        json_components = json_circuit["components"]
-        if "wires" not in json_circuit:
-            raise CircuitError(f"No 'circuit/connections' in '{filename}'")
-        json_connections = json_circuit["wires"]
-
-        for json_component in json_components:
-            Component.from_dict(self, json_component)
-
-        for json_connection in json_connections:
-            self.connect_from_json(json_connection["src"], json_connection["dst"])
-
-    def to_json_file(self, filename):
+    def to_dict(self):
         if self._name is None:
             raise CircuitError("Circuit must have a name")
 
@@ -211,7 +190,37 @@ class Circuit:
             }
         }
 
+        return circuit_dict
+
+    def from_dict(self, circuit_dict):
+        self.clear()
+        if "circuit" not in circuit_dict:
+            raise CircuitError("No 'circuit' in JSON")
+        json_circuit = circuit_dict["circuit"]
+        if "name" not in json_circuit:
+            raise CircuitError("No 'circuit/name' in JSON")
+        self._name = json_circuit["name"]
+        if "components" not in json_circuit:
+            raise CircuitError("No 'circuit/components' in JSON")
+        json_components = json_circuit["components"]
+        if "wires" not in json_circuit:
+            raise CircuitError("No 'circuit/connections' in JSON")
+        json_connections = json_circuit["wires"]
+
+        for json_component in json_components:
+            Component.from_dict(self, json_component)
+
+        for json_connection in json_connections:
+            self.connect_from_json(json_connection["src"], json_connection["dst"])
+
+    def to_json_file(self, filename):
+        circuit_dict = self.to_dict()
         json_object = json.dumps(circuit_dict, indent=4)
 
         with open(filename, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)
+
+    def from_json_file(self, filename):
+        with open(filename, mode="r", encoding="utf-8") as json_file:
+            circuit_dict = json.load(json_file)
+            self.from_dict(circuit_dict)

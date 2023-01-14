@@ -37,7 +37,7 @@ class PlacedComponent:
     def paint_component(self, painter):
         self.paint_component_base(painter)
         painter.setFont(QFont("Arial", 8))
-        painter.drawText(self.get_rect(), Qt.AlignCenter, self._component.name)
+        painter.drawText(self.get_rect(), Qt.AlignCenter, self._component.display_name)
 
     def paint_ports(self, painter, active_port):
         # Draw ports

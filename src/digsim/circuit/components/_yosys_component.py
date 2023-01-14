@@ -21,15 +21,22 @@ class YosysComponent(MultiComponent):
         "$_ALDFFE_PPP_": {"class": ALDFFE_PPP, "name": "aldffe_ppp"},
     }
 
-    def __init__(self, circuit, filename):
+    def __init__(self, circuit, filename=None):
+        super().__init__(circuit, name="Yosys")
         self._filename = filename
         self._port_tag_dict = {}
         self._circuit = circuit
         self._component_id = {}
+        self._json = None
+        self._yosys_name = None
+        if filename is not None:
+            self.load()
+
+    def load(self):
         with open(self._filename, encoding="utf-8") as json_file:
             self._json = json.load(json_file)
-
-        super().__init__(circuit, self._get_component_name())
+        self._yosys_name = self._get_component_name()
+        self.display_name = self._yosys_name
         self._parse_cells()
         self._make_cell_connections()
         self._connect_external_ports()
@@ -46,7 +53,7 @@ class YosysComponent(MultiComponent):
         return list(modules.keys())[0]
 
     def _parse_cells(self):
-        cells = self._json["modules"][self.name]["cells"]
+        cells = self._json["modules"][self._yosys_name]["cells"]
         for _, cell_dict in cells.items():
             cell_type = cell_dict["type"]
             cell = self.COMPONENT_MAP.get(cell_type)
@@ -77,7 +84,7 @@ class YosysComponent(MultiComponent):
                         out_port.wire = port
 
     def _connect_external_ports(self):
-        ports = self._json["modules"][self.name]["ports"]
+        ports = self._json["modules"][self._yosys_name]["ports"]
         for portname, port_dict in ports.items():
             port_direction = (
                 PortDirection.IN if port_dict["direction"] == "input" else PortDirection.OUT

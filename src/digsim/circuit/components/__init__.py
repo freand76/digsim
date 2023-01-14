@@ -3,7 +3,7 @@
 
 from ._button import PushButton  # noqa: F401
 from ._clock import Clock  # noqa: F401
-from ._gates import ALDFFE_PPP, AND, DFFE_PP0P, NAND, NOT, NOT_AND, SR, XOR  # noqa: F401
+from ._gates import ALDFFE_PPP, AND, DFFE_PP0P, NAND, NOT, SR, XOR  # noqa: F401
 from ._hexdigit import HexDigit  # noqa: F401
 from ._led import Led  # noqa: F401
 from ._on_off_switch import OnOffSwitch  # noqa: F401

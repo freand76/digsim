@@ -4,6 +4,7 @@
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-public-methods
 
+import json
 import queue
 import time
 from functools import partial
@@ -25,18 +26,24 @@ class AppModel(QThread):
     sig_component_notify = Signal(Component)
     sig_control_notify = Signal(bool)
     sig_sim_time_notify = Signal(float)
+    sig_update_gui_components = Signal()
 
     def __init__(self):
         super().__init__()
         self._placed_components = {}
         self._placed_wires = {}
-        self._circuit = Circuit(vcd="gui.vcd")
+        self._circuit = Circuit(name="DigSimCircuit", vcd="gui.vcd")
         self._started = False
         self._sim_tick_ms = 50
         self._gui_event_queue = queue.Queue()
         self._component_callback_list = []
         self._new_wire = None
         self._new_wire_end_pos = None
+        self._component_id = 0
+
+    def clear(self):
+        self._placed_components = {}
+        self._placed_wires = {}
         self._component_id = 0
 
     @property
@@ -60,10 +67,7 @@ class AppModel(QThread):
     def add_component_by_name(self, name, pos):
         component_class = getattr(digsim.circuit.components, name)
         component = component_class(self._circuit, name=f"{name}_{self._component_id}")
-        if not self._circuit.initialized:
-            self._circuit_init()
-
-        self._component_id += 1
+        self._circuit_init()
         return self.add_component(component, pos.x(), pos.y())
 
     def add_component(self, component, xpos, ypos):
@@ -72,13 +76,14 @@ class AppModel(QThread):
         else:
             placed_component = PlacedComponent(component, xpos, ypos)
 
+        self._component_id += 1
         self._placed_components[component] = placed_component
         if isinstance(component, CallbackComponent):
             component.set_callback(partial(AppModel.comp_cb, self))
         return placed_component
 
-    def add_wire(self, src_port, dst_port):
-        wire = PlacedWire(self, src_port, dst_port)
+    def add_wire(self, src_port, dst_port, connect=True):
+        wire = PlacedWire(self, src_port, dst_port, connect)
         self._placed_wires[wire.key] = wire
         self.sig_component_notify.emit(dst_port.parent)
 
@@ -141,9 +146,6 @@ class AppModel(QThread):
     def model_stop(self):
         self._started = False
 
-    def model_running(self):
-        return self._started
-
     def model_reset(self):
         if not self._started:
             self._circuit_init()
@@ -180,3 +182,31 @@ class AppModel(QThread):
     @property
     def is_running(self):
         return self._started
+
+    def save_circuit(self, path):
+        circuit_dict = self._circuit.to_dict()
+        circuit_dict["gui"] = {}
+        for comp, placed_comp in self._placed_components.items():
+            circuit_dict["gui"][comp.name] = {
+                "x": placed_comp.pos.x(),
+                "y": placed_comp.pos.y(),
+            }
+        json_object = json.dumps(circuit_dict, indent=4)
+        with open(path, mode="w", encoding="utf-8") as json_file:
+            json_file.write(json_object)
+
+    def load_circuit(self, path):
+        self.clear()
+        with open(path, mode="r", encoding="utf-8") as json_file:
+            circuit_dict = json.load(json_file)
+        self._circuit.from_dict(circuit_dict)
+        for name, comp in self._circuit.component_dict().items():
+            x = circuit_dict["gui"][name]["x"]
+            y = circuit_dict["gui"][name]["y"]
+            self.add_component(comp, x, y)
+        for name, comp in self._circuit.component_dict().items():
+            for src_port in comp.outports:
+                for dst_port in src_port.wires:
+                    self.add_wire(src_port, dst_port, connect=False)
+            self._circuit_init()
+        self.sig_update_gui_components.emit()

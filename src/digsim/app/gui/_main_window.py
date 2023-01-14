@@ -6,6 +6,7 @@
 from PySide6.QtCore import QMimeData, QSize, Qt
 from PySide6.QtGui import QDrag, QPainter, QPixmap
 from PySide6.QtWidgets import (
+    QFileDialog,
     QFrame,
     QHBoxLayout,
     QLineEdit,
@@ -125,6 +126,7 @@ class CircuitArea(QWidget):
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self._app_model = app_model
+        self._app_model.sig_update_gui_components.connect(self._update_gui_components)
 
         for placed_comp in self._app_model.get_placed_components():
             ComponentWidget(app_model, placed_comp, self)
@@ -167,6 +169,18 @@ class CircuitArea(QWidget):
         placed_component = self._app_model.add_component_by_name(component_name, position)
         comp = ComponentWidget(self._app_model, placed_component, self)
         comp.show()
+
+    def _update_gui_components(self):
+        children = self.findChildren(ComponentWidget)
+        for child in children:
+            child.deleteLater()
+
+        placed_components = self._app_model.get_placed_components()
+        for placed_component in placed_components:
+            comp = ComponentWidget(self._app_model, placed_component, self)
+            comp.show()
+        self._app_model.update_wires()
+        self.update()
 
 
 class SelectableComponentWidget(QPushButton):
@@ -263,8 +277,13 @@ class TopBar(QFrame):
         self._sim_time.setFrame(False)
         self._sim_time.selectionChanged.connect(lambda: self._sim_time.setSelection(0, 0))
         self.layout().addWidget(self._sim_time)
-        self.layout().setStretchFactor(self._start_button, 0)
         self.layout().addStretch(1)
+        self._load_button = QPushButton("Load Circuit", self)
+        self._load_button.clicked.connect(self.load)
+        self.layout().addWidget(self._load_button)
+        self._save_button = QPushButton("Save Circuit", self)
+        self._save_button.clicked.connect(self.save)
+        self.layout().addWidget(self._save_button)
 
     def start(self):
         self._start_button.setEnabled(False)
@@ -273,6 +292,18 @@ class TopBar(QFrame):
     def stop(self):
         self._start_button.setEnabled(False)
         self._app_model.model_stop()
+
+    def load(self):
+        path = QFileDialog.getOpenFileName(
+            self, "Load Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
+        )
+        self._app_model.load_circuit(path[0])
+
+    def save(self):
+        path = QFileDialog.getSaveFileName(
+            self, "Save Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
+        )
+        self._app_model.save_circuit(path[0])
 
     def reset(self):
         self._time_s = 0
@@ -294,7 +325,7 @@ class TopBar(QFrame):
     def _sim_time_notify(self, time_s):
         self._sim_time.setText(f"{time_s:.2f} s")
         self._time_s = time_s
-        if self._time_s and not self._app_model.model_running():
+        if self._time_s and not self._app_model.is_running:
             self._reset_button.setEnabled(True)
         else:
             self._reset_button.setEnabled(False)

@@ -8,12 +8,13 @@ from ._enum import PortDirection
 
 
 class Component(abc.ABC):
-    def __init__(self, circuit, name=""):
+    def __init__(self, circuit, name="", display_name=None):
         self._circuit = circuit
         self._name = name
         self._parent = None
         self._ports = []
         self._circuit.add_component(self)
+        self._display_name = display_name or self.__class__.__name__
 
     def init(self):
         for port in self._ports:
@@ -63,6 +64,14 @@ class Component(abc.ABC):
         return self._name
 
     @property
+    def display_name(self):
+        return self._display_name
+
+    @display_name.setter
+    def display_name(self, display_name):
+        self._display_name = display_name
+
+    @property
     def parent(self):
         return self._parent
 
@@ -77,7 +86,7 @@ class Component(abc.ABC):
         self.circuit.add_event(port, level, propagation_delay_ns)
 
     def __str__(self):
-        comp_str = f"{self.name}"
+        comp_str = f"{self.display_name}"
         for port in self.inports:
             comp_str += f"\n - I:{port.name}={port.bitval}"
         for port in self.outports:
@@ -88,13 +97,17 @@ class Component(abc.ABC):
     def from_dict(cls, circuit, json_component):
         component_name = json_component["name"]
         component_type = json_component["type"]
+        display_name = json_component.get("display_name")
 
         py_module_name = ".".join(component_type.split(".")[0:-1])
         py_class_name = component_type.split(".")[-1]
 
         module = importlib.import_module(py_module_name)
         class_ = getattr(module, py_class_name)
-        return class_(circuit=circuit, name=component_name)
+        component = class_(circuit=circuit, name=component_name)
+        if display_name is not None:
+            component.display_name = display_name
+        return component
 
     @property
     def has_action(self):
@@ -111,10 +124,19 @@ class Component(abc.ABC):
         pass
 
     def to_dict(self):
-        return {
+        component_dict = {
             "name": self.name,
-            "type": f"{type(self).__module__}.{type(self).__name__}",
+            "display_name": self.display_name,
         }
+
+        module_split = type(self).__module__.split(".")
+        type_str = ""
+        for module in module_split:
+            if not module.startswith("_"):
+                type_str += f"{module}."
+        type_str += type(self).__name__
+        component_dict["type"] = type_str
+        return component_dict
 
 
 class MultiComponent(Component):

@@ -5,7 +5,7 @@ from .atoms import CallbackComponent, OutputPort, SignalLevel, WireConnectionErr
 
 
 class Clock(CallbackComponent):
-    def __init__(self, circuit, frequency, name="Clock"):
+    def __init__(self, circuit, frequency=1, name="Clock"):
         super().__init__(circuit, name)
         self.add_port(
             OutputPort(
