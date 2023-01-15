@@ -6,13 +6,9 @@ import math
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPen
 
-from digsim.circuit.components.atoms import PortDirection
+from digsim.circuit.components.atoms import PortDirection, WireConnectionError
 
 from ._placed_object import PlacedObject
-
-
-class WireException(Exception):
-    pass
 
 
 class PlacedWire(PlacedObject):
@@ -27,7 +23,7 @@ class PlacedWire(PlacedObject):
         self._is_bus = False
 
         if port_a is None:
-            raise WireException("Cannot start a wire without a port")
+            raise WireConnectionError("Cannot start a wire without a port")
 
         if port_b is not None:
             if port_a.direction == PortDirection.OUT and port_b.direction == PortDirection.IN:
@@ -37,7 +33,7 @@ class PlacedWire(PlacedObject):
                 self._src_port = port_b
                 self._dst_port = port_a
             else:
-                raise WireException("Cannot connect to power of same type")
+                raise WireConnectionError("Cannot connect to power of same type")
         else:
             if port_a.direction == PortDirection.OUT:
                 self._src_port = port_a
@@ -48,7 +44,7 @@ class PlacedWire(PlacedObject):
         self._dst_point = None
         self.update()
         if connect:
-            self.connect()
+            self._connect()
 
     def _paint_wire(self, painter, src, dst):
         pen = QPen()
@@ -69,7 +65,7 @@ class PlacedWire(PlacedObject):
     def paint_new(self, painter, end_pos):
         self._paint_wire(painter, self.start_pos, end_pos)
 
-    def connect(self):
+    def _connect(self):
         if self._src_port is not None and self._dst_port is not None:
             self._src_port.wire = self._dst_port
             self._connected = True
@@ -83,8 +79,8 @@ class PlacedWire(PlacedObject):
         elif port.direction == PortDirection.IN and self._dst_port is None:
             self._dst_port = port
         else:
-            raise WireException("Cannot connect to power of same type")
-
+            raise WireConnectionError("Cannot connect to power of same type")
+        self._connect()
         self.update()
 
     def update(self):
@@ -98,6 +94,13 @@ class PlacedWire(PlacedObject):
             self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name)
 
     def is_close(self, point):
+        if (
+            point.x() < min(self._src_point.x(), self._dst_point.x())
+            or point.x() > max(self._src_point.x(), self._dst_point.x())
+            or point.y() < min(self._src_point.y(), self._dst_point.y())
+            or point.y() > max(self._src_point.y(), self._dst_point.y())
+        ):
+            return False
         p1_x = self._src_point.x()
         p1_y = self._src_point.y()
         p2_x = self._dst_point.x()

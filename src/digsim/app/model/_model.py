@@ -14,11 +14,11 @@ from PySide6.QtCore import QThread, Signal
 import digsim.circuit.components
 from digsim.circuit import Circuit
 from digsim.circuit.components import HexDigit, YosysComponent
-from digsim.circuit.components.atoms import CallbackComponent, Component
+from digsim.circuit.components.atoms import CallbackComponent, Component, WireConnectionError
 
 from ._placed_component import PlacedComponent
 from ._placed_hexdigit import PlacedHexDigit
-from ._placed_wire import PlacedWire, WireException
+from ._placed_wire import PlacedWire
 from ._placed_yosys import PlacedYosys
 
 
@@ -161,17 +161,17 @@ class AppModel(QThread):
             self._new_wire.paint_new(painter, self._new_wire_end_pos)
 
     def new_wire_start(self, component, portname):
-        self._new_wire = PlacedWire(self, component.port(portname))
+        if component.port(portname).can_add_wire():
+            self._new_wire = PlacedWire(self, component.port(portname))
 
     def new_wire_end(self, component, portname):
         try:
             self._new_wire.set_end_port(component.port(portname))
-            self._new_wire.connect()
             self._placed_wires[self._new_wire.key] = self._new_wire
-            self._new_wire = None
-            self._new_wire_end_pos = None
-        except WireException as exc:
+        except WireConnectionError as exc:
             print("ERROR:", str(exc))
+        self._new_wire = None
+        self._new_wire_end_pos = None
 
     def new_wire_abort(self):
         self._new_wire = None

@@ -18,8 +18,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from digsim.circuit import WireConnectionError
-
 
 class ComponentWidget(QPushButton):
     def __init__(self, app_model, placed_component, parent):
@@ -65,10 +63,7 @@ class ComponentWidget(QPushButton):
                 self._app_model.add_gui_event(self.component.onpress)
             elif self._app_model.has_new_wire():
                 if self._active_port is not None:
-                    try:
-                        self._app_model.new_wire_end(self.component, self._active_port)
-                    except WireConnectionError as exc:
-                        print(f"ERROR: {str(exc)}")
+                    self._app_model.new_wire_end(self.component, self._active_port)
             else:
                 self._app_model.select(self._placed_component)
                 if self._active_port is None:

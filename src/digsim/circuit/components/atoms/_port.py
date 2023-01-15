@@ -1,6 +1,8 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+# pylint: disable=too-many-public-methods
+
 import abc
 
 from ._enum import PortDirection, SignalLevel
@@ -74,6 +76,13 @@ class Port(abc.ABC):
 
     def set_driver(self, port):
         self._driver_port = port
+
+    def can_add_wire(self):
+        if self._direction == PortDirection.OUT:
+            return True
+        if not self.has_driver():
+            return True
+        return False
 
     @property
     def driver(self):
