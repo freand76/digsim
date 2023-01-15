@@ -40,12 +40,10 @@ class AppModel(QThread):
         self._component_callback_list = []
         self._new_wire = None
         self._new_wire_end_pos = None
-        self._component_id = 0
 
     def clear(self):
         self._placed_components = {}
         self._placed_wires = {}
-        self._component_id = 0
 
     @property
     def callback_list(self):
@@ -67,7 +65,7 @@ class AppModel(QThread):
 
     def add_component_by_name(self, name, pos):
         component_class = getattr(digsim.circuit.components, name)
-        component = component_class(self._circuit, name=f"{name}_{self._component_id}")
+        component = component_class(self._circuit, name=name)
         self._circuit_init()
         return self.add_component(component, pos.x(), pos.y())
 
@@ -79,7 +77,6 @@ class AppModel(QThread):
         else:
             placed_component = PlacedComponent(component, xpos, ypos)
 
-        self._component_id += 1
         self._placed_components[component] = placed_component
         if isinstance(component, CallbackComponent):
             component.set_callback(partial(AppModel.comp_cb, self))
@@ -240,7 +237,6 @@ class AppModel(QThread):
         circuit_dict["gui"] = {}
         for comp, placed_comp in self._placed_components.items():
             circuit_dict["gui"][comp.name] = placed_comp.to_dict()
-        circuit_dict["gui"]["next_id"] = self._component_id
         json_object = json.dumps(circuit_dict, indent=4)
         with open(path, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)
@@ -260,5 +256,4 @@ class AppModel(QThread):
                 for dst_port in src_port.wires:
                     self.add_wire(src_port, dst_port, connect=False)
             self._circuit_init()
-        self._component_id = circuit_dict["gui"]["next_id"]
         self.sig_update_gui_components.emit()

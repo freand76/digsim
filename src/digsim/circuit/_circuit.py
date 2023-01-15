@@ -42,7 +42,7 @@ class CircuitEvent:
 
 class Circuit:
     def __init__(self, name=None, vcd=None):
-        self._components = []
+        self._components = {}
         self._circuit_events = []
         self._name = name
         self._time_ns = 0
@@ -58,16 +58,18 @@ class Circuit:
 
     @property
     def components(self):
-        return self._components
+        comp_array = []
+        for _, comp in self._components.items():
+            comp_array.append(comp)
+        return comp_array
 
     def delete_component(self, component):
-        index = self._components.index(component)
-        del self._components[index]
+        del self._components[component.name]
         component.remove_connections()
 
     def get_toplevel_components(self):
         toplevel_components = []
-        for comp in self._components:
+        for _, comp in self._components.items():
             if comp.is_toplevel():
                 toplevel_components.append(comp)
         return toplevel_components
@@ -77,12 +79,12 @@ class Circuit:
         self._circuit_events = []
         if self._vcd is not None:
             self._vcd_init()
-        for comp in self._components:
+        for _, comp in self._components.items():
             comp.init()
         self.run_until(ns=0)  # Handle all time zero events
 
     def clear(self):
-        self._components = []
+        self._components = {}
 
     def vcd(self, filename):
         if self._vcd is not None:
@@ -96,13 +98,13 @@ class Circuit:
 
     def _vcd_init(self):
         port_info = []
-        for comp in self._components:
+        for _, comp in self._components.items():
             for port in comp.ports:
                 port_info.append((port.path, port.name, port.width))
         self._vcd.init(port_info)
 
         # Dump initial state in vcd
-        for comp in self._components:
+        for _, comp in self._components.items():
             for port in comp.ports:
                 self._vcd.write(port, self._time_ns)
 
@@ -153,15 +155,17 @@ class Circuit:
         self._circuit_events.append(CircuitEvent(event_time_ns, port, level))
 
     def add_component(self, component):
-        for comp in self._components:
-            if component.name == comp.name:
-                raise CircuitError("Component already in circuit")
-        self._components.append(component)
+        name_id = 1
+        namebase = component.name
+        while component.name in self._components:
+            component.name = f"{namebase}_{name_id}"
+            name_id += 1
+        self._components[component.name] = component
 
     def get_component(self, component_name):
-        for comp in self._components:
-            if component_name == comp.name:
-                return comp
+        comp = self._components.get(component_name)
+        if comp is not None:
+            return comp
         raise CircuitError(f"Component '{component_name}' not found")
 
     def connect_from_json(self, source, dest):

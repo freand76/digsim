@@ -318,12 +318,16 @@ class TopBar(QFrame):
         path = QFileDialog.getOpenFileName(
             self, "Load Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
         )
+        if len(path[0]) == 0:
+            return
         self._app_model.load_circuit(path[0])
 
     def save(self):
         path = QFileDialog.getSaveFileName(
             self, "Save Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
         )
+        if len(path[0]) == 0:
+            return
         self._app_model.save_circuit(path[0])
 
     def reset(self):

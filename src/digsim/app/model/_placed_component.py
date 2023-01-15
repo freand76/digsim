@@ -39,7 +39,7 @@ class PlacedComponent(PlacedObject):
             if port.width == 1:
                 self._port_display_name[port.name] = port.name
             else:
-                self._port_display_name[port.name] = f"{port.name}[{port.width}:0]"
+                self._port_display_name[port.name] = f"{port.name}[{port.width-1}:0]"
 
     def get_port_display_name_metrics(self, portname):
         font = QFont("Arial", 8)
@@ -68,7 +68,7 @@ class PlacedComponent(PlacedObject):
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
-        font = QFont("Arial", 8)
+        font = QFont("Arial", 10)
         painter.setFont(font)
         fm = QFontMetrics(font)
         display_name_str = self._component.display_name

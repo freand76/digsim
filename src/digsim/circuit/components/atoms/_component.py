@@ -69,6 +69,10 @@ class Component(abc.ABC):
     def name(self):
         return self._name
 
+    @name.setter
+    def name(self, name):
+        self._name = name
+
     @property
     def display_name(self):
         return self._display_name

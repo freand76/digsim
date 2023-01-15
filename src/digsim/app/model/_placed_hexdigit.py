@@ -38,7 +38,7 @@ class PlacedHexDigit(PlacedComponent):
         ],
     }
 
-    PORT_TO_RECT_MARGIN = 10
+    PORT_TO_RECT_MARGIN = 5
     RECT_TO_DIGIT_MARGIN = 10
 
     def paint_component(self, painter):
@@ -48,7 +48,7 @@ class PlacedHexDigit(PlacedComponent):
         painter.setBrush(Qt.black)
         _, str_pixels_w, _ = self.get_port_display_name_metrics("val")
         first_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
-        painter.drawRoundedRect(first_left, 10, 50, 80, 3, 3)
+        painter.drawRoundedRect(first_left, 10, 57, 80, 4, 4)
         self.draw_digit(painter, QPoint(first_left + self.RECT_TO_DIGIT_MARGIN, 20))
 
     def draw_digit(self, painter, start_point):
@@ -75,5 +75,5 @@ class PlacedHexDigit(PlacedComponent):
         else:
             painter.setPen(Qt.darkRed)
             painter.setBrush(Qt.darkRed)
-        dotPoint = QPoint(80, 80) + start_point
-        painter.drawEllipse(dotPoint, 5, 5)
+        dotPoint = QPoint(40, 60) + start_point
+        painter.drawEllipse(dotPoint, 3, 3)
