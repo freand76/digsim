@@ -46,9 +46,9 @@ class Clock(CallbackComponent):
     def wire(self, port):
         self.O.wire = port
 
-    def settings_from_dict(self, settings):
-        if "frequency" in settings:
-            self.set_frequency(settings["frequency"])
+    def setup(self, frequency=None):
+        if frequency is not None:
+            self.set_frequency(frequency)
 
     def settings_to_dict(self):
         return {"frequency": self._frequency}

@@ -123,10 +123,9 @@ class YosysComponent(MultiComponent):
                         external_port.connect_bit(idx, port_instance)
                 self.add_port(external_port)
 
-    def settings_from_dict(self, settings):
-        self._filename = settings.get("path")
-        if self._filename is not None:
-            self.load(self._filename)
+    def setup(self, path=None):
+        if path is not None:
+            self.load(path)
 
     def settings_to_dict(self):
         return {"path": self._filename}

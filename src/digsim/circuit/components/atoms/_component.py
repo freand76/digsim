@@ -144,7 +144,7 @@ class Component(abc.ABC):
         class_ = getattr(module, py_class_name)
         component = class_(circuit=circuit, name=component_name)
         if component_settings is not None and bool(component_settings):
-            component.settings_from_dict(component_settings)
+            component.setup(**component_settings)
         if display_name is not None:
             component.display_name = display_name
         return component
