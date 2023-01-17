@@ -6,6 +6,15 @@ import os
 from digsim.circuit import Circuit
 from digsim.circuit.components import PushButton, YosysComponent
 
+def memory(address):
+    mem = {
+        0xfffc: 0x00,
+        0xfffd: 0xc0,
+    }
+    if address in mem:
+        print(f"DI={mem[address]:x}")
+        return mem[address]
+    return 0
 
 circuit = Circuit(vcd="6502.vcd")
 rst = PushButton(circuit, "RST")
@@ -20,22 +29,21 @@ clk.O.wire = yosys_6502.clk
 
 circuit.init()
 
-rst.push()
-circuit.run(ms=10)
-
-circuit.run(ms=10)
-clk.push()
-circuit.run(ms=10)
 clk.release()
-
+rst.push()
+circuit.run(ns=500)
+clk.push()
+circuit.run(ns=500)
+clk.release()
 rst.release()
 
-yosys_6502.DI.set_level(value=0x80)
 
 for _ in range(10):
-    print(yosys_6502)
-    circuit.run(ms=10)
+    data = memory(int(yosys_6502.AB.bitval, 16))
+    circuit.run(ns=500)
+    print(f"AB={yosys_6502.AB.bitval} WE={yosys_6502.WE.bitval}")
+    circuit.run(ns=500)
     clk.push()
-    print(yosys_6502)
-    circuit.run(ms=10)
+    circuit.run(ns=500)
+    yosys_6502.DI.set_level(value=data)
     clk.release()
