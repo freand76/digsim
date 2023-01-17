@@ -479,6 +479,7 @@ class _SDFFCE_(ParameterComponent):
         self.add_port(ComponentPort(self, "R", PortDirection.IN, update_parent=False))
         self.add_port(OutputPort(self, "Q"))
         self._old_C_level = self.C.level
+        self.Q.level = SignalLevel.LOW
 
     def update(self):
         if self.C.level != self._old_C_level and self.C.level == self._clock_edge:
@@ -487,7 +488,7 @@ class _SDFFCE_(ParameterComponent):
                     self.Q.level = self._reset_value
                 else:
                     self.Q.level = self.D.level
-            self._old_C_level = self.C.level
+        self._old_C_level = self.C.level
 
 
 class _SDFFCE_NN0N_(_SDFFCE_):
@@ -608,7 +609,7 @@ class _SDFFE_(ParameterComponent):
                 self.Q.level = self._reset_value
             elif self.E.level == self._enable_level:
                 self.Q.level = self.D.level
-            self._old_C_level = self.C.level
+        self._old_C_level = self.C.level
 
 
 class _SDFFE_NN0N_(_SDFFE_):

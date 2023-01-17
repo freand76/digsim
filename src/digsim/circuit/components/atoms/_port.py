@@ -234,6 +234,10 @@ class BusOutPort(BusPort):
         for port in self._wired_ports:
             port.set_level(value=value)
 
+    @property
+    def bitval(self):
+        return f"0x{self._bus_value:x}"
+
 
 class BusInPort(BusPort):
     def __init__(self, parent, name, width=1):
@@ -264,6 +268,10 @@ class BusInPort(BusPort):
                     bit_port.update_wires(new_level)
 
                 value = value >> 1
+
+    @property
+    def bitval(self):
+        return f"0x{self._bus_value:x}"
 
     def update(self):
         self.parent.update()

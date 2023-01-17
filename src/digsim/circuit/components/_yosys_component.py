@@ -49,10 +49,10 @@ class YosysComponent(MultiComponent):
 
     def _parse_cells(self):
         cells = self._json["modules"][self._yosys_name]["cells"]
-        for _, cell_dict in cells.items():
+        for cell, cell_dict in cells.items():
             cell_type = cell_dict["type"]
-            cell_name = cell_type[2:-1]
-            component_class_name = f"_{cell_name}_"
+            cell_name = f'{cell.split("$")[-1]}_{cell_type[2:-1]}'
+            component_class_name = f"_{cell_type[2:-1]}_"
             component_class = getattr(digsim.circuit.components._yosys_atoms, component_class_name)
             cell_count = self._component_id.get(cell_name, 0)
             self._component_id[cell_name] = cell_count + 1
