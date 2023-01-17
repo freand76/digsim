@@ -1,9 +1,12 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+# pylint: disable=protected-access
+
 import json
 
-from ._gates import ALDFFE_PPP, AND, DFFE_PP0P, NOT, XOR
+import digsim.circuit.components._yosys_atoms
+
 from .atoms import BusInPort, BusOutPort, ComponentPort, MultiComponent, PortDirection
 
 
@@ -12,15 +15,6 @@ class YosysComponentException(Exception):
 
 
 class YosysComponent(MultiComponent):
-
-    COMPONENT_MAP = {
-        "$_NOT_": {"class": NOT, "name": "not"},
-        "$_AND_": {"class": AND, "name": "and"},
-        "$_XOR_": {"class": XOR, "name": "xor"},
-        "$_DFFE_PP0P_": {"class": DFFE_PP0P, "name": "dffe_pp0p"},
-        "$_ALDFFE_PPP_": {"class": ALDFFE_PPP, "name": "aldffe_ppp"},
-    }
-
     def __init__(self, circuit, name="Yosys", filename=None):
         super().__init__(circuit, name)
         self._filename = filename
@@ -57,13 +51,12 @@ class YosysComponent(MultiComponent):
         cells = self._json["modules"][self._yosys_name]["cells"]
         for _, cell_dict in cells.items():
             cell_type = cell_dict["type"]
-            cell = self.COMPONENT_MAP.get(cell_type)
-            if cell is None:
-                raise Exception(f"Cell '{cell_type}' not implemented yet...")
-            component_class = cell["class"]
-            cell_count = self._component_id.get(cell["name"], 0)
-            self._component_id[cell["name"]] = cell_count + 1
-            component = component_class(self._circuit, name=f"{cell['name']}_{cell_count}")
+            cell_name = cell_type[2:-1]
+            component_class_name = f"_{cell_name}_"
+            component_class = getattr(digsim.circuit.components._yosys_atoms, component_class_name)
+            cell_count = self._component_id.get(cell_name, 0)
+            self._component_id[cell_name] = cell_count + 1
+            component = component_class(self._circuit, name=f"{cell_name}_{cell_count}")
             self.add(component)
             cell_connections = cell_dict["connections"]
             for portname, connection in cell_connections.items():

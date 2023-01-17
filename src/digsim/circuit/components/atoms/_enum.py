@@ -10,6 +10,6 @@ class PortDirection(Enum):
 
 
 class SignalLevel(Enum):
-    UNKNOWN = auto()
-    HIGH = auto()
-    LOW = auto()
+    UNKNOWN = "X"
+    HIGH = "1"
+    LOW = "0"
