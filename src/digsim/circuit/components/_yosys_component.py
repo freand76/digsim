@@ -87,6 +87,9 @@ class YosysComponent(MultiComponent):
             port_width = len(port_dict["bits"])
             if port_width == 1:
                 connection_id = port_dict["bits"][0]
+                if connection_id not in self._port_tag_dict:
+                    print(f"Skipping non-connected port '{portname}'")
+                    continue
                 portlist = self._port_tag_dict[connection_id]
                 external_port = ComponentPort(self, portbitname, port_direction)
                 self.add_port(external_port)
