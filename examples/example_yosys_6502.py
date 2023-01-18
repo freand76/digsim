@@ -6,15 +6,17 @@ import os
 from digsim.circuit import Circuit
 from digsim.circuit.components import PushButton, YosysComponent
 
+
 def memory(address):
     mem = {
-        0xfffc: 0x00,
-        0xfffd: 0xc0,
+        0xFFFC: 0x00,
+        0xFFFD: 0xC0,
     }
     if address in mem:
         print(f"DI={mem[address]:x}")
         return mem[address]
     return 0
+
 
 circuit = Circuit(vcd="6502.vcd")
 rst = PushButton(circuit, "RST")

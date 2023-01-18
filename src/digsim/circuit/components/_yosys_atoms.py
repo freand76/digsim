@@ -7,12 +7,16 @@
 from .atoms import Component, ComponentPort, OutputPort, PortDirection, SignalLevel
 
 
-class ParameterComponent(Component):
-    @staticmethod
-    def bool_to_level(high):
-        if high:
+class ClassNameParameterComponent(Component):
+    def name_to_level(self, index):
+        class_name = self.__class__.__name__
+        split = class_name.split("_")
+        level = split[2][index]
+        if level in ["N", "0"]:
+            return SignalLevel.LOW
+        if level in ["P", "1"]:
             return SignalLevel.HIGH
-        return SignalLevel.LOW
+        raise Exception(f"Unknown value ä{level}'")
 
 
 # Clock, Async Load, Enable
@@ -26,12 +30,12 @@ class ParameterComponent(Component):
 # module \$_ALDFFE_PPP_ (D, C, L, AD, E, Q);
 
 
-class _ALDFFE_(ParameterComponent):
-    def __init__(self, circuit, name, pos_c, pos_l, pos_e):
+class _ALDFFE_(ClassNameParameterComponent):
+    def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self._clock_edge = self.bool_to_level(pos_c)
-        self._load_level = self.bool_to_level(pos_l)
-        self._enable_level = self.bool_to_level(pos_e)
+        self._clock_edge = self.name_to_level(0)
+        self._load_level = self.name_to_level(1)
+        self._enable_level = self.name_to_level(2)
         self.add_port(ComponentPort(self, "AD", PortDirection.IN, update_parent=False))
         self.add_port(ComponentPort(self, "C", PortDirection.IN))
         self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
@@ -53,43 +57,35 @@ class _ALDFFE_(ParameterComponent):
 
 
 class _ALDFFE_NNN_(_ALDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, False)
+    pass
 
 
 class _ALDFFE_NNP_(_ALDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, True)
+    pass
 
 
 class _ALDFFE_NPN_(_ALDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, False)
+    pass
 
 
 class _ALDFFE_NPP_(_ALDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, True)
+    pass
 
 
 class _ALDFFE_PNN_(_ALDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, False)
+    pass
 
 
 class _ALDFFE_PNP_(_ALDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, True)
+    pass
 
 
 class _ALDFFE_PPN_(_ALDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, False)
+    pass
 
 
 class _ALDFFE_PPP_(_ALDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, True)
+    pass
 
 
 # Clock, Async Load, Enable
@@ -99,11 +95,11 @@ class _ALDFFE_PPP_(_ALDFFE_):
 # module \$_ALDFF_PP_ (D, C, L, AD, Q);
 
 
-class _ALDFF_(ParameterComponent):
-    def __init__(self, circuit, name, pos_c, pos_l):
+class _ALDFF_(ClassNameParameterComponent):
+    def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self._clock_edge = self.bool_to_level(pos_c)
-        self._load_level = self.bool_to_level(pos_l)
+        self._clock_edge = self.name_to_level(0)
+        self._load_level = self.name_to_level(1)
         self.add_port(ComponentPort(self, "AD", PortDirection.IN, update_parent=False))
         self.add_port(ComponentPort(self, "C", PortDirection.IN))
         self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
@@ -120,25 +116,19 @@ class _ALDFF_(ParameterComponent):
 
 
 class _ALDFF_NN_(_ALDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False)
+    pass
 
 
 class _ALDFF_NP_(_ALDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True)
+    pass
 
 
 class _ALDFF_PN_(_ALDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False)
+    pass
 
 
 class _ALDFF_PP_(_ALDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True)
-
-        self._old_C_level = self.C.level
+    pass
 
 
 # module \$_DFFE_NN0N_ (D, C, R, E, Q);
@@ -159,13 +149,13 @@ class _ALDFF_PP_(_ALDFF_):
 # module \$_DFFE_PP1P_ (D, C, R, E, Q);
 
 
-class _DFFE_(ParameterComponent):
-    def __init__(self, circuit, name, pos_c, pos_r, r_val, pos_e):
+class _DFFE4_(ClassNameParameterComponent):
+    def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self._clock_edge = self.bool_to_level(pos_c)
-        self._reset_level = self.bool_to_level(pos_r)
-        self._reset_value = self.bool_to_level(r_val)
-        self._enable_level = self.bool_to_level(pos_e)
+        self._clock_edge = self.name_to_level(0)
+        self._reset_level = self.name_to_level(1)
+        self._reset_value = self.name_to_level(2)
+        self._enable_level = self.name_to_level(3)
         self.add_port(ComponentPort(self, "C", PortDirection.IN))
         self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
         self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
@@ -185,84 +175,68 @@ class _DFFE_(ParameterComponent):
         self._old_C_level = self.C.level
 
 
-class _DFFE_NN0N_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, False, False)
+class _DFFE_NN0N_(_DFFE4_):
+    pass
 
 
-class _DFFE_NN0P_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, False, True)
+class _DFFE_NN0P_(_DFFE4_):
+    pass
 
 
-class _DFFE_NN1N_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, True, False)
+class _DFFE_NN1N_(_DFFE4_):
+    pass
 
 
-class _DFFE_NN1P_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, True, True)
+class _DFFE_NN1P_(_DFFE4_):
+    pass
 
 
-class _DFFE_NP0N_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, False, False)
+class _DFFE_NP0N_(_DFFE4_):
+    pass
 
 
-class _DFFE_NP0P_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, False, True)
+class _DFFE_NP0P_(_DFFE4_):
+    pass
 
 
-class _DFFE_NP1N_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, True, False)
+class _DFFE_NP1N_(_DFFE4_):
+    pass
 
 
-class _DFFE_NP1P_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, True, True)
+class _DFFE_NP1P_(_DFFE4_):
+    pass
 
 
-class _DFFE_PN0N_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, False, False)
+class _DFFE_PN0N_(_DFFE4_):
+    pass
 
 
-class _DFFE_PN0P_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, False, True)
+class _DFFE_PN0P_(_DFFE4_):
+    pass
 
 
-class _DFFE_PN1N_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, True, False)
+class _DFFE_PN1N_(_DFFE4_):
+    pass
 
 
-class _DFFE_PN1P_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, True, True)
+class _DFFE_PN1P_(_DFFE4_):
+    pass
 
 
-class _DFFE_PP0N_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, False, False)
+class _DFFE_PP0N_(_DFFE4_):
+    pass
 
 
-class _DFFE_PP0P_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, False, True)
+class _DFFE_PP0P_(_DFFE4_):
+    pass
 
 
-class _DFFE_PP1N_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, True, False)
+class _DFFE_PP1N_(_DFFE4_):
+    pass
 
 
-class _DFFE_PP1P_(_DFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, True, True)
+class _DFFE_PP1P_(_DFFE4_):
+    pass
 
 
 # module \$_DFFE_NN_ (D, C, E, Q);
@@ -271,11 +245,11 @@ class _DFFE_PP1P_(_DFFE_):
 # module \$_DFFE_PP_ (D, C, E, Q);
 
 
-class _DFFE2_(ParameterComponent):
-    def __init__(self, circuit, name, pos_c, pos_e):
+class _DFFE2_(ClassNameParameterComponent):
+    def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self._clock_edge = self.bool_to_level(pos_c)
-        self._enable_level = self.bool_to_level(pos_e)
+        self._clock_edge = self.name_to_level(0)
+        self._enable_level = self.name_to_level(1)
         self.add_port(ComponentPort(self, "C", PortDirection.IN))
         self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
         self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
@@ -293,33 +267,29 @@ class _DFFE2_(ParameterComponent):
 
 
 class _DFFE_NN_(_DFFE2_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False)
+    pass
 
 
 class _DFFE_NP_(_DFFE2_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True)
+    pass
 
 
 class _DFFE_PN_(_DFFE2_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False)
+    pass
 
 
 class _DFFE_PP_(_DFFE2_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True)
+    pass
 
 
 # module \$_DFF_N_ (D, C, Q);
 # module \$_DFF_P_ (D, C, Q);
 
 
-class _DFF_(ParameterComponent):
-    def __init__(self, circuit, name, pos_c):
+class _DFF_(ClassNameParameterComponent):
+    def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self._clock_edge = self.bool_to_level(pos_c)
+        self._clock_edge = self.name_to_level(0)
         self.add_port(ComponentPort(self, "C", PortDirection.IN))
         self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
         self.add_port(OutputPort(self, "Q"))
@@ -332,13 +302,11 @@ class _DFF_(ParameterComponent):
 
 
 class _DFF_N_(_DFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False)
+    pass
 
 
 class _DFF_P_(_DFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True)
+    pass
 
 
 # module \$_DFF_NN0_ (D, C, R, Q);
@@ -351,12 +319,22 @@ class _DFF_P_(_DFF_):
 # module \$_DFF_PP1_ (D, C, R, Q);
 
 
-class _SDFF_(ParameterComponent):
-    def __init__(self, circuit, name, pos_c, pos_r, r_val):
+# module \$_SDFF_NN0_ (D, C, R, Q);
+# module \$_SDFF_NN1_ (D, C, R, Q);
+# module \$_SDFF_NP0_ (D, C, R, Q);
+# module \$_SDFF_NP1_ (D, C, R, Q);
+# module \$_SDFF_PN0_ (D, C, R, Q);
+# module \$_SDFF_PN1_ (D, C, R, Q);
+# module \$_SDFF_PP0_ (D, C, R, Q);
+# module \$_SDFF_PP1_ (D, C, R, Q);
+
+
+class _SDFF_(ClassNameParameterComponent):
+    def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self._clock_edge = self.bool_to_level(pos_c)
-        self._reset_level = self.bool_to_level(pos_r)
-        self._reset_value = self.bool_to_level(r_val)
+        self._clock_edge = self.name_to_level(0)
+        self._reset_level = self.name_to_level(1)
+        self._reset_value = self.name_to_level(2)
         self.add_port(ComponentPort(self, "C", PortDirection.IN))
         self.add_port(ComponentPort(self, "R", PortDirection.IN, update_parent=False))
         self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
@@ -373,53 +351,35 @@ class _SDFF_(ParameterComponent):
 
 
 class _SDFF_NN0_(_SDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, False)
+    pass
 
 
 class _SDFF_NN1_(_SDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, True)
+    pass
 
 
 class _SDFF_NP0_(_SDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, False)
+    pass
 
 
 class _SDFF_NP1_(_SDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, True)
+    pass
 
 
 class _SDFF_PN0_(_SDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, False)
+    pass
 
 
 class _SDFF_PN1_(_SDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, True)
+    pass
 
 
 class _SDFF_PP0_(_SDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, False)
+    pass
 
 
 class _SDFF_PP1_(_SDFF_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, True)
-
-
-# module \$_SDFF_NN0_ (D, C, R, Q);
-# module \$_SDFF_NN1_ (D, C, R, Q);
-# module \$_SDFF_NP0_ (D, C, R, Q);
-# module \$_SDFF_NP1_ (D, C, R, Q);
-# module \$_SDFF_PN0_ (D, C, R, Q);
-# module \$_SDFF_PN1_ (D, C, R, Q);
-# module \$_SDFF_PP0_ (D, C, R, Q);
-# module \$_SDFF_PP1_ (D, C, R, Q);
+    pass
 
 
 # module \$_DFFSR_NNN_ (C, S, R, D, Q);
@@ -466,20 +426,19 @@ class _SDFF_PP1_(_SDFF_):
 # module \$_SDFFCE_PP1P_ (D, C, R, E, Q);
 
 
-class _SDFFCE_(ParameterComponent):
-    def __init__(self, circuit, name, pos_c, pos_r, r_val, pos_e):
+class _SDFFCE_(ClassNameParameterComponent):
+    def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self._clock_edge = self.bool_to_level(pos_c)
-        self._reset_level = self.bool_to_level(pos_r)
-        self._reset_value = self.bool_to_level(r_val)
-        self._enable_level = self.bool_to_level(pos_e)
+        self._clock_edge = self.name_to_level(0)
+        self._reset_level = self.name_to_level(1)
+        self._reset_value = self.name_to_level(2)
+        self._enable_level = self.name_to_level(3)
         self.add_port(ComponentPort(self, "C", PortDirection.IN))
         self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
         self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
         self.add_port(ComponentPort(self, "R", PortDirection.IN, update_parent=False))
         self.add_port(OutputPort(self, "Q"))
         self._old_C_level = self.C.level
-        self.Q.level = SignalLevel.LOW
 
     def update(self):
         if self.C.level != self._old_C_level and self.C.level == self._clock_edge:
@@ -492,83 +451,67 @@ class _SDFFCE_(ParameterComponent):
 
 
 class _SDFFCE_NN0N_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, False, False)
+    pass
 
 
 class _SDFFCE_NN0P_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, False, True)
+    pass
 
 
 class _SDFFCE_NN1N_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, True, False)
+    pass
 
 
 class _SDFFCE_NN1P_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, True, True)
+    pass
 
 
 class _SDFFCE_NP0N_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, False, False)
+    pass
 
 
 class _SDFFCE_NP0P_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, False, True)
+    pass
 
 
 class _SDFFCE_NP1N_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, True, False)
+    pass
 
 
 class _SDFFCE_NP1P_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, True, True)
+    pass
 
 
 class _SDFFCE_PN0N_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, False, False)
+    pass
 
 
 class _SDFFCE_PN0P_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, False, True)
+    pass
 
 
 class _SDFFCE_PN1N_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, True, False)
+    pass
 
 
 class _SDFFCE_PN1P_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, True, True)
+    pass
 
 
 class _SDFFCE_PP0N_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, False, False)
+    pass
 
 
 class _SDFFCE_PP0P_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, False, True)
+    pass
 
 
 class _SDFFCE_PP1N_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, True, False)
+    pass
 
 
 class _SDFFCE_PP1P_(_SDFFCE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, True, True)
+    pass
 
 
 # module \$_SDFFE_NN0N_ (D, C, R, E, Q);
@@ -589,13 +532,13 @@ class _SDFFCE_PP1P_(_SDFFCE_):
 # module \$_SDFFE_PP1P_ (D, C, R, E, Q);
 
 
-class _SDFFE_(ParameterComponent):
-    def __init__(self, circuit, name, pos_c, pos_r, r_val, pos_e):
+class _SDFFE_(ClassNameParameterComponent):
+    def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self._clock_edge = self.bool_to_level(pos_c)
-        self._reset_level = self.bool_to_level(pos_r)
-        self._reset_value = self.bool_to_level(r_val)
-        self._enable_level = self.bool_to_level(pos_e)
+        self._clock_edge = self.name_to_level(0)
+        self._reset_level = self.name_to_level(1)
+        self._reset_value = self.name_to_level(2)
+        self._enable_level = self.name_to_level(3)
         self.add_port(ComponentPort(self, "C", PortDirection.IN))
         self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
         self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
@@ -613,83 +556,67 @@ class _SDFFE_(ParameterComponent):
 
 
 class _SDFFE_NN0N_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, False, False)
+    pass
 
 
 class _SDFFE_NN0P_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, False, True)
+    pass
 
 
 class _SDFFE_NN1N_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, True, False)
+    pass
 
 
 class _SDFFE_NN1P_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, False, True, True)
+    pass
 
 
 class _SDFFE_NP0N_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, False, False)
+    pass
 
 
 class _SDFFE_NP0P_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, False, True)
+    pass
 
 
 class _SDFFE_NP1N_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, True, False)
+    pass
 
 
 class _SDFFE_NP1P_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, False, True, True, True)
+    pass
 
 
 class _SDFFE_PN0N_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, False, False)
+    pass
 
 
 class _SDFFE_PN0P_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, False, True)
+    pass
 
 
 class _SDFFE_PN1N_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, True, False)
+    pass
 
 
 class _SDFFE_PN1P_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, False, True, True)
+    pass
 
 
 class _SDFFE_PP0N_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, False, False)
+    pass
 
 
 class _SDFFE_PP0P_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, False, True)
+    pass
 
 
 class _SDFFE_PP1N_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, True, False)
+    pass
 
 
 class _SDFFE_PP1P_(_SDFFE_):
-    def __init__(self, circuit, name):
-        super().__init__(circuit, name, True, True, True, True)
+    pass
 
 
 # module \$_DLATCH_N_ (E, D, Q);
