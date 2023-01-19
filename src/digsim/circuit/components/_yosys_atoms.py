@@ -44,6 +44,9 @@ class _ALDFFE_(ClassNameParameterComponent):
         self.add_port(OutputPort(self, "Q"))
         self._old_C_level = self.C.level
 
+    def init(self):
+        self.Q.level = self._reset_level
+
     def update(self):
         if self.L.level == self._load_level:
             self.Q.level = self.AD.level
@@ -107,6 +110,9 @@ class _ALDFF_(ClassNameParameterComponent):
         self.add_port(OutputPort(self, "Q"))
         self._old_C_level = self.C.level
 
+    def init(self):
+        self.Q.level = SignalLevel.LOW
+
     def update(self):
         if self.L.level == self._load_level:
             self.Q.level = self.AD.level
@@ -162,6 +168,9 @@ class _DFFE4_(ClassNameParameterComponent):
         self.add_port(ComponentPort(self, "R", PortDirection.IN))
         self.add_port(OutputPort(self, "Q"))
         self._old_C_level = self.C.level
+
+    def init(self):
+        self.Q.level = SignalLevel.LOW
 
     def update(self):
         if self.R.level == self._reset_level:
@@ -256,6 +265,9 @@ class _DFFE2_(ClassNameParameterComponent):
         self.add_port(OutputPort(self, "Q"))
         self._old_C_level = self.C.level
 
+    def init(self):
+        self.Q.level = SignalLevel.LOW
+
     def update(self):
         if (
             self.C.level != self._old_C_level
@@ -294,6 +306,9 @@ class _DFF_(ClassNameParameterComponent):
         self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
         self.add_port(OutputPort(self, "Q"))
         self._old_C_level = self.C.level
+
+    def init(self):
+        self.Q.level = SignalLevel.LOW
 
     def update(self):
         if self.C.level != self._old_C_level and self.C.level == self._clock_edge:
@@ -340,6 +355,9 @@ class _SDFF_(ClassNameParameterComponent):
         self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
         self.add_port(OutputPort(self, "Q"))
         self._old_C_level = self.C.level
+
+    def init(self):
+        self.Q.level = SignalLevel.LOW
 
     def update(self):
         if self.C.level != self._old_C_level and self.C.level == self._clock_edge:
@@ -439,6 +457,9 @@ class _SDFFCE_(ClassNameParameterComponent):
         self.add_port(ComponentPort(self, "R", PortDirection.IN, update_parent=False))
         self.add_port(OutputPort(self, "Q"))
         self._old_C_level = self.C.level
+
+    def init(self):
+        self.Q.level = SignalLevel.LOW
 
     def update(self):
         if self.C.level != self._old_C_level and self.C.level == self._clock_edge:
@@ -545,6 +566,9 @@ class _SDFFE_(ClassNameParameterComponent):
         self.add_port(ComponentPort(self, "R", PortDirection.IN, update_parent=False))
         self.add_port(OutputPort(self, "Q"))
         self._old_C_level = self.C.level
+
+    def init(self):
+        self.Q.level = SignalLevel.LOW
 
     def update(self):
         if self.C.level != self._old_C_level and self.C.level == self._clock_edge:

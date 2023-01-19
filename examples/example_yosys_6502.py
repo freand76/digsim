@@ -4,7 +4,7 @@
 import os
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import PushButton, YosysComponent
+from digsim.circuit.components import Clock, PushButton, YosysComponent
 
 
 def memory(address):
@@ -15,37 +15,37 @@ def memory(address):
     if address in mem:
         print(f"DI={mem[address]:x}")
         return mem[address]
-    return 0
+    return 0x0A
 
 
 circuit = Circuit(vcd="6502.vcd")
 rst = PushButton(circuit, "RST")
-clk = PushButton(circuit, "CLK")
+clk = Clock(circuit, frequency=1000000, name="CLK")
+irq = PushButton(circuit, "IRQ")
+rdy = PushButton(circuit, "RDY")
 
 yosys_6502 = YosysComponent(
     circuit, filename=f"{os.path.dirname(__file__)}/../yosys_modules/6502.json"
 )
 
-rst.O.wire = yosys_6502.RST
+rst.O.wire = yosys_6502.reset
 clk.O.wire = yosys_6502.clk
+irq.O.wire = yosys_6502.IRQ
+irq.O.wire = yosys_6502.NMI
+rdy.O.wire = yosys_6502.RDY
 
 circuit.init()
+irq.release()
+rdy.push()
 
-clk.release()
 rst.push()
-circuit.run(ns=500)
-clk.push()
-circuit.run(ns=500)
-clk.release()
+circuit.run(us=1)
 rst.release()
+circuit.run(us=1)
 
-
-for _ in range(10):
-    data = memory(int(yosys_6502.AB.bitval, 16))
-    circuit.run(ns=500)
+for _ in range(20):
     print(f"AB={yosys_6502.AB.bitval} WE={yosys_6502.WE.bitval}")
     circuit.run(ns=500)
-    clk.push()
-    circuit.run(ns=500)
+    data = memory(int(yosys_6502.AB.bitval, 16))
     yosys_6502.DI.set_level(value=data)
-    clk.release()
+    circuit.run(ns=500)
