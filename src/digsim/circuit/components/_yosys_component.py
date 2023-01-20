@@ -37,17 +37,16 @@ class StaticLogic(Component):
 class YosysComponent(MultiComponent):
     def __init__(self, circuit, name="Yosys", filename=None, nets=True):
         super().__init__(circuit, name)
-        self._gates_comp = MultiComponent(self._circuit, "gates")
-        self.add(self._gates_comp)
-        self._net_comp = None
+        self._circuit = circuit
         self._filename = filename
         self._nets = nets
         self._port_connections = {}
-        self._circuit = circuit
-        self._component_id = {}
         self._json = None
         self._yosys_name = None
-        self._add_logic_one_and_zero()
+        self._gates_comp = None
+        self._net_comp = None
+
+        self._setup_base()
 
         if nets:
             self._net_comp = Component(self._circuit, "nets")
@@ -56,7 +55,9 @@ class YosysComponent(MultiComponent):
         if filename is not None:
             self.load(filename)
 
-    def _add_logic_one_and_zero(self):
+    def _setup_base(self):
+        self._gates_comp = MultiComponent(self._circuit, "gates")
+        self.add(self._gates_comp)
         self._logic_one = StaticLogic(self._circuit, "LogicOne", SignalLevel.HIGH)
         self._gates_comp.add(self._logic_one)
         self._add_port("1", self._logic_one.O, driver=True)
@@ -97,9 +98,7 @@ class YosysComponent(MultiComponent):
             cell_name = f'{cell.split("$")[-1]}_{cell_type[2:-1]}'
             component_class_name = f"_{cell_type[2:-1]}_"
             component_class = getattr(digsim.circuit.components._yosys_atoms, component_class_name)
-            cell_count = self._component_id.get(cell_name, 0)
-            self._component_id[cell_name] = cell_count + 1
-            component = component_class(self._circuit, name=f"{cell_name}_{cell_count}")
+            component = component_class(self._circuit, name=f"{cell_name}")
             self._gates_comp.add(component)
 
             for portname, direction in cell_dict["port_directions"].items():
