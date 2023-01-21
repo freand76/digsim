@@ -40,6 +40,15 @@ class PlacedHexDigit(PlacedComponent):
 
     PORT_TO_RECT_MARGIN = 5
     RECT_TO_DIGIT_MARGIN = 10
+    DIGIT_WIDTH = 54
+
+    def __init__(self, component, xpos, ypos):
+        super().__init__(component, xpos, ypos)
+        _, str_pixels_w, _ = self.get_port_display_name_metrics("val")
+        first_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
+        self._width = (
+            first_left + self.component.get_digits() * self.DIGIT_WIDTH + self.RECT_TO_DIGIT_MARGIN
+        )
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
@@ -48,11 +57,17 @@ class PlacedHexDigit(PlacedComponent):
         painter.setBrush(Qt.black)
         _, str_pixels_w, _ = self.get_port_display_name_metrics("val")
         first_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
-        painter.drawRoundedRect(first_left, 10, 57, 80, 4, 4)
-        self.draw_digit(painter, QPoint(first_left + self.RECT_TO_DIGIT_MARGIN, 20))
+        digits = self.component.get_digits()
+        painter.drawRoundedRect(first_left, 10, self.DIGIT_WIDTH * digits, 80, 4, 4)
+        for digit_id in range(self.component.get_digits()):
+            active_segments = self.component.segments(digit_id)
+            self.draw_digit(
+                painter,
+                QPoint(first_left + self.RECT_TO_DIGIT_MARGIN + self.DIGIT_WIDTH * digit_id, 20),
+                active_segments,
+            )
 
-    def draw_digit(self, painter, start_point):
-        active_segments = self.component.segments()
+    def draw_digit(self, painter, start_point, active_segments):
         for seg, type_pos in self.SEGMENT_TYPE_AND_POS.items():
             if seg in active_segments:
                 painter.setPen(Qt.red)

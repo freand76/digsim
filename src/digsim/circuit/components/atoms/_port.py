@@ -30,6 +30,16 @@ class Port(abc.ABC):
     def width(self):
         return self._width
 
+    @width.setter
+    def width(self, width):
+        if width != self._width:
+            driver = self.get_driver()
+            if driver is not None:
+                driver.disconnect(self)
+            for port in self._wired_ports:
+                self.disconnect(port)
+        self._width = width
+
     @property
     def wire(self):
         raise PortConnectionError("Cannot get a wire")
@@ -128,11 +138,11 @@ class PortWire(Port):
     def set_driver(self, port):
         self._port_driver = port
 
+    def get_driver(self):
+        return self._port_driver
+
     def has_driver(self):
         return self._port_driver is not None
-
-    def set_bit_value(self, bit, value):
-        bit.value = value
 
 
 class PortIn(PortWire):
@@ -167,8 +177,8 @@ class PortOut(Port):
     def set_driver(self, port):
         raise PortConnectionError(f"The port {self.path()}.{self.name()} cannot be driven")
 
-    def set_bit_value(self, bit, value):
-        raise PortConnectionError(f"The port {self.path()}.{self.name()} cannot be driven")
+    def get_driver(self):
+        return None
 
     def has_driver(self):
         return False
@@ -201,6 +211,9 @@ class PortMultiBitWire(Port):
 
     def set_driver(self, port):
         self._port_driver = port
+
+    def get_driver(self):
+        return self._port_driver
 
     def has_driver(self):
         return self._port_driver is not None

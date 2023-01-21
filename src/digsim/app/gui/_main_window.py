@@ -79,6 +79,7 @@ class ComponentWidget(QPushButton):
                 self._app_model.new_wire_abort()
             else:
                 self._placed_component.create_context_menu(self, event)
+                self.adjustSize()
                 self.update()
 
     def mouseReleaseEvent(self, event):

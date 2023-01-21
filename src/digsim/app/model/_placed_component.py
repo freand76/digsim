@@ -15,10 +15,11 @@ class PlacedComponent(PlacedObject):
 
     DEFAULT_WIDTH = 120
     DEFAULT_HEIGHT = 100
-    BORDER_MARGIN = 20
+    RECT_TO_BORDER = 5
+    BORDER_TO_PORT = 30
     PORT_SIDE = 8
-    COMPONENT_BORDER = 5
-    PORT_CLICK_EXTRA_PIXELS = 10
+    PORT_CLICK_BOX_SIDE = 20
+    MIN_PORT_TO_PORT_DISTANCE = 20
 
     def __init__(self, component, xpos, ypos):
         super().__init__()
@@ -31,6 +32,14 @@ class PlacedComponent(PlacedObject):
         self.update_ports()
 
     def update_ports(self):
+        max_ports = max(len(self._component.inports()), len(self._component.outports()))
+        if max_ports > 1:
+            min_height = (
+                (max_ports - 1) * self.MIN_PORT_TO_PORT_DISTANCE
+                + 2 * self.BORDER_TO_PORT
+                + 2 * self.RECT_TO_BORDER
+            )
+            self._height = max(self._height, min_height)
         self._port_rects = {}
         self._port_display_name = {}
         self._add_port_rects(self._component.inports(), 0)
@@ -115,21 +124,21 @@ class PlacedComponent(PlacedObject):
                 self.PORT_SIDE,
             )
         elif len(ports) > 1:
-            port_distance = (self._height - 2 * self.BORDER_MARGIN) / (len(ports) - 1)
+            port_distance = (self._height - 2 * self.BORDER_TO_PORT) / (len(ports) - 1)
             for idx, port in enumerate(ports):
                 self._port_rects[port.name()] = QRect(
                     xpos,
-                    self.BORDER_MARGIN + idx * port_distance - self.PORT_SIDE / 2,
+                    self.BORDER_TO_PORT + idx * port_distance - self.PORT_SIDE / 2,
                     self.PORT_SIDE,
                     self.PORT_SIDE,
                 )
 
     def get_rect(self):
         return QRect(
-            self.COMPONENT_BORDER,
-            self.COMPONENT_BORDER,
-            self._width - 2 * self.COMPONENT_BORDER,
-            self._height - 2 * self.COMPONENT_BORDER,
+            self.RECT_TO_BORDER,
+            self.RECT_TO_BORDER,
+            self._width - 2 * self.RECT_TO_BORDER,
+            self._height - 2 * self.RECT_TO_BORDER,
         )
 
     def get_port_pos(self, portname):
@@ -139,10 +148,10 @@ class PlacedComponent(PlacedObject):
     def get_port_for_point(self, point):
         for portname, rect in self._port_rects.items():
             if (
-                point.x() > rect.x() - self.PORT_CLICK_EXTRA_PIXELS
-                and point.x() < rect.x() + rect.width() + self.PORT_CLICK_EXTRA_PIXELS
-                and point.y() > rect.y() - self.PORT_CLICK_EXTRA_PIXELS
-                and point.y() < rect.y() + rect.height() + self.PORT_CLICK_EXTRA_PIXELS
+                point.x() > rect.x() - self.PORT_CLICK_BOX_SIDE / 2
+                and point.x() < rect.x() + rect.width() + self.PORT_CLICK_BOX_SIDE / 2
+                and point.y() > rect.y() - self.PORT_CLICK_BOX_SIDE / 2
+                and point.y() < rect.y() + rect.height() + self.PORT_CLICK_BOX_SIDE / 2
             ):
                 return portname
         return None
