@@ -9,8 +9,8 @@ from digsim import Circuit
 def led_callback(comp):
     led_port = comp.ports[0]
     time_ns = comp.circuit.time_ns
-    name = comp.name
-    if led_port.intval == 1:
+    name = comp.name()
+    if led_port.value == 1:
         print(f"{time_ns:9}:LED: '{name}' is ON")
     else:
         print(f"{time_ns:9}:LED: '{name}' is OFF")

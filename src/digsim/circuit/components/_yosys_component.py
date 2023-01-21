@@ -8,16 +8,7 @@ import json
 
 import digsim.circuit.components._yosys_atoms
 
-from .atoms import (
-    BusInPort,
-    BusOutPort,
-    Component,
-    ComponentPort,
-    MultiComponent,
-    OutputPort,
-    PortDirection,
-    SignalLevel,
-)
+from .atoms import Component, MultiComponent, PortMultiBitWire, PortOut
 
 
 class YosysComponentException(Exception):
@@ -27,12 +18,12 @@ class YosysComponentException(Exception):
 class StaticLevels(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(OutputPort(self, "low"))
-        self.add_port(OutputPort(self, "high"))
+        self.add_port(PortOut(self, "low"))
+        self.add_port(PortOut(self, "high"))
 
     def init(self):
-        self.low.level = SignalLevel.LOW
-        self.high.level = SignalLevel.HIGH
+        self.low.value = 0
+        self.high.value = 1
 
 
 class YosysComponent(MultiComponent):
@@ -69,8 +60,8 @@ class YosysComponent(MultiComponent):
         with open(self._filename, encoding="utf-8") as json_file:
             self._json = json.load(json_file)
         self._yosys_name = self._get_component_name()
-        self.name = self._yosys_name
-        self.display_name = self._yosys_name
+        # self.set_name(self._yosys_name)
+        self.set_display_name(self._yosys_name)
         self._parse_cells()
         self._make_cell_connections()
         self._connect_external_ports()
@@ -117,58 +108,28 @@ class YosysComponent(MultiComponent):
             for port in src_dst_dict["dst"]:
                 driver_port.wire = port
 
-    def _connect_external_bit_port(self, portname, port_dict, port_direction):
-        connection_id = port_dict["bits"][0]
-        if connection_id not in self._port_connections:
-            print(f"Skipping non-connected port '{portname}'")
-            return
-        portlist = self._port_connections[connection_id]["dst"]
-        external_port = ComponentPort(self, portname, port_direction)
-        self.add_port(external_port)
-        if port_direction == PortDirection.IN:
-            for port in portlist:
-                external_port.wire = port
-                self._add_port(connection_id, external_port, driver=True)
-        else:
+    def _connect_external_port(self, portname, port_dict, port_is_output):
+        port_width = len(port_dict["bits"])
+        external_port = PortMultiBitWire(self, portname, width=port_width, output=port_is_output)
+        for idx, connection_id in enumerate(port_dict["bits"]):
             port_instance = self._port_connections[connection_id]["src"]
-            port_instance.wire = external_port
+            if port_is_output:
+                port_instance.wire = external_port.get_bit(idx)
+                continue
 
-    def _connect_external_bus_port(self, portname, port_dict, port_direction, port_width):
-        if port_direction == PortDirection.IN:
-            external_port = BusInPort(self, portname, width=port_width)
-            for idx, connection_id in enumerate(port_dict["bits"]):
-                portlist = self._port_connections[connection_id]["dst"]
-                for port in portlist:
-                    external_port.connect_bit(idx, port)
-                    self._add_port(connection_id, external_port.port_bit(idx), driver=True)
-        else:
-            external_port = BusOutPort(self, portname, width=port_width)
-            for idx, connection_id in enumerate(port_dict["bits"]):
-                port_instance = self._port_connections[connection_id]["src"]
-                external_port.connect_bit(idx, port_instance)
+            portlist = self._port_connections[connection_id]["dst"]
+            for port in portlist:
+                external_port.get_bit(idx).wire = port
+                self._add_port(connection_id, external_port.get_bit(idx), driver=True)
         self.add_port(external_port)
 
     def _connect_external_ports(self):
         ports = self._json["modules"][self._yosys_name]["ports"]
         for portname, port_dict in ports.items():
-            port_direction = (
-                PortDirection.IN if port_dict["direction"] == "input" else PortDirection.OUT
-            )
-            port_width = len(port_dict["bits"])
-            if port_width == 1:
-                self._connect_external_bit_port(portname, port_dict, port_direction)
-            else:
-                self._connect_external_bus_port(portname, port_dict, port_direction, port_width)
+            port_is_output = port_dict["direction"] == "output"
+            self._connect_external_port(portname, port_dict, port_is_output)
 
-    def _add_bit_netname(self, netname, netname_dict):
-        connection_id = netname_dict["bits"][0]
-        if connection_id in self._port_connections:
-            net_port = ComponentPort(self._net_comp, f"{netname}", PortDirection.IN)
-            self._net_comp.add_port(net_port)
-            port_instance = self._port_connections[connection_id]["src"]
-            port_instance.wire = net_port
-
-    def _add_bus_netname(self, netname, netname_dict, net_width):
+    def _add_netname(self, netname, netname_dict):
         netname_valid = False
         for idx, connection_id in enumerate(netname_dict["bits"]):
             if connection_id not in self._port_connections:
@@ -178,12 +139,13 @@ class YosysComponent(MultiComponent):
         if not netname_valid:
             return
 
-        net_port = BusOutPort(self._net_comp, f"{netname}", width=net_width)
+        net_width = len(netname_dict["bits"])
+        net_port = PortMultiBitWire(self._net_comp, f"{netname}", width=net_width)
         self._net_comp.add_port(net_port)
         for idx, connection_id in enumerate(netname_dict["bits"]):
             if connection_id in self._port_connections:
                 port_instance = self._port_connections[connection_id]["src"]
-                net_port.connect_bit(idx, port_instance)
+                port_instance.wire = net_port.get_bit(idx)
 
     def _add_netnames(self):
         if self._net_comp is None:
@@ -194,11 +156,7 @@ class YosysComponent(MultiComponent):
             if netname_dict["hide_name"] != 0:
                 continue
             netname = netname.replace(".", "_")
-            net_width = len(netname_dict["bits"])
-            if net_width == 1:
-                self._add_bit_netname(netname, netname_dict)
-            else:
-                self._add_bus_netname(netname, netname_dict, net_width)
+            self._add_netname(netname, netname_dict)
 
     def setup(self, path=None):
         if path is not None:

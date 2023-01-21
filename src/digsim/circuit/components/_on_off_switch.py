@@ -1,14 +1,15 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-from .atoms import CallbackComponent, OutputPort, SignalLevel
+from .atoms import CallbackComponent, PortOut
 
 
 class OnOffSwitch(CallbackComponent):
     def __init__(self, circuit, name="OnOffSwitch", start_on=False):
         super().__init__(circuit, name)
-        self.add_port(OutputPort(self, "O", update_parent_on_delta=True))
-        self.O.set_propagation_delay_ns(0)
+        portout = PortOut(self, "O", delay_ns=0)
+        self.add_port(portout)
+        portout.update_parent(True)
         self._on = False
         self._start_on = start_on
 
@@ -23,11 +24,11 @@ class OnOffSwitch(CallbackComponent):
         self._set(self._start_on)
 
     def turn_on(self):
-        self.O.level = SignalLevel.HIGH
+        self.O.value = 1
         self._on = True
 
     def turn_off(self):
-        self.O.level = SignalLevel.LOW
+        self.O.value = 0
         self._on = False
 
     def toggle(self):
@@ -42,4 +43,4 @@ class OnOffSwitch(CallbackComponent):
 
     @property
     def active(self):
-        return self.O.level == SignalLevel.HIGH
+        return self.O.value == 1

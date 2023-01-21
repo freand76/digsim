@@ -1,22 +1,21 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-from .atoms import Component, OutputPort, SignalLevel, WireConnectionError
+from .atoms import Component, PortOut
 
 
 class VDD(Component):
     def __init__(self, circuit, name="VDD"):
         super().__init__(circuit, name)
-        self.add_port(OutputPort(self, "O"))
-        self.O.set_propagation_delay_ns(0)
+        self.add_port(PortOut(self, "O", delay_ns=0))
 
     def init(self):
         super().init()
-        self.O.level = SignalLevel.HIGH
+        self.O.value = 1
 
     @property
     def wire(self):
-        raise WireConnectionError("Cannot get a wire")
+        return self.o.wire
 
     @wire.setter
     def wire(self, port):
@@ -26,16 +25,15 @@ class VDD(Component):
 class GND(Component):
     def __init__(self, circuit, name="GND"):
         super().__init__(circuit, name)
-        self.add_port(OutputPort(self, "O"))
-        self.O.set_propagation_delay_ns(0)
+        self.add_port(PortOut(self, "O", delay_ns=0))
 
     def init(self):
         super().init()
-        self.O.level = SignalLevel.LOW
+        self.O.value = 0
 
     @property
     def wire(self):
-        raise WireConnectionError("Cannot get a wire")
+        return self.o.wire
 
     @wire.setter
     def wire(self, port):

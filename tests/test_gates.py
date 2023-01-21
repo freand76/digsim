@@ -4,12 +4,11 @@
 import pytest
 from digsim.circuit import Circuit
 from digsim.circuit.components import AND, NAND, NOT, XOR
-from digsim.circuit.components.atoms import SignalLevel
 
 
-UNKNOWN = SignalLevel.UNKNOWN
-HIGH = SignalLevel.HIGH
-LOW = SignalLevel.LOW
+UNKNOWN = "X"
+HIGH = 1
+LOW = 0
 
 
 @pytest.mark.parametrize(
@@ -28,13 +27,13 @@ def test_and(in_a, in_b, out_y):
     circuit = Circuit()
     _and = AND(circuit)
 
-    _and.A.level = in_a
-    _and.B.level = in_b
-    assert _and.A.level == in_a
-    assert _and.B.level == in_b
-    assert _and.Y.level == UNKNOWN
+    _and.A.value = in_a
+    _and.B.value = in_b
+    assert _and.A.value == in_a
+    assert _and.B.value == in_b
+    assert _and.Y.value == UNKNOWN
     circuit.run(ms=1)
-    assert _and.Y.level == out_y
+    assert _and.Y.value == out_y
 
 
 @pytest.mark.parametrize(
@@ -49,11 +48,11 @@ def test_not(in_a, out_y):
     circuit = Circuit()
     _not = NOT(circuit)
 
-    _not.A.level = in_a
-    assert _not.A.level == in_a
-    assert _not.Y.level == UNKNOWN
+    _not.A.value = in_a
+    assert _not.A.value == in_a
+    assert _not.Y.value == UNKNOWN
     circuit.run(ms=1)
-    assert _not.Y.level == out_y
+    assert _not.Y.value == out_y
 
 
 @pytest.mark.parametrize(
@@ -72,13 +71,13 @@ def test_nand(in_a, in_b, out_y):
     circuit = Circuit()
     _nand = NAND(circuit)
 
-    _nand.A.level = in_a
-    _nand.B.level = in_b
-    assert _nand.A.level == in_a
-    assert _nand.B.level == in_b
-    assert _nand.Y.level == UNKNOWN
+    _nand.A.value = in_a
+    _nand.B.value = in_b
+    assert _nand.A.value == in_a
+    assert _nand.B.value == in_b
+    assert _nand.Y.value == UNKNOWN
     circuit.run(ms=1)
-    assert _nand.Y.level == out_y
+    assert _nand.Y.value == out_y
 
 
 @pytest.mark.parametrize(
@@ -97,10 +96,10 @@ def test_xor(in_a, in_b, out_y):
     circuit = Circuit()
     _xor = XOR(circuit)
 
-    _xor.A.level = in_a
-    _xor.B.level = in_b
-    assert _xor.A.level == in_a
-    assert _xor.B.level == in_b
-    assert _xor.Y.level == UNKNOWN
+    _xor.A.value = in_a
+    _xor.B.value = in_b
+    assert _xor.A.value == in_a
+    assert _xor.B.value == in_b
+    assert _xor.Y.value == UNKNOWN
     circuit.run(ms=1)
-    assert _xor.Y.level == out_y
+    assert _xor.Y.value == out_y

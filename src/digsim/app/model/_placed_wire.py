@@ -6,7 +6,7 @@ import math
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPen
 
-from digsim.circuit.components.atoms import PortDirection, WireConnectionError
+from digsim.circuit.components.atoms import PortConnectionError
 
 from ._placed_object import PlacedObject
 
@@ -23,19 +23,19 @@ class PlacedWire(PlacedObject):
         self._is_bus = False
 
         if port_a is None:
-            raise WireConnectionError("Cannot start a wire without a port")
+            raise PortConnectionError("Cannot start a wire without a port")
 
         if port_b is not None:
-            if port_a.direction == PortDirection.OUT and port_b.direction == PortDirection.IN:
+            if port_a.is_output() and port_b.is_input():
                 self._src_port = port_a
                 self._dst_port = port_b
-            elif port_a.direction == PortDirection.IN and port_b.direction == PortDirection.OUT:
+            elif port_a.is_input() and port_b.is_output():
                 self._src_port = port_b
                 self._dst_port = port_a
             else:
-                raise WireConnectionError("Cannot connect to power of same type")
+                raise PortConnectionError("Cannot connect to power of same type")
         else:
-            if port_a.direction == PortDirection.OUT:
+            if port_a.is_output():
                 self._src_port = port_a
             else:
                 self._dst_port = port_a
@@ -74,24 +74,24 @@ class PlacedWire(PlacedObject):
         self._src_port.disconnect(self._dst_port)
 
     def set_end_port(self, port):
-        if port.direction == PortDirection.OUT and self._src_port is None:
+        if port.is_output() and self._src_port is None:
             self._src_port = port
-        elif port.direction == PortDirection.IN and self._dst_port is None:
+        elif port.is_input() and self._dst_port is None:
             self._dst_port = port
         else:
-            raise WireConnectionError("Cannot connect to power of same type")
+            raise PortConnectionError("Cannot connect to power of same type")
         self._connect()
         self.update()
 
     def update(self):
         if self._src_port is not None:
             self._is_bus = self._src_port.width > 1
-            src_comp = self._app_model.get_placed_component(self._src_port.parent)
-            self._src_point = src_comp.pos + src_comp.get_port_pos(self._src_port.name)
+            src_comp = self._app_model.get_placed_component(self._src_port.parent())
+            self._src_point = src_comp.pos + src_comp.get_port_pos(self._src_port.name())
         if self._dst_port is not None:
             self._is_bus = self._dst_port.width > 1
-            dst_comp = self._app_model.get_placed_component(self._dst_port.parent)
-            self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name)
+            dst_comp = self._app_model.get_placed_component(self._dst_port.parent())
+            self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name())
 
     def is_close(self, point):
         if (

@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (
 
 class ComponentWidget(QPushButton):
     def __init__(self, app_model, placed_component, parent):
-        super().__init__(parent, objectName=placed_component.component.name)
+        super().__init__(parent, objectName=placed_component.component.name())
         self._app_model = app_model
         self._app_model.sig_component_notify.connect(self._component_notify)
         self._placed_component = placed_component

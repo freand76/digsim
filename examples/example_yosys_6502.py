@@ -34,7 +34,11 @@ irq.O.wire = yosys_6502.IRQ
 irq.O.wire = yosys_6502.NMI
 rdy.O.wire = yosys_6502.RDY
 
+
 circuit.init()
+yosys_6502.DI.value = 0
+print(yosys_6502)
+
 irq.release()
 rdy.push()
 
@@ -44,8 +48,8 @@ rst.release()
 circuit.run(us=1)
 
 for _ in range(20):
-    print(f"AB={yosys_6502.AB.bitval} WE={yosys_6502.WE.bitval}")
+    print(f"AB={yosys_6502.AB.strval()} WE={yosys_6502.WE.strval()}")
     circuit.run(ns=500)
-    data = memory(int(yosys_6502.AB.bitval, 16))
-    yosys_6502.DI.set_level(value=data)
+    data = memory(yosys_6502.AB.value)
+    yosys_6502.DI.value = data
     circuit.run(ns=500)

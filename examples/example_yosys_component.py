@@ -37,7 +37,7 @@ print(yosys_counter)
 print("\n===================== Start ==========================\n")
 
 for _ in range(0, 16):
-    print("OUT", yosys_counter.cnt.value())
+    print("OUT", yosys_counter.cnt.value)
 
     clk.push()
     circuit.run(ms=10)

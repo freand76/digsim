@@ -4,7 +4,7 @@
 # pylint: disable=too-many-arguments
 # pylint: disable=consider-using-in
 
-from .atoms import Component, ComponentPort, OutputPort, PortDirection, SignalLevel
+from .atoms import Component, PortIn, PortOut, PortWire
 
 
 class ClassNameParameterComponent(Component):
@@ -13,9 +13,9 @@ class ClassNameParameterComponent(Component):
         split = class_name.split("_")
         level = split[2][index]
         if level in ["N", "0"]:
-            return SignalLevel.LOW
+            return 0
         if level in ["P", "1"]:
-            return SignalLevel.HIGH
+            return 1
         raise Exception(f"Unknown value ä{level}'")
 
 
@@ -36,27 +36,27 @@ class _ALDFFE_(ClassNameParameterComponent):
         self._clock_edge = self.name_to_level(0)
         self._load_level = self.name_to_level(1)
         self._enable_level = self.name_to_level(2)
-        self.add_port(ComponentPort(self, "AD", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "L", PortDirection.IN))
-        self.add_port(OutputPort(self, "Q"))
-        self._old_C_level = self.C.level
+        self.add_port(PortWire(self, "AD"))
+        self.add_port(PortIn(self, "C"))
+        self.add_port(PortWire(self, "D"))
+        self.add_port(PortWire(self, "E"))
+        self.add_port(PortIn(self, "L"))
+        self.add_port(PortOut(self, "Q"))
+        self._old_C_level = self.C.value
 
     def init(self):
-        self.Q.level = self._reset_level
+        self.Q.value = self._reset_level
 
     def update(self):
-        if self.L.level == self._load_level:
-            self.Q.level = self.AD.level
+        if self.L.value == self._load_level:
+            self.Q.value = self.AD.value
         elif (
-            self.C.level != self._old_C_level
-            and self.C.level == self._clock_edge
-            and self.E.level == self._enable_level
+            self.C.value != self._old_C_level
+            and self.C.value == self._clock_edge
+            and self.E.value == self._enable_level
         ):
-            self.Q.level = self.D.level
-        self._old_C_level = self.C.level
+            self.Q.value = self.D.value
+        self._old_C_level = self.C.value
 
 
 class _ALDFFE_NNN_(_ALDFFE_):
@@ -103,22 +103,22 @@ class _ALDFF_(ClassNameParameterComponent):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._load_level = self.name_to_level(1)
-        self.add_port(ComponentPort(self, "AD", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "L", PortDirection.IN))
-        self.add_port(OutputPort(self, "Q"))
-        self._old_C_level = self.C.level
+        self.add_port(PortWire(self, "AD"))
+        self.add_port(PortIn(self, "C"))
+        self.add_port(PortWire(self, "D"))
+        self.add_port(PortIn(self, "L"))
+        self.add_port(PortOut(self, "Q"))
+        self._old_C_level = self.C.value
 
     def init(self):
-        self.Q.level = SignalLevel.LOW
+        self.Q.value = 0
 
     def update(self):
-        if self.L.level == self._load_level:
-            self.Q.level = self.AD.level
-        elif self.C.level != self._old_C_level and self.C.level == self._clock_edge:
-            self.Q.level = self.D.level
-        self._old_C_level = self.C.level
+        if self.L.value == self._load_level:
+            self.Q.value = self.AD.value
+        elif self.C.value != self._old_C_level and self.C.value == self._clock_edge:
+            self.Q.value = self.D.value
+        self._old_C_level = self.C.value
 
 
 class _ALDFF_NN_(_ALDFF_):
@@ -162,26 +162,26 @@ class _DFFE4_(ClassNameParameterComponent):
         self._reset_level = self.name_to_level(1)
         self._reset_value = self.name_to_level(2)
         self._enable_level = self.name_to_level(3)
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "R", PortDirection.IN))
-        self.add_port(OutputPort(self, "Q"))
-        self._old_C_level = self.C.level
+        self.add_port(PortIn(self, "C"))
+        self.add_port(PortWire(self, "D"))
+        self.add_port(PortWire(self, "E"))
+        self.add_port(PortIn(self, "R"))
+        self.add_port(PortOut(self, "Q"))
+        self._old_C_level = self.C.value
 
     def init(self):
-        self.Q.level = SignalLevel.LOW
+        self.Q.value = 0
 
     def update(self):
-        if self.R.level == self._reset_level:
-            self.Q.level = self._reset_value
+        if self.R.value == self._reset_level:
+            self.Q.value = self._reset_value
         elif (
-            self.C.level != self._old_C_level
-            and self.C.level == self._clock_edge
-            and self.E.level == self._enable_level
+            self.C.value != self._old_C_level
+            and self.C.value == self._clock_edge
+            and self.E.value == self._enable_level
         ):
-            self.Q.level = self.D.level
-        self._old_C_level = self.C.level
+            self.Q.value = self.D.value
+        self._old_C_level = self.C.value
 
 
 class _DFFE_NN0N_(_DFFE4_):
@@ -259,23 +259,23 @@ class _DFFE2_(ClassNameParameterComponent):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._enable_level = self.name_to_level(1)
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
-        self.add_port(OutputPort(self, "Q"))
-        self._old_C_level = self.C.level
+        self.add_port(PortIn(self, "C"))
+        self.add_port(PortWire(self, "D"))
+        self.add_port(PortWire(self, "E"))
+        self.add_port(PortOut(self, "Q"))
+        self._old_C_level = self.C.value
 
     def init(self):
-        self.Q.level = SignalLevel.LOW
+        self.Q.value = 0
 
     def update(self):
         if (
-            self.C.level != self._old_C_level
-            and self.C.level == self._clock_edge
-            and self.E.level == self._enable_level
+            self.C.value != self._old_C_level
+            and self.C.value == self._clock_edge
+            and self.E.value == self._enable_level
         ):
-            self.Q.level = self.D.level
-        self._old_C_level = self.C.level
+            self.Q.value = self.D.value
+        self._old_C_level = self.C.value
 
 
 class _DFFE_NN_(_DFFE2_):
@@ -302,18 +302,18 @@ class _DFF_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
-        self.add_port(OutputPort(self, "Q"))
-        self._old_C_level = self.C.level
+        self.add_port(PortIn(self, "C"))
+        self.add_port(PortWire(self, "D"))
+        self.add_port(PortOut(self, "Q"))
+        self._old_C_level = self.C.value
 
     def init(self):
-        self.Q.level = SignalLevel.LOW
+        self.Q.value = 0
 
     def update(self):
-        if self.C.level != self._old_C_level and self.C.level == self._clock_edge:
-            self.Q.level = self.D.level
-        self._old_C_level = self.C.level
+        if self.C.value != self._old_C_level and self.C.value == self._clock_edge:
+            self.Q.value = self.D.value
+        self._old_C_level = self.C.value
 
 
 class _DFF_N_(_DFF_):
@@ -350,22 +350,22 @@ class _SDFF_(ClassNameParameterComponent):
         self._clock_edge = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
         self._reset_value = self.name_to_level(2)
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(ComponentPort(self, "R", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
-        self.add_port(OutputPort(self, "Q"))
-        self._old_C_level = self.C.level
+        self.add_port(PortIn(self, "C"))
+        self.add_port(PortWire(self, "R"))
+        self.add_port(PortWire(self, "D"))
+        self.add_port(PortOut(self, "Q"))
+        self._old_C_level = self.C.value
 
     def init(self):
-        self.Q.level = SignalLevel.LOW
+        self.Q.value = 0
 
     def update(self):
-        if self.C.level != self._old_C_level and self.C.level == self._clock_edge:
-            if self.R.level == self._reset_level:
-                self.Q.level = self._reset_value
+        if self.C.value != self._old_C_level and self.C.value == self._clock_edge:
+            if self.R.value == self._reset_level:
+                self.Q.value = self._reset_value
             else:
-                self.Q.level = self.D.level
-        self._old_C_level = self.C.level
+                self.Q.value = self.D.value
+        self._old_C_level = self.C.value
 
 
 class _SDFF_NN0_(_SDFF_):
@@ -451,24 +451,24 @@ class _SDFFCE_(ClassNameParameterComponent):
         self._reset_level = self.name_to_level(1)
         self._reset_value = self.name_to_level(2)
         self._enable_level = self.name_to_level(3)
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "R", PortDirection.IN, update_parent=False))
-        self.add_port(OutputPort(self, "Q"))
-        self._old_C_level = self.C.level
+        self.add_port(PortIn(self, "C"))
+        self.add_port(PortWire(self, "D"))
+        self.add_port(PortWire(self, "E"))
+        self.add_port(PortWire(self, "R"))
+        self.add_port(PortOut(self, "Q"))
+        self._old_C_level = self.C.value
 
     def init(self):
-        self.Q.level = SignalLevel.LOW
+        self.Q.value = 0
 
     def update(self):
-        if self.C.level != self._old_C_level and self.C.level == self._clock_edge:
-            if self.E.level == self._enable_level:
-                if self.R.level == self._reset_level:
-                    self.Q.level = self._reset_value
+        if self.C.value != self._old_C_level and self.C.value == self._clock_edge:
+            if self.E.value == self._enable_level:
+                if self.R.value == self._reset_level:
+                    self.Q.value = self._reset_value
                 else:
-                    self.Q.level = self.D.level
-        self._old_C_level = self.C.level
+                    self.Q.value = self.D.value
+        self._old_C_level = self.C.value
 
 
 class _SDFFCE_NN0N_(_SDFFCE_):
@@ -560,23 +560,23 @@ class _SDFFE_(ClassNameParameterComponent):
         self._reset_level = self.name_to_level(1)
         self._reset_value = self.name_to_level(2)
         self._enable_level = self.name_to_level(3)
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "R", PortDirection.IN, update_parent=False))
-        self.add_port(OutputPort(self, "Q"))
-        self._old_C_level = self.C.level
+        self.add_port(PortIn(self, "C"))
+        self.add_port(PortWire(self, "D"))
+        self.add_port(PortWire(self, "E"))
+        self.add_port(PortWire(self, "R"))
+        self.add_port(PortOut(self, "Q"))
+        self._old_C_level = self.C.value
 
     def init(self):
-        self.Q.level = SignalLevel.LOW
+        self.Q.value = 0
 
     def update(self):
-        if self.C.level != self._old_C_level and self.C.level == self._clock_edge:
-            if self.R.level == self._reset_level:
-                self.Q.level = self._reset_value
-            elif self.E.level == self._enable_level:
-                self.Q.level = self.D.level
-        self._old_C_level = self.C.level
+        if self.C.value != self._old_C_level and self.C.value == self._clock_edge:
+            if self.R.value == self._reset_level:
+                self.Q.value = self._reset_value
+            elif self.E.value == self._enable_level:
+                self.Q.value = self.D.value
+        self._old_C_level = self.C.value
 
 
 class _SDFFE_NN0N_(_SDFFE_):
@@ -676,16 +676,16 @@ class _SDFFE_PP1P_(_SDFFE_):
 class _MUX_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(ComponentPort(self, "S", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortIn(self, "S"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if self.S.level == SignalLevel.LOW:
-            self.Y.level = self.A.level
+        if self.S.value == 0:
+            self.Y.value = self.A.value
         else:
-            self.Y.level = self.B.level
+            self.Y.value = self.B.value
 
 
 # module \$_MUX16_ (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, S, T, U, V, Y);
@@ -698,15 +698,15 @@ class _MUX_(Component):
 class _AND_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH:
-            self.Y.level = SignalLevel.HIGH
+        if self.A.value == 1 and self.B.value == 1:
+            self.Y.value = 1
         else:
-            self.Y.level = SignalLevel.LOW
+            self.Y.value = 0
 
 
 # module \$_ANDNOT_ (A, B, Y);
@@ -715,15 +715,15 @@ class _AND_(Component):
 class _ANDNOT_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.LOW:
-            self.Y.level = SignalLevel.HIGH
+        if self.A.value == 1 and self.B.value == 0:
+            self.Y.value = 1
         else:
-            self.Y.level = SignalLevel.LOW
+            self.Y.value = 0
 
 
 # module \$_BUF_ (A, Y);
@@ -734,15 +734,15 @@ class _ANDNOT_(Component):
 class _NAND_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH:
-            self.Y.level = SignalLevel.LOW
+        if self.A.value == 1 and self.B.value == 1:
+            self.Y.value = 0
         else:
-            self.Y.level = SignalLevel.HIGH
+            self.Y.value = 1
 
 
 # module \$_NOR_ (A, B, Y);
@@ -751,15 +751,15 @@ class _NAND_(Component):
 class _NOR_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if self.A.level == SignalLevel.HIGH or self.B.level == SignalLevel.HIGH:
-            self.Y.level = SignalLevel.LOW
+        if self.A.value == 1 or self.B.value == 1:
+            self.Y.value = 0
         else:
-            self.Y.level = SignalLevel.HIGH
+            self.Y.value = 1
 
 
 # module \$_NOT_ (A, Y);
@@ -768,14 +768,14 @@ class _NOR_(Component):
 class _NOT_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if self.A.level == SignalLevel.HIGH:
-            self.Y.level = SignalLevel.LOW
+        if self.A.value == 1:
+            self.Y.value = 0
         else:
-            self.Y.level = SignalLevel.HIGH
+            self.Y.value = 1
 
 
 # module \$_OR_ (A, B, Y);
@@ -784,15 +784,15 @@ class _NOT_(Component):
 class _OR_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if self.A.level == SignalLevel.HIGH or self.B.level == SignalLevel.HIGH:
-            self.Y.level = SignalLevel.HIGH
+        if self.A.value == 1 or self.B.value == 1:
+            self.Y.value = 1
         else:
-            self.Y.level = SignalLevel.LOW
+            self.Y.value = 0
 
 
 # module \$_ORNOT_ (A, B, Y);
@@ -801,15 +801,15 @@ class _OR_(Component):
 class _ORNOT_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if self.A.level == SignalLevel.HIGH or self.B.level == SignalLevel.LOW:
-            self.Y.level = SignalLevel.HIGH
+        if self.A.value == 1 or self.B.value == 0:
+            self.Y.value = 1
         else:
-            self.Y.level = SignalLevel.LOW
+            self.Y.value = 0
 
 
 # module \$_AOI3_ (A, B, C, Y);
@@ -821,31 +821,27 @@ class _ORNOT_(Component):
 class _XNOR_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if (self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.LOW) or (
-            self.A.level == SignalLevel.LOW and self.B.level == SignalLevel.HIGH
-        ):
-            self.Y.level = SignalLevel.LOW
+        if (self.A.value == 1 and self.B.value == 0) or (self.A.value == 0 and self.B.value == 1):
+            self.Y.value = 0
         else:
-            self.Y.level = SignalLevel.HIGH
+            self.Y.value = 1
 
 
 # module \$_XOR_ (A, B, Y);
 class _XOR_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if (self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.LOW) or (
-            self.A.level == SignalLevel.LOW and self.B.level == SignalLevel.HIGH
-        ):
-            self.Y.level = SignalLevel.HIGH
+        if (self.A.value == 1 and self.B.value == 0) or (self.A.value == 0 and self.B.value == 1):
+            self.Y.value = 1
         else:
-            self.Y.level = SignalLevel.LOW
+            self.Y.value = 0

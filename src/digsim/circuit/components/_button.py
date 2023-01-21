@@ -1,15 +1,16 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-from .atoms import CallbackComponent, OutputPort, SignalLevel
+from .atoms import CallbackComponent, PortOut
 
 
 class PushButton(CallbackComponent):
     def __init__(self, circuit, name="PushButton", inverted=False):
         super().__init__(circuit, name)
         self._inverted = inverted
-        self.add_port(OutputPort(self, "O", update_parent_on_delta=True))
-        self.O.set_propagation_delay_ns(0)
+        portout = PortOut(self, "O", delay_ns=0)
+        self.add_port(portout)
+        portout.update_parent(True)
 
     def init(self):
         super().init()
@@ -17,15 +18,15 @@ class PushButton(CallbackComponent):
 
     def push(self):
         if self._inverted:
-            self.O.level = SignalLevel.LOW
+            self.O.value = 0
         else:
-            self.O.level = SignalLevel.HIGH
+            self.O.value = 1
 
     def release(self):
         if self._inverted:
-            self.O.level = SignalLevel.HIGH
+            self.O.value = 1
         else:
-            self.O.level = SignalLevel.LOW
+            self.O.value = 0
 
     @property
     def has_action(self):
@@ -34,8 +35,8 @@ class PushButton(CallbackComponent):
     @property
     def active(self):
         if self._inverted:
-            return self.O.level == SignalLevel.LOW
-        return self.O.level == SignalLevel.HIGH
+            return self.O.value == 0
+        return self.O.value == 1
 
     def onpress(self):
         self.push()

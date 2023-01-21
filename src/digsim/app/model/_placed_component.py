@@ -33,13 +33,13 @@ class PlacedComponent(PlacedObject):
     def update_ports(self):
         self._port_rects = {}
         self._port_display_name = {}
-        self._add_port_rects(self._component.inports, 0)
-        self._add_port_rects(self._component.outports, self._width - self.PORT_SIDE - 1)
+        self._add_port_rects(self._component.inports(), 0)
+        self._add_port_rects(self._component.outports(), self._width - self.PORT_SIDE - 1)
         for port in self._component.ports:
             if port.width == 1:
-                self._port_display_name[port.name] = port.name
+                self._port_display_name[port.name()] = port.name()
             else:
-                self._port_display_name[port.name] = f"{port.name}[{port.width-1}:0]"
+                self._port_display_name[port.name()] = f"{port.name()}[{port.width-1}:0]"
 
     def get_port_display_name_metrics(self, portname):
         font = QFont("Arial", 8)
@@ -71,7 +71,7 @@ class PlacedComponent(PlacedObject):
         font = QFont("Arial", 10)
         painter.setFont(font)
         fm = QFontMetrics(font)
-        display_name_str = self._component.display_name
+        display_name_str = self._component.display_name()
         str_pixels_w = fm.horizontalAdvance(display_name_str)
         str_pixels_h = fm.height()
         painter.drawText(
@@ -108,7 +108,7 @@ class PlacedComponent(PlacedObject):
 
     def _add_port_rects(self, ports, xpos):
         if len(ports) == 1:
-            self._port_rects[ports[0].name] = QRect(
+            self._port_rects[ports[0].name()] = QRect(
                 xpos,
                 self._height / 2 - self.PORT_SIDE / 2,
                 self.PORT_SIDE,
@@ -117,7 +117,7 @@ class PlacedComponent(PlacedObject):
         elif len(ports) > 1:
             port_distance = (self._height - 2 * self.BORDER_MARGIN) / (len(ports) - 1)
             for idx, port in enumerate(ports):
-                self._port_rects[port.name] = QRect(
+                self._port_rects[port.name()] = QRect(
                     xpos,
                     self.BORDER_MARGIN + idx * port_distance - self.PORT_SIDE / 2,
                     self.PORT_SIDE,

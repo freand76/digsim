@@ -1,95 +1,72 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-from .atoms import Component, ComponentPort, MultiComponent, OutputPort, PortDirection, SignalLevel
+from .atoms import Component, MultiComponent, PortIn, PortOut, PortWire
 
 
 class NOT(Component):
     def __init__(self, circuit, name="NOT"):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if self.A.level == SignalLevel.LOW:
-            self.Y.level = SignalLevel.HIGH
-        elif self.A.level == SignalLevel.HIGH:
-            self.Y.level = SignalLevel.LOW
+        if self.A.value == 0:
+            self.Y.value = 1
+        elif self.A.value == 1:
+            self.Y.value = 0
         else:
-            self.Y.level = SignalLevel.UNKNOWN
+            self.Y.value = "X"
 
 
 class AND(Component):
     def __init__(self, circuit, name="AND"):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH:
-            self.Y.level = SignalLevel.HIGH
-        elif SignalLevel.LOW in (self.A.level, self.B.level):
-            self.Y.level = SignalLevel.LOW
+        if self.A.value == 1 and self.B.value == 1:
+            self.Y.value = 1
+        elif 0 in (self.A.value, self.B.value):
+            self.Y.value = 0
         else:
-            self.Y.level = SignalLevel.UNKNOWN
+            self.Y.value = "X"
 
 
 class XOR(Component):
     def __init__(self, circuit, name="XOR"):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if (self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.LOW) or (
-            self.A.level == SignalLevel.LOW and self.B.level == SignalLevel.HIGH
+        if (self.A.value == 1 and self.B.value == 0) or (self.A.value == 0 and self.B.value == 1):
+            self.Y.value = 1
+        elif (self.A.value == 1 and self.B.value == 1) or (
+            self.A.value == 0 and self.B.value == 0
         ):
-            self.Y.level = SignalLevel.HIGH
-        elif (self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH) or (
-            self.A.level == SignalLevel.LOW and self.B.level == SignalLevel.LOW
-        ):
-            self.Y.level = SignalLevel.LOW
+            self.Y.value = 0
         else:
-            self.Y.level = SignalLevel.UNKNOWN
+            self.Y.value = "X"
 
 
 class NAND(Component):
     def __init__(self, circuit, name="NAND"):
         super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
 
     def update(self):
-        if self.A.level == SignalLevel.HIGH and self.B.level == SignalLevel.HIGH:
-            self.Y.level = SignalLevel.LOW
-        elif SignalLevel.LOW in (self.A.level, self.B.level):
-            self.Y.level = SignalLevel.HIGH
+        if self.A.value == 1 and self.B.value == 1:
+            self.Y.value = 0
+        elif 0 in (self.A.value, self.B.value):
+            self.Y.value = 1
         else:
-            self.Y.level = SignalLevel.UNKNOWN
-
-
-class NAND3(Component):
-    def __init__(self, circuit, name="NAND3"):
-        super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "A", PortDirection.IN))
-        self.add_port(ComponentPort(self, "B", PortDirection.IN))
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(OutputPort(self, "Y"))
-
-    def update(self):
-        if (
-            self.A.level == SignalLevel.HIGH
-            and self.B.level == SignalLevel.HIGH
-            and self.C.level == SignalLevel.HIGH
-        ):
-            self.Y.level = SignalLevel.LOW
-        elif SignalLevel.LOW in (self.A.level, self.B.level, self.C.level):
-            self.Y.level = SignalLevel.HIGH
-        else:
-            self.Y.level = SignalLevel.UNKNOWN
+            self.Y.value = "X"
 
 
 class SR(MultiComponent):
@@ -101,61 +78,12 @@ class SR(MultiComponent):
         self.add(_nandr)
         _nands.Y.wire = _nandr.A
         _nandr.Y.wire = _nands.B
-        _nands.Y.level = SignalLevel.HIGH
-        _nandr.Y.level = SignalLevel.HIGH
-        self.add_port(ComponentPort(self, "nS", PortDirection.IN))
-        self.add_port(ComponentPort(self, "nR", PortDirection.IN))
-        self.add_port(ComponentPort(self, "Q", PortDirection.OUT))
-        self.add_port(ComponentPort(self, "nQ", PortDirection.OUT))
+        self.add_port(PortWire(self, "nS"))
+        self.add_port(PortWire(self, "nR"))
+        self.add_port(PortWire(self, "Q"))
+        self.add_port(PortWire(self, "nQ"))
 
         self.nS.wire = _nands.A
         self.nR.wire = _nandr.B
         _nands.Y.wire = self.Q
         _nandr.Y.wire = self.nQ
-
-
-class DFFE_PP0P(Component):
-    def __init__(self, circuit, name="DFFE"):
-        super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "R", PortDirection.IN))
-        self.add_port(OutputPort(self, "Q"))
-        self._old_C_level = self.C.level
-
-    def update(self):
-        if self.R.level == SignalLevel.HIGH:
-            self.Q.level = SignalLevel.LOW
-        elif (
-            self.C.level != self._old_C_level
-            and self.C.level == SignalLevel.HIGH
-            and self.E.level == SignalLevel.HIGH
-        ):
-            self.Q.level = self.D.level
-
-        self._old_C_level = self.C.level
-
-
-class ALDFFE_PPP(Component):
-    def __init__(self, circuit, name="ALDFFE"):
-        super().__init__(circuit, name)
-        self.add_port(ComponentPort(self, "AD", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "C", PortDirection.IN))
-        self.add_port(ComponentPort(self, "D", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "E", PortDirection.IN, update_parent=False))
-        self.add_port(ComponentPort(self, "L", PortDirection.IN))
-        self.add_port(OutputPort(self, "Q"))
-        self._old_C_level = self.C.level
-
-    def update(self):
-        if self.L.level == SignalLevel.HIGH:
-            self.Q.level = self.AD.level
-        elif (
-            self.C.level != self._old_C_level
-            and self.C.level == SignalLevel.HIGH
-            and self.E.level == SignalLevel.HIGH
-        ):
-            self.Q.level = self.D.level
-
-        self._old_C_level = self.C.level

@@ -6,8 +6,6 @@
 import abc
 import importlib
 
-from ._enum import PortDirection
-
 
 class ComponentException(Exception):
     pass
@@ -27,58 +25,51 @@ class Component(abc.ABC):
             port.init()
 
     def add_port(self, port):
-        self.__dict__[port.name] = port
+        self.__dict__[port.name()] = port
         self._ports.append(port)
 
-    @property
     def path(self):
         if self._parent is not None:
-            return f"{self._parent.path}.{self.name}"
-        return f"{self.name}"
+            return f"{self._parent.path()}.{self.name()}"
+        return f"{self.name()}"
 
     @property
     def ports(self):
         return self._ports
 
-    def _get_ports(self, direction):
+    def _get_ports(self, output):
         sel_ports = []
         for port in self._ports:
-            if port.direction == direction:
+            if port.is_output() == output:
                 sel_ports.append(port)
         return sel_ports
 
-    @property
     def inports(self):
-        return self._get_ports(PortDirection.IN)
+        return self._get_ports(False)
 
-    @property
     def outports(self):
-        return self._get_ports(PortDirection.OUT)
+        return self._get_ports(True)
 
     def port(self, portname):
         for port in self._ports:
-            if port.name == portname:
+            if port.name() == portname:
                 return port
-        raise ComponentException("Port not found")
+        raise ComponentException(f"Port {self.name}:{portname} not found")
 
     @property
     def circuit(self):
         return self._circuit
 
-    @property
     def name(self):
         return self._name
 
-    @name.setter
-    def name(self, name):
+    def set_name(self, name):
         self._name = name
 
-    @property
     def display_name(self):
         return self._display_name
 
-    @display_name.setter
-    def display_name(self, display_name):
+    def set_display_name(self, display_name):
         self._display_name = display_name
 
     @property
@@ -96,29 +87,29 @@ class Component(abc.ABC):
         pass
 
     def remove_connections(self):
-        for src_port in self.outports:
+        for src_port in self.outports():
             for dst_port in src_port.wires:
                 dst_port.set_driver(None)
 
-        for dst_port in self.inports:
+        for dst_port in self.inports():
             if dst_port.has_driver():
                 dst_port.driver.disconnect(dst_port)
 
-    def add_event(self, port, level, propagation_delay_ns):
-        self.circuit.add_event(port, level, propagation_delay_ns)
+    def add_event(self, port, value, delay_ns):
+        self.circuit.add_event(port, value, delay_ns)
 
     def __str__(self):
-        comp_str = f"{self.display_name}"
-        for port in self.inports:
-            comp_str += f"\n - I:{port.name}={port.bitval}"
-        for port in self.outports:
-            comp_str += f"\n - O:{port.name}={port.bitval}"
+        comp_str = f"{self.display_name()}"
+        for port in self.inports():
+            comp_str += f"\n - I:{port.name()}={port.value}"
+        for port in self.outports():
+            comp_str += f"\n - O:{port.name()}={port.value}"
         return comp_str
 
     def to_dict(self):
         component_dict = {
-            "name": self.name,
-            "display_name": self.display_name,
+            "name": self.name(),
+            "display_name": self.display_name(),
         }
 
         module_split = type(self).__module__.split(".")
@@ -146,7 +137,7 @@ class Component(abc.ABC):
         if component_settings is not None and bool(component_settings):
             component.setup(**component_settings)
         if display_name is not None:
-            component.display_name = display_name
+            component.set_display_name(display_name)
         return component
 
     @property

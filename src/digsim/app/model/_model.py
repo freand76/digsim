@@ -14,7 +14,7 @@ from PySide6.QtCore import QThread, Signal
 import digsim.circuit.components
 from digsim.circuit import Circuit
 from digsim.circuit.components import HexDigit, YosysComponent
-from digsim.circuit.components.atoms import CallbackComponent, Component, WireConnectionError
+from digsim.circuit.components.atoms import CallbackComponent, Component, PortConnectionError
 
 from ._placed_component import PlacedComponent
 from ._placed_hexdigit import PlacedHexDigit
@@ -85,7 +85,7 @@ class AppModel(QThread):
     def add_wire(self, src_port, dst_port, connect=True):
         wire = PlacedWire(self, src_port, dst_port, connect)
         self._placed_wires[wire.key] = wire
-        self.sig_component_notify.emit(dst_port.parent)
+        self.sig_component_notify.emit(dst_port.parent())
 
     def get_placed_components(self):
         placed_components = []
@@ -168,7 +168,7 @@ class AppModel(QThread):
         try:
             self._new_wire.set_end_port(component.port(portname))
             self._placed_wires[self._new_wire.key] = self._new_wire
-        except WireConnectionError as exc:
+        except PortConnectionError as exc:
             print("ERROR:", str(exc))
         self._new_wire = None
         self._new_wire_end_pos = None
@@ -236,7 +236,7 @@ class AppModel(QThread):
         circuit_dict = self._circuit.to_dict()
         circuit_dict["gui"] = {}
         for comp, placed_comp in self._placed_components.items():
-            circuit_dict["gui"][comp.name] = placed_comp.to_dict()
+            circuit_dict["gui"][comp.name()] = placed_comp.to_dict()
         json_object = json.dumps(circuit_dict, indent=4)
         with open(path, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)
@@ -247,13 +247,13 @@ class AppModel(QThread):
             circuit_dict = json.load(json_file)
         self._circuit.from_dict(circuit_dict)
         for comp in self._circuit.get_toplevel_components():
-            x = circuit_dict["gui"][comp.name]["x"]
-            y = circuit_dict["gui"][comp.name]["y"]
+            x = circuit_dict["gui"][comp.name()]["x"]
+            y = circuit_dict["gui"][comp.name()]["y"]
             self.add_component(comp, x, y)
 
         for comp in self._circuit.get_toplevel_components():
-            for src_port in comp.outports:
-                for dst_port in src_port.wires:
+            for src_port in comp.outports():
+                for dst_port in src_port.get_wires():
                     self.add_wire(src_port, dst_port, connect=False)
             self._circuit_init()
         self.sig_update_gui_components.emit()

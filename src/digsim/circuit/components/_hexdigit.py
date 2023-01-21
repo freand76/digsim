@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-from .atoms import BusInPort, CallbackComponent, ComponentPort, PortDirection, SignalLevel
+from .atoms import CallbackComponent, PortIn
 
 
 class HexDigit(CallbackComponent):
@@ -28,17 +28,17 @@ class HexDigit(CallbackComponent):
 
     def __init__(self, circuit, name="HexDigit", callback=None, dot=False):
         super().__init__(circuit, name, callback)
-        self.add_port(BusInPort(self, "val", width=4))
+        self.add_port(PortIn(self, "val", width=4))
         self._dot = dot
         if self._dot:
-            self.add_port(ComponentPort(self, "dot", PortDirection.IN))
+            self.add_port(PortIn(self, "dot"))
 
     def value(self):
-        return self.val.intval
+        return self.val.value
 
     def dot_active(self):
         if self._dot:
-            return self.dot.has_driver() and self.dot.level == SignalLevel.HIGH
+            return self.dot.has_driver() and self.dot.value == 1
         return False
 
     def segments(self):
