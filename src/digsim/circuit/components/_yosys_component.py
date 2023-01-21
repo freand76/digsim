@@ -24,14 +24,15 @@ class YosysComponentException(Exception):
     pass
 
 
-class StaticLogic(Component):
-    def __init__(self, circuit, name, level):
+class StaticLevels(Component):
+    def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(OutputPort(self, "O"))
-        self._level = level
+        self.add_port(OutputPort(self, "low"))
+        self.add_port(OutputPort(self, "high"))
 
     def init(self):
-        self.O.level = self._level
+        self.low.level = SignalLevel.LOW
+        self.high.level = SignalLevel.HIGH
 
 
 class YosysComponent(MultiComponent):
@@ -58,12 +59,10 @@ class YosysComponent(MultiComponent):
     def _setup_base(self):
         self._gates_comp = MultiComponent(self._circuit, "gates")
         self.add(self._gates_comp)
-        self._logic_one = StaticLogic(self._circuit, "LogicOne", SignalLevel.HIGH)
-        self._gates_comp.add(self._logic_one)
-        self._add_port("1", self._logic_one.O, driver=True)
-        self._logic_zero = StaticLogic(self._circuit, "LogicZero", SignalLevel.LOW)
-        self._gates_comp.add(self._logic_zero)
-        self._add_port("0", self._logic_zero.O, driver=True)
+        static_levels = StaticLevels(self._circuit, "StaticLevels")
+        self._gates_comp.add(static_levels)
+        self._add_port("0", static_levels.low, driver=True)
+        self._add_port("1", static_levels.high, driver=True)
 
     def load(self, filename):
         self._filename = filename
