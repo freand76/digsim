@@ -25,7 +25,7 @@ irq = PushButton(circuit, "IRQ")
 rdy = PushButton(circuit, "RDY")
 
 yosys_6502 = YosysComponent(
-    circuit, filename=f"{os.path.dirname(__file__)}/../yosys_modules/6502.json"
+    circuit, filename=f"{os.path.dirname(__file__)}/6502.json"
 )
 
 rst.O.wire = yosys_6502.reset
