@@ -193,6 +193,9 @@ class PortWireBit(PortWire):
         super().set_value(value)
         self._parent_port.update()
 
+    def get_parent_port(self):
+        return self._parent_port
+
 
 class PortMultiBitWire(Port):
     def __init__(self, parent, name, width, output=False):

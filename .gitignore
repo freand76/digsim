@@ -4,3 +4,5 @@
 build/
 *.vcd
 *.json
+*.o
+*.map

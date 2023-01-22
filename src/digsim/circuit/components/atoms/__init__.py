@@ -2,4 +2,11 @@
 # All rights reserved
 
 from ._component import CallbackComponent, Component, MultiComponent  # noqa: F401
-from ._port import PortConnectionError, PortIn, PortMultiBitWire, PortOut, PortWire  # noqa: F401
+from ._port import (  # noqa: F401
+    PortConnectionError,
+    PortIn,
+    PortMultiBitWire,
+    PortOut,
+    PortWire,
+    PortWireBit,
+)

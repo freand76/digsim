@@ -6,6 +6,8 @@
 
 from vcd import VCDWriter
 
+from digsim.circuit.components.atoms import PortWireBit
+
 
 class WavesWriter:
     def __init__(self, filename):
@@ -24,6 +26,8 @@ class WavesWriter:
             self._vcd_dict[f"{port_path}.{port_name}"] = var
 
     def write(self, port, time_ns):
+        if isinstance(port, PortWireBit):
+            port = port.get_parent_port()
         var = self._vcd_dict.get(f"{port.path()}.{port.name()}")
         if var is None:
             return
