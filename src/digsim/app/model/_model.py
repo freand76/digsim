@@ -13,11 +13,12 @@ from PySide6.QtCore import QThread, Signal
 
 import digsim.circuit.components
 from digsim.circuit import Circuit
-from digsim.circuit.components import HexDigit, YosysComponent
+from digsim.circuit.components import HexDigit, SevenSegment, YosysComponent
 from digsim.circuit.components.atoms import CallbackComponent, Component, PortConnectionError
 
 from ._placed_component import PlacedComponent
 from ._placed_hexdigit import PlacedHexDigit
+from ._placed_seven_segment import PlacedSevenSegment
 from ._placed_wire import PlacedWire
 from ._placed_yosys import PlacedYosys
 
@@ -72,6 +73,8 @@ class AppModel(QThread):
     def add_component(self, component, xpos, ypos):
         if isinstance(component, HexDigit):
             placed_component = PlacedHexDigit(component, xpos, ypos)
+        elif isinstance(component, SevenSegment):
+            placed_component = PlacedSevenSegment(component, xpos, ypos)
         elif isinstance(component, YosysComponent):
             placed_component = PlacedYosys(component, xpos, ypos)
         else:

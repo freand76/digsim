@@ -235,6 +235,7 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(SelectableComponentWidget(app_model, "Clock", self))
         self.layout().addWidget(SelectableComponentWidget(app_model, "PushButton", self))
         self.layout().addWidget(SelectableComponentWidget(app_model, "OnOffSwitch", self))
+        self.layout().addWidget(SelectableComponentWidget(app_model, "SevenSegment", self))
         self.layout().addWidget(SelectableComponentWidget(app_model, "HexDigit", self))
         self.layout().addWidget(SelectableComponentWidget(app_model, "Led", self))
         self.layout().addWidget(SelectableComponentWidget(app_model, "YosysComponent", self))
