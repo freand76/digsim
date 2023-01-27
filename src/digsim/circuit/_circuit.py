@@ -1,7 +1,10 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+# pylint: disable=too-many-public-methods
+
 import json
+import os
 
 from ._waves_writer import WavesWriter
 from .components.atoms import Component
@@ -64,9 +67,15 @@ class Circuit:
             comp_array.append(comp)
         return comp_array
 
-    @property
-    def folder(self):
-        return self._folder
+    def load_path(self, path):
+        if self._folder is not None:
+            return self._folder + "/" + path
+        return path
+
+    def store_path(self, path):
+        if self._folder is not None:
+            return os.path.relpath(path, self._folder)
+        return path
 
     def delete_component(self, component):
         del self._components[component.name()]
@@ -184,10 +193,11 @@ class Circuit:
         dest_componment = self.get_component(dest_component_name)
         source_component.port(source_port_name).wire = dest_componment.port(dest_port_name)
 
-    def to_dict(self):
+    def to_dict(self, folder=None):
         if self._name is None:
             raise CircuitError("Circuit must have a name")
 
+        self._folder = folder
         components_list = []
         for comp in self.get_toplevel_components():
             components_list.append(comp.to_dict())

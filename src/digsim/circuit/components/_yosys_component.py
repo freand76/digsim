@@ -160,9 +160,9 @@ class YosysComponent(MultiComponent):
 
     def setup(self, path=None):
         if path is not None:
-            if self.circuit.folder is not None:
-                path = self.circuit.folder + "/" + path
+            path = self.circuit.load_path(path)
             self.load(path)
 
     def settings_to_dict(self):
-        return {"path": self._filename}
+        filename = self.circuit.store_path(self._filename)
+        return {"path": filename}

@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint
 
 from ._placed_seven_segment import PlacedSevenSegment
 

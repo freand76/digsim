@@ -237,7 +237,8 @@ class AppModel(QThread):
         return self._started
 
     def save_circuit(self, path):
-        circuit_dict = self._circuit.to_dict()
+        circuit_folder = os.path.dirname(path)
+        circuit_dict = self._circuit.to_dict(circuit_folder)
         circuit_dict["gui"] = {}
         for comp, placed_comp in self._placed_components.items():
             circuit_dict["gui"][comp.name()] = placed_comp.to_dict()
