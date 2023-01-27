@@ -16,9 +16,7 @@ class PlacedHexDigit(PlacedSevenSegment):
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
-        painter.setBrush(Qt.SolidPattern)
-        painter.setPen(Qt.black)
-        painter.setBrush(Qt.black)
+        self.paint_digit_rect(painter)
         for digit_id in range(self.digits):
             active_segments = self.component.segments(digit_id)
             self.draw_digit(

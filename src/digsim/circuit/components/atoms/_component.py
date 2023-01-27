@@ -89,7 +89,7 @@ class Component(abc.ABC):
 
     def remove_connections(self):
         for src_port in self.outports():
-            for dst_port in src_port.wires:
+            for dst_port in src_port.get_wires():
                 dst_port.set_driver(None)
 
         for dst_port in self.inports():

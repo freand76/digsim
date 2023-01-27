@@ -46,6 +46,7 @@ class Circuit:
         self._circuit_events = []
         self._name = name
         self._time_ns = 0
+        self._folder = None
 
         if vcd is not None:
             self._vcd = WavesWriter(filename=vcd)
@@ -62,6 +63,10 @@ class Circuit:
         for _, comp in self._components.items():
             comp_array.append(comp)
         return comp_array
+
+    @property
+    def folder(self):
+        return self._folder
 
     def delete_component(self, component):
         del self._components[component.name()]
@@ -203,7 +208,8 @@ class Circuit:
 
         return circuit_dict
 
-    def from_dict(self, circuit_dict):
+    def from_dict(self, circuit_dict, folder=None):
+        self._folder = folder
         self.clear()
         if "circuit" not in circuit_dict:
             raise CircuitError("No 'circuit' in JSON")

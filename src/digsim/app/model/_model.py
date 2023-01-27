@@ -5,6 +5,7 @@
 # pylint: disable=too-many-public-methods
 
 import json
+import os
 import queue
 import time
 from functools import partial
@@ -248,7 +249,9 @@ class AppModel(QThread):
         self.clear()
         with open(path, mode="r", encoding="utf-8") as json_file:
             circuit_dict = json.load(json_file)
-        self._circuit.from_dict(circuit_dict)
+
+        circuit_folder = os.path.dirname(path)
+        self._circuit.from_dict(circuit_dict, circuit_folder)
         for comp in self._circuit.get_toplevel_components():
             x = circuit_dict["gui"][comp.name()]["x"]
             y = circuit_dict["gui"][comp.name()]["y"]

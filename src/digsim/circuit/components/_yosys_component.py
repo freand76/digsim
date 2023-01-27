@@ -160,6 +160,8 @@ class YosysComponent(MultiComponent):
 
     def setup(self, path=None):
         if path is not None:
+            if self.circuit.folder is not None:
+                path = self.circuit.folder + "/" + path
             self.load(path)
 
     def settings_to_dict(self):
