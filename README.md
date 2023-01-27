@@ -14,9 +14,9 @@
 
 ### Run
 ```
-> python examples/example_pulse.py
+> python examples/example_sr.py
 ```
 ### Look at waveforms
 ```
-> gtkwave pulse.vcd
+> gtkwave sr.vcd
 ```
