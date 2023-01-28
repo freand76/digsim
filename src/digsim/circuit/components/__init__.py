@@ -5,7 +5,7 @@
 
 from ._button import PushButton  # noqa: F401
 from ._clock import Clock  # noqa: F401
-from ._gates import AND, NAND, NOT, SR, XOR  # noqa: F401
+from ._gates import AND, DFF, NAND, NOR, NOT, OR, SR, XOR  # noqa: F401
 from ._hexdigit import HexDigit  # noqa: F401
 from ._led import Led  # noqa: F401
 from ._mem64kbyte import Mem64kByte  # noqa: F401

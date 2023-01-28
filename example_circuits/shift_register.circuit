@@ -1,0 +1,175 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "DFF",
+                "display_name": "DFF",
+                "type": "digsim.circuit.components.DFF",
+                "settings": {}
+            },
+            {
+                "name": "DFF_1",
+                "display_name": "DFF",
+                "type": "digsim.circuit.components.DFF",
+                "settings": {}
+            },
+            {
+                "name": "DFF_2",
+                "display_name": "DFF",
+                "type": "digsim.circuit.components.DFF",
+                "settings": {}
+            },
+            {
+                "name": "DFF_3",
+                "display_name": "DFF",
+                "type": "digsim.circuit.components.DFF",
+                "settings": {}
+            },
+            {
+                "name": "DFF_4",
+                "display_name": "DFF",
+                "type": "digsim.circuit.components.DFF",
+                "settings": {}
+            },
+            {
+                "name": "DFF_5",
+                "display_name": "DFF",
+                "type": "digsim.circuit.components.DFF",
+                "settings": {}
+            },
+            {
+                "name": "SevenSegment",
+                "display_name": "SevenSegment",
+                "type": "digsim.circuit.components.SevenSegment",
+                "settings": {}
+            },
+            {
+                "name": "PushButton",
+                "display_name": "PushButton",
+                "type": "digsim.circuit.components.PushButton",
+                "settings": {}
+            },
+            {
+                "name": "Clock",
+                "display_name": "Clock",
+                "type": "digsim.circuit.components.Clock",
+                "settings": {
+                    "frequency": 1
+                }
+            }
+        ],
+        "wires": [
+            {
+                "src": "DFF.Q",
+                "dst": "SevenSegment.A"
+            },
+            {
+                "src": "DFF.Q",
+                "dst": "DFF_1.D"
+            },
+            {
+                "src": "DFF_1.Q",
+                "dst": "SevenSegment.B"
+            },
+            {
+                "src": "DFF_1.Q",
+                "dst": "DFF_2.D"
+            },
+            {
+                "src": "DFF_2.Q",
+                "dst": "SevenSegment.C"
+            },
+            {
+                "src": "DFF_2.Q",
+                "dst": "DFF_3.D"
+            },
+            {
+                "src": "DFF_3.Q",
+                "dst": "SevenSegment.D"
+            },
+            {
+                "src": "DFF_3.Q",
+                "dst": "DFF_4.D"
+            },
+            {
+                "src": "DFF_4.Q",
+                "dst": "SevenSegment.E"
+            },
+            {
+                "src": "DFF_4.Q",
+                "dst": "DFF_5.D"
+            },
+            {
+                "src": "DFF_5.Q",
+                "dst": "SevenSegment.F"
+            },
+            {
+                "src": "PushButton.O",
+                "dst": "DFF.D"
+            },
+            {
+                "src": "Clock.O",
+                "dst": "DFF.C"
+            },
+            {
+                "src": "Clock.O",
+                "dst": "DFF_1.C"
+            },
+            {
+                "src": "Clock.O",
+                "dst": "DFF_2.C"
+            },
+            {
+                "src": "Clock.O",
+                "dst": "DFF_3.C"
+            },
+            {
+                "src": "Clock.O",
+                "dst": "DFF_4.C"
+            },
+            {
+                "src": "Clock.O",
+                "dst": "DFF_5.C"
+            }
+        ]
+    },
+    "gui": {
+        "DFF": {
+            "x": 212,
+            "y": 117
+        },
+        "DFF_1": {
+            "x": 211,
+            "y": 232
+        },
+        "DFF_2": {
+            "x": 212,
+            "y": 340
+        },
+        "DFF_3": {
+            "x": 218,
+            "y": 454
+        },
+        "DFF_4": {
+            "x": 216,
+            "y": 567
+        },
+        "DFF_5": {
+            "x": 218,
+            "y": 680
+        },
+        "SevenSegment": {
+            "x": 775,
+            "y": 269
+        },
+        "PushButton": {
+            "x": 23,
+            "y": 38
+        },
+        "Clock": {
+            "x": 22,
+            "y": 168
+        }
+    }
+}

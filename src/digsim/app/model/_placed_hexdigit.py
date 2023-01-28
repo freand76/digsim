@@ -3,8 +3,6 @@
 
 """ A hexdigit component placed in the GUI """
 
-from PySide6.QtCore import QPoint
-
 from ._placed_seven_segment import PlacedSevenSegment
 
 
@@ -15,18 +13,22 @@ class PlacedHexDigit(PlacedSevenSegment):
         super().__init__(component, xpos, ypos)
         _, str_pixels_w, _ = self.get_port_display_name_metrics("val")
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
+        self.digit_top = self.RECT_TO_DIGIT_RECT_MARGIN
         self.digits = self.component.get_digits()
-        self._width = self.digit_left + self.digits * self.DIGIT_WIDTH + self.RECT_TO_DIGIT_MARGIN
+        self._width = (
+            self.digit_left + self.digits * self.DIGIT_WIDTH + self.DIGIT_RECT_TO_DIGIT_MARGIN
+        )
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
-        self.paint_digit_rect(painter)
+        self.paint_digit_rect(
+            painter, self.digit_left, self.RECT_TO_DIGIT_RECT_MARGIN, self.digits
+        )
         for digit_id in range(self.digits):
             active_segments = self.component.segments(digit_id)
             self.draw_digit(
                 painter,
-                QPoint(
-                    self.digit_left + self.RECT_TO_DIGIT_MARGIN + self.DIGIT_WIDTH * digit_id, 20
-                ),
+                self.digit_left + self.DIGIT_WIDTH * digit_id,
+                self.digit_top,
                 active_segments,
             )

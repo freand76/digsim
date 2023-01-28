@@ -7,7 +7,7 @@
                 "display_name": "counter",
                 "type": "digsim.circuit.components.YosysComponent",
                 "settings": {
-                    "path": "counter.json"
+                    "path": "../examples/yosys_counter/counter.json"
                 }
             },
             {

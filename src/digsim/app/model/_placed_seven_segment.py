@@ -42,43 +42,46 @@ class PlacedSevenSegment(PlacedComponent):
     }
 
     PORT_TO_RECT_MARGIN = 5
-    RECT_TO_DIGIT_MARGIN = 10
+    RECT_TO_DIGIT_RECT_MARGIN = 10
+    DIGIT_RECT_TO_DIGIT_MARGIN = 10
     DIGIT_WIDTH = 54
+    DIGIT_HEIGHT = 80
 
     def __init__(self, component, xpos, ypos):
         super().__init__(component, xpos, ypos)
         _, str_pixels_w, _ = self.get_port_display_name_metrics("dot")
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
-        self.digits = 1
-        self._width = self.digit_left + self.DIGIT_WIDTH + self.RECT_TO_DIGIT_MARGIN
+        self._width = self.digit_left + self.DIGIT_WIDTH + self.DIGIT_RECT_TO_DIGIT_MARGIN
 
-    def paint_digit_rect(self, painter):
+    def paint_component(self, painter):
+        self.paint_component_base(painter)
+        digit_ypos = self._height / 2 - self.DIGIT_HEIGHT / 2 + self.RECT_TO_DIGIT_RECT_MARGIN
+        self.paint_digit_rect(painter, self.digit_left, digit_ypos)
+        active_segments = self.component.segments()
+        self.draw_digit(painter, self.digit_left, digit_ypos, active_segments)
+
+    @classmethod
+    def paint_digit_rect(cls, painter, xpos, ypos, digits=1):
         """Paint the digit background"""
         painter.setBrush(Qt.SolidPattern)
         painter.setPen(Qt.black)
         painter.setBrush(Qt.black)
-        painter.drawRoundedRect(self.digit_left, 10, self.DIGIT_WIDTH * self.digits, 80, 4, 4)
+        painter.drawRoundedRect(xpos, ypos, cls.DIGIT_WIDTH * digits, cls.DIGIT_HEIGHT, 4, 4)
 
-    def paint_component(self, painter):
-        self.paint_component_base(painter)
-        self.paint_digit_rect(painter)
-        active_segments = self.component.segments()
-        self.draw_digit(
-            painter,
-            QPoint(self.digit_left + self.RECT_TO_DIGIT_MARGIN, 20),
-            active_segments,
-        )
-
-    def draw_digit(self, painter, start_point, active_segments):
+    @classmethod
+    def draw_digit(cls, painter, xpos, ypos, active_segments):
         """Paint the LED digit segments"""
-        for seg, type_pos in self.SEGMENT_TYPE_AND_POS.items():
+        start_point = QPoint(
+            xpos + cls.DIGIT_RECT_TO_DIGIT_MARGIN, ypos + cls.DIGIT_RECT_TO_DIGIT_MARGIN
+        )
+        for seg, type_pos in cls.SEGMENT_TYPE_AND_POS.items():
             if seg in active_segments:
                 painter.setPen(Qt.red)
                 painter.setBrush(Qt.red)
             else:
                 painter.setPen(Qt.darkRed)
                 painter.setBrush(Qt.darkRed)
-            pos_vector = self.SEGMENT_CORDS[type_pos[0]]
+            pos_vector = cls.SEGMENT_CORDS[type_pos[0]]
             offset = type_pos[1]
             path = QPainterPath()
             path.moveTo(offset + start_point)
