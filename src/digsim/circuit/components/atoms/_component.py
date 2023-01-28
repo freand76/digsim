@@ -99,17 +99,6 @@ class Component(abc.ABC):
     def add_event(self, port, value, delay_ns):
         self.circuit.add_event(port, value, delay_ns)
 
-    def is_rising_edge(self, port):
-        rising_edge = False
-        if (
-            port.value == 1
-            and port in self._edge_detect_dict
-            and self._edge_detect_dict[port] == 0
-        ):
-            rising_edge = True
-        self._edge_detect_dict[port] = port.value
-        return rising_edge
-
     def __str__(self):
         comp_str = f"{self.display_name()}"
         for port in self.inports():

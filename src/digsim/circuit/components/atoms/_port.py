@@ -16,6 +16,7 @@ class Port(abc.ABC):
         self._output = output  # Is this port an output port
         self._wired_ports = []  # The ports that this port drives
         self._value = None  # The value of this port
+        self._edge_detect_value = "X"  # Last edge detect value
         self.init()  # Initialize the port
 
     @property
@@ -81,6 +82,20 @@ class Port(abc.ABC):
 
     def is_input(self):
         return not self._output
+
+    def is_rising_edge(self):
+        rising_edge = False
+        if self.value == 1 and self._edge_detect_value == 0:
+            rising_edge = True
+        self._edge_detect_value = self.value
+        return rising_edge
+
+    def is_falling_edge(self):
+        falling_edge = False
+        if self.value == 0 and self._edge_detect_value == 1:
+            falling_edge = True
+        self._edge_detect_value = self.value
+        return falling_edge
 
     @abc.abstractmethod
     def set_value(self, value):
