@@ -15,7 +15,7 @@ class PlacedComponent(PlacedObject):
     DEFAULT_WIDTH = 120
     DEFAULT_HEIGHT = 100
     RECT_TO_BORDER = 5
-    BORDER_TO_PORT = 30
+    BORDER_TO_PORT = 20
     PORT_SIDE = 8
     PORT_CLICK_BOX_SIDE = 20
     MIN_PORT_TO_PORT_DISTANCE = 20

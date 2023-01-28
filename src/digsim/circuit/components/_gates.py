@@ -120,8 +120,8 @@ class DFF(Component):
 
     def __init__(self, circuit, name="NOR"):
         super().__init__(circuit, name)
-        self.add_port(PortIn(self, "C"))
         self.add_port(PortWire(self, "D"))
+        self.add_port(PortIn(self, "C"))
         self.add_port(PortOut(self, "Q"))
 
     def update(self):

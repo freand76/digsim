@@ -20,7 +20,18 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from digsim.app.model import PlacedComponent, PlacedHexDigit, PlacedSevenSegment
+from digsim.app.model import (
+    PlacedComponent,
+    PlacedHexDigit,
+    PlacedImageComponentAND,
+    PlacedImageComponentDFF,
+    PlacedImageComponentNAND,
+    PlacedImageComponentNOR,
+    PlacedImageComponentNOT,
+    PlacedImageComponentOR,
+    PlacedImageComponentXOR,
+    PlacedSevenSegment,
+)
 
 
 class ComponentWidget(QPushButton):
@@ -272,13 +283,13 @@ class ComponentSelection(QWidget):
         self.setLayout(QVBoxLayout(self))
         self.layout().setContentsMargins(5, 5, 5, 5)
         self.layout().setSpacing(5)
-        self.layout().addWidget(SelectableComponentWidget("OR", self))
-        self.layout().addWidget(SelectableComponentWidget("AND", self))
-        self.layout().addWidget(SelectableComponentWidget("NOT", self))
-        self.layout().addWidget(SelectableComponentWidget("XOR", self))
-        self.layout().addWidget(SelectableComponentWidget("NAND", self))
-        self.layout().addWidget(SelectableComponentWidget("NOR", self))
-        self.layout().addWidget(SelectableComponentWidget("DFF", self))
+        self.layout().addWidget(SelectableComponentWidget("OR", self, PlacedImageComponentOR))
+        self.layout().addWidget(SelectableComponentWidget("AND", self, PlacedImageComponentAND))
+        self.layout().addWidget(SelectableComponentWidget("NOT", self, PlacedImageComponentNOT))
+        self.layout().addWidget(SelectableComponentWidget("XOR", self, PlacedImageComponentXOR))
+        self.layout().addWidget(SelectableComponentWidget("NAND", self, PlacedImageComponentNAND))
+        self.layout().addWidget(SelectableComponentWidget("NOR", self, PlacedImageComponentNOR))
+        self.layout().addWidget(SelectableComponentWidget("DFF", self, PlacedImageComponentDFF))
         self.layout().addWidget(SelectableComponentWidget("VDD", self))
         self.layout().addWidget(SelectableComponentWidget("GND", self))
         self.layout().addWidget(SelectableComponentWidget("Clock", self))
