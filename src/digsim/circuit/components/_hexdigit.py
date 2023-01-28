@@ -37,17 +37,21 @@ class HexDigit(CallbackComponent):
             self.add_port(PortIn(self, "dot"))
 
     def set_digits(self, digits):
+        """Set the number of digits"""
         self._digits = digits
         self.val.width = digits * 4
         self.dot.width = digits
 
     def get_digits(self):
+        """Get the number of digits"""
         return self._digits
 
     def value(self):
+        """Get value"""
         return self.val.value
 
     def dot_active(self, digit_id=1):
+        """Is the dot active for the selected digit_id?"""
         if not self._dot:
             return False
         if self.dot.value == "X":
@@ -56,6 +60,7 @@ class HexDigit(CallbackComponent):
         return dot_value == 1
 
     def segments(self, digit_id=0):
+        """Whch segments are active for the selected digit_id?"""
         if self.value() == "X":
             segments = ""
         else:
@@ -66,6 +71,7 @@ class HexDigit(CallbackComponent):
         return segments
 
     def setup(self, digits=1):
+        """Setup from settings"""
         if digits is not None:
             self.set_digits(digits)
 

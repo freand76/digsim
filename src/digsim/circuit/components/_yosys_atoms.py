@@ -12,6 +12,12 @@ from .atoms import Component, PortIn, PortOut, PortWire
 
 class ClassNameParameterComponent(Component):
     def name_to_level(self, index):
+        """
+        Helper function to convert a specific position in the class name
+        to a logic level:
+        N/0 ==> 0
+        P/1 ==> 1
+        """
         class_name = self.__class__.__name__
         split = class_name.split("_")
         level = split[2][index]

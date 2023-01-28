@@ -17,10 +17,6 @@ class VDD(Component):
         super().init()
         self.O.value = 1
 
-    @property
-    def wire(self):
-        return self.o.wire
-
     @wire.setter
     def wire(self, port):
         self.O.wire = port
@@ -36,10 +32,6 @@ class GND(Component):
     def init(self):
         super().init()
         self.O.value = 0
-
-    @property
-    def wire(self):
-        return self.o.wire
 
     @wire.setter
     def wire(self, port):

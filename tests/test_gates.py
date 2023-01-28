@@ -26,6 +26,7 @@ LOW = 0
     ],
 )
 def test_and(in_a, in_b, out_y):
+    """Test AND gate"""
     circuit = Circuit()
     _and = AND(circuit)
 
@@ -47,6 +48,7 @@ def test_and(in_a, in_b, out_y):
     ],
 )
 def test_not(in_a, out_y):
+    """Test NOT gate"""
     circuit = Circuit()
     _not = NOT(circuit)
 
@@ -70,6 +72,7 @@ def test_not(in_a, out_y):
     ],
 )
 def test_nand(in_a, in_b, out_y):
+    """Test NAND gate"""
     circuit = Circuit()
     _nand = NAND(circuit)
 
@@ -95,6 +98,7 @@ def test_nand(in_a, in_b, out_y):
     ],
 )
 def test_xor(in_a, in_b, out_y):
+    """Test XOR gate"""
     circuit = Circuit()
     _xor = XOR(circuit)
 

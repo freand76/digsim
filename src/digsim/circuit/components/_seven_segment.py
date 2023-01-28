@@ -16,6 +16,7 @@ class SevenSegment(CallbackComponent):
             self.add_port(PortIn(self, portname))
 
     def segments(self):
+        """Get the active segments"""
         segments = ""
         for portname in self.PORTLIST:
             if self.port(portname).value == 1:

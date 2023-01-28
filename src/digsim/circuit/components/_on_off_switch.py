@@ -28,14 +28,17 @@ class OnOffSwitch(CallbackComponent):
         self._set(self._start_on)
 
     def turn_on(self):
+        """Turn on the switch"""
         self.O.value = 1
         self._on = True
 
     def turn_off(self):
+        """Turn off the switch"""
         self.O.value = 0
         self._on = False
 
     def toggle(self):
+        """Toggle the switch"""
         self._set(not self._on)
 
     def onpress(self):

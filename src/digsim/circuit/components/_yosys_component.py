@@ -65,6 +65,7 @@ class YosysComponent(MultiComponent):
         self._add_port("1", static_levels.high, driver=True)
 
     def load(self, filename):
+        """Load yosys json netlist file"""
         self._filename = filename
         with open(self._filename, encoding="utf-8") as json_file:
             self._json = json.load(json_file)
@@ -168,6 +169,7 @@ class YosysComponent(MultiComponent):
             self._add_netname(netname, netname_dict)
 
     def setup(self, path=None):
+        """Setup from settings"""
         if path is not None:
             path = self.circuit.load_path(path)
             self.load(path)

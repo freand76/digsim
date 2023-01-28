@@ -21,12 +21,14 @@ class PushButton(CallbackComponent):
         self.release()
 
     def push(self):
+        """Push pushbutton"""
         if self._inverted:
             self.O.value = 0
         else:
             self.O.value = 1
 
     def release(self):
+        """Release pushbutton"""
         if self._inverted:
             self.O.value = 1
         else:

@@ -12,6 +12,8 @@ from digsim.circuit.components import AND, NOT, Led, PushButton
 
 
 def led_callback(comp):
+    """Callback function for LED component change"""
+
     led_port = comp.ports[0]
     time_ns = comp.circuit.time_ns
     name = comp.name()

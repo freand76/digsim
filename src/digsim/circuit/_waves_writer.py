@@ -21,6 +21,7 @@ class WavesWriter:
         self._vcd_dict = {}
 
     def init(self, port_info):
+        """Initialize vcd writer"""
         if self._vcd_file is not None or self._vcd_writer is not None:
             self.close()
         self._vcd_file = open(self._vcd_name, mode="w", encoding="utf-8")
@@ -30,6 +31,7 @@ class WavesWriter:
             self._vcd_dict[f"{port_path}.{port_name}"] = var
 
     def write(self, port, time_ns):
+        """Write port value to vcd file"""
         var = self._vcd_dict.get(f"{port.path()}.{port.name()}")
         if var is None:
             return
@@ -38,6 +40,7 @@ class WavesWriter:
             self.write(wire, time_ns)
 
     def close(self):
+        """Close vcd file"""
         if self._vcd_writer is not None:
             self._vcd_writer.close()
             self._vcd_writer = None

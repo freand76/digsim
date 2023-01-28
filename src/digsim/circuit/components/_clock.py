@@ -29,6 +29,7 @@ class Clock(CallbackComponent):
         super().update()
 
     def set_frequency(self, frequency):
+        """Set the clock frequency in hertz"""
         self._frequency = frequency
         half_period_ns = int(1000000000 / (frequency * 2))
         self._portout.set_delay_ns(half_period_ns)
@@ -37,15 +38,12 @@ class Clock(CallbackComponent):
     def active(self):
         return self._portout.value == 1
 
-    @property
-    def wire(self):
-        return self._portout.wire
-
     @wire.setter
     def wire(self, port):
         self._portout.wire = port
 
     def setup(self, frequency=None):
+        """Setup from settings"""
         if frequency is not None:
             self.set_frequency(frequency)
 
