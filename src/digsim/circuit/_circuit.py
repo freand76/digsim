@@ -31,20 +31,25 @@ class CircuitEvent:
 
     @property
     def time_ns(self):
+        """Get the simulation time (ns) of this event"""
         return self._time_ns
 
     @property
     def port(self):
+        """Get the port of this event"""
         return self._port
 
     @property
     def value(self):
+        """Get the delta cycle value of this event"""
         return self._value
 
     def is_same_event(self, port):
+        """Return True if the in the event is the same as"""
         return port == self._port
 
     def update(self, time_ns, value):
+        """Update the event with a new time (ns) and a new value"""
         self._time_ns = time_ns
         self._value = value
 
@@ -69,30 +74,36 @@ class Circuit:
 
     @property
     def time_ns(self):
+        """Get the current simulation time (ns)"""
         return self._time_ns
 
     @property
     def components(self):
+        """Get the components in this circuit"""
         comp_array = []
         for _, comp in self._components.items():
             comp_array.append(comp)
         return comp_array
 
     def load_path(self, path):
+        """Get the load path relative to the circuit path"""
         if self._folder is not None:
             return self._folder + "/" + path
         return path
 
     def store_path(self, path):
+        """Get the store path relative to the circuit path"""
         if self._folder is not None:
             return os.path.relpath(path, self._folder)
         return path
 
     def delete_component(self, component):
+        """Delete a component from the circuit"""
         del self._components[component.name()]
         component.remove_connections()
 
     def get_toplevel_components(self):
+        """Get toplevel components in the circuit"""
         toplevel_components = []
         for _, comp in self._components.items():
             if comp.is_toplevel():
@@ -100,6 +111,7 @@ class Circuit:
         return toplevel_components
 
     def init(self):
+        """Initialize circuit and components (and ports)"""
         self._time_ns = 0
         self._circuit_events = []
         if self._vcd is not None:
@@ -109,15 +121,18 @@ class Circuit:
         self.run_until(ns=0)  # Handle all time zero events
 
     def clear(self):
+        """Remove all components"""
         self._components = {}
 
     def vcd(self, filename):
+        """Start wave collecting in a gtkwave .vcd file"""
         if self._vcd is not None:
             raise CircuitError("VCD already started")
         self._vcd = WavesWriter(filename=filename)
         self._vcd_init()
 
     def vcd_close(self):
+        """Close gtkwave .vcd file"""
         self._vcd.close()
         self._vcd = None
 
@@ -145,6 +160,10 @@ class Circuit:
         self._vcd.close()
 
     def process_single_event(self, stop_time_ns=None):
+        """
+        Process one simulation event
+        Return False if ther are now events of if the stop_time has passed
+        """
         if len(self._circuit_events) == 0:
             return False
         self._circuit_events.sort()
@@ -159,6 +178,7 @@ class Circuit:
         return True
 
     def run(self, s=None, ms=None, us=None, ns=None):
+        """Run simulation for a period of time"""
         stop_time_ns = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
         while len(self._circuit_events) > 0 and self._time_ns <= stop_time_ns:
             if not self.process_single_event(stop_time_ns):
@@ -167,11 +187,13 @@ class Circuit:
         self._time_ns = max(self._time_ns, stop_time_ns)
 
     def run_until(self, s=None, ms=None, us=None, ns=None):
+        """Run simulation until a specified time"""
         stop_time_ns = self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
         if stop_time_ns >= self._time_ns:
             self.run(ns=stop_time_ns - self._time_ns)
 
     def add_event(self, port, value, propagation_delay_ns):
+        """Add delta cycle event, this will also write values to .vcd file"""
         event_time_ns = self._time_ns + propagation_delay_ns
         # print(f"Add event {port.parent().name()}:{port.name()} => {value}")
         for event in self._circuit_events:
@@ -181,6 +203,7 @@ class Circuit:
         self._circuit_events.append(CircuitEvent(event_time_ns, port, value))
 
     def add_component(self, component):
+        """Add component to circuit"""
         name_id = 1
         namebase = component.name()
         while component.name() in self._components:
@@ -189,12 +212,13 @@ class Circuit:
         self._components[component.name()] = component
 
     def get_component(self, component_name):
+        """Get component witgh 'component_name'"""
         comp = self._components.get(component_name)
         if comp is not None:
             return comp
         raise CircuitError(f"Component '{component_name}' not found")
 
-    def connect_from_json(self, source, dest):
+    def _connect_from_dict(self, source, dest):
         source_component_name = source.split(".")[0]
         source_port_name = source.split(".")[1]
         dest_component_name = dest.split(".")[0]
@@ -205,6 +229,7 @@ class Circuit:
         source_component.port(source_port_name).wire = dest_componment.port(dest_port_name)
 
     def to_dict(self, folder=None):
+        """Generate dict from circuit, used when storing circuit"""
         if self._name is None:
             raise CircuitError("Circuit must have a name")
 
@@ -230,6 +255,7 @@ class Circuit:
         return circuit_dict
 
     def from_dict(self, circuit_dict, folder=None):
+        """Clear circuit and add components from dict"""
         self._folder = folder
         self.clear()
         if "circuit" not in circuit_dict:
@@ -249,9 +275,10 @@ class Circuit:
             Component.from_dict(self, json_component)
 
         for json_connection in json_connections:
-            self.connect_from_json(json_connection["src"], json_connection["dst"])
+            self._connect_from_dict(json_connection["src"], json_connection["dst"])
 
     def to_json_file(self, filename):
+        """Store circuit in json file"""
         circuit_dict = self.to_dict()
         json_object = json.dumps(circuit_dict, indent=4)
 
@@ -259,6 +286,7 @@ class Circuit:
             json_file.write(json_object)
 
     def from_json_file(self, filename):
+        """Load circuit from json file"""
         with open(filename, mode="r", encoding="utf-8") as json_file:
             circuit_dict = json.load(json_file)
             self.from_dict(circuit_dict)

@@ -17,10 +17,6 @@ class VDD(Component):
         super().init()
         self.O.value = 1
 
-    @wire.setter
-    def wire(self, port):
-        self.O.wire = port
-
 
 class GND(Component):
     """GND / Logic0 component class"""
@@ -32,7 +28,3 @@ class GND(Component):
     def init(self):
         super().init()
         self.O.value = 0
-
-    @wire.setter
-    def wire(self, port):
-        self.O.wire = port

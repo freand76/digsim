@@ -31,6 +31,7 @@ class PlacedComponent(PlacedObject):
         self.update_ports()
 
     def update_ports(self):
+        """Update port positions for the placed component"""
         max_ports = max(len(self._component.inports()), len(self._component.outports()))
         if max_ports > 1:
             min_height = (
@@ -50,6 +51,7 @@ class PlacedComponent(PlacedObject):
                 self._port_display_name[port.name()] = f"{port.name()}[{port.width-1}:0]"
 
     def get_port_display_name_metrics(self, portname):
+        """Get the port display name (including bits if available"""
         font = QFont("Arial", 8)
         fm = QFontMetrics(font)
         display_name_str = self._port_display_name[portname]
@@ -58,7 +60,7 @@ class PlacedComponent(PlacedObject):
         return display_name_str, str_pixels_w, str_pixels_h
 
     def paint_component_base(self, painter):
-        # Draw component
+        """Paint component base rect"""
         comp_rect = self.get_rect()
         pen = QPen()
         if self.selected:
@@ -75,6 +77,7 @@ class PlacedComponent(PlacedObject):
         painter.drawRoundedRect(comp_rect, 5, 5)
 
     def paint_component(self, painter):
+        """Paint component"""
         self.paint_component_base(painter)
         font = QFont("Arial", 10)
         painter.setFont(font)
@@ -89,10 +92,11 @@ class PlacedComponent(PlacedObject):
         )
 
     def inport_x_pos(self):
+        """Get the X position left of the input port"""
         return 1.5 * self.PORT_SIDE
 
     def paint_ports(self, painter, active_port):
-        # Draw ports
+        """Paint component ports"""
         painter.setPen(Qt.black)
         painter.setBrush(Qt.SolidPattern)
         font = QFont("Arial", 8)
@@ -133,6 +137,7 @@ class PlacedComponent(PlacedObject):
                 )
 
     def get_rect(self):
+        """Get component rect"""
         return QRect(
             self.RECT_TO_BORDER,
             self.RECT_TO_BORDER,
@@ -141,10 +146,12 @@ class PlacedComponent(PlacedObject):
         )
 
     def get_port_pos(self, portname):
+        """Get component pos"""
         rect = self._port_rects[portname]
         return QPoint(rect.x(), rect.y()) + QPoint(self.PORT_SIDE / 2, self.PORT_SIDE / 2)
 
     def get_port_for_point(self, point):
+        """Get component port from a point"""
         for portname, rect in self._port_rects.items():
             if (
                 point.x() > rect.x() - self.PORT_CLICK_BOX_SIDE / 2
@@ -156,23 +163,28 @@ class PlacedComponent(PlacedObject):
         return None
 
     def create_context_menu(self, parent, event):
-        pass
+        """Create context menu for component"""
 
     @property
     def component(self):
+        """Get component"""
         return self._component
 
     @property
     def pos(self):
+        """Get position"""
         return self._pos
 
     @property
     def size(self):
+        """Get size"""
         return QSize(self._width, self._height)
 
     @pos.setter
     def pos(self, point):
+        """Set position"""
         self._pos = point
 
     def to_dict(self):
+        """Return position as dict"""
         return {"x": self.pos.x(), "y": self.pos.y()}

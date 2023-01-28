@@ -64,9 +64,11 @@ class PlacedWire(PlacedObject):
         painter.drawLine(src, dst)
 
     def paint(self, painter):
+        """Paint paced wire"""
         self._paint_wire(painter, self._src_point, self._dst_point)
 
     def paint_new(self, painter, end_pos):
+        """Paint new/unfinished placed wire"""
         self._paint_wire(painter, self.start_pos, end_pos)
 
     def _connect(self):
@@ -75,9 +77,11 @@ class PlacedWire(PlacedObject):
             self._connected = True
 
     def disconnect(self):
+        """Disconnect placed wire"""
         self._src_port.disconnect(self._dst_port)
 
     def set_end_port(self, port):
+        """Set end port when creating a new wire"""
         if port.is_output() and self._src_port is None:
             self._src_port = port
         elif port.is_input() and self._dst_port is None:
@@ -88,6 +92,7 @@ class PlacedWire(PlacedObject):
         self.update()
 
     def update(self):
+        """Update the wire position if the connected components move"""
         if self._src_port is not None:
             self._is_bus = self._src_port.width > 1
             src_comp = self._app_model.get_placed_component(self._src_port.parent())
@@ -98,6 +103,7 @@ class PlacedWire(PlacedObject):
             self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name())
 
     def is_close(self, point):
+        """Return True if the point is close to this wire, used for selection"""
         if (
             point.x() < min(self._src_point.x(), self._dst_point.x())
             or point.x() > max(self._src_point.x(), self._dst_point.x())
@@ -117,22 +123,27 @@ class PlacedWire(PlacedObject):
         return (nom / denom) < self.WIRE_CLICK_CLOSE_PIXELS
 
     def has_port(self, port):
+        """Return True if port is alredy a part of this wire?"""
         return port in [self._src_port, self._dst_port]
 
     @property
     def key(self):
+        """Get placed wire key, used by the model"""
         return (self._src_port, self._dst_port)
 
     @property
     def src_port(self):
+        """Get the source port of the placed wire"""
         return self._src_port
 
     @property
     def dst_port(self):
+        """Get the destination port of the placed wire"""
         return self._dst_port
 
     @property
     def start_pos(self):
+        """Get the start point for the unfinished placed wire"""
         if self._src_point is not None:
             return self._src_point
         return self._dst_point

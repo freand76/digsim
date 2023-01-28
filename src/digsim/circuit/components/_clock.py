@@ -38,10 +38,6 @@ class Clock(CallbackComponent):
     def active(self):
         return self._portout.value == 1
 
-    @wire.setter
-    def wire(self, port):
-        self._portout.wire = port
-
     def setup(self, frequency=None):
         """Setup from settings"""
         if frequency is not None:

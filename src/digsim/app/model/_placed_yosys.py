@@ -20,5 +20,6 @@ class PlacedYosys(PlacedComponent):
         menu.exec_(event.globalPos())
 
     def open_settings(self):
+        """Open settings dialog"""
         self.component.load("yosys_modules/counter.json")
         self.update_ports()

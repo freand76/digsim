@@ -36,10 +36,12 @@ class ComponentWidget(QPushButton):
         self.move(self._placed_component.pos)
 
     def sizeHint(self):
+        """QT event callback function"""
         return self._placed_component.size
 
     @property
     def component(self):
+        """Get component from widget"""
         return self._placed_component.component
 
     def _component_notify(self, component):
@@ -47,20 +49,24 @@ class ComponentWidget(QPushButton):
             self.update()
 
     def paintEvent(self, _):
+        """QT event callback function"""
         painter = QPainter(self)
         self._placed_component.paint_component(painter)
         self._placed_component.paint_ports(painter, self._active_port)
         painter.end()
 
     def enterEvent(self, _):
+        """QT event callback function"""
         if self._app_model.is_running and self.component.has_action:
             self.setCursor(Qt.PointingHandCursor)
 
     def leaveEvent(self, _):
+        """QT event callback function"""
         self.setCursor(Qt.ArrowCursor)
         self._active_port = None
 
     def mousePressEvent(self, event):
+        """QT event callback function"""
         super().mousePressEvent(event)
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
@@ -87,6 +93,7 @@ class ComponentWidget(QPushButton):
                 self.update()
 
     def mouseReleaseEvent(self, event):
+        """QT event callback function"""
         super().mouseReleaseEvent(event)
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
@@ -100,6 +107,7 @@ class ComponentWidget(QPushButton):
                 self.parent().update()
 
     def mouseMoveEvent(self, event):
+        """QT event callback function"""
         if self._app_model.is_running:
             return
 
@@ -141,16 +149,19 @@ class CircuitArea(QWidget):
         self.setAcceptDrops(True)
 
     def keyPressEvent(self, event):
+        """QT event callback function"""
         if event.key() == Qt.Key_Delete:
             self._app_model.delete()
         event.accept()
 
     def paintEvent(self, _):
+        """QT event callback function"""
         painter = QPainter(self)
         self._app_model.paint_wires(painter)
         painter.end()
 
     def mousePressEvent(self, event):
+        """QT event callback function"""
         super().mousePressEvent(event)
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
@@ -168,6 +179,7 @@ class CircuitArea(QWidget):
                 self.update()
 
     def mouseMoveEvent(self, event):
+        """QT event callback function"""
         if self._app_model.is_running:
             return
 
@@ -176,9 +188,11 @@ class CircuitArea(QWidget):
             self.update()
 
     def dragEnterEvent(self, event):
+        """QT event callback function"""
         event.accept()
 
     def dropEvent(self, event):
+        """QT event callback function"""
         event.setDropAction(Qt.IgnoreAction)
         event.accept()
         self.setFocus()
@@ -216,9 +230,11 @@ class SelectableComponentWidget(QPushButton):
         self.setText(name)
 
     def sizeHint(self):
+        """QT event callback function"""
         return QSize(70, 70)
 
     def mousePressEvent(self, event):
+        """QT event callback function"""
         if event.buttons() == Qt.LeftButton:
             drag = QDrag(self)
             mime = QMimeData()
@@ -326,16 +342,19 @@ class TopBar(QFrame):
         self.layout().addWidget(self._save_button)
 
     def start(self):
+        """Button action: Start"""
         self._start_button.setEnabled(False)
         self._load_button.setEnabled(False)
         self._save_button.setEnabled(False)
         self._app_model.model_start()
 
     def stop(self):
+        """Button action: Stop"""
         self._start_button.setEnabled(False)
         self._app_model.model_stop()
 
     def load(self):
+        """Button action: Load"""
         path = QFileDialog.getOpenFileName(
             self, "Load Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
         )
@@ -344,6 +363,7 @@ class TopBar(QFrame):
         self._app_model.load_circuit(path[0])
 
     def save(self):
+        """Button action: Save"""
         path = QFileDialog.getSaveFileName(
             self, "Save Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
         )
@@ -352,6 +372,7 @@ class TopBar(QFrame):
         self._app_model.save_circuit(path[0])
 
     def reset(self):
+        """Button action: Reset"""
         self._time_s = 0
         self._app_model.model_reset()
         self._reset_button.setEnabled(False)
@@ -416,6 +437,7 @@ class MainWindow(QMainWindow):
         self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
 
     def closeEvent(self, event):
+        """QT event callback function"""
         self._app_model.model_stop()
         self._app_model.wait()
         super().closeEvent(event)

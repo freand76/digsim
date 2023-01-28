@@ -53,6 +53,7 @@ class PlacedSevenSegment(PlacedComponent):
         self._width = self.digit_left + self.DIGIT_WIDTH + self.RECT_TO_DIGIT_MARGIN
 
     def paint_digit_rect(self, painter):
+        """Paint the digit background"""
         painter.setBrush(Qt.SolidPattern)
         painter.setPen(Qt.black)
         painter.setBrush(Qt.black)
@@ -69,6 +70,7 @@ class PlacedSevenSegment(PlacedComponent):
         )
 
     def draw_digit(self, painter, start_point, active_segments):
+        """Paint the LED digit segments"""
         for seg, type_pos in self.SEGMENT_TYPE_AND_POS.items():
             if seg in active_segments:
                 painter.setPen(Qt.red)

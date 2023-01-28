@@ -114,10 +114,8 @@ class Component(abc.ABC):
 
     @wire.setter
     def wire(self, port):
-        """Some components have a single output port, they can implement a wire function"""
-        raise ComponentException(
-            f"'wire' not implemented for this component '{self.display_name}'"
-        )
+        """Some components have a single output port, they can wired at component level"""
+        self.outports()[0].wire = port
 
     def update(self):
         """This function is called if a port change and that port should update its parent"""
