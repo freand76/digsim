@@ -206,7 +206,7 @@ class PortWireBit(PortWire):
 
     def set_value(self, value):
         super().set_value(value)
-        self._parent_port.update()
+        self._parent_port.update_value_from_bits()
 
     def get_parent_port(self):
         return self._parent_port
@@ -239,7 +239,7 @@ class PortMultiBitWire(Port):
     def get_bit(self, bit_id):
         return self._bits[bit_id]
 
-    def update(self):
+    def update_value_from_bits(self):
         for bit in self._bits:
             if bit.value == "X":
                 self.update_wires("X")
@@ -248,3 +248,11 @@ class PortMultiBitWire(Port):
         for bit_id, bit in enumerate(self._bits):
             value = value | bit.value << bit_id
         self.update_wires(value)
+        # Send event just to update waves
+        self.parent().add_event(self, value, 0)
+
+    def delta_cycle(self, value):
+        """
+        Do nothing here, the event passed in 'update_value_from_bits'
+        is just used to updates waves in Circuit class
+        """
