@@ -5,6 +5,7 @@
 
 # pylint: disable=too-many-arguments
 # pylint: disable=consider-using-in
+# pylint: disable=missing-class-docstring
 
 from .atoms import Component, PortIn, PortOut, PortWire
 

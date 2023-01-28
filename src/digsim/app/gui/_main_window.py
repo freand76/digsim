@@ -22,6 +22,8 @@ from PySide6.QtWidgets import (
 
 
 class ComponentWidget(QPushButton):
+    """A component widget, a 'clickable' widget with a custom paintEvent"""
+
     def __init__(self, app_model, placed_component, parent):
         super().__init__(parent, objectName=placed_component.component.name())
         self._app_model = app_model
@@ -125,6 +127,8 @@ class ComponentWidget(QPushButton):
 
 
 class CircuitArea(QWidget):
+    """The circuit area class, this is where the component widgets are placed"""
+
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self._app_model = app_model
@@ -200,6 +204,11 @@ class CircuitArea(QWidget):
 
 
 class SelectableComponentWidget(QPushButton):
+    """
+    The selectable component class,
+    this is the component widget than can be dragged into the circuit area.
+    """
+
     def __init__(self, app_model, name, parent):
         super().__init__(parent)
         self._app_model = app_model
@@ -223,6 +232,11 @@ class SelectableComponentWidget(QPushButton):
 
 
 class ComponentSelection(QWidget):
+    """
+    The component selection area,
+    these are the components than can be dragged into the circuit area.
+    """
+
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self.app_model = app_model
@@ -244,6 +258,10 @@ class ComponentSelection(QWidget):
 
 
 class CircuitEditor(QSplitter):
+    """
+    The circuit editor, the component selction widget and the circuit area widget.
+    """
+
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self._app_model = app_model
@@ -271,6 +289,10 @@ class CircuitEditor(QSplitter):
 
 
 class TopBar(QFrame):
+    """
+    The top widget with the control and status widgets
+    """
+
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self._app_model = app_model
@@ -358,6 +380,10 @@ class TopBar(QFrame):
 
 
 class CentralWidget(QWidget):
+    """
+    The central widget with the top widget and circuit editor widget.
+    """
+
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self._app_model = app_model
@@ -376,6 +402,10 @@ class CentralWidget(QWidget):
 
 
 class MainWindow(QMainWindow):
+    """
+    The main window for the applicaton.
+    """
+
     def __init__(self, app_model):
         super().__init__()
         self._app_model = app_model

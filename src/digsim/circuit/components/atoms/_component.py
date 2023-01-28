@@ -11,10 +11,12 @@ import importlib
 
 
 class ComponentException(Exception):
-    pass
+    """Component error exception class"""
 
 
 class Component(abc.ABC):
+    """The component base class"""
+
     def __init__(self, circuit, name="", display_name=None):
         self._circuit = circuit
         self._name = name
@@ -166,6 +168,8 @@ class Component(abc.ABC):
 
 
 class MultiComponent(Component):
+    """A component that holds one or several sub components"""
+
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
         self._components = []
@@ -176,6 +180,12 @@ class MultiComponent(Component):
 
 
 class CallbackComponent(Component):
+    """
+    A component that will call a callback function upon change,
+    this is used to for example output text in stdout or update GUI
+    objects when the component change value.
+    """
+
     def __init__(self, circuit, name, callback=None):
         super().__init__(circuit, name)
         self._callback = callback

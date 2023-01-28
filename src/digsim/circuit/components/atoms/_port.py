@@ -12,6 +12,8 @@ class PortConnectionError(Exception):
 
 
 class Port(abc.ABC):
+    """The abstract base class for all ports"""
+
     def __init__(self, parent, name, width=1, output=False):
         self._parent = parent  # The parent component
         self._name = name  # The name of this port
@@ -145,6 +147,11 @@ class Port(abc.ABC):
 
 
 class PortWire(Port):
+    """
+    The PortWire class:
+    * The port wire will instantaneously update the driven wires upon change.
+    """
+
     def __init__(self, parent, name, width=1, output=False):
         super().__init__(parent, name, width, output)
         self._port_driver = None  # The port that drives this port
@@ -164,6 +171,12 @@ class PortWire(Port):
 
 
 class PortIn(PortWire):
+    """
+    The PortIn class:
+    * The port wire will instantaneously update the driven wires upon change.
+    * The port will update the parent component upon change.
+    """
+
     def __init__(self, parent, name, width=1):
         super().__init__(parent, name, width, output=False)
 
@@ -173,6 +186,12 @@ class PortIn(PortWire):
 
 
 class PortOut(Port):
+    """
+    The PortOut class:
+    * The port wire will update the driven wires after a delta cycle.
+    * The port will update the parent component if the _update_parent variable is set to true.
+    """
+
     def __init__(self, parent, name, width=1, delay_ns=1):
         super().__init__(parent, name, width, output=True)
         self._delay_ns = delay_ns  # Propagation delay for this port
@@ -203,6 +222,12 @@ class PortOut(Port):
 
 
 class PortWireBit(PortWire):
+    """
+    The PortWireBit class is used when several bits should be collected into
+    a multi bit bus port.
+    The PortWireBit will update its parent (a PortMultiBitWire) upon change.
+    """
+
     def __init__(self, parent, name, parent_port):
         super().__init__(parent, name, 1, False)
         self._parent_port = parent_port
@@ -216,6 +241,12 @@ class PortWireBit(PortWire):
 
 
 class PortMultiBitWire(Port):
+    """
+    The PortMultiWireBit class is used when several bits should be collected into
+    a multi bit bus port.
+    The PortWireMultiBit will add events to the circuit upon change to update vcd output.
+    """
+
     def __init__(self, parent, name, width, output=False):
         super().__init__(parent, name, width, output)
         self._port_driver = None  # The port that drives this port

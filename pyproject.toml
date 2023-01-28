@@ -22,7 +22,6 @@ sections = [
 [tool.pylint.'MESSAGES CONTROL']
 max-line-length = 99
 disable = """
-    missing-class-docstring,
     missing-function-docstring,
     no-member,
     invalid-name,

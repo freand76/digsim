@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" The application module for a GUI simulated circuit """
+""" An application model for a GUI simulated circuit """
 
 # pylint: disable=too-many-instance-attributes
 # pylint: disable=too-many-public-methods
@@ -27,6 +27,7 @@ from ._placed_yosys import PlacedYosys
 
 
 class AppModel(QThread):
+    """The application model class for a GUI simulated circuit"""
 
     sig_component_notify = Signal(Component)
     sig_control_notify = Signal(bool)
