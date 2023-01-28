@@ -1,6 +1,12 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+"""
+Example with a component created from a yosys netlist
+The yosys netlist is a 4 bit counter created from a verilog file.
+The example will generate a gtkwave file, 'counter.vcd'.
+"""
+
 import os
 
 from digsim.circuit import Circuit

@@ -1,6 +1,8 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" All classes within digsim.circuit.components namespace """
+
 from ._button import PushButton  # noqa: F401
 from ._clock import Clock  # noqa: F401
 from ._gates import AND, NAND, NOT, SR, XOR  # noqa: F401

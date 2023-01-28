@@ -1,6 +1,8 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" A 7-segment component placed in the GUI """
+
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QPainterPath
 
@@ -8,6 +10,7 @@ from ._placed_component import PlacedComponent
 
 
 class PlacedSevenSegment(PlacedComponent):
+    """The class for a 7-segment component placed in the GUI"""
 
     SEGMENT_TYPE_AND_POS = {
         "A": ("H", QPoint(3, 0)),

@@ -1,6 +1,8 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" Module with yosys atom component classes """
+
 # pylint: disable=too-many-arguments
 # pylint: disable=consider-using-in
 

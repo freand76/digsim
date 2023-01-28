@@ -1,10 +1,12 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" Module with 7-segment LED component """
 from .atoms import CallbackComponent, PortIn
 
 
 class SevenSegment(CallbackComponent):
+    """7-segment LED component class"""
 
     PORTLIST = ["A", "B", "C", "D", "E", "F", "G", "dot"]
 

@@ -1,6 +1,8 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" Pystest module to test functionality of gates """
+
 import pytest
 from digsim.circuit import Circuit
 from digsim.circuit.components import AND, NAND, NOT, XOR

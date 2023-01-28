@@ -1,6 +1,17 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+"""
+Example with a component created from a yosys netlist
+The yosys netlist is a 6502 CPU created from a verilog file.
+The 6502 is connected to two memory mapped components,
+one 64kByte memory and one memory mapped 'stdout' writer.
+The example code that is loaded into the memory before the
+simulation starts will send the characters 'Hello World' to
+the MemStdOut component.
+The example will generate a gtkwave file, '6502.vcd'.
+"""
+
 import os
 
 from digsim.circuit import Circuit

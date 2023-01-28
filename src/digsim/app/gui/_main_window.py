@@ -1,6 +1,8 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" The main window and widgets of the digsim gui application """
+
 # pylint: disable=too-few-public-methods
 
 from PySide6.QtCore import QMimeData, QSize, Qt

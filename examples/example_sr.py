@@ -1,6 +1,11 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+"""
+Basic example with two PushButtons connected to an SR component
+The example will generate a gtkwave file, 'sr.vcd'.
+"""
+
 from digsim.circuit import Circuit
 from digsim.circuit.components import SR, Led, PushButton
 

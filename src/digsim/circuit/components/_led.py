@@ -1,10 +1,14 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" Module with the LED component """
+
 from .atoms import CallbackComponent, PortIn
 
 
 class Led(CallbackComponent):
+    """LED component class"""
+
     def __init__(self, circuit, name="LED", callback=None):
         super().__init__(circuit, name, callback)
         self.add_port(PortIn(self, "I"))

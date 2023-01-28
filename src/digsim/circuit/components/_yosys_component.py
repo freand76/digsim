@@ -1,6 +1,11 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+"""
+Module with classes to create a yosys component
+from a yosys json netlist.
+"""
+
 # pylint: disable=protected-access
 # pylint: disable=too-many-instance-attributes
 
@@ -12,10 +17,12 @@ from .atoms import Component, MultiComponent, PortMultiBitWire, PortOut
 
 
 class YosysComponentException(Exception):
-    pass
+    """Yosys component exception class"""
 
 
 class StaticLevels(Component):
+    """Yosys component for static logic levels"""
+
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
         self.add_port(PortOut(self, "low"))
@@ -27,6 +34,8 @@ class StaticLevels(Component):
 
 
 class YosysComponent(MultiComponent):
+    """Class to create a yosys component from a yosys json netlist"""
+
     def __init__(self, circuit, name="Yosys", filename=None, nets=True):
         super().__init__(circuit, name)
         self._circuit = circuit

@@ -1,6 +1,12 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+"""
+Example that will create a circuit and store it as a json file.
+The example will generate a json circuit file 'pulse_circuit.json'
+and a gtkwave file, 'pulse.vcd'.
+"""
+
 from digsim.circuit import Circuit
 from digsim.circuit.components import AND, NOT, Led, PushButton
 

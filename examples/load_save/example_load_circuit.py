@@ -1,6 +1,11 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+"""
+Example that will load a previously stored circuit from a json file.
+The example will generate a gtkwave file, 'circuit.vcd'.
+"""
+
 import os
 
 from digsim import Circuit

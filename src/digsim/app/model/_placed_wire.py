@@ -1,6 +1,8 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" A wire placed in the GUI """
+
 import math
 
 from PySide6.QtCore import Qt
@@ -12,6 +14,8 @@ from ._placed_object import PlacedObject
 
 
 class PlacedWire(PlacedObject):
+    """The class for wire placed in the GUI"""
+
     WIRE_CLICK_CLOSE_PIXELS = 10
 
     def __init__(self, app_model, port_a, port_b=None, connect=True):

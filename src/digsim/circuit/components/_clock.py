@@ -1,10 +1,14 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" Clock component module """
+
 from .atoms import CallbackComponent, PortOut
 
 
 class Clock(CallbackComponent):
+    """Clock component class"""
+
     def __init__(self, circuit, frequency=1, name="Clock"):
         super().__init__(circuit, name)
         self._portout = PortOut(self, "O")

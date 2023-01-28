@@ -1,10 +1,14 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" A PushButton component """
+
 from .atoms import CallbackComponent, PortOut
 
 
 class PushButton(CallbackComponent):
+    """PushButton component class"""
+
     def __init__(self, circuit, name="PushButton", inverted=False):
         super().__init__(circuit, name)
         self._inverted = inverted

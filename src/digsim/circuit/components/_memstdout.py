@@ -1,10 +1,18 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+"""
+This module implements a synchronous memory mapped stdout output
+with 8-bit memory bus and 16-bit address bus.
+The address is listens to can be changed with the 'address' parameter.
+"""
+
 from digsim.circuit.components.atoms import Component, PortIn, PortWire
 
 
 class MemStdOut(Component):
+    """Synchronous memory mapped stdout class"""
+
     def __init__(self, circuit, address=0x8000):
         super().__init__(circuit, "MemStdOut")
         self._address = address

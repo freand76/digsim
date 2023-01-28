@@ -1,10 +1,14 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" Module with the basic logic gates """
+
 from .atoms import Component, MultiComponent, PortIn, PortOut, PortWire
 
 
 class NOT(Component):
+    """NOT logic gate"""
+
     def __init__(self, circuit, name="NOT"):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
@@ -19,7 +23,27 @@ class NOT(Component):
             self.Y.value = "X"
 
 
+class OR(Component):
+    """OR logic gate"""
+
+    def __init__(self, circuit, name="OR"):
+        super().__init__(circuit, name)
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
+
+    def update(self):
+        if self.A.value == 0 and self.B.value == 0:
+            self.Y.value = 0
+        elif 1 in (self.A.value, self.B.value):
+            self.Y.value = 1
+        else:
+            self.Y.value = "X"
+
+
 class AND(Component):
+    """AND logic gate"""
+
     def __init__(self, circuit, name="AND"):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
@@ -36,6 +60,8 @@ class AND(Component):
 
 
 class XOR(Component):
+    """XOR logic gate"""
+
     def __init__(self, circuit, name="XOR"):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
@@ -54,6 +80,8 @@ class XOR(Component):
 
 
 class NAND(Component):
+    """NAND logic gate"""
+
     def __init__(self, circuit, name="NAND"):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
@@ -69,7 +97,27 @@ class NAND(Component):
             self.Y.value = "X"
 
 
+class NOR(Component):
+    """NOR logic gate"""
+
+    def __init__(self, circuit, name="NOR"):
+        super().__init__(circuit, name)
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortOut(self, "Y"))
+
+    def update(self):
+        if self.A.value == 0 and self.B.value == 0:
+            self.Y.value = 1
+        elif 1 in (self.A.value, self.B.value):
+            self.Y.value = 0
+        else:
+            self.Y.value = "X"
+
+
 class SR(MultiComponent):
+    """SR logic gate composed of two NAND gates"""
+
     def __init__(self, circuit, name="SR"):
         super().__init__(circuit, name)
         _nands = NAND(circuit, name=f"{name}_S")

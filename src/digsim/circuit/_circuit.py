@@ -1,6 +1,10 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+"""
+Module that handles the circuit simulation of components
+"""
+
 # pylint: disable=too-many-public-methods
 
 import json
@@ -11,10 +15,15 @@ from .components.atoms import Component
 
 
 class CircuitError(Exception):
-    pass
+    """A circuit error class"""
 
 
 class CircuitEvent:
+    """
+    The circuit event class for storing the
+    delta events in the simulation.
+    """
+
     def __init__(self, time_ns, port, value):
         self._time_ns = time_ns
         self._port = port
@@ -44,6 +53,8 @@ class CircuitEvent:
 
 
 class Circuit:
+    """Class thay handles the circuit simulation"""
+
     def __init__(self, name=None, vcd=None):
         self._components = {}
         self._circuit_events = []

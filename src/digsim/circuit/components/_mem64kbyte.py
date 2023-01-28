@@ -1,10 +1,19 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+"""
+This module implements a 64kByte synchronous memory
+with 8-bit memory bus and 16-bit address bus.
+It cam be prefilled with binary data from 'rom_filename'
+starting at 'rom_address'.
+"""
+
 from digsim.circuit.components.atoms import Component, PortIn, PortOut, PortWire
 
 
 class Mem64kByte(Component):
+    """64kByte synchronous memory class"""
+
     def __init__(self, circuit, rom_filename=None, rom_address=0):
         super().__init__(circuit, "Memory")
         self.add_port(PortIn(self, "clk"))

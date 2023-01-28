@@ -1,10 +1,13 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" HexDigit component module """
+
 from .atoms import CallbackComponent, PortIn
 
 
 class HexDigit(CallbackComponent):
+    """HexDigit component class"""
 
     VAL_TO_SEGMENTS = {
         0: "ABCDEF",

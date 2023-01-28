@@ -1,10 +1,14 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" An On/Off Switch  component """
+
 from .atoms import CallbackComponent, PortOut
 
 
 class OnOffSwitch(CallbackComponent):
+    """On/Off Switch  component class"""
+
     def __init__(self, circuit, name="OnOffSwitch", start_on=False):
         super().__init__(circuit, name)
         portout = PortOut(self, "O", delay_ns=0)

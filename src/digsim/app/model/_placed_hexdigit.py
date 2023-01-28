@@ -1,12 +1,16 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+""" A hexdigit component placed in the GUI """
+
 from PySide6.QtCore import QPoint
 
 from ._placed_seven_segment import PlacedSevenSegment
 
 
 class PlacedHexDigit(PlacedSevenSegment):
+    """The class for a hexdigit component placed in the GUI"""
+
     def __init__(self, component, xpos, ypos):
         super().__init__(component, xpos, ypos)
         _, str_pixels_w, _ = self.get_port_display_name_metrics("val")

@@ -1,6 +1,10 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+"""
+Module that handles the creation of vcd files
+"""
+
 # pylint: disable=consider-using-with
 # pylint: disable=import-error
 
@@ -8,6 +12,8 @@ from vcd import VCDWriter
 
 
 class WavesWriter:
+    """Class that handles the creation of vcd files"""
+
     def __init__(self, filename):
         self._vcd_name = filename
         self._vcd_file = None

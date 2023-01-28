@@ -1,6 +1,11 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
+"""
+Basic example with a clock component connected to an LED component
+The example will generate a gtkwave file, 'clock.vcd'.
+"""
+
 from digsim.circuit import Circuit
 from digsim.circuit.components import Clock, Led
 
