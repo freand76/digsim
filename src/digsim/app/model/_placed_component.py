@@ -91,6 +91,44 @@ class PlacedComponent(PlacedObject):
             display_name_str,
         )
 
+    @classmethod
+    def paint_selectable_component(cls, painter, size, name):
+        """
+        Paint selectable component
+        use width x width (square) to paint component image
+        """
+        painter.setPen(Qt.darkGray)
+        painter.setBrush(Qt.darkGray)
+        painter.drawRoundedRect(5, 5, size.width() - 10, size.width() - 10, 5, 5)
+        painter.setPen(Qt.black)
+        font = QFont("Arial", 10)
+        fm = QFontMetrics(font)
+        text = "No Image"
+        str_pixels_w = fm.horizontalAdvance(text)
+        str_pixels_h = fm.height()
+        painter.setFont(font)
+        painter.drawText(
+            size.width() / 2 - str_pixels_w / 2,
+            size.height() / 2 - str_pixels_h / 2,
+            text,
+        )
+        cls.paint_selectable_component_name(painter, size, name)
+
+    @classmethod
+    def paint_selectable_component_name(cls, painter, size, name):
+        """Paint the name for the selectable component"""
+        font = QFont("Arial", 8)
+        fm = QFontMetrics(font)
+        str_pixels_w = fm.horizontalAdvance(name)
+        str_pixels_h = fm.height()
+        painter.setFont(font)
+        painter.setPen(Qt.black)
+        painter.drawText(
+            size.width() / 2 - str_pixels_w / 2,
+            size.height() - str_pixels_h,
+            name,
+        )
+
     def inport_x_pos(self):
         """Get the X position left of the input port"""
         return 1.5 * self.PORT_SIDE

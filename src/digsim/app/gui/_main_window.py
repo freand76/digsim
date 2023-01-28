@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from digsim.app.model import PlacedComponent, PlacedHexDigit, PlacedSevenSegment
+
 
 class ComponentWidget(QPushButton):
     """A component widget, a 'clickable' widget with a custom paintEvent"""
@@ -223,15 +225,18 @@ class SelectableComponentWidget(QPushButton):
     this is the component widget than can be dragged into the circuit area.
     """
 
-    def __init__(self, app_model, name, parent):
+    def __init__(self, name, parent, paint_class=PlacedComponent, display_name=None):
         super().__init__(parent)
-        self._app_model = app_model
         self._name = name
-        self.setText(name)
+        self._paint_class = paint_class
+        if display_name is not None:
+            self._display_name = display_name
+        else:
+            self._display_name = name
 
     def sizeHint(self):
         """QT event callback function"""
-        return QSize(70, 70)
+        return QSize(80, 105)
 
     def mousePressEvent(self, event):
         """QT event callback function"""
@@ -241,10 +246,18 @@ class SelectableComponentWidget(QPushButton):
             mime.setText(self._name)
             drag.setMimeData(mime)
             drag.setHotSpot(event.pos() - self.rect().topLeft())
-            pixmap = QPixmap(self.size())
+            pixmap = QPixmap(self.size().width(), self.size().width())
             self.render(pixmap)
             drag.setPixmap(pixmap)
             drag.exec_(Qt.CopyAction | Qt.MoveAction, Qt.CopyAction)
+
+    def paintEvent(self, event):
+        """QT event callback function"""
+        if self._paint_class is None:
+            super().paintEvent(event)
+        else:
+            painter = QPainter(self)
+            self._paint_class.paint_selectable_component(painter, self.size(), self._display_name)
 
 
 class ComponentSelection(QWidget):
@@ -259,22 +272,30 @@ class ComponentSelection(QWidget):
         self.setLayout(QVBoxLayout(self))
         self.layout().setContentsMargins(5, 5, 5, 5)
         self.layout().setSpacing(5)
-        self.layout().addWidget(SelectableComponentWidget(app_model, "OR", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "AND", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "NOT", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "XOR", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "NAND", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "NOR", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "DFF", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "VDD", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "GND", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "Clock", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "PushButton", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "OnOffSwitch", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "SevenSegment", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "HexDigit", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "Led", self))
-        self.layout().addWidget(SelectableComponentWidget(app_model, "YosysComponent", self))
+        self.layout().addWidget(SelectableComponentWidget("OR", self))
+        self.layout().addWidget(SelectableComponentWidget("AND", self))
+        self.layout().addWidget(SelectableComponentWidget("NOT", self))
+        self.layout().addWidget(SelectableComponentWidget("XOR", self))
+        self.layout().addWidget(SelectableComponentWidget("NAND", self))
+        self.layout().addWidget(SelectableComponentWidget("NOR", self))
+        self.layout().addWidget(SelectableComponentWidget("DFF", self))
+        self.layout().addWidget(SelectableComponentWidget("VDD", self))
+        self.layout().addWidget(SelectableComponentWidget("GND", self))
+        self.layout().addWidget(SelectableComponentWidget("Clock", self))
+        self.layout().addWidget(SelectableComponentWidget("PushButton", self))
+        self.layout().addWidget(SelectableComponentWidget("OnOffSwitch", self))
+        self.layout().addWidget(
+            SelectableComponentWidget(
+                "SevenSegment", self, PlacedSevenSegment, display_name="7-Seg"
+            )
+        )
+        self.layout().addWidget(
+            SelectableComponentWidget("HexDigit", self, PlacedHexDigit, display_name="Hex-digit")
+        )
+        self.layout().addWidget(SelectableComponentWidget("Led", self))
+        self.layout().addWidget(
+            SelectableComponentWidget("YosysComponent", self, display_name="Yosys")
+        )
 
 
 class CircuitEditor(QSplitter):
@@ -293,7 +314,7 @@ class CircuitEditor(QSplitter):
 
         selection_panel = ComponentSelection(app_model, self)
         self._selection_area = QScrollArea(self)
-        self._selection_area.setFixedWidth(96)
+        self._selection_area.setFixedWidth(106)
         self._selection_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self._selection_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self._selection_area.setWidget(selection_panel)

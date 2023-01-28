@@ -32,3 +32,7 @@ class PlacedHexDigit(PlacedSevenSegment):
                 self.digit_top,
                 active_segments,
             )
+
+    @classmethod
+    def paint_selectable_component(cls, painter, size, name):
+        cls.paint_selectable_digit(painter, size, name, "ABDEG")

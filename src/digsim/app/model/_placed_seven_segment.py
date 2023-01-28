@@ -61,6 +61,18 @@ class PlacedSevenSegment(PlacedComponent):
         self.draw_digit(painter, self.digit_left, digit_ypos, active_segments)
 
     @classmethod
+    def paint_selectable_component(cls, painter, size, name):
+        cls.paint_selectable_digit(painter, size, name, "ADEFG")
+
+    @classmethod
+    def paint_selectable_digit(cls, painter, size, name, segments):
+        """Paint a digit (for selectable component in gui"""
+        xpos = size.width() / 2 - cls.DIGIT_WIDTH / 2
+        cls.paint_digit_rect(painter, xpos, 0)
+        cls.draw_digit(painter, xpos, 0, segments)
+        cls.paint_selectable_component_name(painter, size, name)
+
+    @classmethod
     def paint_digit_rect(cls, painter, xpos, ypos, digits=1):
         """Paint the digit background"""
         painter.setBrush(Qt.SolidPattern)
