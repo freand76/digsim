@@ -5,8 +5,8 @@
 
 import os
 
-from PySide6.QtCore import QPoint
-from PySide6.QtGui import QPixmap
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtGui import QPen, QPixmap
 
 from ._placed_component import PlacedComponent
 
@@ -53,7 +53,7 @@ class PlacedImageComponent(PlacedComponent):
     @classmethod
     def paint_pixmap(cls, painter, xpos, ypos, active=False):
         """Paint the pixmap"""
-        pixmap = cls._pixmap_active if active else cls._pixmap
+        pixmap = cls._pixmap_active if active and cls._pixmap_active is not None else cls._pixmap
         painter.drawPixmap(QPoint(xpos, ypos), pixmap)
 
 
@@ -102,8 +102,43 @@ class PlacedImageComponentDFF(PlacedImageComponent):
 class PlacedImageComponentOnOffSwitch(PlacedImageComponent):
     """The class for a DFF image component placed in the GUI"""
 
-    IMAGE_FILENAME = "images/OFF.png"
-    ACTIVE_IMAGE_FILENAME = "images/ON.png"
+    IMAGE_FILENAME = "images/Switch_OFF.png"
+    ACTIVE_IMAGE_FILENAME = "images/Switch_ON.png"
 
     def __init__(self, component, xpos, ypos):
         super().__init__(component, xpos, ypos, show_name=False)
+
+
+class PlacedImageComponentPushButton(PlacedImageComponent):
+    """The class for a DFF image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/PB_OFF.png"
+    ACTIVE_IMAGE_FILENAME = "images/PB_ON.png"
+
+    def __init__(self, component, xpos, ypos):
+        super().__init__(component, xpos, ypos, show_name=False)
+
+
+class PlacedImageComponentClock(PlacedImageComponent):
+    """The class for a DFF image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/Clock.png"
+
+    def __init__(self, component, xpos, ypos):
+        super().__init__(component, xpos, ypos, show_name=False)
+
+    def paint_component(self, painter):
+        super().paint_component(painter)
+        if self.component.active:
+            active_rect = self.get_rect().adjusted(
+                (self.DEFAULT_WIDTH - 80) / 2,
+                (self.DEFAULT_HEIGHT - 80) / 2,
+                -(self.DEFAULT_WIDTH - 80) / 2,
+                -(self.DEFAULT_HEIGHT - 80) / 2,
+            )
+            pen = QPen()
+            pen.setWidth(4)
+            pen.setColor(Qt.green)
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+            painter.drawRoundedRect(active_rect, 5, 5)

@@ -7,12 +7,14 @@ from ._placed_component import PlacedComponent
 from ._placed_hexdigit import PlacedHexDigit
 from ._placed_image_component import (
     PlacedImageComponentAND,
+    PlacedImageComponentClock,
     PlacedImageComponentDFF,
     PlacedImageComponentNAND,
     PlacedImageComponentNOR,
     PlacedImageComponentNOT,
     PlacedImageComponentOnOffSwitch,
     PlacedImageComponentOR,
+    PlacedImageComponentPushButton,
     PlacedImageComponentXOR,
 )
 from ._placed_seven_segment import PlacedSevenSegment
@@ -21,15 +23,17 @@ from ._placed_yosys import PlacedYosys
 
 CLASS_NAME_TO_PLACED_COMPONENT = {
     "AND": PlacedImageComponentAND,
+    "Clock": PlacedImageComponentClock,
     "DFF": PlacedImageComponentDFF,
+    "HexDigit": PlacedHexDigit,
     "NAND": PlacedImageComponentNAND,
     "NOR": PlacedImageComponentNOR,
     "NOT": PlacedImageComponentNOT,
     "OR": PlacedImageComponentOR,
-    "XOR": PlacedImageComponentXOR,
     "OnOffSwitch": PlacedImageComponentOnOffSwitch,
-    "HexDigit": PlacedHexDigit,
+    "PushButton": PlacedImageComponentPushButton,
     "SevenSegment": PlacedSevenSegment,
+    "XOR": PlacedImageComponentXOR,
     "Yosys": PlacedYosys,
 }
 
