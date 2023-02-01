@@ -16,34 +16,11 @@ from PySide6.QtCore import QThread, Signal
 
 import digsim.circuit.components
 from digsim.circuit import Circuit
-from digsim.circuit.components import (
-    AND,
-    DFF,
-    NAND,
-    NOR,
-    NOT,
-    OR,
-    XOR,
-    HexDigit,
-    SevenSegment,
-    YosysComponent,
-)
 from digsim.circuit.components.atoms import CallbackComponent, Component, PortConnectionError
 
 from ._placed_component import PlacedComponent
-from ._placed_hexdigit import PlacedHexDigit
-from ._placed_image_component import (
-    PlacedImageComponentAND,
-    PlacedImageComponentDFF,
-    PlacedImageComponentNAND,
-    PlacedImageComponentNOR,
-    PlacedImageComponentNOT,
-    PlacedImageComponentOR,
-    PlacedImageComponentXOR,
-)
-from ._placed_seven_segment import PlacedSevenSegment
+from ._placed_component_factory import get_placed_component_by_name  # noqa: F401
 from ._placed_wire import PlacedWire
-from ._placed_yosys import PlacedYosys
 
 
 class AppModel(QThread):
@@ -104,33 +81,11 @@ class AppModel(QThread):
 
     def add_component(self, component, xpos, ypos):
         """Add placed component in position"""
-        if isinstance(component, AND):
-            placed_component = PlacedImageComponentAND(component, xpos, ypos)
-        elif isinstance(component, OR):
-            placed_component = PlacedImageComponentOR(component, xpos, ypos)
-        elif isinstance(component, NAND):
-            placed_component = PlacedImageComponentNAND(component, xpos, ypos)
-        elif isinstance(component, NOR):
-            placed_component = PlacedImageComponentNOR(component, xpos, ypos)
-        elif isinstance(component, XOR):
-            placed_component = PlacedImageComponentXOR(component, xpos, ypos)
-        elif isinstance(component, NOT):
-            placed_component = PlacedImageComponentNOT(component, xpos, ypos)
-        elif isinstance(component, DFF):
-            placed_component = PlacedImageComponentDFF(component, xpos, ypos)
-        elif isinstance(component, HexDigit):
-            placed_component = PlacedHexDigit(component, xpos, ypos)
-        elif isinstance(component, SevenSegment):
-            placed_component = PlacedSevenSegment(component, xpos, ypos)
-        elif isinstance(component, YosysComponent):
-            placed_component = PlacedYosys(component, xpos, ypos)
-        else:
-            placed_component = PlacedComponent(component, xpos, ypos)
-
-        self._placed_components[component] = placed_component
+        placed_component_class = get_placed_component_by_name(type(component).__name__)
+        self._placed_components[component] = placed_component_class(component, xpos, ypos)
         if isinstance(component, CallbackComponent):
             component.set_callback(partial(AppModel.comp_cb, self))
-        return placed_component
+        return self._placed_components[component]
 
     def add_wire(self, src_port, dst_port, connect=True):
         """Add placed wire between source and destination port"""

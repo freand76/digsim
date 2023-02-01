@@ -15,35 +15,46 @@ class PlacedImageComponent(PlacedComponent):
     """The class for a image component placed in the GUI"""
 
     IMAGE_FILENAME = None
+    ACTIVE_IMAGE_FILENAME = None
     _pixmap = None
+    _pixmap_active = None
+
+    def __init__(self, component, xpos, ypos, show_name=True):
+        super().__init__(component, xpos, ypos)
+        self._show_name = show_name
 
     @classmethod
-    def get_pixmap(cls):
+    def get_pixmap(cls, active=False):
         """Load the pixmap at first use"""
-        if cls._pixmap is None:
+        if active and cls.ACTIVE_IMAGE_FILENAME is not None and cls._pixmap_active is None:
+            cls._pixmap_active = QPixmap(
+                f"{os.path.dirname(__file__)}/{cls.ACTIVE_IMAGE_FILENAME}"
+            )
+        elif not active and cls.IMAGE_FILENAME is not None and cls._pixmap is None:
             cls._pixmap = QPixmap(f"{os.path.dirname(__file__)}/{cls.IMAGE_FILENAME}")
-            print("LOAD", cls._pixmap)
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
-        self.get_pixmap()
+        self.get_pixmap(self.component.active)
         xpos = self.size.width() / 2 - self._pixmap.width() / 2
         ypos = self.size.height() / 2 - self._pixmap.height() / 2
-        self.paint_pixmap(painter, xpos, ypos)
-        self.paint_selectable_component_name(painter, self.size, self.component.display_name())
+        self.paint_pixmap(painter, xpos, ypos, self.component.active)
+        if self._show_name:
+            self.paint_selectable_component_name(painter, self.size, self.component.display_name())
 
     @classmethod
-    def paint_selectable_component(cls, painter, size, name):
+    def paint_selectable_component(cls, painter, size, name, active=False):
         cls.paint_selectable_component_name(painter, size, name)
-        cls.get_pixmap()
+        cls.get_pixmap(active)
         xpos = size.width() / 2 - cls._pixmap.width() / 2
         ypos = size.width() / 2 - cls._pixmap.height() / 2
         cls.paint_pixmap(painter, xpos, ypos)
 
     @classmethod
-    def paint_pixmap(cls, painter, xpos, ypos):
+    def paint_pixmap(cls, painter, xpos, ypos, active=False):
         """Paint the pixmap"""
-        painter.drawPixmap(QPoint(xpos, ypos), cls._pixmap)
+        pixmap = cls._pixmap_active if active else cls._pixmap
+        painter.drawPixmap(QPoint(xpos, ypos), pixmap)
 
 
 class PlacedImageComponentAND(PlacedImageComponent):
@@ -86,3 +97,13 @@ class PlacedImageComponentDFF(PlacedImageComponent):
     """The class for a DFF image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/DFF.png"
+
+
+class PlacedImageComponentOnOffSwitch(PlacedImageComponent):
+    """The class for a DFF image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/OFF.png"
+    ACTIVE_IMAGE_FILENAME = "images/ON.png"
+
+    def __init__(self, component, xpos, ypos):
+        super().__init__(component, xpos, ypos, show_name=False)

@@ -70,15 +70,17 @@ class PlacedComponent(PlacedObject):
         pen.setColor(Qt.black)
         painter.setPen(pen)
         painter.setBrush(Qt.SolidPattern)
-        if self.component.active:
-            painter.setBrush(Qt.green)
-        else:
-            painter.setBrush(Qt.gray)
+        painter.setBrush(Qt.gray)
         painter.drawRoundedRect(comp_rect, 5, 5)
 
     def paint_component(self, painter):
         """Paint component"""
         self.paint_component_base(painter)
+        if self.component.active:
+            painter.setPen(Qt.black)
+            painter.setBrush(Qt.SolidPattern)
+            painter.setBrush(Qt.green)
+            painter.drawRoundedRect(self.get_rect(), 5, 5)
         font = QFont("Arial", 10)
         painter.setFont(font)
         fm = QFontMetrics(font)

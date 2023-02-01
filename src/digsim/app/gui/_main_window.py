@@ -20,18 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from digsim.app.model import (
-    PlacedComponent,
-    PlacedHexDigit,
-    PlacedImageComponentAND,
-    PlacedImageComponentDFF,
-    PlacedImageComponentNAND,
-    PlacedImageComponentNOR,
-    PlacedImageComponentNOT,
-    PlacedImageComponentOR,
-    PlacedImageComponentXOR,
-    PlacedSevenSegment,
-)
+from digsim.app.model import get_placed_component_by_name
 
 
 class ComponentWidget(QPushButton):
@@ -236,10 +225,10 @@ class SelectableComponentWidget(QPushButton):
     this is the component widget than can be dragged into the circuit area.
     """
 
-    def __init__(self, name, parent, paint_class=PlacedComponent, display_name=None):
+    def __init__(self, name, parent, display_name=None):
         super().__init__(parent)
         self._name = name
-        self._paint_class = paint_class
+        self._paint_class = get_placed_component_by_name(name)
         if display_name is not None:
             self._display_name = display_name
         else:
@@ -283,25 +272,23 @@ class ComponentSelection(QWidget):
         self.setLayout(QVBoxLayout(self))
         self.layout().setContentsMargins(5, 5, 5, 5)
         self.layout().setSpacing(5)
-        self.layout().addWidget(SelectableComponentWidget("OR", self, PlacedImageComponentOR))
-        self.layout().addWidget(SelectableComponentWidget("AND", self, PlacedImageComponentAND))
-        self.layout().addWidget(SelectableComponentWidget("NOT", self, PlacedImageComponentNOT))
-        self.layout().addWidget(SelectableComponentWidget("XOR", self, PlacedImageComponentXOR))
-        self.layout().addWidget(SelectableComponentWidget("NAND", self, PlacedImageComponentNAND))
-        self.layout().addWidget(SelectableComponentWidget("NOR", self, PlacedImageComponentNOR))
-        self.layout().addWidget(SelectableComponentWidget("DFF", self, PlacedImageComponentDFF))
+        self.layout().addWidget(SelectableComponentWidget("OR", self))
+        self.layout().addWidget(SelectableComponentWidget("AND", self))
+        self.layout().addWidget(SelectableComponentWidget("NOT", self))
+        self.layout().addWidget(SelectableComponentWidget("XOR", self))
+        self.layout().addWidget(SelectableComponentWidget("NAND", self))
+        self.layout().addWidget(SelectableComponentWidget("NOR", self))
+        self.layout().addWidget(SelectableComponentWidget("DFF", self))
         self.layout().addWidget(SelectableComponentWidget("VDD", self))
         self.layout().addWidget(SelectableComponentWidget("GND", self))
         self.layout().addWidget(SelectableComponentWidget("Clock", self))
         self.layout().addWidget(SelectableComponentWidget("PushButton", self))
         self.layout().addWidget(SelectableComponentWidget("OnOffSwitch", self))
         self.layout().addWidget(
-            SelectableComponentWidget(
-                "SevenSegment", self, PlacedSevenSegment, display_name="7-Seg"
-            )
+            SelectableComponentWidget("SevenSegment", self, display_name="7-Seg")
         )
         self.layout().addWidget(
-            SelectableComponentWidget("HexDigit", self, PlacedHexDigit, display_name="Hex-digit")
+            SelectableComponentWidget("HexDigit", self, display_name="Hex-digit")
         )
         self.layout().addWidget(SelectableComponentWidget("Led", self))
         self.layout().addWidget(
