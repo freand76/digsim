@@ -55,7 +55,7 @@ class PlacedSevenSegment(PlacedComponent):
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
-        digit_ypos = self._height / 2 - self.DIGIT_HEIGHT / 2 + self.RECT_TO_DIGIT_RECT_MARGIN
+        digit_ypos = self._height / 2 - self.DIGIT_HEIGHT / 2
         self.paint_digit_rect(painter, self.digit_left, digit_ypos)
         active_segments = self.component.segments()
         self.draw_digit(painter, self.digit_left, digit_ypos, active_segments)
