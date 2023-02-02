@@ -99,14 +99,41 @@ class PlacedImageComponentDFF(PlacedImageComponent):
     IMAGE_FILENAME = "images/DFF.png"
 
 
+class PlacedImageComponentGND(PlacedImageComponent):
+    """The class for a Logic Zero image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/ZERO.png"
+
+    def __init__(self, component, xpos, ypos):
+        super().__init__(component, xpos, ypos, show_name=False)
+
+
+class PlacedImageComponentVDD(PlacedImageComponent):
+    """The class for a Logic One image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/ONE.png"
+
+    def __init__(self, component, xpos, ypos):
+        super().__init__(component, xpos, ypos, show_name=False)
+
+
 class PlacedImageComponentLed(PlacedImageComponent):
-    """The class for a On/Off-Switch image component placed in the GUI"""
+    """The class for a Led image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/LED_OFF.png"
     ACTIVE_IMAGE_FILENAME = "images/LED_ON.png"
 
     def __init__(self, component, xpos, ypos):
         super().__init__(component, xpos, ypos, show_name=False)
+
+
+class PlacedImageComponentYosys(PlacedImageComponent):
+    """The class for a Yosys image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/YOSYS.png"
+
+    def paint_component(self, painter):
+        PlacedComponent.paint_component(self, painter)
 
 
 class PlacedImageComponentPushButton(PlacedImageComponent):
