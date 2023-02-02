@@ -9,6 +9,7 @@ from ._placed_image_component import (
     PlacedImageComponentAND,
     PlacedImageComponentClock,
     PlacedImageComponentDFF,
+    PlacedImageComponentLed,
     PlacedImageComponentNAND,
     PlacedImageComponentNOR,
     PlacedImageComponentNOT,
@@ -22,10 +23,10 @@ from ._placed_yosys import PlacedYosys
 
 
 CLASS_NAME_TO_PLACED_COMPONENT = {
-    "AND": PlacedImageComponentAND,
     "Clock": PlacedImageComponentClock,
     "DFF": PlacedImageComponentDFF,
     "HexDigit": PlacedHexDigit,
+    "Led": PlacedImageComponentLed,
     "NAND": PlacedImageComponentNAND,
     "NOR": PlacedImageComponentNOR,
     "NOT": PlacedImageComponentNOT,
@@ -35,6 +36,7 @@ CLASS_NAME_TO_PLACED_COMPONENT = {
     "SevenSegment": PlacedSevenSegment,
     "XOR": PlacedImageComponentXOR,
     "Yosys": PlacedYosys,
+    "AND": PlacedImageComponentAND,
 }
 
 

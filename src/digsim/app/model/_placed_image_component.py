@@ -99,6 +99,16 @@ class PlacedImageComponentDFF(PlacedImageComponent):
     IMAGE_FILENAME = "images/DFF.png"
 
 
+class PlacedImageComponentLed(PlacedImageComponent):
+    """The class for a On/Off-Switch image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/LED_OFF.png"
+    ACTIVE_IMAGE_FILENAME = "images/LED_ON.png"
+
+    def __init__(self, component, xpos, ypos):
+        super().__init__(component, xpos, ypos, show_name=False)
+
+
 class PlacedImageComponentPushButton(PlacedImageComponent):
     """The class for a PushButton image component placed in the GUI"""
 
