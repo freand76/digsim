@@ -99,8 +99,52 @@ class PlacedImageComponentDFF(PlacedImageComponent):
     IMAGE_FILENAME = "images/DFF.png"
 
 
-class PlacedImageComponentOnOffSwitch(PlacedImageComponent):
-    """The class for a DFF image component placed in the GUI"""
+class PlacedImageComponentPushButton(PlacedImageComponent):
+    """The class for a PushButton image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/PB.png"
+    BUTTON_RADIUS = 35
+
+    def __init__(self, component, xpos, ypos):
+        super().__init__(component, xpos, ypos, show_name=False)
+
+    def paint_component(self, painter):
+        super().paint_component(painter)
+        if self.component.active:
+            pen = QPen()
+            pen.setWidth(4)
+            pen.setColor(Qt.green)
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+            painter.drawEllipse(
+                self._width / 2 - self.BUTTON_RADIUS,
+                self._height / 2 - self.BUTTON_RADIUS,
+                self.BUTTON_RADIUS * 2,
+                self.BUTTON_RADIUS * 2,
+            )
+
+
+class PlacedImageComponentWithActiveRect(PlacedImageComponent):
+    """
+    A base class for a image component placed in the GUI.
+    When active the image will have a green border painted around it.
+    """
+
+    def paint_component(self, painter):
+        super().paint_component(painter)
+        if self.component.active:
+            xpos = self.size.width() / 2 - self._pixmap.width() / 2
+            ypos = self.size.height() / 2 - self._pixmap.height() / 2
+            pen = QPen()
+            pen.setWidth(4)
+            pen.setColor(Qt.green)
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+            painter.drawRoundedRect(xpos, ypos, self._pixmap.width(), self._pixmap.height(), 5, 5)
+
+
+class PlacedImageComponentOnOffSwitch(PlacedImageComponentWithActiveRect):
+    """The class for a On/Off-Switch image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/Switch_OFF.png"
     ACTIVE_IMAGE_FILENAME = "images/Switch_ON.png"
@@ -109,36 +153,10 @@ class PlacedImageComponentOnOffSwitch(PlacedImageComponent):
         super().__init__(component, xpos, ypos, show_name=False)
 
 
-class PlacedImageComponentPushButton(PlacedImageComponent):
-    """The class for a DFF image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/PB_OFF.png"
-    ACTIVE_IMAGE_FILENAME = "images/PB_ON.png"
-
-    def __init__(self, component, xpos, ypos):
-        super().__init__(component, xpos, ypos, show_name=False)
-
-
-class PlacedImageComponentClock(PlacedImageComponent):
+class PlacedImageComponentClock(PlacedImageComponentWithActiveRect):
     """The class for a DFF image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/Clock.png"
 
     def __init__(self, component, xpos, ypos):
         super().__init__(component, xpos, ypos, show_name=False)
-
-    def paint_component(self, painter):
-        super().paint_component(painter)
-        if self.component.active:
-            active_rect = self.get_rect().adjusted(
-                (self.DEFAULT_WIDTH - 80) / 2,
-                (self.DEFAULT_HEIGHT - 80) / 2,
-                -(self.DEFAULT_WIDTH - 80) / 2,
-                -(self.DEFAULT_HEIGHT - 80) / 2,
-            )
-            pen = QPen()
-            pen.setWidth(4)
-            pen.setColor(Qt.green)
-            painter.setPen(pen)
-            painter.setBrush(Qt.NoBrush)
-            painter.drawRoundedRect(active_rect, 5, 5)
