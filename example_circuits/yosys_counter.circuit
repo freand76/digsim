@@ -37,6 +37,12 @@
                 "display_name": "OnOffSwitch",
                 "type": "digsim.circuit.components.OnOffSwitch",
                 "settings": {}
+            },
+            {
+                "name": "Led",
+                "display_name": "Led",
+                "type": "digsim.circuit.components.Led",
+                "settings": {}
             }
         ],
         "wires": [
@@ -47,6 +53,10 @@
             {
                 "src": "Clock_1.O",
                 "dst": "YosysComponent_0.clk"
+            },
+            {
+                "src": "Clock_1.O",
+                "dst": "Led.I"
             },
             {
                 "src": "PushButton_2.O",
@@ -64,24 +74,28 @@
     },
     "gui": {
         "YosysComponent_0": {
-            "x": 458,
-            "y": 206
+            "x": 450,
+            "y": 250
         },
         "Clock_1": {
-            "x": 119,
-            "y": 64
+            "x": 120,
+            "y": 100
         },
         "PushButton_2": {
-            "x": 118,
-            "y": 254
+            "x": 120,
+            "y": 250
         },
         "HexDigit_4": {
-            "x": 822,
-            "y": 383
+            "x": 750,
+            "y": 370
         },
         "OnOffSwitch": {
-            "x": 119,
-            "y": 436
+            "x": 120,
+            "y": 400
+        },
+        "Led": {
+            "x": 451,
+            "y": 100
         }
     }
 }
