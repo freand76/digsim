@@ -210,6 +210,10 @@ class MultiComponent(Component):
         super().__init__(circuit, name)
         self._components = []
 
+    def init(self):
+        for component in self._components:
+            component.init()
+
     def add(self, component):
         """Add sub-component to MultiComponent"""
         self._components.append(component)

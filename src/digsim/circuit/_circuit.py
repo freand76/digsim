@@ -170,7 +170,10 @@ class Circuit:
         if stop_time_ns is None or self._circuit_events[0].time_ns > stop_time_ns:
             return False
         event = self._circuit_events.pop(0)
-        # print(f"Execute event {event.port.path()}.{event.port.name()} {event.time_ns}")
+        # print(
+        #     f"Execute event {event.port.path()}.{event.port.name()}"
+        #     " {event.time_ns} {event.value}"
+        # )
         self._time_ns = event.time_ns
         event.port.delta_cycle(event.value)
         if self._vcd is not None:
@@ -285,8 +288,9 @@ class Circuit:
         with open(filename, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)
 
-    def from_json_file(self, filename):
+    def from_json_file(self, filename, folder=None):
         """Load circuit from json file"""
+        self._folder = folder
         with open(filename, mode="r", encoding="utf-8") as json_file:
             circuit_dict = json.load(json_file)
-            self.from_dict(circuit_dict)
+            self.from_dict(circuit_dict, folder)

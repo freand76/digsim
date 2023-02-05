@@ -69,6 +69,8 @@ class Port(abc.ABC):
     def init(self):
         """Initialize port, will be called when compponent/circuit is initialized"""
         self._value = "X"
+        self._edge_detect_value = "X"
+        self.update_wires("X")
 
     def name(self):
         """Get port name"""
@@ -295,6 +297,13 @@ class PortMultiBitWire(Port):
             bit_val = (value >> bit_id) & 1
             bit.value = bit_val
 
+    def get_wires(self):
+        wires = super().get_wires()
+        # Needed to update vcd, but breaks update
+        # for bit in self._bits:
+        #    wires.extend(bit.get_wires())
+        return wires
+
     def set_driver(self, port):
         """Set port driver"""
         self._port_driver = port
@@ -319,7 +328,7 @@ class PortMultiBitWire(Port):
                 return
         value = 0
         for bit_id, bit in enumerate(self._bits):
-            value = value | bit.value << bit_id
+            value = value | (bit.value << bit_id)
         self.update_wires(value)
         # Send event just to update waves
         self.parent().add_event(self, value, 0)

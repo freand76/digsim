@@ -54,6 +54,7 @@ class _ALDFFE_(ClassNameParameterComponent):
         self._old_C_level = self.C.value
 
     def init(self):
+        super().init()
         self.Q.value = self._reset_level
 
     def update(self):
@@ -120,6 +121,7 @@ class _ALDFF_(ClassNameParameterComponent):
         self._old_C_level = self.C.value
 
     def init(self):
+        super().init()
         self.Q.value = 0
 
     def update(self):
@@ -179,6 +181,7 @@ class _DFFE4_(ClassNameParameterComponent):
         self._old_C_level = self.C.value
 
     def init(self):
+        super().init()
         self.Q.value = 0
 
     def update(self):
@@ -275,6 +278,7 @@ class _DFFE2_(ClassNameParameterComponent):
         self._old_C_level = self.C.value
 
     def init(self):
+        super().init()
         self.Q.value = 0
 
     def update(self):
@@ -317,6 +321,7 @@ class _DFF_(ClassNameParameterComponent):
         self._old_C_level = self.C.value
 
     def init(self):
+        super().init()
         self.Q.value = 0
 
     def update(self):
@@ -366,6 +371,7 @@ class _SDFF_(ClassNameParameterComponent):
         self._old_C_level = self.C.value
 
     def init(self):
+        super().init()
         self.Q.value = 0
 
     def update(self):
@@ -468,6 +474,7 @@ class _SDFFCE_(ClassNameParameterComponent):
         self._old_C_level = self.C.value
 
     def init(self):
+        super().init()
         self.Q.value = 0
 
     def update(self):
@@ -577,6 +584,7 @@ class _SDFFE_(ClassNameParameterComponent):
         self._old_C_level = self.C.value
 
     def init(self):
+        super().init()
         self.Q.value = 0
 
     def update(self):
