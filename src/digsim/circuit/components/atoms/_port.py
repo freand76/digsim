@@ -96,6 +96,13 @@ class Port(abc.ABC):
         """Get connected ports"""
         return self._wired_ports
 
+    def get_wired_ports_recursive(self):
+        """Get all connected ports (recursive)"""
+        all_wired_ports = [self]
+        for port in self._wired_ports:
+            all_wired_ports.extend(port.get_wired_ports_recursive())
+        return all_wired_ports
+
     def is_output(self):
         """Return True if this port is an output port"""
         return self._output
@@ -299,10 +306,13 @@ class PortMultiBitWire(Port):
 
     def get_wires(self):
         wires = super().get_wires()
-        # Needed to update vcd, but breaks update
-        # for bit in self._bits:
-        #    wires.extend(bit.get_wires())
         return wires
+
+    def get_wired_ports_recursive(self):
+        all_wired_ports = super().get_wired_ports_recursive()
+        for bit in self._bits:
+            all_wired_ports.extend(bit.get_wired_ports_recursive())
+        return all_wired_ports
 
     def set_driver(self, port):
         """Set port driver"""
