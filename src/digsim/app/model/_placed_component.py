@@ -3,6 +3,8 @@
 
 """ A component placed in the GUI """
 
+import abc
+
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPen
 
@@ -29,6 +31,10 @@ class PlacedComponent(PlacedObject):
         self._port_rects = {}
         self._port_display_name = {}
         self.update_ports()
+
+    def center(self):
+        """move component so pos is center instead of top-left corner"""
+        self._pos = self._pos - QPoint(self._width / 2, self._height / 2)
 
     def update_ports(self):
         """Update port positions for the placed component"""
@@ -59,6 +65,20 @@ class PlacedComponent(PlacedObject):
         str_pixels_h = fm.height()
         return display_name_str, str_pixels_w, str_pixels_h
 
+    def paint_component_name(self, painter):
+        """Paint the component name"""
+        font = QFont("Arial", 10)
+        painter.setFont(font)
+        fm = QFontMetrics(font)
+        display_name_str = self._component.display_name()
+        str_pixels_w = fm.horizontalAdvance(display_name_str)
+        str_pixels_h = fm.height()
+        painter.drawText(
+            self.get_rect().x() + self.get_rect().width() / 2 - str_pixels_w / 2,
+            self.get_rect().y() + str_pixels_h,
+            display_name_str,
+        )
+
     def paint_component_base(self, painter):
         """Paint component base rect"""
         comp_rect = self.get_rect()
@@ -73,48 +93,17 @@ class PlacedComponent(PlacedObject):
         painter.setBrush(Qt.gray)
         painter.drawRoundedRect(comp_rect, 5, 5)
 
+    @abc.abstractmethod
     def paint_component(self, painter):
         """Paint component"""
-        self.paint_component_base(painter)
-        if self.component.active:
-            painter.setPen(Qt.black)
-            painter.setBrush(Qt.SolidPattern)
-            painter.setBrush(Qt.green)
-            painter.drawRoundedRect(self.get_rect(), 5, 5)
-        font = QFont("Arial", 10)
-        painter.setFont(font)
-        fm = QFontMetrics(font)
-        display_name_str = self._component.display_name()
-        str_pixels_w = fm.horizontalAdvance(display_name_str)
-        str_pixels_h = fm.height()
-        painter.drawText(
-            self.get_rect().x() + self.get_rect().width() / 2 - str_pixels_w / 2,
-            self.get_rect().y() + str_pixels_h,
-            display_name_str,
-        )
 
     @classmethod
+    @abc.abstractmethod
     def paint_selectable_component(cls, painter, size, name):
         """
         Paint selectable component
         use width x width (square) to paint component image
         """
-        painter.setPen(Qt.darkGray)
-        painter.setBrush(Qt.darkGray)
-        painter.drawRoundedRect(5, 5, size.width() - 10, size.width() - 10, 5, 5)
-        painter.setPen(Qt.black)
-        font = QFont("Arial", 10)
-        fm = QFontMetrics(font)
-        text = "No Image"
-        str_pixels_w = fm.horizontalAdvance(text)
-        str_pixels_h = fm.height()
-        painter.setFont(font)
-        painter.drawText(
-            size.width() / 2 - str_pixels_w / 2,
-            size.height() / 2 - str_pixels_h / 2,
-            text,
-        )
-        cls.paint_selectable_component_name(painter, size, name)
 
     @classmethod
     def paint_selectable_component_name(cls, painter, size, name):

@@ -3,8 +3,10 @@
 
 """ A selectable object placed in the GUI """
 
+import abc
 
-class PlacedObject:
+
+class PlacedObject(abc.ABC):
     """The base class for a selectable object placed in the GUI"""
 
     def __init__(self):

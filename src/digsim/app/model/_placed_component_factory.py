@@ -3,7 +3,6 @@
 
 """ A GUI component object factory module """
 
-from ._placed_component import PlacedComponent
 from ._placed_hexdigit import PlacedHexDigit
 from ._placed_image_component import (
     PlacedImageComponentAND,
@@ -22,6 +21,10 @@ from ._placed_image_component import (
     PlacedImageComponentYosys,
 )
 from ._placed_seven_segment import PlacedSevenSegment
+
+
+class PlacedComponentFactoryError(Exception):
+    """PlacedComponentFactoryError"""
 
 
 CLASS_NAME_TO_PLACED_COMPONENT = {
@@ -51,4 +54,4 @@ def get_placed_component_by_name(component_class_name):
         return CLASS_NAME_TO_PLACED_COMPONENT[component_class_name]
 
     # Default placed component
-    return PlacedComponent
+    raise PlacedComponentFactoryError(f"Unknown component '{component_class_name}'")

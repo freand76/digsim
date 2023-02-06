@@ -77,9 +77,11 @@ class AppModel(QThread):
         component_class = getattr(digsim.circuit.components, name)
         component = component_class(self._circuit, name=name)
         self._circuit_init()
-        return self.add_component(component, pos.x(), pos.y())
+        placed_component = self._add_component(component, pos.x(), pos.y())
+        placed_component.center()  # Component is plced @ mouse pointer, make it center
+        return placed_component
 
-    def add_component(self, component, xpos, ypos):
+    def _add_component(self, component, xpos, ypos):
         """Add placed component in position"""
         placed_component_class = get_placed_component_by_name(type(component).__name__)
         self._placed_components[component] = placed_component_class(component, xpos, ypos)
@@ -281,7 +283,7 @@ class AppModel(QThread):
         for comp in self._circuit.get_toplevel_components():
             x = circuit_dict["gui"][comp.name()]["x"]
             y = circuit_dict["gui"][comp.name()]["y"]
-            self.add_component(comp, x, y)
+            self._add_component(comp, x, y)
 
         for comp in self._circuit.get_toplevel_components():
             for src_port in comp.outports():

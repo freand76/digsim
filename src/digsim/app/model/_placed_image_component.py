@@ -133,7 +133,8 @@ class PlacedImageComponentYosys(PlacedImageComponent):
     IMAGE_FILENAME = "images/YOSYS.png"
 
     def paint_component(self, painter):
-        PlacedComponent.paint_component(self, painter)
+        self.paint_component_base(painter)
+        self.paint_component_name(painter)
 
 
 class PlacedImageComponentPushButton(PlacedImageComponent):
