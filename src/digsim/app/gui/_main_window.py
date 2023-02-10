@@ -4,6 +4,7 @@
 """ The main window and widgets of the digsim gui application """
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-instance-attributes
 
 from PySide6.QtCore import QMimeData, QSize, Qt
 from PySide6.QtGui import QDrag, QPainter, QPixmap
@@ -43,12 +44,14 @@ class ComponentSettingsSlider(QFrame):
         settings_slider.setMaximum(parameter_dict["max"])
         settings_slider.setMinimum(parameter_dict["min"])
         settings_slider.setValue(parameter_dict["default"])
+        settings_slider.setTickInterval(1)
         settings_slider.setSingleStep(1)
         self.layout().addWidget(QLabel(parameter_dict["description"]), 0, 0, 1, 6)
         self.layout().addWidget(settings_slider, 1, 0, 1, 5)
         self._value_label = QLabel(f"{parameter_dict['default']}")
         self.layout().addWidget(self._value_label, 1, 6, 1, 1)
         settings_slider.valueChanged.connect(self._update)
+        settings_slider.setFocus()
 
     def _update(self, value):
         self._settings[self._parameter] = value
@@ -69,6 +72,7 @@ class ComponentSettingsCheckBox(QFrame):
         self._settings_checkbox.setChecked(parameter_dict["default"])
         self.layout().addWidget(self._settings_checkbox)
         self._settings_checkbox.stateChanged.connect(self._update)
+        self._settings_checkbox.setFocus()
 
     def _update(self, _):
         self._settings[self._parameter] = self._settings_checkbox.isChecked()
@@ -76,6 +80,17 @@ class ComponentSettingsCheckBox(QFrame):
 
 class ComponentSettingsDialog(QDialog):
     """SettingsDialog"""
+
+    @classmethod
+    def start(cls, parent, name, parameters):
+        """Start a settings dialog and return the settings"""
+        if parameters:
+            dialog = ComponentSettingsDialog(parent, name, parameters)
+            result = dialog.exec_()
+            if result == QDialog.DialogCode.Rejected:
+                return False, {}
+            return True, dialog.get_settings()
+        return True, {}
 
     def __init__(self, parent, name, parameters):
         super().__init__(parent)
@@ -235,6 +250,8 @@ class CircuitArea(QWidget):
 
     def keyPressEvent(self, event):
         """QT event callback function"""
+        if self._app_model.is_running:
+            return
         if event.key() == Qt.Key_Delete:
             self._app_model.delete()
         event.accept()
@@ -286,22 +303,14 @@ class CircuitArea(QWidget):
         position = event.pos()
 
         component_parameters = self._app_model.get_component_parameters(component_name)
-        settings = {}
-        if component_parameters:
-            component_settings_dialog = ComponentSettingsDialog(
-                self, component_name, component_parameters
+        ok, settings = ComponentSettingsDialog.start(self, component_name, component_parameters)
+        if ok:
+            placed_component = self._app_model.add_component_by_name(
+                component_name, position, settings
             )
-            result = component_settings_dialog.exec_()
-            if result == QDialog.DialogCode.Rejected:
-                return
-            settings = component_settings_dialog.get_settings()
-
-        placed_component = self._app_model.add_component_by_name(
-            component_name, position, settings
-        )
-        comp = ComponentWidget(self._app_model, placed_component, self)
-        comp.show()
-        self._app_model.select(placed_component)
+            comp = ComponentWidget(self._app_model, placed_component, self)
+            comp.show()
+            self._app_model.select(placed_component)
 
     def _update_gui_components(self):
         children = self.findChildren(ComponentWidget)
@@ -435,13 +444,14 @@ class TopBar(QFrame):
         self._app_model.sig_control_notify.connect(self._control_notify)
         self._app_model.sig_sim_time_notify.connect(self._sim_time_notify)
         self._time_s = 0
+        self._started = False
 
         self.setObjectName("TopBar")
         self.setStyleSheet("QFrame#TopBar {background: #ebebeb;}")
 
         self.setLayout(QHBoxLayout(self))
         self._start_button = QPushButton("Start Simulation", self)
-        self._start_button.clicked.connect(self.start)
+        self._start_button.clicked.connect(self.start_stop)
         self.layout().addWidget(self._start_button)
         self._reset_button = QPushButton("Reset Simulation", self)
         self._reset_button.clicked.connect(self.reset)
@@ -461,17 +471,18 @@ class TopBar(QFrame):
         self._save_button.clicked.connect(self.save)
         self.layout().addWidget(self._save_button)
 
-    def start(self):
-        """Button action: Start"""
-        self._start_button.setEnabled(False)
-        self._load_button.setEnabled(False)
-        self._save_button.setEnabled(False)
-        self._app_model.model_start()
-
-    def stop(self):
-        """Button action: Stop"""
-        self._start_button.setEnabled(False)
-        self._app_model.model_stop()
+    def start_stop(self):
+        """Button action: Start/Stop"""
+        if not self._started:
+            self._started = True
+            self._start_button.setEnabled(False)
+            self._load_button.setEnabled(False)
+            self._save_button.setEnabled(False)
+            self._app_model.model_start()
+        else:
+            self._started = False
+            self._start_button.setEnabled(False)
+            self._app_model.model_stop()
 
     def load(self):
         """Button action: Load"""
@@ -500,11 +511,9 @@ class TopBar(QFrame):
     def _control_notify(self, started):
         if started:
             self._start_button.setText("Stop Similation")
-            self._start_button.clicked.connect(self.stop)
             self._start_button.setEnabled(True)
         else:
             self._start_button.setText("Start Similation")
-            self._start_button.clicked.connect(self.start)
             self._start_button.setEnabled(True)
             self._load_button.setEnabled(True)
             self._save_button.setEnabled(True)
@@ -549,6 +558,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self, app_model):
         super().__init__()
+
         self._app_model = app_model
         self.resize(1280, 720)
         central_widget = CentralWidget(app_model, self)
