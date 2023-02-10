@@ -20,5 +20,8 @@ class SevenSegment(CallbackComponent):
         segments = ""
         for portname in self.PORTLIST:
             if self.port(portname).value == 1:
-                segments += portname
+                if portname == "dot":
+                    segments += "."
+                else:
+                    segments += portname
         return segments

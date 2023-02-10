@@ -23,40 +23,61 @@ class NOT(Component):
             self.Y.value = "X"
 
 
-class OR(Component):
+class ConfigPortsComponent(Component):
+    """Base class for components with configurable input ports"""
+
+    def __init__(self, circuit, name, ports):
+        super().__init__(circuit, name)
+        self._inports = []
+        portname = "A"
+        for _ in range(ports):
+            port = PortIn(self, portname)
+            self._inports.append(port)
+            self.add_port(port)
+            portname = chr(ord(portname) + 1)
+        self.add_port(PortOut(self, "Y"))
+
+    @classmethod
+    def get_parameters(cls):
+        return {
+            "ports": {
+                "type": int,
+                "min": 2,
+                "max": 8,
+                "default": 2,
+                "description": "Number of input ports",
+            },
+        }
+
+
+class OR(ConfigPortsComponent):
     """OR logic gate"""
 
-    def __init__(self, circuit, name="OR"):
-        super().__init__(circuit, name)
-        self.add_port(PortIn(self, "A"))
-        self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+    def __init__(self, circuit, name="OR", ports=2):
+        super().__init__(circuit, name, ports)
 
     def update(self):
-        if self.A.value == 0 and self.B.value == 0:
-            self.Y.value = 0
-        elif 1 in (self.A.value, self.B.value):
+        if any(port.value == "X" for port in self._inports):
+            self.Y.value = "X"
+        elif any(port.value == 1 for port in self._inports):
             self.Y.value = 1
         else:
-            self.Y.value = "X"
+            self.Y.value = 0
 
 
-class AND(Component):
+class AND(ConfigPortsComponent):
     """AND logic gate"""
 
-    def __init__(self, circuit, name="AND"):
-        super().__init__(circuit, name)
-        self.add_port(PortIn(self, "A"))
-        self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+    def __init__(self, circuit, name="AND", ports=2):
+        super().__init__(circuit, name, ports)
 
     def update(self):
-        if self.A.value == 1 and self.B.value == 1:
-            self.Y.value = 1
-        elif 0 in (self.A.value, self.B.value):
-            self.Y.value = 0
-        else:
+        if any(port.value == "X" for port in self._inports):
             self.Y.value = "X"
+        elif all(port.value == 1 for port in self._inports):
+            self.Y.value = 1
+        else:
+            self.Y.value = 0
 
 
 class XOR(Component):
@@ -79,40 +100,34 @@ class XOR(Component):
             self.Y.value = "X"
 
 
-class NAND(Component):
+class NAND(ConfigPortsComponent):
     """NAND logic gate"""
 
-    def __init__(self, circuit, name="NAND"):
-        super().__init__(circuit, name)
-        self.add_port(PortIn(self, "A"))
-        self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+    def __init__(self, circuit, name="NAND", ports=2):
+        super().__init__(circuit, name, ports)
 
     def update(self):
-        if self.A.value == 1 and self.B.value == 1:
-            self.Y.value = 0
-        elif 0 in (self.A.value, self.B.value):
-            self.Y.value = 1
-        else:
+        if any(port.value == "X" for port in self._inports):
             self.Y.value = "X"
+        elif all(port.value == 1 for port in self._inports):
+            self.Y.value = 0
+        else:
+            self.Y.value = 1
 
 
-class NOR(Component):
+class NOR(ConfigPortsComponent):
     """NOR logic gate"""
 
-    def __init__(self, circuit, name="NOR"):
-        super().__init__(circuit, name)
-        self.add_port(PortIn(self, "A"))
-        self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+    def __init__(self, circuit, name="OR", ports=2):
+        super().__init__(circuit, name, ports)
 
     def update(self):
-        if self.A.value == 0 and self.B.value == 0:
-            self.Y.value = 1
-        elif 1 in (self.A.value, self.B.value):
+        if any(port.value == "X" for port in self._inports):
+            self.Y.value = "X"
+        elif any(port.value == 1 for port in self._inports):
             self.Y.value = 0
         else:
-            self.Y.value = "X"
+            self.Y.value = 1
 
 
 class DFF(Component):

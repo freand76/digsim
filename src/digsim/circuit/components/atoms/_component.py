@@ -202,6 +202,11 @@ class Component(abc.ABC):
         """Return component settings as a dict"""
         return {}
 
+    @classmethod
+    def get_parameters(cls):
+        """Return parameters"""
+        return {}
+
 
 class MultiComponent(Component):
     """A component that holds one or several sub components"""

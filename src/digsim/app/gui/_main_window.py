@@ -8,19 +8,102 @@
 from PySide6.QtCore import QMimeData, QSize, Qt
 from PySide6.QtGui import QDrag, QPainter, QPixmap
 from PySide6.QtWidgets import (
+    QCheckBox,
+    QDialog,
+    QDialogButtonBox,
     QFileDialog,
     QFrame,
+    QGridLayout,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QMainWindow,
     QPushButton,
     QScrollArea,
+    QSlider,
     QSplitter,
     QVBoxLayout,
     QWidget,
 )
 
 from digsim.app.model import get_placed_component_by_name
+
+
+class ComponentSettingsSlider(QFrame):
+    """SettingsSlider"""
+
+    def __init__(self, parent, parameter, parameter_dict, settings):
+        super().__init__(parent)
+        self.setLayout(QGridLayout(self))
+        self.setFrameStyle(QFrame.Panel)
+        self._parameter = parameter
+        self._settings = settings
+        self._settings[parameter] = parameter_dict["default"]
+        settings_slider = QSlider(Qt.Horizontal, self)
+        settings_slider.setMaximum(parameter_dict["max"])
+        settings_slider.setMinimum(parameter_dict["min"])
+        settings_slider.setValue(parameter_dict["default"])
+        settings_slider.setSingleStep(1)
+        self.layout().addWidget(QLabel(parameter_dict["description"]), 0, 0, 1, 6)
+        self.layout().addWidget(settings_slider, 1, 0, 1, 5)
+        self._value_label = QLabel(f"{parameter_dict['default']}")
+        self.layout().addWidget(self._value_label, 1, 6, 1, 1)
+        settings_slider.valueChanged.connect(self._update)
+
+    def _update(self, value):
+        self._settings[self._parameter] = value
+        self._value_label.setText(f"{value}")
+
+
+class ComponentSettingsCheckBox(QFrame):
+    """SettingsCheckbox"""
+
+    def __init__(self, parent, parameter, parameter_dict, settings):
+        super().__init__(parent)
+        self.setLayout(QHBoxLayout(self))
+        self.setFrameStyle(QFrame.Panel)
+        self._parameter = parameter
+        self._settings = settings
+        self._settings[parameter] = parameter_dict["default"]
+        self._settings_checkbox = QCheckBox(parameter_dict["description"], self)
+        self._settings_checkbox.setChecked(parameter_dict["default"])
+        self.layout().addWidget(self._settings_checkbox)
+        self._settings_checkbox.stateChanged.connect(self._update)
+
+    def _update(self, _):
+        self._settings[self._parameter] = self._settings_checkbox.isChecked()
+
+
+class ComponentSettingsDialog(QDialog):
+    """SettingsDialog"""
+
+    def __init__(self, parent, name, parameters):
+        super().__init__(parent)
+        self.setLayout(QVBoxLayout(self))
+        self.setWindowTitle(f"Setup {name} component")
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.setStyleSheet("QLabel{font-size: 18pt;}")
+
+        self._settings = {}
+        for parameter, parameter_dict in parameters.items():
+            if parameter_dict["type"] == int:
+                self.layout().addWidget(
+                    ComponentSettingsSlider(self, parameter, parameter_dict, self._settings)
+                )
+            elif parameter_dict["type"] == bool:
+                self.layout().addWidget(
+                    ComponentSettingsCheckBox(self, parameter, parameter_dict, self._settings)
+                )
+
+        QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        self.layout().addWidget(self.buttonBox)
+
+    def get_settings(self):
+        """Get settings from setting dialog"""
+        return self._settings
 
 
 class ComponentWidget(QPushButton):
@@ -201,7 +284,21 @@ class CircuitArea(QWidget):
 
         component_name = event.mimeData().text()
         position = event.pos()
-        placed_component = self._app_model.add_component_by_name(component_name, position)
+
+        component_parameters = self._app_model.get_component_parameters(component_name)
+        settings = {}
+        if component_parameters:
+            component_settings_dialog = ComponentSettingsDialog(
+                self, component_name, component_parameters
+            )
+            result = component_settings_dialog.exec_()
+            if result == QDialog.DialogCode.Rejected:
+                return
+            settings = component_settings_dialog.get_settings()
+
+        placed_component = self._app_model.add_component_by_name(
+            component_name, position, settings
+        )
         comp = ComponentWidget(self._app_model, placed_component, self)
         comp.show()
         self._app_model.select(placed_component)

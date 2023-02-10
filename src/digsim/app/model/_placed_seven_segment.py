@@ -49,6 +49,10 @@ class PlacedSevenSegment(PlacedComponent):
 
     def __init__(self, component, xpos, ypos):
         super().__init__(component, xpos, ypos)
+        self.setup_size()
+
+    def setup_size(self):
+        """Setup the size of the component"""
         _, str_pixels_w, _ = self.get_port_display_name_metrics("dot")
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
         self._width = self.digit_left + self.DIGIT_WIDTH + self.DIGIT_RECT_TO_DIGIT_MARGIN

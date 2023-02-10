@@ -34,7 +34,7 @@ class HexDigit(CallbackComponent):
         self._digits = digits
         self._dot = dot
         if self._dot:
-            self.add_port(PortIn(self, "dot"))
+            self.add_port(PortIn(self, "dot", width=digits))
 
     def set_digits(self, digits):
         """Set the number of digits"""
@@ -77,3 +77,20 @@ class HexDigit(CallbackComponent):
 
     def settings_to_dict(self):
         return {"digits": self._digits}
+
+    @classmethod
+    def get_parameters(cls):
+        return {
+            "digits": {
+                "type": int,
+                "min": 1,
+                "max": 8,
+                "default": 1,
+                "description": "Number of digits",
+            },
+            "dot": {
+                "type": bool,
+                "default": False,
+                "description": "Use decimal dot",
+            },
+        }
