@@ -85,16 +85,38 @@ class ComponentSettingsCheckBox(QFrame):
 class ComponentSettingsDialog(QDialog):
     """SettingsDialog"""
 
+    @staticmethod
+    def _is_file_path(parent, parameters):
+        parameters_list = list(parameters.keys())
+        first_key = parameters_list[0]
+        settings = {}
+        is_file_path = len(parameters_list) == 1 and parameters[first_key]["type"] == "path"
+        if is_file_path:
+            description = parameters[first_key]["description"]
+            fileinfo = parameters[first_key]["fileinfo"]
+            path = QFileDialog.getOpenFileName(
+                parent, description, "", f"{fileinfo};;All Files (*.*)"
+            )
+            if len(path[0]) > 0:
+                settings[first_key] = path[0]
+        return is_file_path, settings
+
     @classmethod
     def start(cls, parent, name, parameters):
         """Start a settings dialog and return the settings"""
-        if parameters:
-            dialog = ComponentSettingsDialog(parent, name, parameters)
-            result = dialog.exec_()
-            if result == QDialog.DialogCode.Rejected:
-                return False, {}
-            return True, dialog.get_settings()
-        return True, {}
+        if len(parameters) == 0:
+            # No parameters, just place component without settings
+            return True, {}
+
+        is_file_path, settings = cls._is_file_path(parent, parameters)
+        if is_file_path:
+            return len(settings) > 0, settings
+
+        dialog = ComponentSettingsDialog(parent, name, parameters)
+        result = dialog.exec_()
+        if result == QDialog.DialogCode.Rejected:
+            return False, {}
+        return True, dialog.get_settings()
 
     def __init__(self, parent, name, parameters):
         super().__init__(parent)

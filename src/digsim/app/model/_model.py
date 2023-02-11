@@ -284,6 +284,8 @@ class AppModel(QThread):
             circuit_dict = json.load(json_file)
 
         circuit_folder = os.path.dirname(path)
+        if len(circuit_folder) == 0:
+            circuit_folder = "."
         self._circuit.from_dict(circuit_dict, circuit_folder)
         for comp in self._circuit.get_toplevel_components():
             x = circuit_dict["gui"][comp.name()]["x"]

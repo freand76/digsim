@@ -38,11 +38,6 @@ class Clock(CallbackComponent):
     def active(self):
         return self._portout.value == 1
 
-    def setup(self, frequency=None):
-        """Setup from settings"""
-        if frequency is not None:
-            self.set_frequency(frequency)
-
     def settings_to_dict(self):
         return {"frequency": self._frequency}
 

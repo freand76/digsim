@@ -14,7 +14,7 @@ from digsim.circuit.components import VDD, PushButton, YosysComponent
 
 
 circuit = Circuit()
-yosys_counter = YosysComponent(circuit, filename=f"{os.path.dirname(__file__)}/counter.json")
+yosys_counter = YosysComponent(circuit, path=f"{os.path.dirname(__file__)}/counter.json")
 
 clk = PushButton(circuit, "clk")
 reset = PushButton(circuit, "reset")

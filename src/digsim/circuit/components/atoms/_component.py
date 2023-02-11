@@ -164,16 +164,14 @@ class Component(abc.ABC):
         """Factory: Create a component from a dict"""
         component_name = json_component["name"]
         component_type = json_component["type"]
+        component_settings = json_component.get("settings", {})
         display_name = json_component.get("display_name")
-        component_settings = json_component.get("settings")
         py_module_name = ".".join(component_type.split(".")[0:-1])
         py_class_name = component_type.split(".")[-1]
 
         module = importlib.import_module(py_module_name)
         class_ = getattr(module, py_class_name)
-        component = class_(circuit=circuit, name=component_name)
-        if component_settings is not None and bool(component_settings):
-            component.setup(**component_settings)
+        component = class_(circuit=circuit, name=component_name, **component_settings)
         if display_name is not None:
             component.set_display_name(display_name)
         return component

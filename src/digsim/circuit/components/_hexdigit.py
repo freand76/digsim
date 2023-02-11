@@ -70,13 +70,8 @@ class HexDigit(CallbackComponent):
             segments += "."
         return segments
 
-    def setup(self, digits=1):
-        """Setup from settings"""
-        if digits is not None:
-            self.set_digits(digits)
-
     def settings_to_dict(self):
-        return {"digits": self._digits}
+        return {"digits": self._digits, "dot": self._dot}
 
     @classmethod
     def get_parameters(cls):

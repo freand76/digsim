@@ -24,7 +24,7 @@ clk = Clock(test_circuit, frequency=1000000, name="CLK")
 irq = PushButton(test_circuit, "IRQ")
 rdy = PushButton(test_circuit, "RDY")
 
-yosys_6502 = YosysComponent(test_circuit, filename=f"{os.path.dirname(__file__)}/6502.json")
+yosys_6502 = YosysComponent(test_circuit, path=f"{os.path.dirname(__file__)}/6502.json")
 mem = Mem64kByte(
     test_circuit, rom_filename=f"{os.path.dirname(__file__)}/code.bin", rom_address=0xF800
 )

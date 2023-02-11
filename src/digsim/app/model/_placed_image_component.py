@@ -24,18 +24,18 @@ class PlacedImageComponent(PlacedComponent):
         self._show_name = show_name
 
     @classmethod
-    def get_pixmap(cls, active=False):
+    def _get_pixmaps(cls):
         """Load the pixmap at first use"""
-        if active and cls.ACTIVE_IMAGE_FILENAME is not None and cls._pixmap_active is None:
+        if cls.ACTIVE_IMAGE_FILENAME is not None and cls._pixmap_active is None:
             cls._pixmap_active = QPixmap(
                 f"{os.path.dirname(__file__)}/{cls.ACTIVE_IMAGE_FILENAME}"
             )
-        elif not active and cls.IMAGE_FILENAME is not None and cls._pixmap is None:
+        if cls.IMAGE_FILENAME is not None and cls._pixmap is None:
             cls._pixmap = QPixmap(f"{os.path.dirname(__file__)}/{cls.IMAGE_FILENAME}")
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
-        self.get_pixmap(self.component.active)
+        self._get_pixmaps()
         xpos = self.size.width() / 2 - self._pixmap.width() / 2
         ypos = self.size.height() / 2 - self._pixmap.height() / 2
         self.paint_pixmap(painter, xpos, ypos, self.component.active)
@@ -43,9 +43,9 @@ class PlacedImageComponent(PlacedComponent):
             self.paint_selectable_component_name(painter, self.size, self.component.display_name())
 
     @classmethod
-    def paint_selectable_component(cls, painter, size, name, active=False):
+    def paint_selectable_component(cls, painter, size, name):
         cls.paint_selectable_component_name(painter, size, name)
-        cls.get_pixmap(active)
+        cls._get_pixmaps()
         xpos = size.width() / 2 - cls._pixmap.width() / 2
         ypos = size.width() / 2 - cls._pixmap.height() / 2
         cls.paint_pixmap(painter, xpos, ypos)

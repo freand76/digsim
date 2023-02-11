@@ -58,3 +58,6 @@ class StaticLevel(Component):
                 "description": "Output level is High",
             },
         }
+
+    def settings_to_dict(self):
+        return {"output": self._output}

@@ -36,10 +36,10 @@ class StaticLevels(Component):
 class YosysComponent(MultiComponent):
     """Class to create a yosys component from a yosys json netlist"""
 
-    def __init__(self, circuit, name="Yosys", filename=None, nets=True):
+    def __init__(self, circuit, name="Yosys", path=None, nets=True):
         super().__init__(circuit, name)
         self._circuit = circuit
-        self._filename = filename
+        self._path = path
         self._nets = nets
         self._port_connections = {}
         self._json = None
@@ -53,8 +53,8 @@ class YosysComponent(MultiComponent):
             self._net_comp = Component(self._circuit, "nets")
             self.add(self._net_comp)
 
-        if filename is not None:
-            self.load(filename)
+        if self._path is not None:
+            self.load(self._path)
 
     def _setup_base(self):
         self._gates_comp = MultiComponent(self._circuit, "gates")
@@ -66,8 +66,8 @@ class YosysComponent(MultiComponent):
 
     def load(self, filename):
         """Load yosys json netlist file"""
-        self._filename = filename
-        with open(self._filename, encoding="utf-8") as json_file:
+        self._path = filename
+        with open(self._path, encoding="utf-8") as json_file:
             self._json = json.load(json_file)
         self._yosys_name = self._get_component_name()
         # self.set_name(self._yosys_name)
@@ -168,12 +168,16 @@ class YosysComponent(MultiComponent):
             netname = netname.replace(".", "_")
             self._add_netname(netname, netname_dict)
 
-    def setup(self, path=None):
-        """Setup from settings"""
-        if path is not None:
-            path = self.circuit.load_path(path)
-            self.load(path)
-
     def settings_to_dict(self):
-        filename = self.circuit.store_path(self._filename)
-        return {"path": filename}
+        path = self.circuit.store_path(self._path)
+        return {"path": path}
+
+    @classmethod
+    def get_parameters(cls):
+        return {
+            "path": {
+                "type": "path",
+                "fileinfo": "Yosys JSON Netlist (*.json)",
+                "description": "Select yosys json component",
+            }
+        }
