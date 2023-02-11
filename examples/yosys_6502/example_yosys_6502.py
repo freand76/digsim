@@ -15,14 +15,14 @@ The example will generate a gtkwave file, '6502.vcd'.
 import os
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import Clock, Mem64kByte, MemStdOut, PushButton, YosysComponent
+from digsim.circuit.components import Clock, Mem64kByte, MemStdOut, PushButton, StaticLevel, YosysComponent
 
 
 test_circuit = Circuit(vcd="6502.vcd")
 rst = PushButton(test_circuit, "RST")
 clk = Clock(test_circuit, frequency=1000000, name="CLK")
-irq = PushButton(test_circuit, "IRQ")
-rdy = PushButton(test_circuit, "RDY")
+irq = StaticLevel(test_circuit, "IRQ", output=False)
+rdy = StaticLevel(test_circuit, "RDY", output=True)
 
 yosys_6502 = YosysComponent(test_circuit, path=f"{os.path.dirname(__file__)}/6502.json")
 mem = Mem64kByte(
@@ -49,8 +49,6 @@ rdy.O.wire = yosys_6502.RDY
 
 test_circuit.init()
 print(yosys_6502)
-irq.release()
-rdy.push()
 
 rst.push()
 test_circuit.run(us=1)
