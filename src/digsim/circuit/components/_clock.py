@@ -9,7 +9,7 @@ from .atoms import CallbackComponent, PortOut
 class Clock(CallbackComponent):
     """Clock component class"""
 
-    def __init__(self, circuit, frequency=1, name="Clock"):
+    def __init__(self, circuit, name="Clock", frequency=1):
         super().__init__(circuit, name)
         self._portout = PortOut(self, "O")
         self._portout.update_parent(True)
@@ -45,3 +45,15 @@ class Clock(CallbackComponent):
 
     def settings_to_dict(self):
         return {"frequency": self._frequency}
+
+    @classmethod
+    def get_parameters(cls):
+        return {
+            "frequency": {
+                "type": int,
+                "min": 1,
+                "max": 100,
+                "default": 1,
+                "description": "Clock frequency in Hz",
+            },
+        }

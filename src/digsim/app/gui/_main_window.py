@@ -39,18 +39,20 @@ class ComponentSettingsSlider(QFrame):
         self.setFrameStyle(QFrame.Panel)
         self._parameter = parameter
         self._settings = settings
-        self._settings[parameter] = parameter_dict["default"]
         settings_slider = QSlider(Qt.Horizontal, self)
         settings_slider.setMaximum(parameter_dict["max"])
         settings_slider.setMinimum(parameter_dict["min"])
         settings_slider.setValue(parameter_dict["default"])
         settings_slider.setTickPosition(QSlider.TicksBothSides)
-        settings_slider.setTickInterval(1)
+        settings_slider.setTickInterval(
+            max(1, (parameter_dict["max"] - parameter_dict["min"]) / 10)
+        )
         settings_slider.setSingleStep(1)
         settings_slider.setPageStep(1)
         self.layout().addWidget(QLabel(parameter_dict["description"]), 0, 0, 1, 6)
         self.layout().addWidget(settings_slider, 1, 0, 1, 5)
-        self._value_label = QLabel(f"{parameter_dict['default']}")
+        self._value_label = QLabel("")
+        self._update(parameter_dict["default"])
         self.layout().addWidget(self._value_label, 1, 6, 1, 1)
         settings_slider.valueChanged.connect(self._update)
         settings_slider.setFocus()
@@ -387,11 +389,10 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(SelectableComponentWidget("NAND", self))
         self.layout().addWidget(SelectableComponentWidget("NOR", self))
         self.layout().addWidget(SelectableComponentWidget("DFF", self))
-        self.layout().addWidget(SelectableComponentWidget("VDD", self))
-        self.layout().addWidget(SelectableComponentWidget("GND", self))
-        self.layout().addWidget(SelectableComponentWidget("Clock", self))
         self.layout().addWidget(SelectableComponentWidget("PushButton", self))
         self.layout().addWidget(SelectableComponentWidget("OnOffSwitch", self))
+        self.layout().addWidget(SelectableComponentWidget("Clock", self))
+        self.layout().addWidget(SelectableComponentWidget("StaticLevel", self))
         self.layout().addWidget(
             SelectableComponentWidget("SevenSegment", self, display_name="7-Seg")
         )

@@ -8,7 +8,6 @@ from ._placed_image_component import (
     PlacedImageComponentAND,
     PlacedImageComponentClock,
     PlacedImageComponentDFF,
-    PlacedImageComponentGND,
     PlacedImageComponentLed,
     PlacedImageComponentNAND,
     PlacedImageComponentNOR,
@@ -16,7 +15,7 @@ from ._placed_image_component import (
     PlacedImageComponentOnOffSwitch,
     PlacedImageComponentOR,
     PlacedImageComponentPushButton,
-    PlacedImageComponentVDD,
+    PlacedImageComponentStaticLevel,
     PlacedImageComponentXOR,
     PlacedImageComponentYosys,
 )
@@ -31,7 +30,6 @@ CLASS_NAME_TO_PLACED_COMPONENT = {
     "AND": PlacedImageComponentAND,
     "Clock": PlacedImageComponentClock,
     "DFF": PlacedImageComponentDFF,
-    "GND": PlacedImageComponentGND,
     "HexDigit": PlacedHexDigit,
     "Led": PlacedImageComponentLed,
     "NAND": PlacedImageComponentNAND,
@@ -41,7 +39,7 @@ CLASS_NAME_TO_PLACED_COMPONENT = {
     "OnOffSwitch": PlacedImageComponentOnOffSwitch,
     "PushButton": PlacedImageComponentPushButton,
     "SevenSegment": PlacedSevenSegment,
-    "VDD": PlacedImageComponentVDD,
+    "StaticLevel": PlacedImageComponentStaticLevel,
     "XOR": PlacedImageComponentXOR,
     "YosysComponent": PlacedImageComponentYosys,
 }

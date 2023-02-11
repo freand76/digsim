@@ -99,19 +99,11 @@ class PlacedImageComponentDFF(PlacedImageComponent):
     IMAGE_FILENAME = "images/DFF.png"
 
 
-class PlacedImageComponentGND(PlacedImageComponent):
-    """The class for a Logic Zero image component placed in the GUI"""
+class PlacedImageComponentStaticLevel(PlacedImageComponent):
+    """The class for a StaticLevel image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/ZERO.png"
-
-    def __init__(self, component, xpos, ypos):
-        super().__init__(component, xpos, ypos, show_name=False)
-
-
-class PlacedImageComponentVDD(PlacedImageComponent):
-    """The class for a Logic One image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/ONE.png"
+    ACTIVE_IMAGE_FILENAME = "images/ONE.png"
 
     def __init__(self, component, xpos, ypos):
         super().__init__(component, xpos, ypos, show_name=False)

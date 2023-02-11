@@ -80,24 +80,20 @@ class AND(ConfigPortsComponent):
             self.Y.value = 0
 
 
-class XOR(Component):
+class XOR(ConfigPortsComponent):
     """XOR logic gate"""
 
-    def __init__(self, circuit, name="XOR"):
-        super().__init__(circuit, name)
-        self.add_port(PortIn(self, "A"))
-        self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+    def __init__(self, circuit, name="XOR", ports=2):
+        super().__init__(circuit, name, ports)
 
     def update(self):
-        if (self.A.value == 1 and self.B.value == 0) or (self.A.value == 0 and self.B.value == 1):
-            self.Y.value = 1
-        elif (self.A.value == 1 and self.B.value == 1) or (
-            self.A.value == 0 and self.B.value == 0
-        ):
-            self.Y.value = 0
-        else:
+        if any(port.value == "X" for port in self._inports):
             self.Y.value = "X"
+        else:
+            count = 0
+            for port in self._inports:
+                count += port.value
+            self.Y.value = count % 2
 
 
 class NAND(ConfigPortsComponent):
@@ -133,15 +129,27 @@ class NOR(ConfigPortsComponent):
 class DFF(Component):
     """D-FlipFlop"""
 
-    def __init__(self, circuit, name="NOR"):
+    def __init__(self, circuit, name="DFF", width=1):
         super().__init__(circuit, name)
-        self.add_port(PortWire(self, "D"))
+        self.add_port(PortWire(self, "D", width=width))
         self.add_port(PortIn(self, "C"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOut(self, "Q", width=width))
 
     def update(self):
         if self.C.is_rising_edge():
             self.Q.value = self.D.value
+
+    @classmethod
+    def get_parameters(cls):
+        return {
+            "width": {
+                "type": int,
+                "min": 1,
+                "max": 32,
+                "default": 1,
+                "description": "Bitwidth of D and Q ports",
+            },
+        }
 
 
 class SR(MultiComponent):
