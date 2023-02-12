@@ -274,6 +274,9 @@ class PortWireBit(PortWire):
         super().__init__(parent, name, 1, False)
         self._parent_port = parent_port
 
+    def init(self):
+        super().init()
+
     def set_value(self, value):
         super().set_value(value)
         self._parent_port.update_value_from_bits()
@@ -291,11 +294,16 @@ class PortMultiBitWire(Port):
     """
 
     def __init__(self, parent, name, width, output=False):
-        super().__init__(parent, name, width, output)
         self._port_driver = None  # The port that drives this port
         self._bits = []
+        super().__init__(parent, name, width, output)
         for bit_id in range(self.width):
             self._bits.append(PortWireBit(parent, f"{self.name()}_{bit_id}", self))
+
+    def init(self):
+        super().init()
+        for bit in self._bits:
+            bit.init()
 
     def set_value(self, value):
         if value == "X":
@@ -303,10 +311,6 @@ class PortMultiBitWire(Port):
         for bit_id, bit in enumerate(self._bits):
             bit_val = (value >> bit_id) & 1
             bit.value = bit_val
-
-    def get_wires(self):
-        wires = super().get_wires()
-        return wires
 
     def get_wired_ports_recursive(self):
         all_wired_ports = super().get_wired_ports_recursive()

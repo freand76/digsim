@@ -275,7 +275,7 @@ class Circuit:
         json_connections = json_circuit["wires"]
 
         for json_component in json_components:
-            Component.from_dict(self, json_component)
+            Component.from_dict(self, json_component, folder)
 
         for json_connection in json_connections:
             self._connect_from_dict(json_connection["src"], json_connection["dst"])

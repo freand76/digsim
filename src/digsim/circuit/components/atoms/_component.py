@@ -160,11 +160,14 @@ class Component(abc.ABC):
         return component_dict
 
     @classmethod
-    def from_dict(cls, circuit, json_component):
+    def from_dict(cls, circuit, json_component, folder=None):
         """Factory: Create a component from a dict"""
         component_name = json_component["name"]
         component_type = json_component["type"]
         component_settings = json_component.get("settings", {})
+        if "path" in component_settings:
+            component_settings["path"] = circuit.load_path(component_settings["path"])
+
         display_name = json_component.get("display_name")
         py_module_name = ".".join(component_type.split(".")[0:-1])
         py_class_name = component_type.split(".")[-1]
@@ -214,6 +217,7 @@ class MultiComponent(Component):
         self._components = []
 
     def init(self):
+        super().init()
         for component in self._components:
             component.init()
 
