@@ -36,7 +36,7 @@ class WavesWriter:
             var = self._vcd_dict.get(f"{wired_port.path()}.{wired_port.name()}")
             if var is None:
                 continue
-            self._vcd_writer.change(var, timestamp=time_ns, value=port.value)
+            self._vcd_writer.change(var, timestamp=time_ns, value=wired_port.value)
 
     def close(self):
         """Close vcd file"""
