@@ -15,7 +15,14 @@ The example will generate a gtkwave file, '6502.vcd'.
 import os
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import Clock, Mem64kByte, MemStdOut, PushButton, StaticLevel, YosysComponent
+from digsim.circuit.components import (
+    Clock,
+    Mem64kByte,
+    MemStdOut,
+    PushButton,
+    StaticLevel,
+    YosysComponent,
+)
 
 
 test_circuit = Circuit(vcd="6502.vcd")

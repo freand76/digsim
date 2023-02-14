@@ -160,7 +160,7 @@ class Component(abc.ABC):
         return component_dict
 
     @classmethod
-    def from_dict(cls, circuit, json_component, folder=None):
+    def from_dict(cls, circuit, json_component):
         """Factory: Create a component from a dict"""
         component_name = json_component["name"]
         component_type = json_component["type"]

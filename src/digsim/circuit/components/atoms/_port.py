@@ -274,9 +274,6 @@ class PortWireBit(PortWire):
         super().__init__(parent, name, 1, False)
         self._parent_port = parent_port
 
-    def init(self):
-        super().init()
-
     def set_value(self, value):
         super().set_value(value)
         self._parent_port.update_value_from_bits()

@@ -6,7 +6,7 @@
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-instance-attributes
 
-from PySide6.QtCore import QMimeData, QSize, Qt
+from PySide6.QtCore import QMimeData, QPoint, QSize, Qt, QThread, Signal
 from PySide6.QtGui import QDrag, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -260,8 +260,32 @@ class ComponentWidget(QPushButton):
             self.parent().update()
 
 
+class _DropActionThread(QThread):
+    """This class is used to thredify the drop action"""
+
+    sig_drop_action = Signal(str, QPoint)
+
+    def __init__(self, circuit_area):
+        super().__init__()
+        self._circuit_area = circuit_area
+        self._name = None
+        self._position = None
+        self.sig_drop_action.connect(self._setup)
+
+    def _setup(self, name, position):
+        self._name = name
+        self._position = position
+        self.start()
+
+    def run(self):
+        """Thread run function"""
+        self._circuit_area.sig_add_component.emit(self._name, self._position)
+
+
 class CircuitArea(QWidget):
     """The circuit area class, this is where the component widgets are placed"""
+
+    sig_add_component = Signal(str, QPoint)
 
     def __init__(self, app_model, parent):
         super().__init__(parent)
@@ -273,6 +297,10 @@ class CircuitArea(QWidget):
 
         self.setMouseTracking(True)
         self.setAcceptDrops(True)
+
+        self.sig_add_component.connect(self._add_component)
+
+        self._thread = _DropActionThread(self)
 
     def keyPressEvent(self, event):
         """QT event callback function"""
@@ -326,14 +354,16 @@ class CircuitArea(QWidget):
         self.setFocus()
 
         component_name = event.mimeData().text()
-        position = event.pos()
+        self._thread.sig_drop_action.emit(component_name, event.pos())
 
-        component_parameters = self._app_model.get_component_parameters(component_name)
-        ok, settings = ComponentSettingsDialog.start(self, component_name, component_parameters)
+    def _add_component(self, name, position):
+        if position == QPoint(0, 0):
+            position = self.rect().center()
+
+        component_parameters = self._app_model.get_component_parameters(name)
+        ok, settings = ComponentSettingsDialog.start(self, name, component_parameters)
         if ok:
-            placed_component = self._app_model.add_component_by_name(
-                component_name, position, settings
-            )
+            placed_component = self._app_model.add_component_by_name(name, position, settings)
             comp = ComponentWidget(self._app_model, placed_component, self)
             comp.show()
             self._app_model.select(placed_component)
@@ -357,9 +387,10 @@ class SelectableComponentWidget(QPushButton):
     this is the component widget than can be dragged into the circuit area.
     """
 
-    def __init__(self, name, parent, display_name=None):
+    def __init__(self, name, parent, circuit_area, display_name=None):
         super().__init__(parent)
         self._name = name
+        self._circuit_area = circuit_area
         self._paint_class = get_placed_component_by_name(name)
         if display_name is not None:
             self._display_name = display_name
@@ -383,6 +414,10 @@ class SelectableComponentWidget(QPushButton):
             drag.setPixmap(pixmap)
             drag.exec_(Qt.CopyAction | Qt.MoveAction, Qt.CopyAction)
 
+    def mouseDoubleClickEvent(self, _):
+        """QT event callback function"""
+        self._circuit_area.sig_add_component.emit(self._name, QPoint(0, 0))
+
     def paintEvent(self, event):
         """QT event callback function"""
         if self._paint_class is None:
@@ -398,32 +433,32 @@ class ComponentSelection(QWidget):
     these are the components than can be dragged into the circuit area.
     """
 
-    def __init__(self, app_model, parent):
+    def __init__(self, app_model, circuit_area, parent):
         super().__init__(parent)
         self.app_model = app_model
         self.setLayout(QVBoxLayout(self))
         self.layout().setContentsMargins(5, 5, 5, 5)
         self.layout().setSpacing(5)
-        self.layout().addWidget(SelectableComponentWidget("OR", self))
-        self.layout().addWidget(SelectableComponentWidget("AND", self))
-        self.layout().addWidget(SelectableComponentWidget("NOT", self))
-        self.layout().addWidget(SelectableComponentWidget("XOR", self))
-        self.layout().addWidget(SelectableComponentWidget("NAND", self))
-        self.layout().addWidget(SelectableComponentWidget("NOR", self))
-        self.layout().addWidget(SelectableComponentWidget("DFF", self))
-        self.layout().addWidget(SelectableComponentWidget("PushButton", self))
-        self.layout().addWidget(SelectableComponentWidget("OnOffSwitch", self))
-        self.layout().addWidget(SelectableComponentWidget("Clock", self))
-        self.layout().addWidget(SelectableComponentWidget("StaticLevel", self))
+        self.layout().addWidget(SelectableComponentWidget("OR", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("AND", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("NOT", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("XOR", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("NAND", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("NOR", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("DFF", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("PushButton", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("OnOffSwitch", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("Clock", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("StaticLevel", self, circuit_area))
         self.layout().addWidget(
-            SelectableComponentWidget("SevenSegment", self, display_name="7-Seg")
+            SelectableComponentWidget("SevenSegment", self, circuit_area, display_name="7-Seg")
         )
         self.layout().addWidget(
-            SelectableComponentWidget("HexDigit", self, display_name="Hex-digit")
+            SelectableComponentWidget("HexDigit", self, circuit_area, display_name="Hex-digit")
         )
-        self.layout().addWidget(SelectableComponentWidget("Led", self))
+        self.layout().addWidget(SelectableComponentWidget("Led", self, circuit_area))
         self.layout().addWidget(
-            SelectableComponentWidget("YosysComponent", self, display_name="Yosys")
+            SelectableComponentWidget("YosysComponent", self, circuit_area, display_name="Yosys")
         )
 
 
@@ -441,16 +476,19 @@ class CircuitEditor(QSplitter):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
 
-        selection_panel = ComponentSelection(app_model, self)
         self._selection_area = QScrollArea(self)
         self._selection_area.setFixedWidth(106)
         self._selection_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self._selection_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        circuit_area = CircuitArea(app_model, self)
+        selection_panel = ComponentSelection(app_model, circuit_area, self)
+
         self._selection_area.setWidget(selection_panel)
+
         self.layout().addWidget(self._selection_area)
         self.layout().setStretchFactor(self._selection_area, 0)
 
-        circuit_area = CircuitArea(app_model, self)
         self.layout().addWidget(circuit_area)
         self.layout().setStretchFactor(circuit_area, 1)
 
