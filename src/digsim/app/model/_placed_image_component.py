@@ -22,6 +22,11 @@ class PlacedImageComponent(PlacedComponent):
     def __init__(self, component, xpos, ypos, show_name=True):
         super().__init__(component, xpos, ypos)
         self._show_name = show_name
+        self.setup_size()
+        self.update_ports()
+
+    def setup_size(self):
+        """Change size of component"""
 
     @classmethod
     def _get_pixmaps(cls):
@@ -97,6 +102,18 @@ class PlacedImageComponentDFF(PlacedImageComponent):
     """The class for a DFF image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/DFF.png"
+
+
+class PlacedImageComponentMUX(PlacedImageComponent):
+    """The class for a MUX image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/MUX.png"
+    PORT_TO_IMAGE_DIST = 20
+
+    def setup_size(self):
+        self._get_pixmaps()
+        _, str_pixels_w, _ = self.get_port_display_name_metrics("A")
+        self._width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._pixmap.width()
 
 
 class PlacedImageComponentStaticLevel(PlacedImageComponent):

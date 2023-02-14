@@ -3,7 +3,9 @@
 
 """ Module with the basic logic gates """
 
-from .atoms import Component, MultiComponent, PortIn, PortOut, PortWire
+import math
+
+from .atoms import Component, ComponentException, MultiComponent, PortIn, PortOut, PortWire
 
 
 class NOT(Component):
@@ -148,6 +150,47 @@ class DFF(Component):
                 "max": 32,
                 "default": 1,
                 "description": "Bitwidth of D and Q ports",
+            },
+        }
+
+
+class MUX(Component):
+    """MUX"""
+
+    def __init__(self, circuit, name, ports=2, width=1):
+        super().__init__(circuit, name)
+        if ports not in [2, 4, 8]:
+            raise ComponentException(f"Mux cannot have {ports} number of ports")
+        self._inports = []
+        portname = "A"
+        for _ in range(ports):
+            port = PortIn(self, portname, width=width)
+            self._inports.append(port)
+            self.add_port(port)
+            portname = chr(ord(portname) + 1)
+        self.add_port(PortIn(self, "S", width=int(math.log2(ports))))
+        self.add_port(PortOut(self, "Y", width=width))
+
+    def update(self):
+        if self.S.value == "X":
+            return
+        self.Y.value = self._inports[self.S.value].value
+
+    @classmethod
+    def get_parameters(cls):
+        return {
+            "ports": {
+                "type": "range",
+                "range": [2, 4, 8],
+                "default": 2,
+                "description": "Number of input ports",
+            },
+            "width": {
+                "type": int,
+                "min": 1,
+                "max": 32,
+                "default": 1,
+                "description": "Bitwidth of mux ports",
             },
         }
 

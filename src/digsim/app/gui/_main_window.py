@@ -39,27 +39,50 @@ class ComponentSettingsSlider(QFrame):
         self.setFrameStyle(QFrame.Panel)
         self._parameter = parameter
         self._settings = settings
-        settings_slider = QSlider(Qt.Horizontal, self)
-        settings_slider.setMaximum(parameter_dict["max"])
-        settings_slider.setMinimum(parameter_dict["min"])
-        settings_slider.setValue(parameter_dict["default"])
-        settings_slider.setTickPosition(QSlider.TicksBothSides)
-        settings_slider.setTickInterval(
+        self._settings_slider = QSlider(Qt.Horizontal, self)
+        self._settings_slider.setSingleStep(1)
+        self._settings_slider.setPageStep(1)
+        self._settings_slider.setTickPosition(QSlider.TicksBothSides)
+        self._settings_slider.valueChanged.connect(self._update)
+        self._value_label = QLabel("")
+        self._setup(parameter_dict)
+        self.layout().addWidget(QLabel(parameter_dict["description"]), 0, 0, 1, 6)
+        self.layout().addWidget(self._value_label, 1, 6, 1, 1)
+        self.layout().addWidget(self._settings_slider, 1, 0, 1, 5)
+
+    def _setup(self, parameter_dict):
+        self._settings_slider.setMaximum(parameter_dict["max"])
+        self._settings_slider.setMinimum(parameter_dict["min"])
+        self._settings_slider.setValue(parameter_dict["default"])
+        self._settings_slider.setTickInterval(
             max(1, (parameter_dict["max"] - parameter_dict["min"]) / 10)
         )
-        settings_slider.setSingleStep(1)
-        settings_slider.setPageStep(1)
-        self.layout().addWidget(QLabel(parameter_dict["description"]), 0, 0, 1, 6)
-        self.layout().addWidget(settings_slider, 1, 0, 1, 5)
-        self._value_label = QLabel("")
         self._update(parameter_dict["default"])
-        self.layout().addWidget(self._value_label, 1, 6, 1, 1)
-        settings_slider.valueChanged.connect(self._update)
-        settings_slider.setFocus()
 
     def _update(self, value):
         self._settings[self._parameter] = value
         self._value_label.setText(f"{value}")
+
+
+class ComponentSettingsRangeSlider(ComponentSettingsSlider):
+    """SettingsSlider (range)"""
+
+    def __init__(self, parent, parameter, parameter_dict, settings):
+        self._range = parameter_dict["range"]
+        super().__init__(parent, parameter, parameter_dict, settings)
+
+    def _setup(self, parameter_dict):
+        default = self._range.index(parameter_dict["default"])
+        self._settings_slider.setMaximum(len(self._range) - 1)
+        self._settings_slider.setMinimum(0)
+        self._settings_slider.setValue(default)
+        self._settings_slider.setTickInterval(1)
+        self._update(default)
+
+    def _update(self, value):
+        range_val = self._range[value]
+        self._settings[self._parameter] = range_val
+        self._value_label.setText(f"{range_val}")
 
 
 class ComponentSettingsCheckBox(QFrame):
@@ -134,6 +157,10 @@ class ComponentSettingsDialog(QDialog):
             elif parameter_dict["type"] == bool:
                 self.layout().addWidget(
                     ComponentSettingsCheckBox(self, parameter, parameter_dict, self._settings)
+                )
+            elif parameter_dict["type"] == "range":
+                self.layout().addWidget(
+                    ComponentSettingsRangeSlider(self, parameter, parameter_dict, self._settings)
                 )
 
         QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
@@ -446,6 +473,7 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(SelectableComponentWidget("NAND", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("NOR", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("DFF", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("MUX", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("PushButton", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("OnOffSwitch", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("Clock", self, circuit_area))

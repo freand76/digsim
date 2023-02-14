@@ -3,7 +3,12 @@
 
 """ All classes within digsim.circuit.components.atoms namespace """
 
-from ._component import CallbackComponent, Component, MultiComponent  # noqa: F401
+from ._component import (  # noqa: F401
+    CallbackComponent,
+    Component,
+    ComponentException,
+    MultiComponent,
+)
 from ._port import (  # noqa: F401
     PortConnectionError,
     PortIn,
