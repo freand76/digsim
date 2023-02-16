@@ -30,70 +30,114 @@ from PySide6.QtWidgets import (
 from digsim.app.model import get_placed_component_by_name
 
 
-class ComponentSettingsSlider(QFrame):
-    """SettingsSlider"""
+class ComponentSettingsBase(QFrame):
+    """SettingsBase"""
 
     def __init__(self, parent, parameter, parameter_dict, settings):
         super().__init__(parent)
-        self.setLayout(QGridLayout(self))
         self.setFrameStyle(QFrame.Panel)
+        self._parent = parent
         self._parameter = parameter
+        self._parameter_dict = parameter_dict
         self._settings = settings
+        self._parent.sig_value_updated.connect(self._on_setting_change)
+
+    def emit_signal(self):
+        """Signal other settings components that a value has changed"""
+        self._parent.sig_value_updated.emit(self._parameter)
+
+    def _on_setting_change(self, parameter):
+        if parameter != self._parameter:
+            self.on_setting_change(parameter)
+
+    def on_setting_change(self, parameter):
+        """Called when other setting is changed"""
+
+
+class ComponentSettingsSlider(ComponentSettingsBase):
+    """SettingsSlider"""
+
+    def __init__(self, parent, parameter, parameter_dict, settings):
+        super().__init__(parent, parameter, parameter_dict, settings)
+        self.setLayout(QGridLayout(self))
         self._settings_slider = QSlider(Qt.Horizontal, self)
         self._settings_slider.setSingleStep(1)
         self._settings_slider.setPageStep(1)
         self._settings_slider.setTickPosition(QSlider.TicksBothSides)
         self._settings_slider.valueChanged.connect(self._update)
         self._value_label = QLabel("")
-        self._setup(parameter_dict)
-        self.layout().addWidget(QLabel(parameter_dict["description"]), 0, 0, 1, 6)
+        self.layout().addWidget(QLabel(self._parameter_dict["description"]), 0, 0, 1, 6)
+        self._setup()
         self.layout().addWidget(self._value_label, 1, 6, 1, 1)
         self.layout().addWidget(self._settings_slider, 1, 0, 1, 5)
+        self._init_slider()
 
-    def _setup(self, parameter_dict):
-        self._settings_slider.setMaximum(parameter_dict["max"])
-        self._settings_slider.setMinimum(parameter_dict["min"])
-        self._settings_slider.setValue(parameter_dict["default"])
+    def _init_slider(self):
+        self._settings_slider.setValue(self._parameter_dict["default"])
+        self._update(self._parameter_dict["default"])
+
+    def _setup(self):
+        self._settings_slider.setMaximum(self._parameter_dict["max"])
+        self._settings_slider.setMinimum(self._parameter_dict["min"])
+        self._settings_slider.setValue(self._parameter_dict["default"])
         self._settings_slider.setTickInterval(
-            max(1, (parameter_dict["max"] - parameter_dict["min"]) / 10)
+            max(1, (self._parameter_dict["max"] - self._parameter_dict["min"]) / 10)
         )
-        self._update(parameter_dict["default"])
 
     def _update(self, value):
         self._settings[self._parameter] = value
         self._value_label.setText(f"{value}")
+        self.emit_signal()
+
+
+class ComponentSettingsSliderWidth(ComponentSettingsSlider):
+    """SettingsSlider which is dependent on bitwidth"""
+
+    def _setup(self):
+        value_max = 2 ** self._settings.get("width", 1) - 1
+        self._settings_slider.setMaximum(value_max)
+        self._settings_slider.setMinimum(self._parameter_dict["min"])
+        self._settings_slider.setTickInterval(
+            max(1, (value_max - self._parameter_dict["min"]) / 10)
+        )
+
+    def _update(self, value):
+        self._settings[self._parameter] = value
+        self._value_label.setText(f"{value}")
+        self.emit_signal()
+
+    def on_setting_change(self, parameter):
+        if parameter == "width":
+            self._setup()
 
 
 class ComponentSettingsRangeSlider(ComponentSettingsSlider):
     """SettingsSlider (range)"""
 
-    def __init__(self, parent, parameter, parameter_dict, settings):
-        self._range = parameter_dict["range"]
-        super().__init__(parent, parameter, parameter_dict, settings)
+    def _init_slider(self):
+        default_index = self._parameter_dict["default_index"]
+        self._settings_slider.setValue(default_index)
+        self._update(default_index)
 
-    def _setup(self, parameter_dict):
-        default = self._range.index(parameter_dict["default"])
-        self._settings_slider.setMaximum(len(self._range) - 1)
+    def _setup(self):
+        self._settings_slider.setMaximum(len(self._parameter_dict["range"]) - 1)
         self._settings_slider.setMinimum(0)
-        self._settings_slider.setValue(default)
         self._settings_slider.setTickInterval(1)
-        self._update(default)
 
     def _update(self, value):
-        range_val = self._range[value]
+        range_val = self._parameter_dict["range"][value]
         self._settings[self._parameter] = range_val
         self._value_label.setText(f"{range_val}")
+        self.emit_signal()
 
 
-class ComponentSettingsCheckBox(QFrame):
+class ComponentSettingsCheckBox(ComponentSettingsBase):
     """SettingsCheckbox"""
 
     def __init__(self, parent, parameter, parameter_dict, settings):
-        super().__init__(parent)
+        super().__init__(parent, parameter, parameter_dict, settings)
         self.setLayout(QHBoxLayout(self))
         self.setFrameStyle(QFrame.Panel)
-        self._parameter = parameter
-        self._settings = settings
         self._settings[parameter] = parameter_dict["default"]
         self._settings_checkbox = QCheckBox(parameter_dict["description"], self)
         self._settings_checkbox.setChecked(parameter_dict["default"])
@@ -107,6 +151,8 @@ class ComponentSettingsCheckBox(QFrame):
 
 class ComponentSettingsDialog(QDialog):
     """SettingsDialog"""
+
+    sig_value_updated = Signal(str)
 
     @staticmethod
     def _is_file_path(parent, parameters):
@@ -150,18 +196,23 @@ class ComponentSettingsDialog(QDialog):
 
         self._settings = {}
         for parameter, parameter_dict in parameters.items():
-            if parameter_dict["type"] == int:
-                self.layout().addWidget(
-                    ComponentSettingsSlider(self, parameter, parameter_dict, self._settings)
+            if parameter_dict["type"] == int and parameter_dict["max"] == "width_dependent":
+                widget = ComponentSettingsSliderWidth(
+                    self, parameter, parameter_dict, self._settings
                 )
+            elif parameter_dict["type"] == int:
+                widget = ComponentSettingsSlider(self, parameter, parameter_dict, self._settings)
             elif parameter_dict["type"] == bool:
-                self.layout().addWidget(
-                    ComponentSettingsCheckBox(self, parameter, parameter_dict, self._settings)
-                )
+                widget = ComponentSettingsCheckBox(self, parameter, parameter_dict, self._settings)
             elif parameter_dict["type"] == "range":
-                self.layout().addWidget(
-                    ComponentSettingsRangeSlider(self, parameter, parameter_dict, self._settings)
+                widget = ComponentSettingsRangeSlider(
+                    self, parameter, parameter_dict, self._settings
                 )
+            else:
+                print(f"Unknown type '{parameter_dict['type']}'")
+                continue
+
+            self.layout().addWidget(widget)
 
         QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         self.buttonBox = QDialogButtonBox(QBtn)
@@ -477,7 +528,7 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(SelectableComponentWidget("PushButton", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("OnOffSwitch", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("Clock", self, circuit_area))
-        self.layout().addWidget(SelectableComponentWidget("StaticLevel", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("StaticValue", self, circuit_area))
         self.layout().addWidget(
             SelectableComponentWidget("SevenSegment", self, circuit_area, display_name="7-Seg")
         )

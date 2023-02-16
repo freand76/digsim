@@ -20,7 +20,7 @@ from digsim.circuit.components import (
     Mem64kByte,
     MemStdOut,
     PushButton,
-    StaticLevel,
+    StaticValue,
     YosysComponent,
 )
 
@@ -28,8 +28,8 @@ from digsim.circuit.components import (
 test_circuit = Circuit(vcd="6502.vcd")
 rst = PushButton(test_circuit, "RST")
 clk = Clock(test_circuit, frequency=1000000, name="CLK")
-irq = StaticLevel(test_circuit, "IRQ", output=False)
-rdy = StaticLevel(test_circuit, "RDY", output=True)
+irq = StaticValue(test_circuit, "IRQ", value=0)
+rdy = StaticValue(test_circuit, "RDY", value=1)
 
 yosys_6502 = YosysComponent(test_circuit, path=f"{os.path.dirname(__file__)}/6502.json")
 mem = Mem64kByte(

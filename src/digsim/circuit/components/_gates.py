@@ -182,7 +182,7 @@ class MUX(Component):
             "ports": {
                 "type": "range",
                 "range": [2, 4, 8],
-                "default": 2,
+                "default_index": 0,
                 "description": "Number of input ports",
             },
             "width": {

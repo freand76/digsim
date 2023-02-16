@@ -16,7 +16,7 @@ from ._placed_image_component import (
     PlacedImageComponentOnOffSwitch,
     PlacedImageComponentOR,
     PlacedImageComponentPushButton,
-    PlacedImageComponentStaticLevel,
+    PlacedImageComponentStaticValue,
     PlacedImageComponentXOR,
     PlacedImageComponentYosys,
 )
@@ -41,7 +41,7 @@ CLASS_NAME_TO_PLACED_COMPONENT = {
     "OnOffSwitch": PlacedImageComponentOnOffSwitch,
     "PushButton": PlacedImageComponentPushButton,
     "SevenSegment": PlacedSevenSegment,
-    "StaticLevel": PlacedImageComponentStaticLevel,
+    "StaticValue": PlacedImageComponentStaticValue,
     "XOR": PlacedImageComponentXOR,
     "YosysComponent": PlacedImageComponentYosys,
 }

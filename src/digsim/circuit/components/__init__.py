@@ -12,6 +12,7 @@ from ._mem64kbyte import Mem64kByte  # noqa: F401
 from ._memstdout import MemStdOut  # noqa: F401
 from ._on_off_switch import OnOffSwitch  # noqa: F401
 from ._seven_segment import SevenSegment  # noqa: F401
-from ._static_level import GND, VDD, StaticLevel  # noqa: F401
+from ._static_level import GND, VDD  # noqa: F401
+from ._static_value import StaticValue  # noqa: F401
 from ._yosys_component import YosysComponent  # noqa: F401
 from .atoms import PortConnectionError  # noqa: F401

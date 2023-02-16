@@ -6,7 +6,7 @@
 import os
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QPen, QPixmap
+from PySide6.QtGui import QFont, QFontMetrics, QPen, QPixmap
 
 from ._placed_component import PlacedComponent
 
@@ -116,14 +116,31 @@ class PlacedImageComponentMUX(PlacedImageComponent):
         self._width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._pixmap.width()
 
 
-class PlacedImageComponentStaticLevel(PlacedImageComponent):
-    """The class for a StaticLevel image component placed in the GUI"""
+class PlacedImageComponentStaticValue(PlacedImageComponent):
+    """The class for a StaticValue image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/ZERO.png"
     ACTIVE_IMAGE_FILENAME = "images/ONE.png"
 
     def __init__(self, component, xpos, ypos):
         super().__init__(component, xpos, ypos, show_name=False)
+
+    def paint_component(self, painter):
+        if self.component.O.width == 1:
+            super().paint_component(painter)
+        else:
+            self.paint_component_base(painter)
+            font = QFont("Arial", 16)
+            fm = QFontMetrics(font)
+            value_str = f"{self.component.O.value}"
+            str_w = fm.horizontalAdvance(value_str)
+            str_h = fm.height()
+            painter.setFont(font)
+            painter.drawText(
+                self.get_rect().x() + self.get_rect().width() / 2 - str_w / 2,
+                self.get_rect().y() + str_h,
+                value_str,
+            )
 
 
 class PlacedImageComponentLed(PlacedImageComponent):
