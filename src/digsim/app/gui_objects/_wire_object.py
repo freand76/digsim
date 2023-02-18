@@ -3,10 +3,8 @@
 
 """ A wire placed in the GUI """
 
-import math
-
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPen
+from PySide6.QtCore import QPoint, Qt
+from PySide6.QtGui import QPainterPath, QPen
 
 from digsim.circuit.components.atoms import PortConnectionError
 
@@ -17,15 +15,14 @@ class WireObject(GuiObject):
     """The class for wire placed in the GUI"""
 
     WIRE_CLICK_CLOSE_PIXELS = 10
+    WIRE_TO_OBJECT_DIST = 5
 
     def __init__(self, app_model, port_a, port_b=None, connect=True):
         super().__init__()
         self._app_model = app_model
         self._src_port = None
         self._dst_port = None
-        self._connected = False
-        self._is_bus = False
-
+        self._line_path = []
         if port_a is None:
             raise PortConnectionError("Cannot start a wire without a port")
 
@@ -50,31 +47,74 @@ class WireObject(GuiObject):
         if connect:
             self._connect()
 
-    def _paint_wire(self, painter, src, dst):
+    def _is_bus(self):
+        if self._src_port is not None:
+            return self._src_port.width > 1
+        return self._dst_port.width > 1
+
+    def _create_line(self, src, dst):
+        self._line_path = []
+        if self._src_port is not None:
+            component_object = self._app_model.get_component_object(self._src_port.parent())
+            source = src
+            dest = dst
+        else:
+            source = dst
+            dest = src
+            component_object = self._app_model.get_component_object(self._dst_port.parent())
+
+        component_top_y = component_object.pos.y()
+        component_bottom_y = component_object.pos.y() + component_object.size.height()
+
+        self._line_path.append(source)
+        if source.x() < dest.x():
+            half_dist_x = (dest.x() - source.x()) / 2
+            self._line_path.append(QPoint(source.x() + half_dist_x, source.y()))
+            self._line_path.append(QPoint(source.x() + half_dist_x, source.y()))
+            self._line_path.append(QPoint(source.x() + half_dist_x, dest.y()))
+            self._line_path.append(QPoint(dest.x(), dest.y()))
+        else:
+            half_dist_y = (dest.y() - source.y()) / 2
+            if dst.y() > src.y():
+                y_mid = max(
+                    component_bottom_y - source.y() + self.WIRE_TO_OBJECT_DIST, half_dist_y
+                )
+            else:
+                y_mid = min(component_top_y - source.y() - self.WIRE_TO_OBJECT_DIST, half_dist_y)
+            self._line_path.append(QPoint(source.x() + 10, source.y()))
+            self._line_path.append(QPoint(source.x() + 10, source.y() + y_mid))
+            self._line_path.append(QPoint(dest.x() - 10, source.y() + y_mid))
+            self._line_path.append(QPoint(dest.x() - 10, dest.y()))
+        self._line_path.append(QPoint(dest.x(), dest.y()))
+
+    def _paint_wire(self, painter):
         pen = QPen()
         pen.setColor(Qt.darkGray)
         if self.selected:
             pen.setWidth(6)
             pen.setColor(Qt.black)
-        elif self._is_bus:
+        elif self._is_bus():
             pen.setWidth(4)
         else:
             pen.setWidth(2)
         painter.setPen(pen)
-        painter.drawLine(src, dst)
+        path = QPainterPath(self._line_path[0])
+        for point in self._line_path[1:]:
+            path.lineTo(point)
+        painter.drawPath(path)
 
     def paint(self, painter):
         """Paint paced wire"""
-        self._paint_wire(painter, self._src_point, self._dst_point)
+        self._paint_wire(painter)
 
     def paint_new(self, painter, end_pos):
         """Paint new/unfinished placed wire"""
-        self._paint_wire(painter, self.start_pos, end_pos)
+        self._create_line(self.start_pos, end_pos)
+        self._paint_wire(painter)
 
     def _connect(self):
         if self._src_port is not None and self._dst_port is not None:
             self._src_port.wire = self._dst_port
-            self._connected = True
 
     def disconnect(self):
         """Disconnect placed wire"""
@@ -94,33 +134,39 @@ class WireObject(GuiObject):
     def update(self):
         """Update the wire position if the connected components move"""
         if self._src_port is not None:
-            self._is_bus = self._src_port.width > 1
             src_comp = self._app_model.get_component_object(self._src_port.parent())
             self._src_point = src_comp.pos + src_comp.get_port_pos(self._src_port.name())
         if self._dst_port is not None:
-            self._is_bus = self._dst_port.width > 1
             dst_comp = self._app_model.get_component_object(self._dst_port.parent())
             self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name())
+        if self._src_port is not None and self._dst_port is not None:
+            self._create_line(self._src_point, self._dst_point)
 
     def is_close(self, point):
         """Return True if the point is close to this wire, used for selection"""
-        if (
-            point.x() < min(self._src_point.x(), self._dst_point.x())
-            or point.x() > max(self._src_point.x(), self._dst_point.x())
-            or point.y() < min(self._src_point.y(), self._dst_point.y())
-            or point.y() > max(self._src_point.y(), self._dst_point.y())
-        ):
-            return False
-        p1_x = self._src_point.x()
-        p1_y = self._src_point.y()
-        p2_x = self._dst_point.x()
-        p2_y = self._dst_point.y()
-        p3_x = point.x()
-        p3_y = point.y()
-        nom = abs((p2_x - p1_x) * (p1_y - p3_y) - (p1_x - p3_x) * (p2_y - p1_y))
-        denom = math.sqrt((p2_x - p1_x) ** 2 + (p2_y - p1_y) ** 2)
 
-        return (nom / denom) < self.WIRE_CLICK_CLOSE_PIXELS
+        for idx, point1 in enumerate(self._line_path[0:-2]):
+            point2 = self._line_path[idx + 1]
+            point1_x = min(
+                point1.x() - self.WIRE_CLICK_CLOSE_PIXELS,
+                point2.x() - self.WIRE_CLICK_CLOSE_PIXELS,
+            )
+            point1_y = min(
+                point1.y() - self.WIRE_CLICK_CLOSE_PIXELS,
+                point2.y() - self.WIRE_CLICK_CLOSE_PIXELS,
+            )
+            point2_x = max(
+                point1.x() + self.WIRE_CLICK_CLOSE_PIXELS,
+                point2.x() + self.WIRE_CLICK_CLOSE_PIXELS,
+            )
+            point2_y = max(
+                point1.y() + self.WIRE_CLICK_CLOSE_PIXELS,
+                point2.y() + self.WIRE_CLICK_CLOSE_PIXELS,
+            )
+            if point.x() > point1_x and point.x() < point2_x:
+                if point.y() > point1_y and point.y() < point2_y:
+                    return True
+        return False
 
     def has_port(self, port):
         """Return True if port is alredy a part of this wire?"""

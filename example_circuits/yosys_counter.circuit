@@ -29,7 +29,8 @@
                 "display_name": "HexDigit",
                 "type": "digsim.circuit.components.HexDigit",
                 "settings": {
-                    "digits": 1
+                    "digits": 1,
+                    "dot": true
                 }
             },
             {
@@ -83,18 +84,18 @@
         },
         "PushButton_2": {
             "x": 120,
-            "y": 250
+            "y": 255
         },
         "HexDigit_4": {
             "x": 750,
-            "y": 370
+            "y": 380
         },
         "OnOffSwitch": {
             "x": 120,
             "y": 400
         },
         "Led": {
-            "x": 451,
+            "x": 450,
             "y": 100
         }
     }

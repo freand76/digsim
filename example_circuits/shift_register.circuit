@@ -6,37 +6,49 @@
                 "name": "DFF",
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
-                "settings": {}
+                "settings": {
+                    "width": 1
+                }
             },
             {
                 "name": "DFF_1",
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
-                "settings": {}
+                "settings": {
+                    "width": 1
+                }
             },
             {
                 "name": "DFF_2",
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
-                "settings": {}
+                "settings": {
+                    "width": 1
+                }
             },
             {
                 "name": "DFF_3",
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
-                "settings": {}
+                "settings": {
+                    "width": 1
+                }
             },
             {
                 "name": "DFF_4",
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
-                "settings": {}
+                "settings": {
+                    "width": 1
+                }
             },
             {
                 "name": "DFF_5",
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
-                "settings": {}
+                "settings": {
+                    "width": 1
+                }
             },
             {
                 "name": "PushButton",
@@ -166,48 +178,48 @@
     },
     "gui": {
         "DFF": {
-            "x": 212,
-            "y": 50
+            "x": 250,
+            "y": 20
         },
         "DFF_1": {
-            "x": 212,
-            "y": 150
+            "x": 250,
+            "y": 130
         },
         "DFF_2": {
-            "x": 212,
-            "y": 250
+            "x": 250,
+            "y": 240
         },
         "DFF_3": {
-            "x": 212,
+            "x": 250,
             "y": 350
         },
         "DFF_4": {
-            "x": 212,
-            "y": 450
+            "x": 250,
+            "y": 460
         },
         "DFF_5": {
-            "x": 212,
-            "y": 550
+            "x": 250,
+            "y": 570
         },
         "PushButton": {
-            "x": 12,
-            "y": 9
+            "x": 20,
+            "y": 20
         },
         "Clock": {
-            "x": 14,
-            "y": 119
+            "x": 20,
+            "y": 200
         },
         "Led": {
             "x": 600,
-            "y": 50
+            "y": 20
         },
         "Led_1": {
             "x": 600,
-            "y": 150
+            "y": 130
         },
         "Led_2": {
             "x": 600,
-            "y": 250
+            "y": 240
         },
         "Led_3": {
             "x": 600,
@@ -215,11 +227,11 @@
         },
         "Led_4": {
             "x": 600,
-            "y": 450
+            "y": 460
         },
         "Led_5": {
             "x": 600,
-            "y": 550
+            "y": 570
         }
     }
 }
