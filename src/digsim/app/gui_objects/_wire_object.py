@@ -10,10 +10,10 @@ from PySide6.QtGui import QPen
 
 from digsim.circuit.components.atoms import PortConnectionError
 
-from ._placed_object import PlacedObject
+from ._gui_object import GuiObject
 
 
-class PlacedWire(PlacedObject):
+class WireObject(GuiObject):
     """The class for wire placed in the GUI"""
 
     WIRE_CLICK_CLOSE_PIXELS = 10
@@ -95,11 +95,11 @@ class PlacedWire(PlacedObject):
         """Update the wire position if the connected components move"""
         if self._src_port is not None:
             self._is_bus = self._src_port.width > 1
-            src_comp = self._app_model.get_placed_component(self._src_port.parent())
+            src_comp = self._app_model.get_component_object(self._src_port.parent())
             self._src_point = src_comp.pos + src_comp.get_port_pos(self._src_port.name())
         if self._dst_port is not None:
             self._is_bus = self._dst_port.width > 1
-            dst_comp = self._app_model.get_placed_component(self._dst_port.parent())
+            dst_comp = self._app_model.get_component_object(self._dst_port.parent())
             self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name())
 
     def is_close(self, point):

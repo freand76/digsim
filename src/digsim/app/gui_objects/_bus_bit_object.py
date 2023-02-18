@@ -6,13 +6,13 @@
 from PySide6.QtCore import QPoint, QSize, Qt
 from PySide6.QtGui import QPen
 
-from ._placed_component import PlacedComponent
+from ._component_object import ComponentObject
 
 
 # pylint: disable=too-many-arguments
 
 
-class PlacedBusBits(PlacedComponent):
+class BusBitsObject(ComponentObject):
     """The class for a bus/bit component placed in the GUI"""
 
     WIRE_LENGTH_COMPONENT = 5
@@ -76,7 +76,7 @@ class PlacedBusBits(PlacedComponent):
         cls.paint_selectable_component_name(painter, size, name)
 
 
-class PlacedBitsBus(PlacedBusBits):
+class BitsBusObject(BusBitsObject):
     """The class for a bit/bit component placed in the GUI"""
 
     WIRE_LENGTH_COMPONENT = -5

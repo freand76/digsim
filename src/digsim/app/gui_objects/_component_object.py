@@ -8,10 +8,10 @@ import abc
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPen
 
-from ._placed_object import PlacedObject
+from ._gui_object import GuiObject
 
 
-class PlacedComponent(PlacedObject):
+class ComponentObject(GuiObject):
     """The base class for a component placed in the GUI"""
 
     DEFAULT_WIDTH = 120

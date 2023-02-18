@@ -14,7 +14,7 @@ from functools import partial
 
 from PySide6.QtCore import QThread, Signal
 
-import digsim.app.gui_object
+import digsim.app.gui_objects
 import digsim.circuit.components
 from digsim.circuit import Circuit
 from digsim.circuit.components.atoms import CallbackComponent, Component, PortConnectionError
@@ -30,8 +30,8 @@ class AppModel(QThread):
 
     def __init__(self):
         super().__init__()
-        self._placed_components = {}
-        self._placed_wires = {}
+        self._component_objects = {}
+        self._wire_objects = {}
         self._circuit = Circuit(name="DigSimCircuit", vcd="gui.vcd")
         self._started = False
         self._sim_tick_ms = 50
@@ -42,8 +42,8 @@ class AppModel(QThread):
 
     def clear(self):
         """Clear components and wires"""
-        self._placed_components = {}
-        self._placed_wires = {}
+        self._component_objects = {}
+        self._wire_objects = {}
 
     @property
     def callback_list(self):
@@ -61,13 +61,13 @@ class AppModel(QThread):
 
     def _circuit_init(self):
         self._circuit.init()
-        for _, comp in self._placed_components.items():
+        for _, comp in self._component_objects.items():
             self.sig_component_notify.emit(comp.component)
         self.sig_sim_time_notify.emit(0)
 
-    def get_placed_component(self, component):
-        """Get placed component (from component)"""
-        return self._placed_components[component]
+    def get_component_object(self, component):
+        """Get component object (from component)"""
+        return self._component_objects[component]
 
     def get_component_parameters(self, name):
         """Get parameters for a component"""
@@ -75,46 +75,46 @@ class AppModel(QThread):
         return component_class.get_parameters()
 
     def add_component_by_name(self, name, pos, settings):
-        """Add placed component from class name"""
+        """Add component object from class name"""
         component_class = getattr(digsim.circuit.components, name)
         component = component_class(self._circuit, name=name, **settings)
         self._circuit_init()
-        placed_component = self._add_component(component, pos.x(), pos.y())
-        placed_component.center()  # Component is plced @ mouse pointer, make it center
-        return placed_component
+        component_object = self._add_component(component, pos.x(), pos.y())
+        component_object.center()  # Component is plced @ mouse pointer, make it center
+        return component_object
 
     def _add_component(self, component, xpos, ypos):
-        """Add placed component in position"""
-        placed_component_class = digsim.app.gui_object.class_factory(type(component).__name__)
-        self._placed_components[component] = placed_component_class(component, xpos, ypos)
+        """Add component object in position"""
+        component_object_class = digsim.app.gui_objects.class_factory(type(component).__name__)
+        self._component_objects[component] = component_object_class(component, xpos, ypos)
         if isinstance(component, CallbackComponent):
             component.set_callback(partial(AppModel.comp_cb, self))
-        return self._placed_components[component]
+        return self._component_objects[component]
 
     def add_wire(self, src_port, dst_port, connect=True):
-        """Add placed wire between source and destination port"""
-        wire = digsim.app.gui_object.PlacedWire(self, src_port, dst_port, connect)
-        self._placed_wires[wire.key] = wire
+        """Add wire object between source and destination port"""
+        wire = digsim.app.gui_objects.WireObject(self, src_port, dst_port, connect)
+        self._wire_objects[wire.key] = wire
         self.sig_component_notify.emit(dst_port.parent())
 
-    def get_placed_components(self):
-        """Get list of placed components"""
-        placed_components = []
-        for _, comp in self._placed_components.items():
-            placed_components.append(comp)
-        return placed_components
+    def get_component_objects(self):
+        """Get list of component objects"""
+        component_objects = []
+        for _, comp in self._component_objects.items():
+            component_objects.append(comp)
+        return component_objects
 
-    def get_placed_wires(self):
-        """Get list of placed wires"""
-        placed_wires = []
-        for _, wire in self._placed_wires.items():
-            placed_wires.append(wire)
-        return placed_wires
+    def get_wire_objects(self):
+        """Get list of wire objects"""
+        wire_objects = []
+        for _, wire in self._wire_objects.items():
+            wire_objects.append(wire)
+        return wire_objects
 
     def get_placed_objects(self):
         """Get list of all placed objects"""
-        placed_objects = self.get_placed_components()
-        placed_objects.extend(self.get_placed_wires())
+        placed_objects = self.get_component_objects()
+        placed_objects.extend(self.get_wire_objects())
         return placed_objects
 
     def select(self, placed_object=None):
@@ -128,7 +128,7 @@ class AppModel(QThread):
     def select_pos(self, pos):
         """Select object from position"""
         self.select(None)
-        for wire in self.get_placed_wires():
+        for wire in self.get_wire_objects():
             if wire.is_close(pos):
                 wire.select(True)
             else:
@@ -143,36 +143,36 @@ class AppModel(QThread):
                 objects.append(obj)
         return objects
 
-    def _delete_wire(self, placed_wire):
-        placed_wire.disconnect()
-        del self._placed_wires[placed_wire.key]
+    def _delete_wire(self, wire_object):
+        wire_object.disconnect()
+        del self._wire_objects[wire_object.key]
 
-    def _delete_component(self, placed_component):
-        for port in placed_component.component.ports:
-            for wire in self.get_placed_wires():
+    def _delete_component(self, component_object):
+        for port in component_object.component.ports:
+            for wire in self.get_wire_objects():
                 if wire.has_port(port):
                     self._delete_wire(wire)
-        del self._placed_components[placed_component.component]
-        self._circuit.delete_component(placed_component.component)
+        del self._component_objects[component_object.component]
+        self._circuit.delete_component(component_object.component)
 
     def delete(self):
         """Delete selected object(s)"""
         selected_objects = self.get_selected_objects()
         for obj in selected_objects:
-            if isinstance(obj, digsim.app.gui_object.PlacedWire):
+            if isinstance(obj, digsim.app.gui_objects.WireObject):
                 self._delete_wire(obj)
-            elif isinstance(obj, digsim.app.gui_object.PlacedComponent):
+            elif isinstance(obj, digsim.app.gui_objects.ComponentObject):
                 self._delete_component(obj)
         self.sig_update_gui_components.emit()
 
     def update_wires(self):
-        """Update placed wires"""
-        for _, wire in self._placed_wires.items():
+        """Update wire objects"""
+        for _, wire in self._wire_objects.items():
             wire.update()
 
     def paint_wires(self, painter):
-        """Paint placed wires"""
-        wires = self.get_placed_wires()
+        """Paint wire objects"""
+        wires = self.get_wire_objects()
         for wire in wires:
             wire.paint(painter)
 
@@ -180,31 +180,31 @@ class AppModel(QThread):
             self._new_wire.paint_new(painter, self._new_wire_end_pos)
 
     def new_wire_start(self, component, portname):
-        """Start new placed wire"""
+        """Start new wire object"""
         if component.port(portname).can_add_wire():
-            self._new_wire = digsim.app.gui_object.PlacedWire(self, component.port(portname))
+            self._new_wire = digsim.app.gui_objects.WireObject(self, component.port(portname))
 
     def new_wire_end(self, component, portname):
-        """End new placed wire"""
+        """End new wire object"""
         try:
             self._new_wire.set_end_port(component.port(portname))
-            self._placed_wires[self._new_wire.key] = self._new_wire
+            self._wire_objects[self._new_wire.key] = self._new_wire
         except PortConnectionError as exc:
             print("ERROR:", str(exc))
         self._new_wire = None
         self._new_wire_end_pos = None
 
     def new_wire_abort(self):
-        """Abort new placed wire"""
+        """Abort new wire object"""
         self._new_wire = None
         self._new_wire_end_pos = None
 
     def set_new_wire_end_pos(self, pos):
-        """Update end point for unfinished new placed wire"""
+        """Update end point for unfinished new wire object"""
         self._new_wire_end_pos = pos
 
     def has_new_wire(self):
-        """Return True if an unfinished new placed wire is active"""
+        """Return True if an unfinished new wire object is active"""
         return self._new_wire is not None
 
     @property
@@ -268,8 +268,8 @@ class AppModel(QThread):
         circuit_folder = os.path.dirname(path)
         circuit_dict = self._circuit.to_dict(circuit_folder)
         circuit_dict["gui"] = {}
-        for comp, placed_comp in self._placed_components.items():
-            circuit_dict["gui"][comp.name()] = placed_comp.to_dict()
+        for comp, comp_object in self._component_objects.items():
+            circuit_dict["gui"][comp.name()] = comp_object.to_dict()
         json_object = json.dumps(circuit_dict, indent=4)
         with open(path, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)

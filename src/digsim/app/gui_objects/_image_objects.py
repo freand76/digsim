@@ -8,10 +8,10 @@ import os
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPen, QPixmap
 
-from ._placed_component import PlacedComponent
+from ._component_object import ComponentObject
 
 
-class PlacedImageComponent(PlacedComponent):
+class ImageObject(ComponentObject):
     """The class for a image component placed in the GUI"""
 
     IMAGE_FILENAME = None
@@ -62,43 +62,43 @@ class PlacedImageComponent(PlacedComponent):
         painter.drawPixmap(QPoint(xpos, ypos), pixmap)
 
 
-class PlacedImageComponentAND(PlacedImageComponent):
+class ImageObjectAND(ImageObject):
     """The class for a AND image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/AND.png"
 
 
-class PlacedImageComponentOR(PlacedImageComponent):
+class ImageObjectOR(ImageObject):
     """The class for a OR image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/OR.png"
 
 
-class PlacedImageComponentNAND(PlacedImageComponent):
+class ImageObjectNAND(ImageObject):
     """The class for a NAND image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/NAND.png"
 
 
-class PlacedImageComponentNOR(PlacedImageComponent):
+class ImageObjectNOR(ImageObject):
     """The class for a NOR image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/NOR.png"
 
 
-class PlacedImageComponentNOT(PlacedImageComponent):
+class ImageObjectNOT(ImageObject):
     """The class for a NOR image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/NOT.png"
 
 
-class PlacedImageComponentXOR(PlacedImageComponent):
+class ImageObjectXOR(ImageObject):
     """The class for a XOR image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/XOR.png"
 
 
-class PlacedImageComponentDFF(PlacedImageComponent):
+class ImageObjectDFF(ImageObject):
     """The class for a DFF image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/DFF.png"
@@ -110,7 +110,7 @@ class PlacedImageComponentDFF(PlacedImageComponent):
         self._width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._pixmap.width()
 
 
-class PlacedImageComponentMUX(PlacedImageComponent):
+class ImageObjectMUX(ImageObject):
     """The class for a MUX image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/MUX.png"
@@ -122,7 +122,7 @@ class PlacedImageComponentMUX(PlacedImageComponent):
         self._width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._pixmap.width()
 
 
-class PlacedImageComponentStaticValue(PlacedImageComponent):
+class ImageObjectStaticValue(ImageObject):
     """The class for a StaticValue image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/ZERO.png"
@@ -149,7 +149,7 @@ class PlacedImageComponentStaticValue(PlacedImageComponent):
             )
 
 
-class PlacedImageComponentLed(PlacedImageComponent):
+class ImageObjectLed(ImageObject):
     """The class for a Led image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/LED_OFF.png"
@@ -159,7 +159,7 @@ class PlacedImageComponentLed(PlacedImageComponent):
         super().__init__(component, xpos, ypos, show_name=False)
 
 
-class PlacedImageComponentYosys(PlacedImageComponent):
+class ImageObjectYosys(ImageObject):
     """The class for a Yosys image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/YOSYS.png"
@@ -169,7 +169,7 @@ class PlacedImageComponentYosys(PlacedImageComponent):
         self.paint_component_name(painter)
 
 
-class PlacedImageComponentPushButton(PlacedImageComponent):
+class ImageObjectPushButton(ImageObject):
     """The class for a PushButton image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/PB.png"
@@ -194,7 +194,7 @@ class PlacedImageComponentPushButton(PlacedImageComponent):
             )
 
 
-class PlacedImageComponentWithActiveRect(PlacedImageComponent):
+class ImageObjectWithActiveRect(ImageObject):
     """
     A base class for a image component placed in the GUI.
     When active the image will have a green border painted around it.
@@ -213,7 +213,7 @@ class PlacedImageComponentWithActiveRect(PlacedImageComponent):
             painter.drawRoundedRect(xpos, ypos, self._pixmap.width(), self._pixmap.height(), 5, 5)
 
 
-class PlacedImageComponentOnOffSwitch(PlacedImageComponentWithActiveRect):
+class ImageObjectOnOffSwitch(ImageObjectWithActiveRect):
     """The class for a On/Off-Switch image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/Switch_OFF.png"
@@ -223,7 +223,7 @@ class PlacedImageComponentOnOffSwitch(PlacedImageComponentWithActiveRect):
         super().__init__(component, xpos, ypos, show_name=False)
 
 
-class PlacedImageComponentClock(PlacedImageComponentWithActiveRect):
+class ImageObjectClock(ImageObjectWithActiveRect):
     """The class for a Clock image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/Clock.png"

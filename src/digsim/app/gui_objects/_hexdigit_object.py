@@ -3,10 +3,10 @@
 
 """ A hexdigit component placed in the GUI """
 
-from ._placed_seven_segment import PlacedSevenSegment
+from ._seven_segment_object import SevenSegmentObject
 
 
-class PlacedHexDigit(PlacedSevenSegment):
+class HexDigitObject(SevenSegmentObject):
     """The class for a hexdigit component placed in the GUI"""
 
     def setup_size(self):

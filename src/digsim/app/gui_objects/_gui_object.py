@@ -6,7 +6,7 @@
 import abc
 
 
-class PlacedObject(abc.ABC):
+class GuiObject(abc.ABC):
     """The base class for a selectable object placed in the GUI"""
 
     def __init__(self):

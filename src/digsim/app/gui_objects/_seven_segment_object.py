@@ -6,10 +6,10 @@
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QPainterPath
 
-from ._placed_component import PlacedComponent
+from ._component_object import ComponentObject
 
 
-class PlacedSevenSegment(PlacedComponent):
+class SevenSegmentObject(ComponentObject):
     """The class for a 7-segment component placed in the GUI"""
 
     SEGMENT_TYPE_AND_POS = {

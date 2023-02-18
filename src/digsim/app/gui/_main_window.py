@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-import digsim.app.gui_object
+import digsim.app.gui_objects
 
 
 class ComponentSettingsBase(QFrame):
@@ -226,25 +226,25 @@ class ComponentSettingsDialog(QDialog):
 class ComponentWidget(QPushButton):
     """A component widget, a 'clickable' widget with a custom paintEvent"""
 
-    def __init__(self, app_model, placed_component, parent):
-        super().__init__(parent, objectName=placed_component.component.name())
+    def __init__(self, app_model, component_object, parent):
+        super().__init__(parent, objectName=component_object.component.name())
         self._app_model = app_model
         self._app_model.sig_component_notify.connect(self._component_notify)
-        self._placed_component = placed_component
+        self._component_object = component_object
         self._mouse_grab_pos = None
         self._active_port = None
 
         self.setMouseTracking(True)
-        self.move(self._placed_component.pos)
+        self.move(self._component_object.pos)
 
     def sizeHint(self):
         """QT event callback function"""
-        return self._placed_component.size
+        return self._component_object.size
 
     @property
     def component(self):
         """Get component from widget"""
-        return self._placed_component.component
+        return self._component_object.component
 
     def _component_notify(self, component):
         if component == self.component:
@@ -253,8 +253,8 @@ class ComponentWidget(QPushButton):
     def paintEvent(self, _):
         """QT event callback function"""
         painter = QPainter(self)
-        self._placed_component.paint_component(painter)
-        self._placed_component.paint_ports(painter, self._active_port)
+        self._component_object.paint_component(painter)
+        self._component_object.paint_ports(painter, self._active_port)
         painter.end()
 
     def enterEvent(self, _):
@@ -277,7 +277,7 @@ class ComponentWidget(QPushButton):
                 if self._active_port is not None:
                     self._app_model.new_wire_end(self.component, self._active_port)
             else:
-                self._app_model.select(self._placed_component)
+                self._app_model.select(self._component_object)
                 if self._active_port is None:
                     # Prepare to move
                     self.setCursor(Qt.ClosedHandCursor)
@@ -290,7 +290,7 @@ class ComponentWidget(QPushButton):
             if self._app_model.has_new_wire():
                 self._app_model.new_wire_abort()
             else:
-                self._placed_component.create_context_menu(self, event)
+                self._component_object.create_context_menu(self, event)
                 self.adjustSize()
                 self.update()
 
@@ -304,7 +304,7 @@ class ComponentWidget(QPushButton):
                 # Move complete
                 self.setCursor(Qt.ArrowCursor)
                 self._mouse_grab_pos = None
-                self._placed_component.pos = self.pos()
+                self._component_object.pos = self.pos()
                 self._app_model.update_wires()
                 self.parent().update()
 
@@ -313,7 +313,7 @@ class ComponentWidget(QPushButton):
         if self._app_model.is_running:
             return
 
-        active_port = self._placed_component.get_port_for_point(event.pos())
+        active_port = self._component_object.get_port_for_point(event.pos())
         if active_port != self._active_port:
             self._active_port = active_port
             if self._active_port is not None:
@@ -325,13 +325,13 @@ class ComponentWidget(QPushButton):
         if self._app_model.has_new_wire():
             end_pos = event.pos()
             if self._active_port:
-                end_pos = self._placed_component.get_port_pos(self._active_port)
+                end_pos = self._component_object.get_port_pos(self._active_port)
             self._app_model.set_new_wire_end_pos(self.pos() + end_pos)
             self.parent().update()
 
         elif self._mouse_grab_pos is not None:
             self.move(self.pos() + event.pos() - self._mouse_grab_pos)
-            self._placed_component.pos = self.pos()
+            self._component_object.pos = self.pos()
             self._app_model.update_wires()
             self.parent().update()
 
@@ -368,8 +368,8 @@ class CircuitArea(QWidget):
         self._app_model = app_model
         self._app_model.sig_update_gui_components.connect(self._update_gui_components)
 
-        for placed_comp in self._app_model.get_placed_components():
-            ComponentWidget(app_model, placed_comp, self)
+        for component_object in self._app_model.get_component_objects():
+            ComponentWidget(app_model, component_object, self)
 
         self.setMouseTracking(True)
         self.setAcceptDrops(True)
@@ -439,19 +439,19 @@ class CircuitArea(QWidget):
         component_parameters = self._app_model.get_component_parameters(name)
         ok, settings = ComponentSettingsDialog.start(self, name, component_parameters)
         if ok:
-            placed_component = self._app_model.add_component_by_name(name, position, settings)
-            comp = ComponentWidget(self._app_model, placed_component, self)
+            component_object = self._app_model.add_component_by_name(name, position, settings)
+            comp = ComponentWidget(self._app_model, component_object, self)
             comp.show()
-            self._app_model.select(placed_component)
+            self._app_model.select(component_object)
 
     def _update_gui_components(self):
         children = self.findChildren(ComponentWidget)
         for child in children:
             child.deleteLater()
 
-        placed_components = self._app_model.get_placed_components()
-        for placed_component in placed_components:
-            comp = ComponentWidget(self._app_model, placed_component, self)
+        component_objects = self._app_model.get_component_objects()
+        for component_object in component_objects:
+            comp = ComponentWidget(self._app_model, component_object, self)
             comp.show()
         self._app_model.update_wires()
         self.update()
@@ -467,7 +467,7 @@ class SelectableComponentWidget(QPushButton):
         super().__init__(parent)
         self._name = name
         self._circuit_area = circuit_area
-        self._paint_class = digsim.app.gui_object.class_factory(name)
+        self._paint_class = digsim.app.gui_objects.class_factory(name)
         if display_name is not None:
             self._display_name = display_name
         else:
