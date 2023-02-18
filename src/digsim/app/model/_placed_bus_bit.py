@@ -18,6 +18,17 @@ class PlacedBusBits(PlacedComponent):
     WIRE_LENGTH_COMPONENT = 5
     WIRE_LENGTH_SELECTABLE = 15
 
+    def __init__(self, component, xpos, ypos):
+        super().__init__(component, xpos, ypos)
+        _, bus_w, _ = self.get_port_display_name_metrics("bus")
+        self._width = (
+            2 * self.RECT_TO_BORDER
+            + 2 * self.inport_x_pos()
+            + 2 * bus_w
+            + abs(2 * self.WIRE_LENGTH_COMPONENT)
+        )
+        self.update_ports()
+
     @classmethod
     def _paint_bus_bit(cls, painter, size, border, wire_length, bit_wires_y):
         center_pos = QPoint(size.width() / 2, size.height() / 2)
