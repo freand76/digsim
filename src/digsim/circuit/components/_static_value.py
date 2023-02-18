@@ -27,9 +27,7 @@ class StaticValue(Component):
     def get_parameters(cls):
         return {
             "value": {
-                "type": int,
-                "min": 0,
-                "max": "width_dependent",
+                "type": "width_pow2",
                 "default": 0,
                 "description": "Static value",
             },

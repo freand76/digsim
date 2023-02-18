@@ -90,16 +90,14 @@ class ComponentSettingsSlider(ComponentSettingsBase):
         self.emit_signal()
 
 
-class ComponentSettingsSliderWidth(ComponentSettingsSlider):
+class ComponentSettingsSliderWidthPow2(ComponentSettingsSlider):
     """SettingsSlider which is dependent on bitwidth"""
 
     def _setup(self):
         value_max = 2 ** self._settings.get("width", 1) - 1
         self._settings_slider.setMaximum(value_max)
-        self._settings_slider.setMinimum(self._parameter_dict["min"])
-        self._settings_slider.setTickInterval(
-            max(1, (value_max - self._parameter_dict["min"]) / 10)
-        )
+        self._settings_slider.setMinimum(0)
+        self._settings_slider.setTickInterval(max(1, (value_max - 0) / 10))
 
     def _update(self, value):
         self._settings[self._parameter] = value
@@ -111,7 +109,7 @@ class ComponentSettingsSliderWidth(ComponentSettingsSlider):
             self._setup()
 
 
-class ComponentSettingsRangeSlider(ComponentSettingsSlider):
+class ComponentSettingsIntRangeSlider(ComponentSettingsSlider):
     """SettingsSlider (range)"""
 
     def _init_slider(self):
@@ -196,16 +194,16 @@ class ComponentSettingsDialog(QDialog):
 
         self._settings = {}
         for parameter, parameter_dict in parameters.items():
-            if parameter_dict["type"] == int and parameter_dict["max"] == "width_dependent":
-                widget = ComponentSettingsSliderWidth(
+            if parameter_dict["type"] == "width_pow2":
+                widget = ComponentSettingsSliderWidthPow2(
                     self, parameter, parameter_dict, self._settings
                 )
             elif parameter_dict["type"] == int:
                 widget = ComponentSettingsSlider(self, parameter, parameter_dict, self._settings)
             elif parameter_dict["type"] == bool:
                 widget = ComponentSettingsCheckBox(self, parameter, parameter_dict, self._settings)
-            elif parameter_dict["type"] == "range":
-                widget = ComponentSettingsRangeSlider(
+            elif parameter_dict["type"] == "intrange":
+                widget = ComponentSettingsIntRangeSlider(
                     self, parameter, parameter_dict, self._settings
                 )
             else:

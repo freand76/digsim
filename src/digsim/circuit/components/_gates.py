@@ -186,7 +186,7 @@ class MUX(Component):
     def get_parameters(cls):
         return {
             "ports": {
-                "type": "range",
+                "type": "intrange",
                 "range": [2, 4, 8],
                 "default_index": 0,
                 "description": "Number of input ports",
