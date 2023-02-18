@@ -25,7 +25,7 @@ class Bus2Bits(Component):
                 "min": 2,
                 "max": 32,
                 "default": 2,
-                "description": "Number of bits",
+                "description": "Bus width",
             },
         }
 
@@ -52,7 +52,7 @@ class Bits2Bus(Component):
                 "min": 2,
                 "max": 32,
                 "default": 2,
-                "description": "Number of bits",
+                "description": "Bus width",
             },
         }
 

@@ -102,6 +102,12 @@ class PlacedImageComponentDFF(PlacedImageComponent):
     """The class for a DFF image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/DFF.png"
+    PORT_TO_IMAGE_DIST = 20
+
+    def setup_size(self):
+        self._get_pixmaps()
+        _, str_pixels_w, _ = self.get_port_display_name_metrics("D")
+        self._width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._pixmap.width()
 
 
 class PlacedImageComponentMUX(PlacedImageComponent):
@@ -218,7 +224,7 @@ class PlacedImageComponentOnOffSwitch(PlacedImageComponentWithActiveRect):
 
 
 class PlacedImageComponentClock(PlacedImageComponentWithActiveRect):
-    """The class for a DFF image component placed in the GUI"""
+    """The class for a Clock image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/Clock.png"
 

@@ -70,9 +70,6 @@ class HexDigit(CallbackComponent):
             segments += "."
         return segments
 
-    def settings_to_dict(self):
-        return {"digits": self._digits, "dot": self._dot}
-
     @classmethod
     def get_parameters(cls):
         return {
@@ -89,3 +86,6 @@ class HexDigit(CallbackComponent):
                 "description": "Use decimal dot",
             },
         }
+
+    def settings_to_dict(self):
+        return {"digits": self._digits, "dot": self._dot}
