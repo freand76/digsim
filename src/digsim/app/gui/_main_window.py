@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from digsim.app.model import get_placed_component_by_name
+import digsim.app.gui_object
 
 
 class ComponentSettingsBase(QFrame):
@@ -467,7 +467,7 @@ class SelectableComponentWidget(QPushButton):
         super().__init__(parent)
         self._name = name
         self._circuit_area = circuit_area
-        self._paint_class = get_placed_component_by_name(name)
+        self._paint_class = digsim.app.gui_object.class_factory(name)
         if display_name is not None:
             self._display_name = display_name
         else:

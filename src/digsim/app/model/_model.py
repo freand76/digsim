@@ -14,13 +14,10 @@ from functools import partial
 
 from PySide6.QtCore import QThread, Signal
 
+import digsim.app.gui_object
 import digsim.circuit.components
 from digsim.circuit import Circuit
 from digsim.circuit.components.atoms import CallbackComponent, Component, PortConnectionError
-
-from ._placed_component import PlacedComponent
-from ._placed_component_factory import get_placed_component_by_name  # noqa: F401
-from ._placed_wire import PlacedWire
 
 
 class AppModel(QThread):
@@ -88,7 +85,7 @@ class AppModel(QThread):
 
     def _add_component(self, component, xpos, ypos):
         """Add placed component in position"""
-        placed_component_class = get_placed_component_by_name(type(component).__name__)
+        placed_component_class = digsim.app.gui_object.class_factory(type(component).__name__)
         self._placed_components[component] = placed_component_class(component, xpos, ypos)
         if isinstance(component, CallbackComponent):
             component.set_callback(partial(AppModel.comp_cb, self))
@@ -96,7 +93,7 @@ class AppModel(QThread):
 
     def add_wire(self, src_port, dst_port, connect=True):
         """Add placed wire between source and destination port"""
-        wire = PlacedWire(self, src_port, dst_port, connect)
+        wire = digsim.app.gui_object.PlacedWire(self, src_port, dst_port, connect)
         self._placed_wires[wire.key] = wire
         self.sig_component_notify.emit(dst_port.parent())
 
@@ -162,9 +159,9 @@ class AppModel(QThread):
         """Delete selected object(s)"""
         selected_objects = self.get_selected_objects()
         for obj in selected_objects:
-            if isinstance(obj, PlacedWire):
+            if isinstance(obj, digsim.app.gui_object.PlacedWire):
                 self._delete_wire(obj)
-            elif isinstance(obj, PlacedComponent):
+            elif isinstance(obj, digsim.app.gui_object.PlacedComponent):
                 self._delete_component(obj)
         self.sig_update_gui_components.emit()
 
@@ -185,7 +182,7 @@ class AppModel(QThread):
     def new_wire_start(self, component, portname):
         """Start new placed wire"""
         if component.port(portname).can_add_wire():
-            self._new_wire = PlacedWire(self, component.port(portname))
+            self._new_wire = digsim.app.gui_object.PlacedWire(self, component.port(portname))
 
     def new_wire_end(self, component, portname):
         """End new placed wire"""
