@@ -270,8 +270,8 @@ class PortWireBit(PortWire):
     The PortWireBit will update its parent (a PortMultiBitWire) upon change.
     """
 
-    def __init__(self, parent, name, parent_port):
-        super().__init__(parent, name, 1, False)
+    def __init__(self, parent, name, parent_port, output):
+        super().__init__(parent, name, 1, output)
         self._parent_port = parent_port
 
     def set_value(self, value):
@@ -295,7 +295,9 @@ class PortMultiBitWire(Port):
         self._bits = []
         super().__init__(parent, name, width, output)
         for bit_id in range(self.width):
-            self._bits.append(PortWireBit(parent, f"{self.name()}_{bit_id}", self))
+            self._bits.append(
+                PortWireBit(parent, f"{self.name()}_{bit_id}", self, output=not output)
+            )
 
     def init(self):
         super().init()

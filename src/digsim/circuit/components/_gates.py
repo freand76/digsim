@@ -51,6 +51,9 @@ class ConfigPortsComponent(Component):
             },
         }
 
+    def settings_to_dict(self):
+        return {"ports": len(self._inports)}
+
 
 class OR(ConfigPortsComponent):
     """OR logic gate"""
@@ -153,6 +156,9 @@ class DFF(Component):
             },
         }
 
+    def settings_to_dict(self):
+        return {"width": self.D.width}
+
 
 class MUX(Component):
     """MUX"""
@@ -193,6 +199,9 @@ class MUX(Component):
                 "description": "Bitwidth of mux ports",
             },
         }
+
+    def settings_to_dict(self):
+        return {"ports": len(self._inports), "width": self.A.width}
 
 
 class SR(MultiComponent):

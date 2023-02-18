@@ -3,6 +3,7 @@
 
 """ A GUI component object factory module """
 
+from ._placed_bus_bit import PlacedBitsBus, PlacedBusBits
 from ._placed_hexdigit import PlacedHexDigit
 from ._placed_image_component import (
     PlacedImageComponentAND,
@@ -29,6 +30,8 @@ class PlacedComponentFactoryError(Exception):
 
 CLASS_NAME_TO_PLACED_COMPONENT = {
     "AND": PlacedImageComponentAND,
+    "Bus2Bits": PlacedBusBits,
+    "Bits2Bus": PlacedBitsBus,
     "Clock": PlacedImageComponentClock,
     "DFF": PlacedImageComponentDFF,
     "HexDigit": PlacedHexDigit,

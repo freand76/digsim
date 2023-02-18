@@ -525,6 +525,8 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(SelectableComponentWidget("NOR", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("DFF", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("MUX", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("Bus2Bits", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("Bits2Bus", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("PushButton", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("OnOffSwitch", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("Clock", self, circuit_area))
