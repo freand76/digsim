@@ -36,7 +36,6 @@
    * Add the rest of the yosys atoms
    * Add unittest of yosys atoms
 ### GUI
-   * Add dialog for error messages
    * Clear circuit button
    * "Are you sure?" dialog for load/clear
 ### Model

@@ -17,7 +17,7 @@ from PySide6.QtCore import QThread, Signal
 import digsim.app.gui_objects
 import digsim.circuit.components
 from digsim.circuit import Circuit
-from digsim.circuit.components.atoms import CallbackComponent, Component, PortConnectionError
+from digsim.circuit.components.atoms import CallbackComponent, Component
 
 
 class AppModel(QThread):
@@ -27,6 +27,7 @@ class AppModel(QThread):
     sig_control_notify = Signal(bool)
     sig_sim_time_notify = Signal(float)
     sig_update_gui_components = Signal()
+    sig_error = Signal(str)
 
     def __init__(self):
         super().__init__()
@@ -186,11 +187,8 @@ class AppModel(QThread):
 
     def new_wire_end(self, component, portname):
         """End new wire object"""
-        try:
-            self._new_wire.set_end_port(component.port(portname))
-            self._wire_objects[self._new_wire.key] = self._new_wire
-        except PortConnectionError as exc:
-            print("ERROR:", str(exc))
+        self._new_wire.set_end_port(component.port(portname))
+        self._wire_objects[self._new_wire.key] = self._new_wire
         self._new_wire = None
         self._new_wire_end_pos = None
 

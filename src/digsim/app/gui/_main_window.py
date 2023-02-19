@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMainWindow,
+    QMessageBox,
     QPushButton,
     QScrollArea,
     QSlider,
@@ -28,6 +29,7 @@ from PySide6.QtWidgets import (
 )
 
 import digsim.app.gui_objects
+from digsim.circuit.components.atoms import PortConnectionError
 
 
 class ComponentSettingsBase(QFrame):
@@ -258,7 +260,7 @@ class ComponentSettingsDialog(QDialog):
                     self, parameter, parameter_dict, self._settings
                 )
             else:
-                print(f"Unknown type '{parameter_dict['type']}'")
+                self._app_model.sig_error.emit(f"Unknown settings type '{parameter_dict['type']}'")
                 continue
 
             self.layout().addWidget(widget)
@@ -318,6 +320,14 @@ class ComponentWidget(QPushButton):
         self.setCursor(Qt.ArrowCursor)
         self._active_port = None
 
+    def _new_wire_end(self):
+        try:
+            self._app_model.new_wire_end(self.component, self._active_port)
+        except PortConnectionError as exc:
+            self._app_model.new_wire_abort()
+            self._app_model.sig_error.emit(str(exc))
+            self.parent().update()
+
     def mousePressEvent(self, event):
         """QT event callback function"""
         super().mousePressEvent(event)
@@ -326,7 +336,7 @@ class ComponentWidget(QPushButton):
                 self._app_model.add_gui_event(self.component.onpress)
             elif self._app_model.has_new_wire():
                 if self._active_port is not None:
-                    self._app_model.new_wire_end(self.component, self._active_port)
+                    self._new_wire_end()
             else:
                 self._app_model.select(self._component_object)
                 if self._active_port is None:
@@ -758,6 +768,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("DigSim - Interactive Digital Logic Simulator")
         self.setCentralWidget(central_widget)
         self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
+        self._app_model.sig_error.connect(self.error_dialog)
+
+    def error_dialog(self, error_message):
+        """Error dialog for circuit area"""
+        QMessageBox.critical(self.parent(), "Error!", error_message, QMessageBox.Ok)
 
     def closeEvent(self, event):
         """QT event callback function"""
