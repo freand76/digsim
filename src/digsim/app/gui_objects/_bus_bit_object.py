@@ -52,11 +52,14 @@ class BusBitsObject(ComponentObject):
         for wire_y in bit_wires_y:
             painter.drawLine(center_pos.x() + wire_length, wire_y, center_pos.x(), wire_y)
 
+    def _portlist(self):
+        return self.component.outports()
+
     def paint_component(self, painter):
         self.paint_component_base(painter)
         bit_wires_y = []
-        for bit in range(self.component.bus.width):
-            bit_wires_y.append(self.get_port_pos(f"bus_{bit}").y())
+        for port in self._portlist():
+            bit_wires_y.append(self.get_port_pos(port.name()).y())
         border = QPoint(self.RECT_TO_BORDER, self.RECT_TO_BORDER)
         self._paint_bus_bit(
             painter, self.get_rect(), border, self.WIRE_LENGTH_COMPONENT, bit_wires_y
@@ -81,3 +84,6 @@ class BitsBusObject(BusBitsObject):
 
     WIRE_LENGTH_COMPONENT = -5
     WIRE_LENGTH_SELECTABLE = -15
+
+    def _portlist(self):
+        return self.component.inports()

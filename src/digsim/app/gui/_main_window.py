@@ -147,6 +147,53 @@ class ComponentSettingsCheckBox(ComponentSettingsBase):
         self._settings[self._parameter] = self._settings_checkbox.isChecked()
 
 
+class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
+    """SettingsCheckbox for width number of bits (max32)"""
+
+    MAX_WIDTH = 32
+
+    def __init__(self, parent, parameter, parameter_dict, settings):
+        super().__init__(parent, parameter, parameter_dict, settings)
+        self.setLayout(QGridLayout(self))
+        self._bit_checkboxes = []
+        for checkbox_id in range(self.MAX_WIDTH):
+            checkbox = QCheckBox(f"bit{checkbox_id}")
+            checkbox.setChecked(True)
+            checkbox.stateChanged.connect(self._update)
+            self.layout().addWidget(checkbox, checkbox_id % 8, checkbox_id / 8, 1, 1)
+            self._bit_checkboxes.append(checkbox)
+        disable_all = QPushButton("Disable All")
+        disable_all.clicked.connect(self._disable_all)
+        enable_all = QPushButton("Enable All")
+        enable_all.clicked.connect(self._enable_all)
+        self.layout().addWidget(disable_all, 8, 0, 2, 1)
+        self.layout().addWidget(enable_all, 8, 2, 2, 1)
+        self._update()
+
+    def _set_all(self, state):
+        for checkbox_id in range(self.MAX_WIDTH):
+            checkbox = self._bit_checkboxes[checkbox_id]
+            checkbox.setChecked(state)
+
+    def _enable_all(self):
+        self._set_all(True)
+
+    def _disable_all(self):
+        self._set_all(False)
+
+    def _update(self):
+        self._settings[self._parameter] = []
+        for checkbox_id in range(32):
+            checkbox = self._bit_checkboxes[checkbox_id]
+            checkbox.setEnabled(checkbox_id < self._settings["width"])
+            if checkbox_id < self._settings["width"] and checkbox.isChecked():
+                self._settings[self._parameter].append(checkbox_id)
+
+    def on_setting_change(self, parameter):
+        if parameter == "width":
+            self._update()
+
+
 class ComponentSettingsDialog(QDialog):
     """SettingsDialog"""
 
@@ -196,6 +243,10 @@ class ComponentSettingsDialog(QDialog):
         for parameter, parameter_dict in parameters.items():
             if parameter_dict["type"] == "width_pow2":
                 widget = ComponentSettingsSliderWidthPow2(
+                    self, parameter, parameter_dict, self._settings
+                )
+            elif parameter_dict["type"] == "width_bool":
+                widget = ComponentSettingsCheckBoxWidthBool(
                     self, parameter, parameter_dict, self._settings
                 )
             elif parameter_dict["type"] == int:

@@ -9,13 +9,18 @@ from .atoms import Component, PortMultiBitWire
 class Bus2Bits(Component):
     """Bus to Bits splitter"""
 
-    def __init__(self, circuit, name="Bus2Bits", width=1):
+    def __init__(self, circuit, name="Bus2Bits", width=1, enable=None):
         super().__init__(circuit, name)
         self._bus = PortMultiBitWire(self, "bus", width=width)
         self.add_port(self._bus)
+        self._enable = enable
+        if self._enable is None:
+            self._enable = list(range(width))
+
         for bit_id in range(width):
-            bit_port = self._bus.get_bit(bit_id)
-            self.add_port(bit_port)
+            if bit_id in self._enable:
+                bit_port = self._bus.get_bit(bit_id)
+                self.add_port(bit_port)
 
     @classmethod
     def get_parameters(cls):
@@ -27,10 +32,15 @@ class Bus2Bits(Component):
                 "default": 2,
                 "description": "Bus width",
             },
+            "enable": {
+                "type": "width_bool",
+                "default": None,
+                "description": "Enable bit",
+            },
         }
 
     def settings_to_dict(self):
-        return {"width": self.bus.width}
+        return {"width": self.bus.width, "enable": self._enable}
 
 
 class Bits2Bus(Component):
