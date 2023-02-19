@@ -6,10 +6,13 @@
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-instance-attributes
 
+import pathlib
+
 from PySide6.QtCore import QMimeData, QPoint, QSize, Qt, QThread, Signal
 from PySide6.QtGui import QDrag, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
@@ -29,6 +32,7 @@ from PySide6.QtWidgets import (
 )
 
 import digsim.app.gui_objects
+from digsim.circuit.components import IcComponent
 from digsim.circuit.components.atoms import PortConnectionError
 
 
@@ -149,6 +153,26 @@ class ComponentSettingsCheckBox(ComponentSettingsBase):
         self._settings[self._parameter] = self._settings_checkbox.isChecked()
 
 
+class ComponentSettingsIcSelector(ComponentSettingsBase):
+    """SettingsCheckbox"""
+
+    def __init__(self, parent, parameter, parameter_dict, settings):
+        super().__init__(parent, parameter, parameter_dict, settings)
+        self.setLayout(QVBoxLayout(self))
+        self.layout().addWidget(QLabel(self._parameter_dict["description"]))
+        ic_folder = IcComponent.folder()
+        ic_files = pathlib.Path(ic_folder).glob("*.json")
+        self._ic_selector = QComboBox(parent)
+        for ic_file in ic_files:
+            self._ic_selector.addItem(ic_file.stem, userData=ic_file.stem)
+        self.layout().addWidget(self._ic_selector)
+        self._ic_selector.currentIndexChanged.connect(self._update)
+        self._update(self._ic_selector.currentIndex())
+
+    def _update(self, value):
+        self._settings[self._parameter] = self._ic_selector.itemData(value)
+
+
 class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
     """SettingsCheckbox for width number of bits (max32)"""
 
@@ -218,7 +242,7 @@ class ComponentSettingsDialog(QDialog):
         return is_file_path, settings
 
     @classmethod
-    def start(cls, parent, name, parameters):
+    def start(cls, parent, app_model, name, parameters):
         """Start a settings dialog and return the settings"""
         if len(parameters) == 0:
             # No parameters, just place component without settings
@@ -228,14 +252,15 @@ class ComponentSettingsDialog(QDialog):
         if is_file_path:
             return len(settings) > 0, settings
 
-        dialog = ComponentSettingsDialog(parent, name, parameters)
+        dialog = ComponentSettingsDialog(parent, app_model, name, parameters)
         result = dialog.exec_()
         if result == QDialog.DialogCode.Rejected:
             return False, {}
         return True, dialog.get_settings()
 
-    def __init__(self, parent, name, parameters):
+    def __init__(self, parent, app_model, name, parameters):
         super().__init__(parent)
+        self._app_model = app_model
         self.setLayout(QVBoxLayout(self))
         self.setWindowTitle(f"Setup {name} component")
         self.setFocusPolicy(Qt.StrongFocus)
@@ -257,6 +282,10 @@ class ComponentSettingsDialog(QDialog):
                 widget = ComponentSettingsCheckBox(self, parameter, parameter_dict, self._settings)
             elif parameter_dict["type"] == "intrange":
                 widget = ComponentSettingsIntRangeSlider(
+                    self, parameter, parameter_dict, self._settings
+                )
+            elif parameter_dict["type"] == "ic_name":
+                widget = ComponentSettingsIcSelector(
                     self, parameter, parameter_dict, self._settings
                 )
             else:
@@ -498,7 +527,9 @@ class CircuitArea(QWidget):
             position = self.rect().center()
 
         component_parameters = self._app_model.get_component_parameters(name)
-        ok, settings = ComponentSettingsDialog.start(self, name, component_parameters)
+        ok, settings = ComponentSettingsDialog.start(
+            self, self._app_model, name, component_parameters
+        )
         if ok:
             component_object = self._app_model.add_component_by_name(name, position, settings)
             comp = ComponentWidget(self._app_model, component_object, self)
@@ -597,6 +628,9 @@ class ComponentSelection(QWidget):
             SelectableComponentWidget("HexDigit", self, circuit_area, display_name="Hex-digit")
         )
         self.layout().addWidget(SelectableComponentWidget("Led", self, circuit_area))
+        self.layout().addWidget(
+            SelectableComponentWidget("IcComponent", self, circuit_area, display_name="IC")
+        )
         self.layout().addWidget(
             SelectableComponentWidget("YosysComponent", self, circuit_area, display_name="Yosys")
         )

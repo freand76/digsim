@@ -9,6 +9,7 @@ from ._image_objects import (
     ImageObjectAND,
     ImageObjectClock,
     ImageObjectDFF,
+    ImageObjectIC,
     ImageObjectLed,
     ImageObjectMUX,
     ImageObjectNAND,
@@ -46,6 +47,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT = {
     "SevenSegment": SevenSegmentObject,
     "StaticValue": ImageObjectStaticValue,
     "XOR": ImageObjectXOR,
+    "IcComponent": ImageObjectIC,
     "YosysComponent": ImageObjectYosys,
 }
 

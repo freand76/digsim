@@ -169,6 +169,16 @@ class ImageObjectYosys(ImageObject):
         self.paint_component_name(painter)
 
 
+class ImageObjectIC(ImageObject):
+    """The class for a Yosys image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/IC.png"
+    
+    def paint_component(self, painter):
+        self.paint_component_base(painter)
+        self.paint_component_name(painter)
+
+
 class ImageObjectPushButton(ImageObject):
     """The class for a PushButton image component placed in the GUI"""
 
