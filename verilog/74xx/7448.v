@@ -1,17 +1,16 @@
 // Copyright (c) Fredrik Andersson, 2023
 // All rights reserved
 
-module ic7448 (
-   input [3:0] bcd,
-   input       lt,
-   output      a,
-   output      b,
-   output      c,
-   output      d,
-   output      e,
-   output      f,
-   output      g
-);
+module ic7448 (bcd, lt, a,b,c,d,e,f,g);
+   input [3:0] bcd;
+   input       lt;
+   output      a;
+   output      b;
+   output      c;
+   output      d;
+   output      e;
+   output      f;
+   output      g;
 
    wire [6:0] seg;
    assign a = seg[6];

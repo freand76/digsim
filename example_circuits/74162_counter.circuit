@@ -1,0 +1,146 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "SevenSegment",
+                "display_name": "SevenSegment",
+                "type": "digsim.circuit.components.SevenSegment",
+                "settings": {}
+            },
+            {
+                "name": "IcComponent",
+                "display_name": "ic7448",
+                "type": "digsim.circuit.components.IcComponent",
+                "settings": {
+                    "ic_name": "7448"
+                }
+            },
+            {
+                "name": "IcComponent_1",
+                "display_name": "ttl_74162",
+                "type": "digsim.circuit.components.IcComponent",
+                "settings": {
+                    "ic_name": "74162"
+                }
+            },
+            {
+                "name": "Clock",
+                "display_name": "Clock",
+                "type": "digsim.circuit.components.Clock",
+                "settings": {
+                    "frequency": 5
+                }
+            },
+            {
+                "name": "OnOffSwitch",
+                "display_name": "OnOffSwitch",
+                "type": "digsim.circuit.components.OnOffSwitch",
+                "settings": {}
+            },
+            {
+                "name": "StaticValue",
+                "display_name": "StaticValue",
+                "type": "digsim.circuit.components.StaticValue",
+                "settings": {
+                    "value": 1,
+                    "width": 1
+                }
+            },
+            {
+                "name": "Led",
+                "display_name": "Led",
+                "type": "digsim.circuit.components.Led",
+                "settings": {}
+            }
+        ],
+        "wires": [
+            {
+                "src": "IcComponent.a",
+                "dst": "SevenSegment.A"
+            },
+            {
+                "src": "IcComponent.b",
+                "dst": "SevenSegment.B"
+            },
+            {
+                "src": "IcComponent.c",
+                "dst": "SevenSegment.C"
+            },
+            {
+                "src": "IcComponent.d",
+                "dst": "SevenSegment.D"
+            },
+            {
+                "src": "IcComponent.e",
+                "dst": "SevenSegment.E"
+            },
+            {
+                "src": "IcComponent.f",
+                "dst": "SevenSegment.F"
+            },
+            {
+                "src": "IcComponent.g",
+                "dst": "SevenSegment.G"
+            },
+            {
+                "src": "IcComponent_1.RCO",
+                "dst": "Led.I"
+            },
+            {
+                "src": "IcComponent_1.Q",
+                "dst": "IcComponent.bcd"
+            },
+            {
+                "src": "Clock.O",
+                "dst": "IcComponent_1.Clk"
+            },
+            {
+                "src": "OnOffSwitch.O",
+                "dst": "IcComponent_1.ENP"
+            },
+            {
+                "src": "OnOffSwitch.O",
+                "dst": "IcComponent_1.ENT"
+            },
+            {
+                "src": "StaticValue.O",
+                "dst": "IcComponent_1.Clear_bar"
+            },
+            {
+                "src": "StaticValue.O",
+                "dst": "IcComponent_1.Load_bar"
+            }
+        ]
+    },
+    "gui": {
+        "SevenSegment": {
+            "x": 937,
+            "y": 309
+        },
+        "IcComponent": {
+            "x": 558,
+            "y": 316
+        },
+        "IcComponent_1": {
+            "x": 318,
+            "y": 206
+        },
+        "Clock": {
+            "x": 70,
+            "y": 366
+        },
+        "OnOffSwitch": {
+            "x": 69,
+            "y": 252
+        },
+        "StaticValue": {
+            "x": 67,
+            "y": 142
+        },
+        "Led": {
+            "x": 925,
+            "y": 187
+        }
+    }
+}

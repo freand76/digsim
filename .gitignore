@@ -3,6 +3,5 @@
 *.egg-info/
 build/
 *.vcd
-*.json
 *.o
 *.map

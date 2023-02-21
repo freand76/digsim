@@ -5,7 +5,7 @@
       "attributes": {
         "hdlname": "\\ic7448",
         "top": "00000000000000000000000000000001",
-        "src": "verilog/7448.v:1.1-42.10"
+        "src": "verilog/74xx/7448.v:4.1-44.10"
       },
       "ports": {
         "bcd": {
@@ -824,70 +824,70 @@
           "hide_name": 0,
           "bits": [ 7 ],
           "attributes": {
-            "src": "verilog/7448.v:4.16-4.17"
+            "src": "verilog/74xx/7448.v:7.16-7.17"
           }
         },
         "b": {
           "hide_name": 0,
           "bits": [ 8 ],
           "attributes": {
-            "src": "verilog/7448.v:5.16-5.17"
+            "src": "verilog/74xx/7448.v:8.16-8.17"
           }
         },
         "bcd": {
           "hide_name": 0,
           "bits": [ 2, 3, 4, 5 ],
           "attributes": {
-            "src": "verilog/7448.v:2.16-2.19"
+            "src": "verilog/74xx/7448.v:5.16-5.19"
           }
         },
         "c": {
           "hide_name": 0,
           "bits": [ 9 ],
           "attributes": {
-            "src": "verilog/7448.v:6.16-6.17"
+            "src": "verilog/74xx/7448.v:9.16-9.17"
           }
         },
         "d": {
           "hide_name": 0,
           "bits": [ 10 ],
           "attributes": {
-            "src": "verilog/7448.v:7.16-7.17"
+            "src": "verilog/74xx/7448.v:10.16-10.17"
           }
         },
         "e": {
           "hide_name": 0,
           "bits": [ 11 ],
           "attributes": {
-            "src": "verilog/7448.v:8.16-8.17"
+            "src": "verilog/74xx/7448.v:11.16-11.17"
           }
         },
         "f": {
           "hide_name": 0,
           "bits": [ 12 ],
           "attributes": {
-            "src": "verilog/7448.v:9.16-9.17"
+            "src": "verilog/74xx/7448.v:12.16-12.17"
           }
         },
         "g": {
           "hide_name": 0,
           "bits": [ 13 ],
           "attributes": {
-            "src": "verilog/7448.v:10.16-10.17"
+            "src": "verilog/74xx/7448.v:13.16-13.17"
           }
         },
         "lt": {
           "hide_name": 0,
           "bits": [ 6 ],
           "attributes": {
-            "src": "verilog/7448.v:3.16-3.18"
+            "src": "verilog/74xx/7448.v:6.16-6.18"
           }
         },
         "seg": {
           "hide_name": 0,
           "bits": [ 13, 12, 11, 10, 9, 8, 7 ],
           "attributes": {
-            "src": "verilog/7448.v:13.15-13.18"
+            "src": "verilog/74xx/7448.v:15.15-15.18"
           }
         }
       }
