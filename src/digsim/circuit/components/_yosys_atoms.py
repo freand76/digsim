@@ -348,6 +348,62 @@ class _DFF_P_(_DFF_):
 # module \$_DFF_PP1_ (D, C, R, Q);
 
 
+class _DFF3_(ClassNameParameterComponent):
+    def __init__(self, circuit, name):
+        super().__init__(circuit, name)
+        self._clock_edge = self.name_to_level(0)
+        self._reset_level = self.name_to_level(1)
+        self._reset_value = self.name_to_level(2)
+        self.add_port(PortIn(self, "C"))
+        self.add_port(PortWire(self, "R"))
+        self.add_port(PortWire(self, "D"))
+        self.add_port(PortOut(self, "Q"))
+        self._old_C_level = self.C.value
+
+    def init(self):
+        super().init()
+        self.Q.value = 0
+
+    def update(self):
+        if self.R.value == self._reset_level:
+            self.Q.value = self._reset_value
+        elif self.C.value != self._old_C_level and self.C.value == self._clock_edge:
+            self.Q.value = self.D.value
+        self._old_C_level = self.C.value
+
+
+class _DFF_NN0_(_DFF3_):
+    pass
+
+
+class _DFF_NN1_(_DFF3_):
+    pass
+
+
+class _DFF_NP0_(_DFF3_):
+    pass
+
+
+class _DFF_NP1_(_DFF3_):
+    pass
+
+
+class _DFF_PN0_(_DFF3_):
+    pass
+
+
+class _DFF_PN1_(_DFF3_):
+    pass
+
+
+class _DFF_PP0_(_DFF3_):
+    pass
+
+
+class _DFF_PP1_(_DFF3_):
+    pass
+
+
 # module \$_SDFF_NN0_ (D, C, R, Q);
 # module \$_SDFF_NN1_ (D, C, R, Q);
 # module \$_SDFF_NP0_ (D, C, R, Q);
