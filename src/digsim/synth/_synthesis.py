@@ -25,7 +25,8 @@ class Synthesis:
         with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".ys") as stream:
             stream.write(f"read -sv {' '.join(self._verilog_files)}\n")
             stream.write(f"hierarchy -top {self._verilog_top_module}\n")
-            stream.write("flatten\n")
+            stream.write("proc; flatten\n")
+            stream.write("memory_dff\n")
             stream.write("proc; opt; techmap; opt\n")
             stream.write(f"synth -top {self._verilog_top_module}\n")
             stream.write(f"write_json {self._json_output_file}\n")
