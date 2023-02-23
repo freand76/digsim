@@ -37,8 +37,6 @@ class ClassNameParameterComponent(Component):
 # module \$_ALDFFE_PNP_ (D, C, L, AD, E, Q);
 # module \$_ALDFFE_PPN_ (D, C, L, AD, E, Q);
 # module \$_ALDFFE_PPP_ (D, C, L, AD, E, Q);
-
-
 class _ALDFFE_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -106,8 +104,6 @@ class _ALDFFE_PPP_(_ALDFFE_):
 # module \$_ALDFF_NP_ (D, C, L, AD, Q);
 # module \$_ALDFF_PN_ (D, C, L, AD, Q);
 # module \$_ALDFF_PP_ (D, C, L, AD, Q);
-
-
 class _ALDFF_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -164,8 +160,6 @@ class _ALDFF_PP_(_ALDFF_):
 # module \$_DFFE_PP0P_ (D, C, R, E, Q);
 # module \$_DFFE_PP1N_ (D, C, R, E, Q);
 # module \$_DFFE_PP1P_ (D, C, R, E, Q);
-
-
 class _DFFE4_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -264,8 +258,6 @@ class _DFFE_PP1P_(_DFFE4_):
 # module \$_DFFE_NP_ (D, C, E, Q);
 # module \$_DFFE_PN_ (D, C, E, Q);
 # module \$_DFFE_PP_ (D, C, E, Q);
-
-
 class _DFFE2_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -309,8 +301,6 @@ class _DFFE_PP_(_DFFE2_):
 
 # module \$_DFF_N_ (D, C, Q);
 # module \$_DFF_P_ (D, C, Q);
-
-
 class _DFF_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -346,8 +336,6 @@ class _DFF_P_(_DFF_):
 # module \$_DFF_PN1_ (D, C, R, Q);
 # module \$_DFF_PP0_ (D, C, R, Q);
 # module \$_DFF_PP1_ (D, C, R, Q);
-
-
 class _DFF3_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -412,8 +400,6 @@ class _DFF_PP1_(_DFF3_):
 # module \$_SDFF_PN1_ (D, C, R, Q);
 # module \$_SDFF_PP0_ (D, C, R, Q);
 # module \$_SDFF_PP1_ (D, C, R, Q);
-
-
 class _SDFF_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -471,32 +457,6 @@ class _SDFF_PP1_(_SDFF_):
     pass
 
 
-# module \$_DFFSR_NNN_ (C, S, R, D, Q);
-# module \$_DFFSR_NNP_ (C, S, R, D, Q);
-# module \$_DFFSR_NPN_ (C, S, R, D, Q);
-# module \$_DFFSR_NPP_ (C, S, R, D, Q);
-# module \$_DFFSR_PNN_ (C, S, R, D, Q);
-# module \$_DFFSR_PNP_ (C, S, R, D, Q);
-# module \$_DFFSR_PPN_ (C, S, R, D, Q);
-# module \$_DFFSR_PPP_ (C, S, R, D, Q);
-
-# module \$_DFFSRE_NNNN_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_NNNP_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_NNPN_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_NNPP_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_NPNN_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_NPNP_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_NPPN_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_NPPP_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_PNNN_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_PNNP_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_PNPN_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_PNPP_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_PPNN_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_PPNP_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_PPPN_ (C, S, R, E, D, Q);
-# module \$_DFFSRE_PPPP_ (C, S, R, E, D, Q);
-
 # module \$_SDFFCE_NN0N_ (D, C, R, E, Q);
 # module \$_SDFFCE_NN0P_ (D, C, R, E, Q);
 # module \$_SDFFCE_NN1N_ (D, C, R, E, Q);
@@ -513,8 +473,6 @@ class _SDFF_PP1_(_SDFF_):
 # module \$_SDFFCE_PP0P_ (D, C, R, E, Q);
 # module \$_SDFFCE_PP1N_ (D, C, R, E, Q);
 # module \$_SDFFCE_PP1P_ (D, C, R, E, Q);
-
-
 class _SDFFCE_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -623,8 +581,6 @@ class _SDFFCE_PP1P_(_SDFFCE_):
 # module \$_SDFFE_PP0P_ (D, C, R, E, Q);
 # module \$_SDFFE_PP1N_ (D, C, R, E, Q);
 # module \$_SDFFE_PP1P_ (D, C, R, E, Q);
-
-
 class _SDFFE_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -716,36 +672,7 @@ class _SDFFE_PP1P_(_SDFFE_):
     pass
 
 
-# module \$_DLATCH_N_ (E, D, Q);
-# module \$_DLATCH_P_ (E, D, Q);
-
-# module \$_DLATCH_NN0_ (E, R, D, Q);
-# module \$_DLATCH_NN1_ (E, R, D, Q);
-# module \$_DLATCH_NP0_ (E, R, D, Q);
-# module \$_DLATCH_NP1_ (E, R, D, Q);
-# module \$_DLATCH_PN0_ (E, R, D, Q);
-# module \$_DLATCH_PN1_ (E, R, D, Q);
-# module \$_DLATCH_PP0_ (E, R, D, Q);
-# module \$_DLATCH_PP1_ (E, R, D, Q);
-
-# module \$_DLATCHSR_NNN_ (E, S, R, D, Q);
-# module \$_DLATCHSR_NNP_ (E, S, R, D, Q);
-# module \$_DLATCHSR_NPN_ (E, S, R, D, Q);
-# module \$_DLATCHSR_NPP_ (E, S, R, D, Q);
-# module \$_DLATCHSR_PNN_ (E, S, R, D, Q);
-# module \$_DLATCHSR_PNP_ (E, S, R, D, Q);
-# module \$_DLATCHSR_PPN_ (E, S, R, D, Q);
-# module \$_DLATCHSR_PPP_ (E, S, R, D, Q);
-
-# module \$_SR_NN_ (S, R, Q);
-# module \$_SR_NP_ (S, R, Q);
-# module \$_SR_PN_ (S, R, Q);
-# module \$_SR_PP_ (S, R, Q);
-
-# module \$_NMUX_ (A, B, S, Y);
 # module \$_MUX_ (A, B, S, Y);
-
-
 class _MUX_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -761,13 +688,7 @@ class _MUX_(Component):
             self.Y.value = self.B.value
 
 
-# module \$_MUX16_ (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, S, T, U, V, Y);
-# module \$_MUX4_ (A, B, C, D, S, T, Y);
-# module \$_MUX8_ (A, B, C, D, E, F, G, H, S, T, U, Y);
-
 # module \$_AND_ (A, B, Y);
-
-
 class _AND_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -799,11 +720,7 @@ class _ANDNOT_(Component):
             self.Y.value = 0
 
 
-# module \$_BUF_ (A, Y);
-# module \$_FF_ (D, Q);
 # module \$_NAND_ (A, B, Y);
-
-
 class _NAND_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -819,8 +736,6 @@ class _NAND_(Component):
 
 
 # module \$_NOR_ (A, B, Y);
-
-
 class _NOR_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -836,8 +751,6 @@ class _NOR_(Component):
 
 
 # module \$_NOT_ (A, Y);
-
-
 class _NOT_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -852,8 +765,6 @@ class _NOT_(Component):
 
 
 # module \$_OR_ (A, B, Y);
-
-
 class _OR_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -869,8 +780,6 @@ class _OR_(Component):
 
 
 # module \$_ORNOT_ (A, B, Y);
-
-
 class _ORNOT_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -886,10 +795,37 @@ class _ORNOT_(Component):
 
 
 # module \$_AOI3_ (A, B, C, Y);
-# module \$_AOI4_ (A, B, C, D, Y);
+class _AOI3_(Component):
+    def __init__(self, circuit, name):
+        super().__init__(circuit, name)
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortIn(self, "C"))
+        self.add_port(PortOut(self, "Y"))
+
+    def update(self):
+        if (self.A.value == 1 and self.B.value == 1) or self.C.value == 1:
+            self.Y.value = 0
+        else:
+            self.Y.value = 1
+
+
 # module \$_OAI3_ (A, B, C, Y);
-# module \$_OAI4_ (A, B, C, D, Y);
-# module \$_TBUF_ (A, E, Y);
+class _OAI3_(Component):
+    def __init__(self, circuit, name):
+        super().__init__(circuit, name)
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "B"))
+        self.add_port(PortIn(self, "C"))
+        self.add_port(PortOut(self, "Y"))
+
+    def update(self):
+        if (self.A.value == 1 or self.B.value == 1) and self.C.value == 1:
+            self.Y.value = 0
+        else:
+            self.Y.value = 1
+
+
 # module \$_XNOR_ (A, B, Y);
 class _XNOR_(Component):
     def __init__(self, circuit, name):
@@ -918,3 +854,67 @@ class _XOR_(Component):
             self.Y.value = 1
         else:
             self.Y.value = 0
+
+
+# module \$_DFFSR_NNN_ (C, S, R, D, Q);
+# module \$_DFFSR_NNP_ (C, S, R, D, Q);
+# module \$_DFFSR_NPN_ (C, S, R, D, Q);
+# module \$_DFFSR_NPP_ (C, S, R, D, Q);
+# module \$_DFFSR_PNN_ (C, S, R, D, Q);
+# module \$_DFFSR_PNP_ (C, S, R, D, Q);
+# module \$_DFFSR_PPN_ (C, S, R, D, Q);
+# module \$_DFFSR_PPP_ (C, S, R, D, Q);
+
+# module \$_DFFSRE_NNNN_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_NNNP_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_NNPN_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_NNPP_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_NPNN_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_NPNP_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_NPPN_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_NPPP_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_PNNN_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_PNNP_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_PNPN_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_PNPP_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_PPNN_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_PPNP_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_PPPN_ (C, S, R, E, D, Q);
+# module \$_DFFSRE_PPPP_ (C, S, R, E, D, Q);
+
+# module \$_DLATCH_N_ (E, D, Q);
+# module \$_DLATCH_P_ (E, D, Q);
+
+# module \$_DLATCH_NN0_ (E, R, D, Q);
+# module \$_DLATCH_NN1_ (E, R, D, Q);
+# module \$_DLATCH_NP0_ (E, R, D, Q);
+# module \$_DLATCH_NP1_ (E, R, D, Q);
+# module \$_DLATCH_PN0_ (E, R, D, Q);
+# module \$_DLATCH_PN1_ (E, R, D, Q);
+# module \$_DLATCH_PP0_ (E, R, D, Q);
+# module \$_DLATCH_PP1_ (E, R, D, Q);
+
+# module \$_DLATCHSR_NNN_ (E, S, R, D, Q);
+# module \$_DLATCHSR_NNP_ (E, S, R, D, Q);
+# module \$_DLATCHSR_NPN_ (E, S, R, D, Q);
+# module \$_DLATCHSR_NPP_ (E, S, R, D, Q);
+# module \$_DLATCHSR_PNN_ (E, S, R, D, Q);
+# module \$_DLATCHSR_PNP_ (E, S, R, D, Q);
+# module \$_DLATCHSR_PPN_ (E, S, R, D, Q);
+# module \$_DLATCHSR_PPP_ (E, S, R, D, Q);
+
+# module \$_SR_NN_ (S, R, Q);
+# module \$_SR_NP_ (S, R, Q);
+# module \$_SR_PN_ (S, R, Q);
+# module \$_SR_PP_ (S, R, Q);
+
+
+# module \$_BUF_ (A, Y);
+# module \$_FF_ (D, Q);
+# module \$_AOI4_ (A, B, C, D, Y);
+# module \$_OAI4_ (A, B, C, D, Y);
+# module \$_TBUF_ (A, E, Y);
+# module \$_NMUX_ (A, B, S, Y);
+# module \$_MUX16_ (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, S, T, U, V, Y);
+# module \$_MUX4_ (A, B, C, D, S, T, Y);
+# module \$_MUX8_ (A, B, C, D, E, F, G, H, S, T, U, Y);
