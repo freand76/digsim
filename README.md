@@ -47,12 +47,10 @@ I will try to keep track of them and give credits!
 ### Documentation
    * Add documentation :-)
 ### Yosys
-   * Add the rest of the yosys atoms
    * Add unittest of yosys atoms
 ### GUI
    * Clear circuit button
    * "Are you sure?" dialog for load/clear
 ### Model
-   * Add "generic" IC catalog with synthesized 74xx components
    * Add unittest of all components
    * Add unittest of ports
