@@ -9,17 +9,17 @@
                 "settings": {}
             },
             {
-                "name": "IcComponent",
+                "name": "IntegratedCircuit",
                 "display_name": "ic7448",
-                "type": "digsim.circuit.components.IcComponent",
+                "type": "digsim.circuit.components.IntegratedCircuit",
                 "settings": {
                     "ic_name": "7448"
                 }
             },
             {
-                "name": "IcComponent_1",
+                "name": "IntegratedCircuit_1",
                 "display_name": "ttl_74162",
-                "type": "digsim.circuit.components.IcComponent",
+                "type": "digsim.circuit.components.IntegratedCircuit",
                 "settings": {
                     "ic_name": "74162"
                 }
@@ -36,7 +36,9 @@
                 "name": "OnOffSwitch",
                 "display_name": "OnOffSwitch",
                 "type": "digsim.circuit.components.OnOffSwitch",
-                "settings": {}
+                "settings": {
+                    "start_on": false
+                }
             },
             {
                 "name": "StaticValue",
@@ -56,60 +58,60 @@
         ],
         "wires": [
             {
-                "src": "IcComponent.a",
+                "src": "IntegratedCircuit.a",
                 "dst": "SevenSegment.A"
             },
             {
-                "src": "IcComponent.b",
+                "src": "IntegratedCircuit.b",
                 "dst": "SevenSegment.B"
             },
             {
-                "src": "IcComponent.c",
+                "src": "IntegratedCircuit.c",
                 "dst": "SevenSegment.C"
             },
             {
-                "src": "IcComponent.d",
+                "src": "IntegratedCircuit.d",
                 "dst": "SevenSegment.D"
             },
             {
-                "src": "IcComponent.e",
+                "src": "IntegratedCircuit.e",
                 "dst": "SevenSegment.E"
             },
             {
-                "src": "IcComponent.f",
+                "src": "IntegratedCircuit.f",
                 "dst": "SevenSegment.F"
             },
             {
-                "src": "IcComponent.g",
+                "src": "IntegratedCircuit.g",
                 "dst": "SevenSegment.G"
             },
             {
-                "src": "IcComponent_1.RCO",
+                "src": "IntegratedCircuit_1.RCO",
                 "dst": "Led.I"
             },
             {
-                "src": "IcComponent_1.Q",
-                "dst": "IcComponent.bcd"
+                "src": "IntegratedCircuit_1.Q",
+                "dst": "IntegratedCircuit.bcd"
             },
             {
                 "src": "Clock.O",
-                "dst": "IcComponent_1.Clk"
+                "dst": "IntegratedCircuit_1.Clk"
             },
             {
                 "src": "OnOffSwitch.O",
-                "dst": "IcComponent_1.ENP"
+                "dst": "IntegratedCircuit_1.ENP"
             },
             {
                 "src": "OnOffSwitch.O",
-                "dst": "IcComponent_1.ENT"
+                "dst": "IntegratedCircuit_1.ENT"
             },
             {
                 "src": "StaticValue.O",
-                "dst": "IcComponent_1.Clear_bar"
+                "dst": "IntegratedCircuit_1.Clear_bar"
             },
             {
                 "src": "StaticValue.O",
-                "dst": "IcComponent_1.Load_bar"
+                "dst": "IntegratedCircuit_1.Load_bar"
             }
         ]
     },
@@ -118,11 +120,11 @@
             "x": 937,
             "y": 309
         },
-        "IcComponent": {
+        "IntegratedCircuit": {
             "x": 558,
             "y": 316
         },
-        "IcComponent_1": {
+        "IntegratedCircuit_1": {
             "x": 318,
             "y": 206
         },

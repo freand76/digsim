@@ -9,7 +9,7 @@ import os
 from ._yosys_component import YosysComponent
 
 
-class IcComponent(YosysComponent):
+class IntegratedCircuit(YosysComponent):
     """IC component class (predefined yosys module)"""
 
     def __init__(self, circuit, name="IC", ic_name=None):

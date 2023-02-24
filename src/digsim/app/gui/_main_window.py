@@ -32,7 +32,7 @@ from PySide6.QtWidgets import (
 )
 
 import digsim.app.gui_objects
-from digsim.circuit.components import IcComponent
+from digsim.circuit.components import IntegratedCircuit
 from digsim.circuit.components.atoms import PortConnectionError
 
 
@@ -160,7 +160,7 @@ class ComponentSettingsIcSelector(ComponentSettingsBase):
         super().__init__(parent, parameter, parameter_dict, settings)
         self.setLayout(QVBoxLayout(self))
         self.layout().addWidget(QLabel(self._parameter_dict["description"]))
-        ic_folder = IcComponent.folder()
+        ic_folder = IntegratedCircuit.folder()
         ic_files = pathlib.Path(ic_folder).glob("*.json")
         self._ic_selector = QComboBox(parent)
         for ic_file in ic_files:
@@ -595,6 +595,34 @@ class SelectableComponentWidget(QPushButton):
             self._paint_class.paint_selectable_component(painter, self.size(), self._display_name)
 
 
+class HorizontalLine(QFrame):
+    """
+    Horizontal line for the component selection
+    """
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Sunken)
+
+
+class DescriptionText(QWidget):
+    """
+    Text label for the component selection
+    """
+
+    def __init__(self, parent, text):
+        super().__init__(parent)
+        self.setLayout(QVBoxLayout(self))
+        self.layout().addWidget(HorizontalLine(self))
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(0)
+        label = QLabel(text)
+        label.setAlignment(Qt.AlignCenter)
+        self.layout().addWidget(label)
+        self.layout().addWidget(HorizontalLine(self))
+
+
 class ComponentSelection(QWidget):
     """
     The component selection area,
@@ -607,6 +635,20 @@ class ComponentSelection(QWidget):
         self.setLayout(QVBoxLayout(self))
         self.layout().setContentsMargins(5, 5, 5, 5)
         self.layout().setSpacing(5)
+        self.layout().addWidget(DescriptionText(self, "Input"))
+        self.layout().addWidget(SelectableComponentWidget("PushButton", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("OnOffSwitch", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("Clock", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("StaticValue", self, circuit_area))
+        self.layout().addWidget(DescriptionText(self, "Output"))
+        self.layout().addWidget(SelectableComponentWidget("Led", self, circuit_area))
+        self.layout().addWidget(
+            SelectableComponentWidget("HexDigit", self, circuit_area, display_name="Hex-digit")
+        )
+        self.layout().addWidget(
+            SelectableComponentWidget("SevenSegment", self, circuit_area, display_name="7-Seg")
+        )
+        self.layout().addWidget(DescriptionText(self, "Gates"))
         self.layout().addWidget(SelectableComponentWidget("OR", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("AND", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("NOT", self, circuit_area))
@@ -615,21 +657,12 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(SelectableComponentWidget("NOR", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("DFF", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("MUX", self, circuit_area))
+        self.layout().addWidget(DescriptionText(self, "Bus / Bits"))
         self.layout().addWidget(SelectableComponentWidget("Bus2Bits", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("Bits2Bus", self, circuit_area))
-        self.layout().addWidget(SelectableComponentWidget("PushButton", self, circuit_area))
-        self.layout().addWidget(SelectableComponentWidget("OnOffSwitch", self, circuit_area))
-        self.layout().addWidget(SelectableComponentWidget("Clock", self, circuit_area))
-        self.layout().addWidget(SelectableComponentWidget("StaticValue", self, circuit_area))
+        self.layout().addWidget(DescriptionText(self, "IC / Verilog"))
         self.layout().addWidget(
-            SelectableComponentWidget("SevenSegment", self, circuit_area, display_name="7-Seg")
-        )
-        self.layout().addWidget(
-            SelectableComponentWidget("HexDigit", self, circuit_area, display_name="Hex-digit")
-        )
-        self.layout().addWidget(SelectableComponentWidget("Led", self, circuit_area))
-        self.layout().addWidget(
-            SelectableComponentWidget("IcComponent", self, circuit_area, display_name="IC")
+            SelectableComponentWidget("IntegratedCircuit", self, circuit_area, display_name="IC")
         )
         self.layout().addWidget(
             SelectableComponentWidget("YosysComponent", self, circuit_area, display_name="Yosys")

@@ -47,7 +47,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT = {
     "SevenSegment": SevenSegmentObject,
     "StaticValue": ImageObjectStaticValue,
     "XOR": ImageObjectXOR,
-    "IcComponent": ImageObjectIC,
+    "IntegratedCircuit": ImageObjectIC,
     "YosysComponent": ImageObjectYosys,
 }
 
