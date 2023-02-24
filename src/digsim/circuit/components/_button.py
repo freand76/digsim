@@ -40,8 +40,6 @@ class PushButton(CallbackComponent):
 
     @property
     def active(self):
-        if self._inverted:
-            return self.O.value == 0
         return self.O.value == 1
 
     def onpress(self):
@@ -49,3 +47,16 @@ class PushButton(CallbackComponent):
 
     def onrelease(self):
         self.release()
+
+    def settings_to_dict(self):
+        return {"inverted": self._inverted}
+
+    @classmethod
+    def get_parameters(cls):
+        return {
+            "inverted": {
+                "type": bool,
+                "default": False,
+                "description": "Button output is inverted",
+            },
+        }

@@ -51,3 +51,16 @@ class OnOffSwitch(CallbackComponent):
     @property
     def active(self):
         return self.O.value == 1
+
+    def settings_to_dict(self):
+        return {"start_on": self._start_on}
+
+    @classmethod
+    def get_parameters(cls):
+        return {
+            "start_on": {
+                "type": bool,
+                "default": False,
+                "description": "Switch on after reset",
+            },
+        }
