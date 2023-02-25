@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 from ._circuit_area import CircuitArea
 from ._component_selection import ComponentSelection
 from ._top_bar import TopBar
+from ._utils import are_you_sure_messagebox
 
 
 class CircuitEditor(QSplitter):
@@ -99,6 +100,11 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """QT event callback function"""
-        self._app_model.model_stop()
-        self._app_model.wait()
-        super().closeEvent(event)
+        if not self._app_model.has_changes() or are_you_sure_messagebox(
+            self.parent(), "Close Application"
+        ):
+            self._app_model.model_stop()
+            self._app_model.wait()
+            super().closeEvent(event)
+        else:
+            event.ignore()

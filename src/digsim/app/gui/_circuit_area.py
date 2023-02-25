@@ -105,6 +105,7 @@ class ComponentWidget(QPushButton):
                 self._mouse_grab_pos = None
                 self._component_object.pos = self.pos()
                 self._app_model.update_wires()
+                self._app_model.set_changed()
                 self.parent().update()
 
     def mouseMoveEvent(self, event):

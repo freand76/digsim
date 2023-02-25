@@ -35,6 +35,7 @@ class AppModel(QThread):
         self._wire_objects = {}
         self._circuit = Circuit(name="DigSimCircuit", vcd="gui.vcd")
         self._started = False
+        self._changed = False
         self._sim_tick_ms = 50
         self._gui_event_queue = queue.Queue()
         self._component_callback_list = []
@@ -82,6 +83,7 @@ class AppModel(QThread):
         self._circuit_init()
         component_object = self._add_component(component, pos.x(), pos.y())
         component_object.center()  # Component is plced @ mouse pointer, make it center
+        self._changed = True
         self.sig_control_notify.emit(self._started)
         return component_object
 
@@ -156,6 +158,7 @@ class AppModel(QThread):
                     self._delete_wire(wire)
         del self._component_objects[component_object.component]
         self._circuit.delete_component(component_object.component)
+        self._changed = True
         self.sig_control_notify.emit(self._started)
 
     def delete(self):
@@ -172,6 +175,7 @@ class AppModel(QThread):
         """Update wire objects"""
         for _, wire in self._wire_objects.items():
             wire.update()
+        self.sig_control_notify.emit(self._started)
 
     def paint_wires(self, painter):
         """Paint wire objects"""
@@ -303,12 +307,18 @@ class AppModel(QThread):
     def clear_circuit(self):
         """Clear the circuit"""
         self.clear()
+        self._changed = False
         self.sig_update_gui_components.emit()
         self.sig_control_notify.emit(self._started)
 
     def has_objects(self):
         """Return True if there are objects in the model"""
         return len(self._component_objects) > 0
+
+    def set_changed(self):
+        """Set changed to True, for example when gui has moved component"""
+        self._changed = True
+        self.sig_control_notify.emit(self._started)
 
     def has_changes(self):
         """Return True if there are changes in the model since last save"""

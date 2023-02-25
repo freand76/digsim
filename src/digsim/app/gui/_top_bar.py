@@ -6,7 +6,9 @@
 # pylint: disable=too-few-public-methods
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QLabel, QMessageBox, QPushButton
+from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QLabel, QPushButton
+
+from ._utils import are_you_sure_messagebox
 
 
 class SimControlWidget(QFrame):
@@ -116,18 +118,9 @@ class LoadSaveWidget(QFrame):
         self._app_model.sig_control_notify.connect(self._control_notify)
         self._control_notify(False)
 
-    def _are_you_sure_messagebox(self, dialog_text):
-        ret = QMessageBox.question(
-            self.parent(),
-            dialog_text,
-            "Are you sure destroy the current circuit?",
-            QMessageBox.Yes | QMessageBox.No,
-        )
-        return ret == QMessageBox.Yes
-
     def load(self):
         """Button action: Load"""
-        if not self._are_you_sure_messagebox("Load circuit"):
+        if not are_you_sure_messagebox(self.parent(), "Load circuit"):
             return
         path = QFileDialog.getOpenFileName(
             self, "Load Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
@@ -147,7 +140,7 @@ class LoadSaveWidget(QFrame):
 
     def clear(self):
         """Button action: Save"""
-        if self._are_you_sure_messagebox("Clear circuit"):
+        if are_you_sure_messagebox(self.parent(), "Clear circuit"):
             self._app_model.clear_circuit()
 
     def _control_notify(self, started):
@@ -157,11 +150,8 @@ class LoadSaveWidget(QFrame):
             self._clear_button.setEnabled(False)
         else:
             self._load_button.setEnabled(True)
-            self._save_button.setEnabled(True)
-            if self._app_model.has_objects():
-                self._clear_button.setEnabled(True)
-            else:
-                self._clear_button.setEnabled(False)
+            self._save_button.setEnabled(self._app_model.has_changes())
+            self._clear_button.setEnabled(self._app_model.has_objects())
 
 
 class TopBar(QFrame):
