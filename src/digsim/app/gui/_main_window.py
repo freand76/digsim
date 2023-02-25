@@ -5,7 +5,9 @@
 
 # pylint: disable=too-few-public-methods
 
-from PySide6.QtCore import QMimeData, QPoint, QSize, Qt, QThread, Signal
+from functools import partial
+
+from PySide6.QtCore import QMimeData, QPoint, QSize, Qt, QTimer
 from PySide6.QtGui import QDrag, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QFrame,
@@ -148,32 +150,8 @@ class ComponentWidget(QPushButton):
             self.parent().update()
 
 
-class _DropActionThread(QThread):
-    """This class is used to thredify the drop action"""
-
-    sig_drop_action = Signal(str, QPoint)
-
-    def __init__(self, circuit_area):
-        super().__init__()
-        self._circuit_area = circuit_area
-        self._name = None
-        self._position = None
-        self.sig_drop_action.connect(self._setup)
-
-    def _setup(self, name, position):
-        self._name = name
-        self._position = position
-        self.start()
-
-    def run(self):
-        """Thread run function"""
-        self._circuit_area.sig_add_component.emit(self._name, self._position)
-
-
 class CircuitArea(QWidget):
     """The circuit area class, this is where the component widgets are placed"""
-
-    sig_add_component = Signal(str, QPoint)
 
     def __init__(self, app_model, parent):
         super().__init__(parent)
@@ -185,10 +163,6 @@ class CircuitArea(QWidget):
 
         self.setMouseTracking(True)
         self.setAcceptDrops(True)
-
-        self.sig_add_component.connect(self._add_component)
-
-        self._thread = _DropActionThread(self)
 
     def keyPressEvent(self, event):
         """QT event callback function"""
@@ -242,9 +216,13 @@ class CircuitArea(QWidget):
         self.setFocus()
 
         component_name = event.mimeData().text()
-        self._thread.sig_drop_action.emit(component_name, event.pos())
+        QTimer.singleShot(0, partial(self.add_component, component_name, event.pos()))
 
-    def _add_component(self, name, position):
+    def add_component(self, name, position):
+        """
+        Add componnent to circuit area
+        Used be drag'n'drop into Circuit area or double click in SelectableComponentWidget
+        """
         if position == QPoint(0, 0):
             position = self.rect().center()
 
@@ -306,7 +284,7 @@ class SelectableComponentWidget(QPushButton):
 
     def mouseDoubleClickEvent(self, _):
         """QT event callback function"""
-        self._circuit_area.sig_add_component.emit(self._name, QPoint(0, 0))
+        QTimer.singleShot(0, partial(self._circuit_area.add_component, self._name, QPoint(0, 0)))
 
     def paintEvent(self, event):
         """QT event callback function"""
