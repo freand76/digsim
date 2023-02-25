@@ -3,6 +3,8 @@
 
 """ Module with the basic logic gates """
 
+# pylint: disable=too-many-arguments
+
 import math
 
 from .atoms import Component, ComponentException, MultiComponent, PortIn, PortOut, PortWire
@@ -62,12 +64,12 @@ class OR(ConfigPortsComponent):
         super().__init__(circuit, name, ports)
 
     def update(self):
-        if any(port.value == "X" for port in self._inports):
-            self.Y.value = "X"
-        elif any(port.value == 1 for port in self._inports):
+        if any(port.value == 1 for port in self._inports):
             self.Y.value = 1
-        else:
+        elif all(port.value == 0 for port in self._inports):
             self.Y.value = 0
+        else:
+            self.Y.value = "X"
 
 
 class AND(ConfigPortsComponent):
@@ -123,30 +125,52 @@ class NOR(ConfigPortsComponent):
         super().__init__(circuit, name, ports)
 
     def update(self):
-        if any(port.value == "X" for port in self._inports):
-            self.Y.value = "X"
-        elif any(port.value == 1 for port in self._inports):
+        if any(port.value == 1 for port in self._inports):
             self.Y.value = 0
-        else:
+        elif all(port.value == 0 for port in self._inports):
             self.Y.value = 1
+        else:
+            self.Y.value = "X"
 
 
 class DFF(Component):
     """D-FlipFlop"""
 
-    def __init__(self, circuit, name="DFF", width=1):
+    def __init__(self, circuit, name="DFF", async_reset=False, clock_enable=False, width=1):
         super().__init__(circuit, name)
+        self._async_reset = async_reset
+        self._clock_enable = clock_enable
         self.add_port(PortWire(self, "D", width=width))
+        if self._async_reset:
+            self.add_port(PortIn(self, "R"))
+        if self._clock_enable:
+            self.add_port(PortWire(self, "E"))
         self.add_port(PortIn(self, "C"))
         self.add_port(PortOut(self, "Q", width=width))
 
     def update(self):
-        if self.C.is_rising_edge():
+        rising_edge = self.C.is_rising_edge()
+        if self._async_reset and self.R.value == 1:
+            self.Q.value = 0
+        elif rising_edge:
+            if self._clock_enable and self.E.value == 0:
+                # No clock enable
+                return
             self.Q.value = self.D.value
 
     @classmethod
     def get_parameters(cls):
         return {
+            "async_reset": {
+                "type": bool,
+                "default": False,
+                "description": "DFF has asynchronous reset",
+            },
+            "clock_enable": {
+                "type": bool,
+                "default": False,
+                "description": "DFF has clock enable",
+            },
             "width": {
                 "type": int,
                 "min": 1,
@@ -157,13 +181,17 @@ class DFF(Component):
         }
 
     def settings_to_dict(self):
-        return {"width": self.D.width}
+        return {
+            "async_reset": self._async_reset,
+            "clock_enable": self._clock_enable,
+            "width": self.D.width,
+        }
 
 
 class MUX(Component):
     """MUX"""
 
-    def __init__(self, circuit, name, ports=2, width=1):
+    def __init__(self, circuit, name="MUX", ports=2, width=1):
         super().__init__(circuit, name)
         if ports not in [2, 4, 8]:
             raise ComponentException(f"Mux cannot have {ports} number of ports")
@@ -179,6 +207,7 @@ class MUX(Component):
 
     def update(self):
         if self.S.value == "X":
+            self.Y.value = "X"
             return
         self.Y.value = self._inports[self.S.value].value
 

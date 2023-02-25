@@ -7,6 +7,8 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "async_reset": false,
+                    "clock_enable": false,
                     "width": 1
                 }
             },
@@ -15,6 +17,8 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "async_reset": false,
+                    "clock_enable": false,
                     "width": 1
                 }
             },
@@ -23,6 +27,8 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "async_reset": false,
+                    "clock_enable": false,
                     "width": 1
                 }
             },
@@ -31,6 +37,8 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "async_reset": false,
+                    "clock_enable": false,
                     "width": 1
                 }
             },
@@ -39,6 +47,8 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "async_reset": false,
+                    "clock_enable": false,
                     "width": 1
                 }
             },
@@ -47,6 +57,8 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "async_reset": false,
+                    "clock_enable": false,
                     "width": 1
                 }
             },
@@ -54,7 +66,9 @@
                 "name": "PushButton",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {}
+                "settings": {
+                    "inverted": false
+                }
             },
             {
                 "name": "Clock",

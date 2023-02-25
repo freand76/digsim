@@ -23,9 +23,10 @@ class MemStdOut(Component):
         self._str = ""
 
     def update(self):
+        rising_edge = self.clk.is_rising_edge()
         if self.WE.value == 0 or self.Address.value != self._address:
             return
-        if self.clk.is_rising_edge():
+        if rising_edge:
             datain = self.DataIn.value
             if datain == 0x0A:
                 print(f"StringOutput [line]: '{self._str}'")

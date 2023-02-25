@@ -29,7 +29,8 @@ class Mem64kByte(Component):
                     self._mem_array[rom_address + idx] = byte
 
     def update(self):
-        if not self.clk.is_rising_edge() or self.Address.value == "X":
+        rising_edge = self.clk.is_rising_edge()
+        if not rising_edge or self.Address.value == "X":
             return
         addr = self.Address.value
         we = self.WE.value
