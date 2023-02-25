@@ -70,7 +70,7 @@ class YosysComponent(MultiComponent):
         with open(self._path, encoding="utf-8") as json_file:
             self._json = json.load(json_file)
         self._yosys_name = self._get_component_name()
-        # self.set_name(self._yosys_name)
+        self.set_name(self._yosys_name)
         self.set_display_name(self._yosys_name)
         self._parse_cells()
         self._make_cell_connections()

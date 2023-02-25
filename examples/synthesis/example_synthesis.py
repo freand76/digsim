@@ -41,6 +41,9 @@ circuit = Circuit(vcd="fibonacci.vcd")
 # Create Yosys component (fibonacci) component in circuit
 
 synth_component = YosysComponent(circuit, path=yosys_output_file)
+synth_component1 = YosysComponent(circuit, path=yosys_output_file)
+synth_component2 = YosysComponent(circuit, path=yosys_output_file)
+
 
 # Initialize circuit
 circuit.init()

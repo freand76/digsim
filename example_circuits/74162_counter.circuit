@@ -9,7 +9,7 @@
                 "settings": {}
             },
             {
-                "name": "IntegratedCircuit",
+                "name": "ic7448",
                 "display_name": "ic7448",
                 "type": "digsim.circuit.components.IntegratedCircuit",
                 "settings": {
@@ -17,7 +17,7 @@
                 }
             },
             {
-                "name": "IntegratedCircuit_1",
+                "name": "ttl_74162",
                 "display_name": "ttl_74162",
                 "type": "digsim.circuit.components.IntegratedCircuit",
                 "settings": {
@@ -58,60 +58,60 @@
         ],
         "wires": [
             {
-                "src": "IntegratedCircuit.a",
+                "src": "ic7448.a",
                 "dst": "SevenSegment.A"
             },
             {
-                "src": "IntegratedCircuit.b",
+                "src": "ic7448.b",
                 "dst": "SevenSegment.B"
             },
             {
-                "src": "IntegratedCircuit.c",
+                "src": "ic7448.c",
                 "dst": "SevenSegment.C"
             },
             {
-                "src": "IntegratedCircuit.d",
+                "src": "ic7448.d",
                 "dst": "SevenSegment.D"
             },
             {
-                "src": "IntegratedCircuit.e",
+                "src": "ic7448.e",
                 "dst": "SevenSegment.E"
             },
             {
-                "src": "IntegratedCircuit.f",
+                "src": "ic7448.f",
                 "dst": "SevenSegment.F"
             },
             {
-                "src": "IntegratedCircuit.g",
+                "src": "ic7448.g",
                 "dst": "SevenSegment.G"
             },
             {
-                "src": "IntegratedCircuit_1.RCO",
+                "src": "ttl_74162.RCO",
                 "dst": "Led.I"
             },
             {
-                "src": "IntegratedCircuit_1.Q",
-                "dst": "IntegratedCircuit.bcd"
+                "src": "ttl_74162.Q",
+                "dst": "ic7448.bcd"
             },
             {
                 "src": "Clock.O",
-                "dst": "IntegratedCircuit_1.Clk"
+                "dst": "ttl_74162.Clk"
             },
             {
                 "src": "OnOffSwitch.O",
-                "dst": "IntegratedCircuit_1.ENP"
+                "dst": "ttl_74162.ENP"
             },
             {
                 "src": "OnOffSwitch.O",
-                "dst": "IntegratedCircuit_1.ENT"
+                "dst": "ttl_74162.ENT"
             },
             {
                 "src": "StaticValue.O",
-                "dst": "IntegratedCircuit_1.Clear_bar"
+                "dst": "ttl_74162.Clear_bar"
             },
             {
                 "src": "StaticValue.O",
-                "dst": "IntegratedCircuit_1.Load_bar"
+                "dst": "ttl_74162.Load_bar"
             }
         ]
     },
@@ -120,11 +120,11 @@
             "x": 937,
             "y": 309
         },
-        "IntegratedCircuit": {
+        "ic7448": {
             "x": 558,
             "y": 316
         },
-        "IntegratedCircuit_1": {
+        "ttl_74162": {
             "x": 318,
             "y": 206
         },

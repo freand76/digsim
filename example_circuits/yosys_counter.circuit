@@ -3,7 +3,7 @@
         "name": "DigSimCircuit",
         "components": [
             {
-                "name": "YosysComponent_0",
+                "name": "counter",
                 "display_name": "counter",
                 "type": "digsim.circuit.components.YosysComponent",
                 "settings": {
@@ -48,12 +48,12 @@
         ],
         "wires": [
             {
-                "src": "YosysComponent_0.cnt",
+                "src": "counter.cnt",
                 "dst": "HexDigit_4.val"
             },
             {
                 "src": "Clock_1.O",
-                "dst": "YosysComponent_0.clk"
+                "dst": "counter.clk"
             },
             {
                 "src": "Clock_1.O",
@@ -61,11 +61,11 @@
             },
             {
                 "src": "PushButton_2.O",
-                "dst": "YosysComponent_0.reset"
+                "dst": "counter.reset"
             },
             {
                 "src": "OnOffSwitch.O",
-                "dst": "YosysComponent_0.up"
+                "dst": "counter.up"
             },
             {
                 "src": "OnOffSwitch.O",
@@ -74,7 +74,7 @@
         ]
     },
     "gui": {
-        "YosysComponent_0": {
+        "counter": {
             "x": 450,
             "y": 250
         },

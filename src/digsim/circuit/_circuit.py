@@ -210,9 +210,16 @@ class Circuit:
         name_id = 1
         namebase = component.name()
         while component.name() in self._components:
-            component.set_name(f"{namebase}_{name_id}")
+            component.set_name(f"{namebase}_{name_id}", update_circuit=False)
             name_id += 1
         self._components[component.name()] = component
+
+    def change_component_name(self, component, name):
+        """Change component name"""
+        comp = self._components[component.name()]
+        del self._components[component.name()]
+        comp.set_name(name, update_circuit=False)
+        self.add_component(comp)
 
     def get_component(self, component_name):
         """Get component witgh 'component_name'"""

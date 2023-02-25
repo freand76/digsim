@@ -81,9 +81,12 @@ class Component(abc.ABC):
         """Get the component name"""
         return self._name
 
-    def set_name(self, name):
+    def set_name(self, name, update_circuit=True):
         """Set the component name"""
-        self._name = name
+        if update_circuit:
+            self.circuit.change_component_name(self, name)
+        else:
+            self._name = name
 
     def display_name(self):
         """Get the component display name"""
@@ -174,7 +177,8 @@ class Component(abc.ABC):
 
         module = importlib.import_module(py_module_name)
         class_ = getattr(module, py_class_name)
-        component = class_(circuit=circuit, name=component_name, **component_settings)
+        component = class_(circuit=circuit, **component_settings)
+        component.set_name(component_name)
         if display_name is not None:
             component.set_display_name(display_name)
         return component
