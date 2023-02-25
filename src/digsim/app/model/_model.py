@@ -273,6 +273,8 @@ class AppModel(QThread):
         json_object = json.dumps(circuit_dict, indent=4)
         with open(path, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)
+        self._changed = False
+        self.sig_control_notify.emit(self._started)
 
     def load_circuit(self, path):
         """Load a circuit with GUI information"""
@@ -294,6 +296,7 @@ class AppModel(QThread):
                 for dst_port in src_port.get_wires():
                     self.add_wire(src_port, dst_port, connect=False)
             self._circuit_init()
+        self._changed = False
         self.sig_update_gui_components.emit()
         self.sig_control_notify.emit(self._started)
 
@@ -306,3 +309,7 @@ class AppModel(QThread):
     def has_objects(self):
         """Return True if there are objects in the model"""
         return len(self._component_objects) > 0
+
+    def has_changes(self):
+        """Return True if there are changes in the model since last save"""
+        return self._changed
