@@ -134,14 +134,17 @@ class AppModel(QThread):
             elif not self._multi_select:
                 comp.select(False)
 
-    def select_pos(self, pos):
+    def select_by_position(self, pos):
         """Select object from position"""
+        something_selected = False
         self.select(None)
         for wire in self.get_wire_objects():
             if wire.is_close(pos):
                 wire.select(True)
+                something_selected = True
             elif not self._multi_select:
                 wire.select(False)
+        return something_selected
 
     def get_selected_objects(self):
         """Get selected objects"""
@@ -151,6 +154,13 @@ class AppModel(QThread):
             if obj.selected:
                 objects.append(obj)
         return objects
+
+    def select_by_rect(self, rect):
+        """Select object be rectangle"""
+        placed_objects = self.get_placed_objects()
+        for obj in placed_objects:
+            if obj.in_rect(rect):
+                obj.select(True)
 
     def _delete_wire(self, wire_object):
         wire_object.disconnect()

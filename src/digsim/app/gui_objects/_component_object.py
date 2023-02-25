@@ -209,6 +209,11 @@ class ComponentObject(GuiObject):
         """Get size"""
         return QSize(self._width, self._height)
 
+    def in_rect(self, rect):
+        top_left = self.pos
+        bottom_right = QPoint(self.pos.x() + self.size.width(), self.pos.y() + self.size.height())
+        return self.point_in_rect(top_left, rect) and self.point_in_rect(bottom_right, rect)
+
     @pos.setter
     def pos(self, point):
         """Set position"""

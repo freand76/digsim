@@ -168,6 +168,13 @@ class WireObject(GuiObject):
                     return True
         return False
 
+    def in_rect(self, rect):
+        if self._src_point is not None and self._dst_point is not None:
+            return self.point_in_rect(self._src_point, rect) and self.point_in_rect(
+                self._dst_point, rect
+            )
+        return False
+
     def has_port(self, port):
         """Return True if port is alredy a part of this wire?"""
         return port in [self._src_port, self._dst_port]

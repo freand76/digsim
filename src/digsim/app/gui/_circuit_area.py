@@ -5,7 +5,7 @@
 
 from functools import partial
 
-from PySide6.QtCore import QPoint, Qt, QTimer
+from PySide6.QtCore import QPoint, QRect, Qt, QTimer
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QPushButton, QWidget
 
@@ -144,7 +144,8 @@ class CircuitArea(QWidget):
         super().__init__(parent)
         self._app_model = app_model
         self._app_model.sig_update_gui_components.connect(self._update_gui_components)
-
+        self._select_box_start = None
+        self._select_box_rect = None
         self.setMouseTracking(True)
         self.setAcceptDrops(True)
 
@@ -176,6 +177,9 @@ class CircuitArea(QWidget):
         """QT event callback function"""
         painter = QPainter(self)
         self._app_model.paint_wires(painter)
+        if self._select_box_rect is not None:
+            painter.setBrush(Qt.Dense7Pattern)
+            painter.drawRect(self._select_box_rect)
         painter.end()
 
     def mousePressEvent(self, event):
@@ -186,14 +190,31 @@ class CircuitArea(QWidget):
                 return
             if self._app_model.has_new_wire():
                 return
-            self._app_model.select_pos(event.pos())
-            self.setFocus()
+            if self._app_model.select_by_position(event.pos()):
+                self.update()
+                return
+            self._select_box_start = event.pos()
             self.update()
         elif event.button() == Qt.RightButton:
             if self._app_model.is_running:
                 return
             if self._app_model.has_new_wire():
                 self._abort_wire()
+
+    def _end_selection(self):
+        if self._select_box_rect is not None:
+            self._app_model.select_by_rect(self._select_box_rect)
+        self._select_box_start = None
+        self._select_box_rect = None
+
+    def mouseReleaseEvent(self, event):
+        """QT event callback function"""
+        super().mouseReleaseEvent(event)
+        if event.button() == Qt.LeftButton:
+            if self._app_model.is_running:
+                return
+            self._end_selection()
+            self.update()
 
     def mouseDoubleClickEvent(self, _):
         """QT event callback function"""
@@ -210,6 +231,12 @@ class CircuitArea(QWidget):
         if self._app_model.has_new_wire():
             self._app_model.set_new_wire_end_pos(event.pos())
             self.update()
+            return
+
+        if self._select_box_start is not None:
+            self._select_box_rect = QRect(self._select_box_start, event.pos())
+            self.update()
+            return
 
     def dragEnterEvent(self, event):
         """QT event callback function"""
