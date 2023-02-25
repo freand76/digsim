@@ -138,7 +138,7 @@ class ImageObjectStaticValue(ImageObject):
             self.paint_component_base(painter)
             font = QFont("Arial", 16)
             fm = QFontMetrics(font)
-            value_str = f"{self.component.O.value}"
+            value_str = f"{self.component.parameter_get('value')}"
             str_w = fm.horizontalAdvance(value_str)
             str_h = fm.height()
             painter.setFont(font)

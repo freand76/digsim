@@ -11,10 +11,10 @@ class PushButton(CallbackComponent):
 
     def __init__(self, circuit, name="PushButton", inverted=False):
         super().__init__(circuit, name)
-        self._inverted = inverted
         portout = PortOut(self, "O", delay_ns=0)
         self.add_port(portout)
         portout.update_parent(True)
+        self.parameter_set("inverted", inverted)
 
     def init(self):
         super().init()
@@ -22,17 +22,20 @@ class PushButton(CallbackComponent):
 
     def push(self):
         """Push pushbutton"""
-        if self._inverted:
+        if self.parameter_get("inverted"):
             self.O.value = 0
         else:
             self.O.value = 1
 
     def release(self):
         """Release pushbutton"""
-        if self._inverted:
+        if self.parameter_get("inverted"):
             self.O.value = 1
         else:
             self.O.value = 0
+
+    def reconfigure(self):
+        self.release()
 
     @property
     def has_action(self):
@@ -48,9 +51,6 @@ class PushButton(CallbackComponent):
     def onrelease(self):
         self.release()
 
-    def settings_to_dict(self):
-        return {"inverted": self._inverted}
-
     @classmethod
     def get_parameters(cls):
         return {
@@ -58,5 +58,6 @@ class PushButton(CallbackComponent):
                 "type": bool,
                 "default": False,
                 "description": "Button output is inverted",
+                "reconfigurable": True,
             },
         }

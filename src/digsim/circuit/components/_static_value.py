@@ -11,17 +11,20 @@ class StaticValue(Component):
 
     def __init__(self, circuit, name="StaticValue", width=1, value=0):
         super().__init__(circuit, name)
-        self._width = width
-        self._value = value
+        self.parameter_set("width", width)
+        self.parameter_set("value", value)
         self.add_port(PortOut(self, "O", width=width, delay_ns=0))
 
     def init(self):
         super().init()
-        self.O.value = self._value
+        self.O.value = self.parameter_get("value")
+
+    def reconfigure(self):
+        self.O.value = self.parameter_get("value")
 
     @property
     def active(self):
-        return self._width == 1 and self._value == 1
+        return self.parameter_get("width") == 1 and self.parameter_get("value") == 1
 
     @classmethod
     def get_parameters(cls):
@@ -30,6 +33,7 @@ class StaticValue(Component):
                 "type": "width_pow2",
                 "default": 0,
                 "description": "Static value",
+                "reconfigurable": True,
             },
             "width": {
                 "type": int,
@@ -39,6 +43,3 @@ class StaticValue(Component):
                 "description": "Static value bitwidth",
             },
         }
-
-    def settings_to_dict(self):
-        return {"value": self._value, "width": self._width}

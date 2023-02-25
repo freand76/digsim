@@ -14,8 +14,8 @@ class OnOffSwitch(CallbackComponent):
         portout = PortOut(self, "O", delay_ns=0)
         self.add_port(portout)
         portout.update_parent(True)
-        self._on = False
-        self._start_on = start_on
+        self.parameter_set("start_on", start_on)
+        self._on = start_on
 
     def _set(self, set_on):
         if set_on:
@@ -25,7 +25,7 @@ class OnOffSwitch(CallbackComponent):
 
     def init(self):
         super().init()
-        self._set(self._start_on)
+        self._set(self.parameter_get("start_on"))
 
     def turn_on(self):
         """Turn on the switch"""
@@ -52,9 +52,6 @@ class OnOffSwitch(CallbackComponent):
     def active(self):
         return self.O.value == 1
 
-    def settings_to_dict(self):
-        return {"start_on": self._start_on}
-
     @classmethod
     def get_parameters(cls):
         return {
@@ -62,5 +59,6 @@ class OnOffSwitch(CallbackComponent):
                 "type": bool,
                 "default": False,
                 "description": "Switch on after reset",
+                "reconfigurable": True,
             },
         }

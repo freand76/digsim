@@ -345,6 +345,7 @@ class AppModel(QThread):
         """Set changed to True, for example when gui has moved component"""
         self._changed = True
         self.sig_control_notify.emit(self._started)
+        self.sig_update_gui_components.emit()
 
     def has_changes(self):
         """Return True if there are changes in the model since last save"""
