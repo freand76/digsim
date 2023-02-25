@@ -4,7 +4,6 @@
 """ The main window and widgets of the digsim gui application """
 
 # pylint: disable=too-few-public-methods
-# pylint: disable=too-many-instance-attributes
 
 import pathlib
 
@@ -20,7 +19,6 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QMainWindow,
     QMessageBox,
     QPushButton,
@@ -34,6 +32,8 @@ from PySide6.QtWidgets import (
 import digsim.app.gui_objects
 from digsim.circuit.components import IntegratedCircuit
 from digsim.circuit.components.atoms import PortConnectionError
+
+from ._top_bar import TopBar
 
 
 class ComponentSettingsBase(QFrame):
@@ -701,102 +701,6 @@ class CircuitEditor(QSplitter):
 
     def _control_notify(self, started):
         self._selection_area.setEnabled(not started)
-
-
-class TopBar(QFrame):
-    """
-    The top widget with the control and status widgets
-    """
-
-    def __init__(self, app_model, parent):
-        super().__init__(parent)
-        self._app_model = app_model
-        self._app_model.sig_control_notify.connect(self._control_notify)
-        self._app_model.sig_sim_time_notify.connect(self._sim_time_notify)
-        self._time_s = 0
-        self._started = False
-
-        self.setObjectName("TopBar")
-        self.setStyleSheet("QFrame#TopBar {background: #ebebeb;}")
-
-        self.setLayout(QHBoxLayout(self))
-        self._start_button = QPushButton("Start Simulation", self)
-        self._start_button.clicked.connect(self.start_stop)
-        self.layout().addWidget(self._start_button)
-        self._reset_button = QPushButton("Reset Simulation", self)
-        self._reset_button.clicked.connect(self.reset)
-        self._reset_button.setEnabled(False)
-        self.layout().addWidget(self._reset_button)
-        self._sim_time = QLineEdit("0 s")
-        self._sim_time.setReadOnly(True)
-        self._sim_time.setAlignment(Qt.AlignRight)
-        self._sim_time.setFrame(False)
-        self._sim_time.selectionChanged.connect(lambda: self._sim_time.setSelection(0, 0))
-        self.layout().addWidget(self._sim_time)
-        self.layout().addStretch(1)
-        self._load_button = QPushButton("Load Circuit", self)
-        self._load_button.clicked.connect(self.load)
-        self.layout().addWidget(self._load_button)
-        self._save_button = QPushButton("Save Circuit", self)
-        self._save_button.clicked.connect(self.save)
-        self.layout().addWidget(self._save_button)
-
-    def start_stop(self):
-        """Button action: Start/Stop"""
-        if not self._started:
-            self._started = True
-            self._start_button.setEnabled(False)
-            self._load_button.setEnabled(False)
-            self._save_button.setEnabled(False)
-            self._app_model.model_start()
-        else:
-            self._started = False
-            self._start_button.setEnabled(False)
-            self._app_model.model_stop()
-
-    def load(self):
-        """Button action: Load"""
-        path = QFileDialog.getOpenFileName(
-            self, "Load Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
-        )
-        if len(path[0]) == 0:
-            return
-        self._app_model.load_circuit(path[0])
-
-    def save(self):
-        """Button action: Save"""
-        path = QFileDialog.getSaveFileName(
-            self, "Save Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
-        )
-        if len(path[0]) == 0:
-            return
-        self._app_model.save_circuit(path[0])
-
-    def reset(self):
-        """Button action: Reset"""
-        self._time_s = 0
-        self._app_model.model_reset()
-        self._reset_button.setEnabled(False)
-
-    def _control_notify(self, started):
-        if started:
-            self._start_button.setText("Stop Similation")
-            self._start_button.setEnabled(True)
-        else:
-            self._start_button.setText("Start Similation")
-            self._start_button.setEnabled(True)
-            self._load_button.setEnabled(True)
-            self._save_button.setEnabled(True)
-            if self._time_s > 0:
-                self._reset_button.setEnabled(True)
-
-    def _sim_time_notify(self, time_s):
-        self._sim_time.setText(f"{time_s:.2f} s")
-        self._time_s = time_s
-        if self._time_s and not self._app_model.is_running:
-            self._reset_button.setEnabled(True)
-        else:
-            self._reset_button.setEnabled(False)
 
 
 class CentralWidget(QWidget):
