@@ -202,6 +202,7 @@ class AppModel(QThread):
                 obj.pos = obj.pos + delta_pos
                 self.sig_component_notify.emit(obj.component)
                 self.update_wires()
+                self._changed = True
 
     def paint_wires(self, painter):
         """Paint wire objects"""

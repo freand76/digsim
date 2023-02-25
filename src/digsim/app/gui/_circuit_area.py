@@ -108,12 +108,6 @@ class ComponentWidget(QPushButton):
                 # Move complete
                 self.setCursor(Qt.ArrowCursor)
                 self._mouse_grab_pos = None
-                if self._component_object.pos != self.pos():
-                    # Component was moved
-                    self._component_object.pos = self.pos()
-                    self._app_model.update_wires()
-                    self._app_model.set_changed()
-                self.parent().update()
 
     def mouseMoveEvent(self, event):
         """QT event callback function"""
