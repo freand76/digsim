@@ -41,6 +41,7 @@ class AppModel(QThread):
         self._component_callback_list = []
         self._new_wire = None
         self._new_wire_end_pos = None
+        self._multi_select = False
 
     def clear(self):
         """Clear components and wires"""
@@ -121,12 +122,16 @@ class AppModel(QThread):
         placed_objects.extend(self.get_wire_objects())
         return placed_objects
 
+    def multi_select(self, multi_select):
+        """Enable/Disable multiple select of objects"""
+        self._multi_select = multi_select
+
     def select(self, placed_object=None):
         """Select placed object"""
         for comp in self.get_placed_objects():
             if comp == placed_object:
                 comp.select(True)
-            else:
+            elif not self._multi_select:
                 comp.select(False)
 
     def select_pos(self, pos):
@@ -135,7 +140,7 @@ class AppModel(QThread):
         for wire in self.get_wire_objects():
             if wire.is_close(pos):
                 wire.select(True)
-            else:
+            elif not self._multi_select:
                 wire.select(False)
 
     def get_selected_objects(self):
@@ -149,7 +154,8 @@ class AppModel(QThread):
 
     def _delete_wire(self, wire_object):
         wire_object.disconnect()
-        del self._wire_objects[wire_object.key]
+        if wire_object.key in self._wire_objects:
+            del self._wire_objects[wire_object.key]
 
     def _delete_component(self, component_object):
         for port in component_object.component.ports:
@@ -165,10 +171,11 @@ class AppModel(QThread):
         """Delete selected object(s)"""
         selected_objects = self.get_selected_objects()
         for obj in selected_objects:
+            if isinstance(obj, digsim.app.gui_objects.ComponentObject):
+                self._delete_component(obj)
+        for obj in selected_objects:
             if isinstance(obj, digsim.app.gui_objects.WireObject):
                 self._delete_wire(obj)
-            elif isinstance(obj, digsim.app.gui_objects.ComponentObject):
-                self._delete_component(obj)
         self.sig_update_gui_components.emit()
 
     def update_wires(self):
@@ -176,6 +183,15 @@ class AppModel(QThread):
         for _, wire in self._wire_objects.items():
             wire.update()
         self.sig_control_notify.emit(self._started)
+
+    def move_selected_components(self, delta_pos):
+        """Move selected objects"""
+        selected_objects = self.get_selected_objects()
+        for obj in selected_objects:
+            if isinstance(obj, digsim.app.gui_objects.ComponentObject):
+                obj.pos = obj.pos + delta_pos
+                self.sig_component_notify.emit(obj.component)
+                self.update_wires()
 
     def paint_wires(self, painter):
         """Paint wire objects"""

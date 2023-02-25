@@ -151,8 +151,9 @@ class Port(abc.ABC):
 
     def disconnect(self, port):
         """Disconnect port if it is wired"""
-        index = self._wired_ports.index(port)
-        del self._wired_ports[index]
+        if port in self._wired_ports:
+            index = self._wired_ports.index(port)
+            del self._wired_ports[index]
         port.set_driver(None)
 
     def strval(self):

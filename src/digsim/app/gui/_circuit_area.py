@@ -39,6 +39,7 @@ class ComponentWidget(QPushButton):
 
     def _component_notify(self, component):
         if component == self.component:
+            self.move(self._component_object.pos)
             self.update()
 
     def paintEvent(self, _):
@@ -91,7 +92,7 @@ class ComponentWidget(QPushButton):
             else:
                 self._component_object.create_context_menu(self, event)
                 self.adjustSize()
-                self.update()
+        self.update()
 
     def mouseReleaseEvent(self, event):
         """QT event callback function"""
@@ -132,9 +133,7 @@ class ComponentWidget(QPushButton):
             self.parent().update()
 
         elif self._mouse_grab_pos is not None:
-            self.move(self.pos() + event.pos() - self._mouse_grab_pos)
-            self._component_object.pos = self.pos()
-            self._app_model.update_wires()
+            self._app_model.move_selected_components(event.pos() - self._mouse_grab_pos)
             self.parent().update()
 
 
@@ -162,7 +161,16 @@ class CircuitArea(QWidget):
         elif event.key() == Qt.Key_Escape:
             if self._app_model.has_new_wire():
                 self._abort_wire()
+        elif event.key() == Qt.Key_Control:
+            self._app_model.multi_select(True)
         event.accept()
+
+    def keyReleaseEvent(self, event):
+        """QT event callback function"""
+        if self._app_model.is_running:
+            return
+        if event.key() == Qt.Key_Control:
+            self._app_model.multi_select(False)
 
     def paintEvent(self, _):
         """QT event callback function"""
