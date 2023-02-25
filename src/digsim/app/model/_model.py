@@ -82,6 +82,7 @@ class AppModel(QThread):
         self._circuit_init()
         component_object = self._add_component(component, pos.x(), pos.y())
         component_object.center()  # Component is plced @ mouse pointer, make it center
+        self.sig_control_notify.emit(self._started)
         return component_object
 
     def _add_component(self, component, xpos, ypos):
@@ -155,6 +156,7 @@ class AppModel(QThread):
                     self._delete_wire(wire)
         del self._component_objects[component_object.component]
         self._circuit.delete_component(component_object.component)
+        self.sig_control_notify.emit(self._started)
 
     def delete(self):
         """Delete selected object(s)"""
@@ -293,3 +295,14 @@ class AppModel(QThread):
                     self.add_wire(src_port, dst_port, connect=False)
             self._circuit_init()
         self.sig_update_gui_components.emit()
+        self.sig_control_notify.emit(self._started)
+
+    def clear_circuit(self):
+        """Clear the circuit"""
+        self.clear()
+        self.sig_update_gui_components.emit()
+        self.sig_control_notify.emit(self._started)
+
+    def has_objects(self):
+        """Return True if there are objects in the model"""
+        return len(self._component_objects) > 0

@@ -48,9 +48,6 @@ I will try to keep track of them and give credits!
    * Add documentation :-)
 ### Yosys
    * Add unittest of yosys atoms
-### GUI
-   * Clear circuit button
-   * "Are you sure?" dialog for load/clear
 ### Model
    * Add unittest of all components
    * Add unittest of ports

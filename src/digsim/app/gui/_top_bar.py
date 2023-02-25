@@ -6,7 +6,7 @@
 # pylint: disable=too-few-public-methods
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QLabel, QPushButton
+from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QLabel, QMessageBox, QPushButton
 
 
 class SimControlWidget(QFrame):
@@ -110,10 +110,25 @@ class LoadSaveWidget(QFrame):
         self._save_button = QPushButton("Save Circuit", self)
         self._save_button.clicked.connect(self.save)
         self.layout().addWidget(self._save_button)
+        self._clear_button = QPushButton("Clear Circuit", self)
+        self._clear_button.clicked.connect(self.clear)
+        self.layout().addWidget(self._clear_button)
         self._app_model.sig_control_notify.connect(self._control_notify)
+        self._control_notify(False)
+
+    def _are_you_sure_messagebox(self, dialog_text):
+        ret = QMessageBox.question(
+            self.parent(),
+            dialog_text,
+            "Are you sure destroy the current circuit?",
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        return ret == QMessageBox.Yes
 
     def load(self):
         """Button action: Load"""
+        if not self._are_you_sure_messagebox("Load circuit"):
+            return
         path = QFileDialog.getOpenFileName(
             self, "Load Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
         )
@@ -130,13 +145,23 @@ class LoadSaveWidget(QFrame):
             return
         self._app_model.save_circuit(path[0])
 
+    def clear(self):
+        """Button action: Save"""
+        if self._are_you_sure_messagebox("Clear circuit"):
+            self._app_model.clear_circuit()
+
     def _control_notify(self, started):
         if started:
             self._load_button.setEnabled(False)
             self._save_button.setEnabled(False)
+            self._clear_button.setEnabled(False)
         else:
             self._load_button.setEnabled(True)
             self._save_button.setEnabled(True)
+            if self._app_model.has_objects():
+                self._clear_button.setEnabled(True)
+            else:
+                self._clear_button.setEnabled(False)
 
 
 class TopBar(QFrame):
