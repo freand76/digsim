@@ -103,9 +103,11 @@ class ComponentWidget(QPushButton):
                 # Move complete
                 self.setCursor(Qt.ArrowCursor)
                 self._mouse_grab_pos = None
-                self._component_object.pos = self.pos()
-                self._app_model.update_wires()
-                self._app_model.set_changed()
+                if self._component_object.pos != self.pos():
+                    # Component was moved
+                    self._component_object.pos = self.pos()
+                    self._app_model.update_wires()
+                    self._app_model.set_changed()
                 self.parent().update()
 
     def mouseMoveEvent(self, event):
@@ -147,12 +149,19 @@ class CircuitArea(QWidget):
         self.setMouseTracking(True)
         self.setAcceptDrops(True)
 
+    def _abort_wire(self):
+        self._app_model.new_wire_abort()
+        self.update()
+
     def keyPressEvent(self, event):
         """QT event callback function"""
         if self._app_model.is_running:
             return
         if event.key() == Qt.Key_Delete:
             self._app_model.delete()
+        elif event.key() == Qt.Key_Escape:
+            if self._app_model.has_new_wire():
+                self._abort_wire()
         event.accept()
 
     def paintEvent(self, _):
@@ -176,8 +185,14 @@ class CircuitArea(QWidget):
             if self._app_model.is_running:
                 return
             if self._app_model.has_new_wire():
-                self._app_model.new_wire_abort()
-                self.update()
+                self._abort_wire()
+
+    def mouseDoubleClickEvent(self, _):
+        """QT event callback function"""
+        if self._app_model.is_running:
+            return
+        if self._app_model.has_new_wire():
+            self._abort_wire()
 
     def mouseMoveEvent(self, event):
         """QT event callback function"""
