@@ -22,6 +22,9 @@ class Bus2Bits(Component):
                 bit_port = self._bus.get_bit(bit_id)
                 self.add_port(bit_port)
 
+        self.parameter_set("width", width)
+        self.parameter_set("enable", enable)
+
     @classmethod
     def get_parameters(cls):
         return {
@@ -39,9 +42,6 @@ class Bus2Bits(Component):
             },
         }
 
-    def settings_to_dict(self):
-        return {"width": self.bus.width, "enable": self._enable}
-
 
 class Bits2Bus(Component):
     """Bits to Bus merger"""
@@ -53,6 +53,7 @@ class Bits2Bus(Component):
         for bit_id in range(width):
             bit_port = self._bus.get_bit(bit_id)
             self.add_port(bit_port)
+        self.parameter_set("width", width)
 
     @classmethod
     def get_parameters(cls):
@@ -65,6 +66,3 @@ class Bits2Bus(Component):
                 "description": "Bus width",
             },
         }
-
-    def settings_to_dict(self):
-        return {"width": self.bus.width}

@@ -31,20 +31,14 @@ class HexDigit(CallbackComponent):
     def __init__(self, circuit, name="HexDigit", digits=1, dot=True):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "val", width=(4 * digits)))
-        self._digits = digits
-        self._dot = dot
-        if self._dot:
+        self.parameter_set("digits", digits)
+        self.parameter_set("dot", dot)
+        if dot:
             self.add_port(PortIn(self, "dot", width=digits))
-
-    def set_digits(self, digits):
-        """Set the number of digits"""
-        self._digits = digits
-        self.val.width = digits * 4
-        self.dot.width = digits
 
     def get_digits(self):
         """Get the number of digits"""
-        return self._digits
+        return self.parameter_get("digits")
 
     def value(self):
         """Get value"""
@@ -52,7 +46,7 @@ class HexDigit(CallbackComponent):
 
     def dot_active(self, digit_id=1):
         """Is the dot active for the selected digit_id?"""
-        if not self._dot:
+        if not self.parameter_get("dot"):
             return False
         if self.dot.value == "X":
             return False
@@ -86,6 +80,3 @@ class HexDigit(CallbackComponent):
                 "description": "Use decimal dot",
             },
         }
-
-    def settings_to_dict(self):
-        return {"digits": self._digits, "dot": self._dot}

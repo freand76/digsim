@@ -40,6 +40,7 @@ class ConfigPortsComponent(Component):
             self.add_port(port)
             portname = chr(ord(portname) + 1)
         self.add_port(PortOut(self, "Y"))
+        self.parameter_set("ports", ports)
 
     @classmethod
     def get_parameters(cls):
@@ -52,9 +53,6 @@ class ConfigPortsComponent(Component):
                 "description": "Number of input ports",
             },
         }
-
-    def settings_to_dict(self):
-        return {"ports": len(self._inports)}
 
 
 class OR(ConfigPortsComponent):
@@ -147,6 +145,9 @@ class DFF(Component):
             self.add_port(PortWire(self, "E"))
         self.add_port(PortIn(self, "C"))
         self.add_port(PortOut(self, "Q", width=width))
+        self.parameter_set("width", width)
+        self.parameter_set("async_reset", async_reset)
+        self.parameter_set("clock_enable", clock_enable)
 
     def update(self):
         rising_edge = self.C.is_rising_edge()
@@ -180,13 +181,6 @@ class DFF(Component):
             },
         }
 
-    def settings_to_dict(self):
-        return {
-            "async_reset": self._async_reset,
-            "clock_enable": self._clock_enable,
-            "width": self.D.width,
-        }
-
 
 class MUX(Component):
     """MUX"""
@@ -204,6 +198,8 @@ class MUX(Component):
             portname = chr(ord(portname) + 1)
         self.add_port(PortIn(self, "S", width=int(math.log2(ports))))
         self.add_port(PortOut(self, "Y", width=width))
+        self.parameter_set("ports", ports)
+        self.parameter_set("width", width)
 
     def update(self):
         if self.S.value == "X":
@@ -228,9 +224,6 @@ class MUX(Component):
                 "description": "Bitwidth of mux ports",
             },
         }
-
-    def settings_to_dict(self):
-        return {"ports": len(self._inports), "width": self.A.width}
 
 
 class SR(MultiComponent):

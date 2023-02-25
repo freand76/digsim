@@ -13,9 +13,9 @@ class IntegratedCircuit(YosysComponent):
     """IC component class (predefined yosys module)"""
 
     def __init__(self, circuit, name="IC", ic_name=None):
-        self._ic_name = ic_name
         path = f"{self.folder()}/{ic_name}.json"
         super().__init__(circuit, name=name, path=path)
+        self.parameter_set("ic_name", ic_name)
 
     @classmethod
     def folder(cls):
@@ -23,7 +23,7 @@ class IntegratedCircuit(YosysComponent):
         return f"{os.path.dirname(__file__)}/ic"
 
     def settings_to_dict(self):
-        return {"ic_name": self._ic_name}
+        return {"ic_name": self.parameter_get("ic_name")}
 
     @classmethod
     def get_parameters(cls):
