@@ -77,12 +77,12 @@ class AND(ConfigPortsComponent):
         super().__init__(circuit, name, ports)
 
     def update(self):
-        if any(port.value == "X" for port in self._inports):
-            self.Y.value = "X"
-        elif all(port.value == 1 for port in self._inports):
+        if all(port.value == 1 for port in self._inports):
             self.Y.value = 1
-        else:
+        elif any(port.value == 0 for port in self._inports):
             self.Y.value = 0
+        else:
+            self.Y.value = "X"
 
 
 class XOR(ConfigPortsComponent):
@@ -108,12 +108,12 @@ class NAND(ConfigPortsComponent):
         super().__init__(circuit, name, ports)
 
     def update(self):
-        if any(port.value == "X" for port in self._inports):
-            self.Y.value = "X"
-        elif all(port.value == 1 for port in self._inports):
+        if all(port.value == 1 for port in self._inports):
             self.Y.value = 0
-        else:
+        elif any(port.value == 0 for port in self._inports):
             self.Y.value = 1
+        else:
+            self.Y.value = "X"
 
 
 class NOR(ConfigPortsComponent):
