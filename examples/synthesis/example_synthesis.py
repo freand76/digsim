@@ -12,7 +12,7 @@ import os
 import sys
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import Clock, PushButton, YosysComponent
+from digsim.circuit.components import YosysComponent
 from digsim.synth import Synthesis
 
 
@@ -38,22 +38,18 @@ print("Synthesis done!")
 
 circuit = Circuit(vcd="fibonacci.vcd")
 
-# Create components in circuit, Clock, Reset button and Yosys component (fibonacci)
+# Create Yosys component (fibonacci) component in circuit
 
-clk = Clock(circuit, "clk", frequency=1000)
-reset = PushButton(circuit, "reset")
 synth_component = YosysComponent(circuit, path=yosys_output_file)
-
-# Connect clock and reset button to synth_component (fibonacci)
-
-clk.O.wire = synth_component.clk
-reset.O.wire = synth_component.reset
 
 # Initialize circuit
 circuit.init()
 
-# Push reset button and run the simulation for 1ms
-reset.push()
+# Run for 1 ms
+circuit.run(ms=1)
+
+# Set reset signal high for 1ms
+synth_component.reset.value = 1
 circuit.run(ms=1)
 
 print("\n===================== Reset ==========================\n")
@@ -63,13 +59,19 @@ print(synth_component)
 
 print("\n===================== Start ==========================\n")
 
-# Release reset button and run the simulation for 1us
-reset.release()
-circuit.run(us=1)
+# Set reset signal low for 1ms
+synth_component.reset.value = 0
+circuit.run(ms=1)
 
-# Run simulation in 16ms (in steps of 1ms, print the index and value each loop)
+# Loop 16 times (print the index and value + generate clock cycle)
 for _ in range(0, 16):
     index = synth_component.index.value
     value = synth_component.value.value
     print(f"Fibonacci sequence [{index}] value is {value}")
+
+    # Set clock signal high for 1ms
+    synth_component.clk.value = 1
+    circuit.run(ms=1)
+    # Set clock signal low for 1ms
+    synth_component.clk.value = 0
     circuit.run(ms=1)

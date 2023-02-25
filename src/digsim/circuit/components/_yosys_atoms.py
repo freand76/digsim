@@ -561,7 +561,7 @@ class _DFF3_(ClassNameParameterComponent):
         self._reset_level = self.name_to_level(1)
         self._reset_value = self.name_to_level(2)
         self.add_port(PortIn(self, "C"))
-        self.add_port(PortWire(self, "R"))
+        self.add_port(PortIn(self, "R"))
         self.add_port(PortWire(self, "D"))
         self.add_port(PortOut(self, "Q"))
         self._old_C_level = self.C.value
@@ -1032,7 +1032,7 @@ class _SDFF_PP1_(_SDFF_):
 
 
 class _SDFFE_(ClassNameParameterComponent):
-    """D-type flip-flop with sync reset abd clock enable (with reset having priority)"""
+    """D-type flip-flop with sync reset and clock enable (with reset having priority)"""
 
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
@@ -1125,7 +1125,7 @@ class _SDFFE_PP1P_(_SDFFE_):
 
 
 class _SDFFCE_(ClassNameParameterComponent):
-    """D-type flip-flop with sync reset abd clock enable (with clock enable having priority)"""
+    """D-type flip-flop with sync reset and clock enable (with clock enable having priority)"""
 
     def __init__(self, circuit, name):
         super().__init__(circuit, name)

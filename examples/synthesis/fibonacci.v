@@ -19,7 +19,7 @@ module fibonacci(clk, reset, index, value);
      begin
         next <= sum;
         first <= next;
-        index <= index + 1;  
+        index <= index + 1;
         if (reset)
           begin
              index <= 0;
