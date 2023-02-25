@@ -29,6 +29,7 @@ class WavesWriter:
         for port_path, port_name, port_width in port_info:
             var = self._vcd_writer.register_var(port_path, port_name, "wire", size=port_width)
             self._vcd_dict[f"{port_path}.{port_name}"] = var
+        self._vcd_file.flush()
 
     def write(self, port, time_ns):
         """Write port value to vcd file"""
@@ -37,6 +38,7 @@ class WavesWriter:
             if var is None:
                 continue
             self._vcd_writer.change(var, timestamp=time_ns, value=wired_port.value)
+        self._vcd_file.flush()
 
     def close(self):
         """Close vcd file"""
