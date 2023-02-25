@@ -7,7 +7,7 @@
 
 from functools import partial
 
-from PySide6.QtCore import QMimeData, QPoint, QSize, Qt, QTimer
+from PySide6.QtCore import QMimeData, QSize, Qt, QTimer
 from PySide6.QtGui import QDrag, QPainter, QPixmap
 from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout, QWidget
 
@@ -49,7 +49,7 @@ class SelectableComponentWidget(QPushButton):
 
     def mouseDoubleClickEvent(self, _):
         """QT event callback function"""
-        QTimer.singleShot(0, partial(self._circuit_area.add_component, self._name, QPoint(0, 0)))
+        QTimer.singleShot(0, partial(self._circuit_area.add_component, self._name, None))
 
     def paintEvent(self, event):
         """QT event callback function"""

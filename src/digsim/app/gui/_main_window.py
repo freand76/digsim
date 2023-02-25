@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ._circuit_area import CircuitArea
+from ._circuit_area import CircuitArea, ScrollableCircuitArea
 from ._component_selection import ComponentSelection
 from ._top_bar import TopBar
 from ._utils import are_you_sure_messagebox
@@ -49,8 +49,9 @@ class CircuitEditor(QSplitter):
         self.layout().addWidget(self._selection_area)
         self.layout().setStretchFactor(self._selection_area, 0)
 
-        self.layout().addWidget(circuit_area)
-        self.layout().setStretchFactor(circuit_area, 1)
+        scrollable_circuit_area = ScrollableCircuitArea(self, circuit_area)
+        self.layout().addWidget(scrollable_circuit_area)
+        self.layout().setStretchFactor(scrollable_circuit_area, 1)
 
     def _control_notify(self, started):
         self._selection_area.setEnabled(not started)

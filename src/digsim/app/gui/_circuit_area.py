@@ -7,7 +7,7 @@ from functools import partial
 
 from PySide6.QtCore import QPoint, QRect, Qt, QTimer
 from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QPushButton, QWidget
+from PySide6.QtWidgets import QPushButton, QScrollArea, QWidget
 
 from digsim.circuit.components.atoms import PortConnectionError
 
@@ -142,12 +142,26 @@ class CircuitArea(QWidget):
 
     def __init__(self, app_model, parent):
         super().__init__(parent)
+        self.setFixedWidth(5000)
+        self.setFixedHeight(5000)
         self._app_model = app_model
         self._app_model.sig_update_gui_components.connect(self._update_gui_components)
         self._select_box_start = None
         self._select_box_rect = None
         self.setMouseTracking(True)
         self.setAcceptDrops(True)
+        self._panning_mode = False
+        self._panning_pos = None
+        self._panning_callback = None
+        self._top_left = QPoint(0, 0)
+
+    def set_top_left(self, point):
+        """Set top left position for visible circuit area"""
+        self._top_left = point
+
+    def set_panning_callback(self, callback):
+        """Set callback funktion to handle panning of parent scroll area"""
+        self._panning_callback = callback
 
     def _abort_wire(self):
         self._app_model.new_wire_abort()
@@ -155,6 +169,7 @@ class CircuitArea(QWidget):
 
     def keyPressEvent(self, event):
         """QT event callback function"""
+        super().keyPressEvent(event)
         if self._app_model.is_running:
             return
         if event.key() == Qt.Key_Delete:
@@ -164,14 +179,21 @@ class CircuitArea(QWidget):
                 self._abort_wire()
         elif event.key() == Qt.Key_Control:
             self._app_model.multi_select(True)
+        elif event.key() == Qt.Key_Shift:
+            self.setCursor(Qt.OpenHandCursor)
+            self._panning_mode = True
         event.accept()
 
     def keyReleaseEvent(self, event):
         """QT event callback function"""
+        super().keyReleaseEvent(event)
         if self._app_model.is_running:
             return
         if event.key() == Qt.Key_Control:
             self._app_model.multi_select(False)
+        elif event.key() == Qt.Key_Shift:
+            self.setCursor(Qt.ArrowCursor)
+            self._panning_mode = False
 
     def paintEvent(self, _):
         """QT event callback function"""
@@ -185,6 +207,7 @@ class CircuitArea(QWidget):
     def mousePressEvent(self, event):
         """QT event callback function"""
         super().mousePressEvent(event)
+        self.setFocus()
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
                 return
@@ -193,8 +216,11 @@ class CircuitArea(QWidget):
             if self._app_model.select_by_position(event.pos()):
                 self.update()
                 return
-            self._select_box_start = event.pos()
-            self.update()
+            if self._panning_mode:
+                self._panning_pos = event.pos()
+            else:
+                self._select_box_start = event.pos()
+                self.update()
         elif event.button() == Qt.RightButton:
             if self._app_model.is_running:
                 return
@@ -213,6 +239,7 @@ class CircuitArea(QWidget):
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
                 return
+            self._panning_pos = None
             self._end_selection()
             self.update()
 
@@ -238,6 +265,13 @@ class CircuitArea(QWidget):
             self.update()
             return
 
+        if (
+            self._panning_mode
+            and self._panning_pos is not None
+            and self._panning_callback is not None
+        ):
+            self._panning_callback(self._panning_pos - event.pos())
+
     def dragEnterEvent(self, event):
         """QT event callback function"""
         event.accept()
@@ -256,8 +290,8 @@ class CircuitArea(QWidget):
         Add component to circuit area
         Used be drag'n'drop into Circuit area or double click in SelectableComponentWidget
         """
-        if position == QPoint(0, 0):
-            position = self.rect().center()
+        if position is None:
+            position = self._top_left + QPoint(100, 100)
 
         component_parameters = self._app_model.get_component_parameters(name)
         ok, settings = ComponentSettingsDialog.start(
@@ -280,3 +314,27 @@ class CircuitArea(QWidget):
             comp.show()
         self._app_model.update_wires()
         self.update()
+
+
+class ScrollableCircuitArea(QScrollArea):
+    """The scrollable circuit area class, this is where the circuit area widgets is placed"""
+
+    def __init__(self, parent, circuit_area):
+        super().__init__(parent)
+        self._circuit_area = circuit_area
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+        self.setWidget(circuit_area)
+        self._circuit_area.set_panning_callback(self.panning_callback)
+
+    def scrollContentsBy(self, dx, dy):
+        """QT event callback function"""
+        super().scrollContentsBy(dx, dy)
+        self._circuit_area.set_top_left(
+            QPoint(self.horizontalScrollBar().value(), self.verticalScrollBar().value())
+        )
+
+    def panning_callback(self, delta):
+        """Pan the scroll area by the delta position"""
+        self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() + delta.x())
+        self.verticalScrollBar().setValue(self.verticalScrollBar().value() + delta.y())
