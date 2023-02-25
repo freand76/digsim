@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" The main window and widgets of the digsim gui application """
+"""The component settings dialog(s)"""
 
 import pathlib
 

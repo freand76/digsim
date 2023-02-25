@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" The main window and widgets of the digsim gui application """
+"""The top bar of the main window/gui application"""
 
 # pylint: disable=too-few-public-methods
 
