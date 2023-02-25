@@ -14,8 +14,8 @@ class Clock(CallbackComponent):
         self._portout = PortOut(self, "O")
         self._portout.update_parent(True)
         self.add_port(self._portout)
-        self._frequency = None
-        self.set_frequency(frequency)
+        self.parameter_set("frequency", frequency)
+        self.reconfigure()
 
     def init(self):
         super().init()
@@ -28,9 +28,8 @@ class Clock(CallbackComponent):
             self.O.value = 1
         super().update()
 
-    def set_frequency(self, frequency):
-        """Set the clock frequency in hertz"""
-        self._frequency = frequency
+    def reconfigure(self):
+        frequency = self.parameter_get("frequency")
         half_period_ns = int(1000000000 / (frequency * 2))
         self._portout.set_delay_ns(half_period_ns)
 
@@ -38,17 +37,15 @@ class Clock(CallbackComponent):
     def active(self):
         return self._portout.value == 1
 
-    def settings_to_dict(self):
-        return {"frequency": self._frequency}
-
     @classmethod
     def get_parameters(cls):
         return {
             "frequency": {
                 "type": int,
                 "min": 1,
-                "max": 100,
+                "max": 50,
                 "default": 1,
                 "description": "Clock frequency in Hz",
+                "reconfigurable": True,
             },
         }

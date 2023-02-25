@@ -28,6 +28,10 @@ class ComponentWidget(QPushButton):
         self.setMouseTracking(True)
         self.move(self._component_object.pos)
 
+    def app_model(self):
+        """Get app_model from widget"""
+        return self._app_model
+
     def sizeHint(self):
         """QT event callback function"""
         return self._component_object.size
@@ -90,7 +94,7 @@ class ComponentWidget(QPushButton):
             if self._app_model.has_new_wire():
                 self._app_model.new_wire_abort()
             else:
-                self._component_object.create_context_menu(self, event)
+                self._component_object.create_context_menu(self, self.mapToGlobal(event.pos()))
                 self.adjustSize()
         self.update()
 

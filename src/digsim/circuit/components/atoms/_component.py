@@ -7,6 +7,7 @@
 # pylint: disable=too-many-public-methods
 
 import abc
+import copy
 import importlib
 
 
@@ -25,11 +26,20 @@ class Component(abc.ABC):
         self._edge_detect_dict = {}
         self._circuit.add_component(self)
         self._display_name = display_name or self.__class__.__name__
+        self._parameters = {}
 
     def init(self):
         """Initialize port, will be called when circuit is initialized"""
         for port in self._ports:
             port.init()
+
+    def parameter_set(self, parameter, value):
+        """Set component parameter"""
+        self._parameters[parameter] = value
+
+    def parameter_get(self, parameter):
+        """Get component parameter"""
+        return self._parameters[parameter]
 
     def add_port(self, port):
         """
@@ -205,12 +215,30 @@ class Component(abc.ABC):
 
     def settings_to_dict(self):
         """Return component settings as a dict"""
-        return {}
+        return self._parameters
 
     @classmethod
     def get_parameters(cls):
         """Return parameters"""
         return {}
+
+    def update_settings(self, settings):
+        """Update parameters from settings dict"""
+        for setting, value in settings.items():
+            self.parameter_set(setting, value)
+            self.reconfigure()
+
+    def reconfigure(self):
+        """Update the component from the parameters"""
+
+    def get_reconfigurable_parameters(self):
+        """Return reconfigurable parameters"""
+        reconfigurable_parameters = {}
+        for parameter, parameter_dict in self.get_parameters().items():
+            if parameter_dict.get("reconfigurable", False):
+                reconfigurable_parameters[parameter] = copy.deepcopy(parameter_dict)
+                reconfigurable_parameters[parameter]["default"] = self.parameter_get(parameter)
+        return reconfigurable_parameters
 
 
 class MultiComponent(Component):
