@@ -52,6 +52,7 @@ class CircuitEditor(QSplitter):
         scrollable_circuit_area = ScrollableCircuitArea(self, circuit_area)
         self.layout().addWidget(scrollable_circuit_area)
         self.layout().setStretchFactor(scrollable_circuit_area, 1)
+        circuit_area.setFocus()
 
     def _control_notify(self, started):
         self._selection_area.setEnabled(not started)
