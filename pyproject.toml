@@ -9,7 +9,7 @@ indent = 4
 default_section = "FIRSTPARTY"
 include_trailing_comma = true
 known_qt = "PySide6"
-known_thirdparty = "vcd"
+known_thirdparty = ["vcd", "utilities"]
 sections = [
     "FUTURE",
     "STDLIB",

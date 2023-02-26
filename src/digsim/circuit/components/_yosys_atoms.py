@@ -437,8 +437,8 @@ class _SR_(ClassNameParameterComponent):
 
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self._reset_level = self.name_to_level(0)
-        self._set_level = self.name_to_level(1)
+        self._set_level = self.name_to_level(0)
+        self._reset_level = self.name_to_level(1)
         self.add_port(PortIn(self, "S"))
         self.add_port(PortIn(self, "R"))
         self.add_port(PortOut(self, "Q"))
@@ -818,8 +818,8 @@ class _DFFSR_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
-        self._reset_level = self.name_to_level(1)
-        self._set_level = self.name_to_level(2)
+        self._set_level = self.name_to_level(1)
+        self._reset_level = self.name_to_level(2)
         self.add_port(PortIn(self, "C"))
         self.add_port(PortIn(self, "R"))
         self.add_port(PortIn(self, "S"))
@@ -879,8 +879,8 @@ class _DFFSRE_(ClassNameParameterComponent):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
-        self._reset_level = self.name_to_level(1)
-        self._set_level = self.name_to_level(2)
+        self._set_level = self.name_to_level(1)
+        self._reset_level = self.name_to_level(2)
         self._enable_level = self.name_to_level(3)
         self.add_port(PortIn(self, "C"))
         self.add_port(PortIn(self, "R"))
@@ -1237,11 +1237,11 @@ class _DLATCH_(ClassNameParameterComponent):
             self.Q.value = self.D.value
 
 
-class _DLATCH_N(_DLATCH_):
+class _DLATCH_N_(_DLATCH_):
     """module _DLATCH_N_ (E, D, Q)"""
 
 
-class _DLATCH_P(_DLATCH_):
+class _DLATCH_P_(_DLATCH_):
     """module _DLATCH_P_ (E, D, Q)"""
 
 
@@ -1250,9 +1250,9 @@ class _DLATCH3_(ClassNameParameterComponent):
 
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self._reset_value = self.name_to_level(0)
+        self._enable_level = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
-        self._enable_level = self.name_to_level(2)
+        self._reset_value = self.name_to_level(2)
         self.add_port(PortIn(self, "E"))
         self.add_port(PortIn(self, "R"))
         self.add_port(PortIn(self, "D"))
@@ -1306,9 +1306,9 @@ class _DLATCHSR_(ClassNameParameterComponent):
 
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self._reset_level = self.name_to_level(0)
+        self._enable_level = self.name_to_level(0)
         self._set_level = self.name_to_level(1)
-        self._enable_level = self.name_to_level(2)
+        self._reset_level = self.name_to_level(2)
         self.add_port(PortIn(self, "E"))
         self.add_port(PortIn(self, "S"))
         self.add_port(PortIn(self, "R"))

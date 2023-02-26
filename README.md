@@ -46,8 +46,6 @@ I will try to keep track of them and give credits!
 
 ### Documentation
    * Add documentation :-)
-### Yosys
-   * Add unittest of yosys atoms
 ### Model
    * Add unittest of all components
    * Add unittest of ports
