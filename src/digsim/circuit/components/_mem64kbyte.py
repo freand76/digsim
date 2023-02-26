@@ -8,7 +8,7 @@ It cam be prefilled with binary data from 'rom_filename'
 starting at 'rom_address'.
 """
 
-from digsim.circuit.components.atoms import Component, PortIn, PortOut, PortWire
+from digsim.circuit.components.atoms import Component, PortIn, PortOutDelta, PortWire
 
 
 class Mem64kByte(Component):
@@ -20,7 +20,7 @@ class Mem64kByte(Component):
         self.add_port(PortWire(self, "Address", width=16))
         self.add_port(PortWire(self, "DataIn", width=8))
         self.add_port(PortWire(self, "WE"))
-        self.add_port(PortOut(self, "DataOut", width=8))
+        self.add_port(PortOutDelta(self, "DataOut", width=8))
         self._mem_array = [0] * 65536
         if rom_filename is not None:
             with open(rom_filename, mode="rb") as rom:

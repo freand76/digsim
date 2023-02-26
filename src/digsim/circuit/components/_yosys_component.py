@@ -13,7 +13,7 @@ import json
 
 import digsim.circuit.components._yosys_atoms
 
-from .atoms import Component, MultiComponent, PortMultiBitWire, PortOut
+from .atoms import Component, MultiComponent, PortMultiBitWire, PortOutDelta
 
 
 class YosysComponentException(Exception):
@@ -25,8 +25,8 @@ class StaticLevels(Component):
 
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
-        self.add_port(PortOut(self, "low"))
-        self.add_port(PortOut(self, "high"))
+        self.add_port(PortOutDelta(self, "low"))
+        self.add_port(PortOutDelta(self, "high"))
 
     def init(self):
         self.low.value = 0

@@ -3,7 +3,7 @@
 
 """ Module with the Static Logic components """
 
-from .atoms import Component, PortOut
+from .atoms import Component, PortOutDelta
 
 
 class VDD(Component):
@@ -11,7 +11,7 @@ class VDD(Component):
 
     def __init__(self, circuit, name="VDD"):
         super().__init__(circuit, name)
-        self.add_port(PortOut(self, "O", delay_ns=0))
+        self.add_port(PortOutDelta(self, "O", delay_ns=0))
 
     def default_state(self):
         self.O.value = 1
@@ -22,7 +22,7 @@ class GND(Component):
 
     def __init__(self, circuit, name="GND"):
         super().__init__(circuit, name)
-        self.add_port(PortOut(self, "O", delay_ns=0))
+        self.add_port(PortOutDelta(self, "O", delay_ns=0))
 
     def default_state(self):
         self.O.value = 0

@@ -223,9 +223,9 @@ class PortIn(PortWire):
         self.parent().update()
 
 
-class PortOut(Port):
+class PortOutDelta(Port):
     """
-    The PortOut class:
+    The PortOutDelta class:
     * The port wire will update the driven wires after a delta cycle.
     * The port will update the parent component if the _update_parent variable is set to true.
     """
@@ -268,10 +268,10 @@ class PortOut(Port):
         return False
 
 
-class PortDriver(PortOut):
+class PortOutImmediate(PortOutDelta):
     """
-    The PortDriver class:
-    * A special version of the PortOut used for direct components (button/switch/value)
+    The PortOutImmediate class:
+    * A special version of the PortOutDelta used for direct components (button/switch/value)
     * The port driver will update the driven wires immediately
     * The port will update the parent component if the _update_parent variable is set to true.
     """

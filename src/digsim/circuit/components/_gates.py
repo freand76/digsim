@@ -7,7 +7,7 @@
 
 import math
 
-from .atoms import Component, ComponentException, MultiComponent, PortIn, PortOut, PortWire
+from .atoms import Component, ComponentException, MultiComponent, PortIn, PortOutDelta, PortWire
 
 
 class NOT(Component):
@@ -16,7 +16,7 @@ class NOT(Component):
     def __init__(self, circuit, name="NOT"):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.A.value == 0:
@@ -39,7 +39,7 @@ class ConfigPortsComponent(Component):
             self._inports.append(port)
             self.add_port(port)
             portname = chr(ord(portname) + 1)
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
         self.parameter_set("ports", ports)
 
     @classmethod
@@ -144,7 +144,7 @@ class DFF(Component):
         if self._clock_enable:
             self.add_port(PortWire(self, "E"))
         self.add_port(PortIn(self, "C"))
-        self.add_port(PortOut(self, "Q", width=width))
+        self.add_port(PortOutDelta(self, "Q", width=width))
         self.parameter_set("width", width)
         self.parameter_set("async_reset", async_reset)
         self.parameter_set("clock_enable", clock_enable)
@@ -197,7 +197,7 @@ class MUX(Component):
             self.add_port(port)
             portname = chr(ord(portname) + 1)
         self.add_port(PortIn(self, "S", width=int(math.log2(ports))))
-        self.add_port(PortOut(self, "Y", width=width))
+        self.add_port(PortOutDelta(self, "Y", width=width))
         self.parameter_set("ports", ports)
         self.parameter_set("width", width)
 

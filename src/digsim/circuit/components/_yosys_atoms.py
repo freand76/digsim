@@ -13,7 +13,7 @@ https://github.com/YosysHQ/yosys/blob/master/techlibs/common/simcells.v
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-branches
 
-from .atoms import Component, PortIn, PortOut, PortWire
+from .atoms import Component, PortIn, PortOutDelta, PortWire
 
 
 class YosysNotImplementedException(Exception):
@@ -48,7 +48,7 @@ class _BUF_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         self.Y.value = self.A.value
@@ -60,7 +60,7 @@ class _NOT_(Component):
     def __init__(self, circuit, name):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.A.value == 1:
@@ -76,7 +76,7 @@ class _AND_(Component):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.A.value == 1 and self.B.value == 1:
@@ -92,7 +92,7 @@ class _NAND_(Component):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.A.value == 1 and self.B.value == 1:
@@ -108,7 +108,7 @@ class _OR_(Component):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.A.value == 1 or self.B.value == 1:
@@ -124,7 +124,7 @@ class _NOR_(Component):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.A.value == 1 or self.B.value == 1:
@@ -140,7 +140,7 @@ class _XOR_(Component):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if (self.A.value == 1 and self.B.value == 0) or (self.A.value == 0 and self.B.value == 1):
@@ -156,7 +156,7 @@ class _XNOR_(Component):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if (self.A.value == 1 and self.B.value == 0) or (self.A.value == 0 and self.B.value == 1):
@@ -172,7 +172,7 @@ class _ANDNOT_(Component):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.A.value == 1 and self.B.value == 0:
@@ -188,7 +188,7 @@ class _ORNOT_(Component):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.A.value == 1 or self.B.value == 0:
@@ -205,7 +205,7 @@ class _MUX_(Component):
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortIn(self, "S"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.S.value == 0:
@@ -222,7 +222,7 @@ class _NMUX_(Component):
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortIn(self, "S"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.S.value == 0:
@@ -242,7 +242,7 @@ class _MUX4_(Component):
         self.add_port(PortIn(self, "D"))
         self.add_port(PortIn(self, "S"))
         self.add_port(PortIn(self, "T"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.S.value == 0 and self.T.value == 0:
@@ -271,7 +271,7 @@ class _MUX8_(Component):
         self.add_port(PortIn(self, "S"))
         self.add_port(PortIn(self, "T"))
         self.add_port(PortIn(self, "U"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.S.value == 0 and self.T.value == 0 and self.U.value == 0:
@@ -317,7 +317,7 @@ class _MUX16_(Component):
         self.add_port(PortIn(self, "T"))
         self.add_port(PortIn(self, "U"))
         self.add_port(PortIn(self, "V"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if self.S.value == 0 and self.T.value == 0 and self.U.value == 0 and self.V.value == 0:
@@ -362,7 +362,7 @@ class _AOI3_(Component):
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortIn(self, "C"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if (self.A.value == 1 and self.B.value == 1) or self.C.value == 1:
@@ -379,7 +379,7 @@ class _OAI3_(Component):
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortIn(self, "C"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if (self.A.value == 1 or self.B.value == 1) and self.C.value == 1:
@@ -397,7 +397,7 @@ class _AOI4_(Component):
         self.add_port(PortIn(self, "B"))
         self.add_port(PortIn(self, "C"))
         self.add_port(PortIn(self, "D"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if (self.A.value == 1 and self.B.value == 1) or (self.C.value == 1 and self.D.value == 1):
@@ -415,7 +415,7 @@ class _OAI4_(Component):
         self.add_port(PortIn(self, "B"))
         self.add_port(PortIn(self, "C"))
         self.add_port(PortIn(self, "D"))
-        self.add_port(PortOut(self, "Y"))
+        self.add_port(PortOutDelta(self, "Y"))
 
     def update(self):
         if (self.A.value == 1 or self.B.value == 1) and (self.C.value == 1 or self.D.value == 1):
@@ -441,7 +441,7 @@ class _SR_(ClassNameParameterComponent):
         self._reset_level = self.name_to_level(1)
         self.add_port(PortIn(self, "S"))
         self.add_port(PortIn(self, "R"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
 
     def init(self):
         super().init()
@@ -488,7 +488,7 @@ class _DFF_(ClassNameParameterComponent):
         self._clock_edge = self.name_to_level(0)
         self.add_port(PortIn(self, "C"))
         self.add_port(PortWire(self, "D"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
     def init(self):
@@ -519,7 +519,7 @@ class _DFFE2_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "C"))
         self.add_port(PortWire(self, "D"))
         self.add_port(PortWire(self, "E"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
     def init(self):
@@ -563,7 +563,7 @@ class _DFF3_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "C"))
         self.add_port(PortIn(self, "R"))
         self.add_port(PortWire(self, "D"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
     def init(self):
@@ -623,7 +623,7 @@ class _DFFE4_(ClassNameParameterComponent):
         self.add_port(PortWire(self, "D"))
         self.add_port(PortWire(self, "E"))
         self.add_port(PortIn(self, "R"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
     def init(self):
@@ -717,7 +717,7 @@ class _ALDFF_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "C"))
         self.add_port(PortWire(self, "D"))
         self.add_port(PortIn(self, "L"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
     def init(self):
@@ -761,7 +761,7 @@ class _ALDFFE_(ClassNameParameterComponent):
         self.add_port(PortWire(self, "D"))
         self.add_port(PortWire(self, "E"))
         self.add_port(PortIn(self, "L"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
     def init(self):
@@ -824,7 +824,7 @@ class _DFFSR_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "R"))
         self.add_port(PortIn(self, "S"))
         self.add_port(PortWire(self, "D"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
     def init(self):
@@ -887,7 +887,7 @@ class _DFFSRE_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "S"))
         self.add_port(PortWire(self, "E"))
         self.add_port(PortWire(self, "D"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
     def init(self):
@@ -983,7 +983,7 @@ class _SDFF_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "C"))
         self.add_port(PortWire(self, "R"))
         self.add_port(PortWire(self, "D"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
     def init(self):
@@ -1044,7 +1044,7 @@ class _SDFFE_(ClassNameParameterComponent):
         self.add_port(PortWire(self, "D"))
         self.add_port(PortWire(self, "E"))
         self.add_port(PortWire(self, "R"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
     def init(self):
@@ -1137,7 +1137,7 @@ class _SDFFCE_(ClassNameParameterComponent):
         self.add_port(PortWire(self, "D"))
         self.add_port(PortWire(self, "E"))
         self.add_port(PortWire(self, "R"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
     def init(self):
@@ -1226,7 +1226,7 @@ class _DLATCH_(ClassNameParameterComponent):
         self._enable_level = self.name_to_level(0)
         self.add_port(PortIn(self, "E"))
         self.add_port(PortIn(self, "D"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
 
     def init(self):
         super().init()
@@ -1256,7 +1256,7 @@ class _DLATCH3_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "E"))
         self.add_port(PortIn(self, "R"))
         self.add_port(PortIn(self, "D"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
 
     def init(self):
         super().init()
@@ -1313,7 +1313,7 @@ class _DLATCHSR_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "S"))
         self.add_port(PortIn(self, "R"))
         self.add_port(PortIn(self, "D"))
-        self.add_port(PortOut(self, "Q"))
+        self.add_port(PortOutDelta(self, "Q"))
 
     def init(self):
         super().init()

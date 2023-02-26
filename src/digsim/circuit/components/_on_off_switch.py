@@ -3,7 +3,7 @@
 
 """ An On/Off Switch  component """
 
-from .atoms import CallbackComponent, PortOut
+from .atoms import CallbackComponent, PortOutDelta
 
 
 class OnOffSwitch(CallbackComponent):
@@ -11,7 +11,7 @@ class OnOffSwitch(CallbackComponent):
 
     def __init__(self, circuit, name="OnOffSwitch", start_on=False):
         super().__init__(circuit, name)
-        portout = PortOut(self, "O", delay_ns=0)
+        portout = PortOutDelta(self, "O", delay_ns=0)
         self.add_port(portout)
         portout.update_parent(True)
         self.parameter_set("start_on", start_on)

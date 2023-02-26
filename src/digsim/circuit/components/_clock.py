@@ -3,7 +3,7 @@
 
 """ Clock component module """
 
-from .atoms import CallbackComponent, PortDriver, PortOut
+from .atoms import CallbackComponent, PortOutDelta, PortOutImmediate
 
 
 class Clock(CallbackComponent):
@@ -11,8 +11,8 @@ class Clock(CallbackComponent):
 
     def __init__(self, circuit, name="Clock", frequency=1):
         super().__init__(circuit, name)
-        self._feedback = PortOut(self, "feedback")
-        portout = PortDriver(self, "O")
+        self._feedback = PortOutDelta(self, "feedback")
+        portout = PortOutImmediate(self, "O")
         self.add_port(portout)
         self._feedback.update_parent(True)
         self.parameter_set("frequency", frequency)
