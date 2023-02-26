@@ -329,7 +329,7 @@ class AppModel(QThread):
             for src_port in comp.outports():
                 for dst_port in src_port.get_wires():
                     self.add_wire(src_port, dst_port, connect=False)
-            self._circuit_init()
+        self._circuit_init()
         self._changed = False
         self.sig_update_gui_components.emit()
         self.sig_control_notify.emit(self._started)

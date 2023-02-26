@@ -54,7 +54,7 @@ class HexDigit(CallbackComponent):
         return dot_value == 1
 
     def segments(self, digit_id=0):
-        """Whch segments are active for the selected digit_id?"""
+        """Which segments are active for the selected digit_id?"""
         if self.value() == "X":
             segments = ""
         else:

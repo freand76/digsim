@@ -3,7 +3,7 @@
 
 """ A PushButton component """
 
-from .atoms import CallbackComponent, PortOut
+from .atoms import CallbackComponent, PortDriver
 
 
 class PushButton(CallbackComponent):
@@ -11,13 +11,12 @@ class PushButton(CallbackComponent):
 
     def __init__(self, circuit, name="PushButton", inverted=False):
         super().__init__(circuit, name)
-        portout = PortOut(self, "O", delay_ns=0)
+        portout = PortDriver(self, "O")
         self.add_port(portout)
         portout.update_parent(True)
         self.parameter_set("inverted", inverted)
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.release()
 
     def push(self):

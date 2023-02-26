@@ -11,6 +11,7 @@ from ._component import (  # noqa: F401
 )
 from ._port import (  # noqa: F401
     PortConnectionError,
+    PortDriver,
     PortIn,
     PortMultiBitWire,
     PortOut,

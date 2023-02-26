@@ -233,7 +233,7 @@ class PortOut(Port):
     def __init__(self, parent, name, width=1, delay_ns=1):
         super().__init__(parent, name, width, output=True)
         self._delay_ns = delay_ns  # Propagation delay for this port
-        self._update_parent = False  # SHould this port update parent on change
+        self._update_parent = False  # Should this port update parent on change
 
     def update_parent(self, update_parent):
         """Set update parent valiable (True/False)"""
@@ -246,11 +246,15 @@ class PortOut(Port):
     def set_value(self, value):
         self.parent().add_event(self, value, self._delay_ns)
 
-    def delta_cycle(self, value):
-        """Handle the delta cycle event from the circuit"""
+    def update_port(self, value):
+        """Update the port output and the connected wires"""
         self.update_wires(value)
         if self._update_parent:
             self.parent().update()
+
+    def delta_cycle(self, value):
+        """Handle the delta cycle event from the circuit"""
+        self.update_port(value)
 
     def set_driver(self, port):
         raise PortConnectionError(f"The port {self.path()}.{self.name()} cannot be driven")
@@ -262,6 +266,27 @@ class PortOut(Port):
     def has_driver(self):
         """Return False since the port does not have a driver"""
         return False
+
+
+class PortDriver(PortOut):
+    """
+    The PortDriver class:
+    * A special version of the PortOut used for direct components (button/switch/value)
+    * The port driver will update the driven wires immediately
+    * The port will update the parent component if the _update_parent variable is set to true.
+    """
+
+    def __init__(self, parent, name, width=1):
+        super().__init__(parent, name, width)
+
+    def set_value(self, value):
+        self.parent().add_event(self, value, 0)
+        super().update_port(value)
+
+    def delta_cycle(self, value):
+        """
+        Do nothing here, the event is just used to updates waves in Circuit class
+        """
 
 
 class PortWireBit(PortWire):

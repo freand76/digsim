@@ -13,8 +13,7 @@ class VDD(Component):
         super().__init__(circuit, name)
         self.add_port(PortOut(self, "O", delay_ns=0))
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.O.value = 1
 
 
@@ -25,6 +24,5 @@ class GND(Component):
         super().__init__(circuit, name)
         self.add_port(PortOut(self, "O", delay_ns=0))
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.O.value = 0

@@ -118,6 +118,8 @@ class Circuit:
             self._vcd_init()
         for _, comp in self._components.items():
             comp.init()
+        for _, comp in self._components.items():
+            comp.default_state()
         self.run_until(ns=0)  # Handle all time zero events
 
     def clear(self):

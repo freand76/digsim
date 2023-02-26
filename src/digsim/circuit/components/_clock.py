@@ -3,7 +3,7 @@
 
 """ Clock component module """
 
-from .atoms import CallbackComponent, PortOut
+from .atoms import CallbackComponent, PortDriver, PortOut
 
 
 class Clock(CallbackComponent):
@@ -11,31 +11,34 @@ class Clock(CallbackComponent):
 
     def __init__(self, circuit, name="Clock", frequency=1):
         super().__init__(circuit, name)
-        self._portout = PortOut(self, "O")
-        self._portout.update_parent(True)
-        self.add_port(self._portout)
+        self._feedback = PortOut(self, "feedback")
+        portout = PortDriver(self, "O")
+        self.add_port(portout)
+        self._feedback.update_parent(True)
         self.parameter_set("frequency", frequency)
         self.reconfigure()
 
-    def init(self):
-        super().init()
-        self.add_event(self.O, value=0, delay_ns=0)
+    def default_state(self):
+        self.O.value = 0
+        self._feedback.value = 1
 
     def update(self):
-        if self.O.value == 1:
-            self.O.value = 0
-        else:
+        if self._feedback.value == 1:
             self.O.value = 1
+            self._feedback.value = 0
+        else:
+            self.O.value = 0
+            self._feedback.value = 1
         super().update()
 
     def reconfigure(self):
         frequency = self.parameter_get("frequency")
         half_period_ns = int(1000000000 / (frequency * 2))
-        self._portout.set_delay_ns(half_period_ns)
+        self._feedback.set_delay_ns(half_period_ns)
 
     @property
     def active(self):
-        return self._portout.value == 1
+        return self.O.value == 1
 
     @classmethod
     def get_parameters(cls):

@@ -33,6 +33,9 @@ class Component(abc.ABC):
         for port in self._ports:
             port.init()
 
+    def default_state(self):
+        """Setup default state, for example port outputs"""
+
     def parameter_set(self, parameter, value):
         """Set component parameter"""
         self._parameters[parameter] = value
@@ -258,6 +261,11 @@ class MultiComponent(Component):
         super().init()
         for component in self._components:
             component.init()
+
+    def default_state(self):
+        super().default_state()
+        for component in self._components:
+            component.default_state()
 
     def add(self, component):
         """Add sub-component to MultiComponent"""

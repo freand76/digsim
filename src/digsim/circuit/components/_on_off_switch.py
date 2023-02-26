@@ -23,8 +23,7 @@ class OnOffSwitch(CallbackComponent):
         else:
             self.turn_off()
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self._set(self.parameter_get("start_on"))
 
     def turn_on(self):

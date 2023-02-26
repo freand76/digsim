@@ -3,7 +3,7 @@
 
 """ Module with the Static Leve component """
 
-from .atoms import Component, PortOut
+from .atoms import Component, PortDriver
 
 
 class StaticValue(Component):
@@ -13,10 +13,9 @@ class StaticValue(Component):
         super().__init__(circuit, name)
         self.parameter_set("width", width)
         self.parameter_set("value", value)
-        self.add_port(PortOut(self, "O", width=width, delay_ns=0))
+        self.add_port(PortDriver(self, "O", width=width))
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.O.value = self.parameter_get("value")
 
     def reconfigure(self):
