@@ -9,9 +9,8 @@ from PySide6.QtCore import QPoint, QRect, Qt, QTimer
 from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import QPushButton, QScrollArea, QWidget
 
+from digsim.app.settings import ComponentSettingsDialog
 from digsim.circuit.components.atoms import PortConnectionError
-
-from ._component_settings import ComponentSettingsDialog
 
 
 class ComponentWidget(QPushButton):

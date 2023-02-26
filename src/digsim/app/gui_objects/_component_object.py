@@ -10,7 +10,7 @@ from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QAction, QFont, QFontMetrics, QPen
 from PySide6.QtWidgets import QMenu
 
-from digsim.app.gui._component_settings import ComponentSettingsDialog
+from digsim.app.settings import ComponentSettingsDialog
 
 from ._gui_object import GuiObject
 
