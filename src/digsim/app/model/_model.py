@@ -128,6 +128,8 @@ class AppModel(QThread):
 
     def select(self, placed_object=None):
         """Select placed object"""
+        if placed_object is not None and placed_object.selected:
+            return
         for comp in self.get_placed_objects():
             if comp == placed_object:
                 comp.select(True)
@@ -157,6 +159,7 @@ class AppModel(QThread):
 
     def select_by_rect(self, rect):
         """Select object be rectangle"""
+        self.select(None)
         placed_objects = self.get_placed_objects()
         for obj in placed_objects:
             if obj.in_rect(rect):

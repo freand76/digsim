@@ -200,6 +200,7 @@ class CircuitArea(QWidget):
         if self._select_box_rect is not None:
             painter.setBrush(Qt.Dense7Pattern)
             painter.drawRect(self._select_box_rect)
+            self._app_model.select_by_rect(self._select_box_rect)
         painter.end()
 
     def mousePressEvent(self, event):
