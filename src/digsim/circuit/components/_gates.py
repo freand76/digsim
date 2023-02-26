@@ -165,12 +165,12 @@ class DFF(Component):
             "async_reset": {
                 "type": bool,
                 "default": False,
-                "description": "DFF has asynchronous reset",
+                "description": "Use asynchronous reset",
             },
             "clock_enable": {
                 "type": bool,
                 "default": False,
-                "description": "DFF has clock enable",
+                "description": "Use clock enable",
             },
             "width": {
                 "type": int,
