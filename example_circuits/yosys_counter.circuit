@@ -22,7 +22,9 @@
                 "name": "PushButton_2",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {}
+                "settings": {
+                    "inverted": false
+                }
             },
             {
                 "name": "HexDigit_4",
@@ -37,13 +39,71 @@
                 "name": "OnOffSwitch",
                 "display_name": "OnOffSwitch",
                 "type": "digsim.circuit.components.OnOffSwitch",
-                "settings": {}
+                "settings": {
+                    "start_on": false
+                }
             },
             {
                 "name": "Led",
                 "display_name": "Led",
                 "type": "digsim.circuit.components.Led",
                 "settings": {}
+            },
+            {
+                "name": "Note",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "The counter is a \"Netlist-component\" \ngenerated from verilog."
+                }
+            },
+            {
+                "name": "Note_1",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "Start simulation by pressing the \"Start Simulation\" button above..."
+                }
+            },
+            {
+                "name": "Note_2",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "Enable the counter with this switch"
+                }
+            },
+            {
+                "name": "Note_3",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "This push-button will reset the counter"
+                }
+            },
+            {
+                "name": "Note_4",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "This is a clock generator, \nThe the clock frequency can be changed,\n\"right-click\" and select \"Settings\""
+                }
+            },
+            {
+                "name": "Note_5",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "This LED will light up when the clock is High"
+                }
+            },
+            {
+                "name": "Note_6",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "This hex-digit will show the current counter value"
+                }
             }
         ],
         "wires": [
@@ -75,28 +135,56 @@
     },
     "gui": {
         "counter": {
-            "x": 450,
-            "y": 250
+            "x": 595,
+            "y": 285
         },
         "Clock_1": {
-            "x": 120,
-            "y": 100
+            "x": 265,
+            "y": 135
         },
         "PushButton_2": {
-            "x": 120,
-            "y": 255
+            "x": 265,
+            "y": 290
         },
         "HexDigit_4": {
-            "x": 750,
-            "y": 380
+            "x": 895,
+            "y": 415
         },
         "OnOffSwitch": {
-            "x": 120,
-            "y": 400
+            "x": 265,
+            "y": 435
         },
         "Led": {
-            "x": 450,
-            "y": 100
+            "x": 595,
+            "y": 135
+        },
+        "Note": {
+            "x": 716,
+            "y": 271
+        },
+        "Note_1": {
+            "x": 10,
+            "y": 10
+        },
+        "Note_2": {
+            "x": 66,
+            "y": 460
+        },
+        "Note_3": {
+            "x": 53,
+            "y": 312
+        },
+        "Note_4": {
+            "x": 34,
+            "y": 154
+        },
+        "Note_5": {
+            "x": 535,
+            "y": 87
+        },
+        "Note_6": {
+            "x": 809,
+            "y": 513
         }
     }
 }

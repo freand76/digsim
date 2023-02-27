@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QSlider,
+    QTextEdit,
     QVBoxLayout,
 )
 
@@ -46,6 +47,23 @@ class ComponentSettingsBase(QFrame):
 
     def on_setting_change(self, parameter):
         """Called when other setting is changed"""
+
+
+class ComponentSettingText(ComponentSettingsBase):
+    """Text setting"""
+
+    def __init__(self, parent, parameter, parameter_dict, settings):
+        super().__init__(parent, parameter, parameter_dict, settings)
+        self.setLayout(QVBoxLayout(self))
+        self.layout().addWidget(QLabel(self._parameter_dict["description"]))
+        self._text_edit = QTextEdit(self)
+        self._text_edit.setText(self._parameter_dict["default"])
+        self._text_edit.textChanged.connect(self._update)
+        self.layout().addWidget(self._text_edit)
+
+    def _update(self):
+        value = self._text_edit.toPlainText()
+        self._settings[self._parameter] = value
 
 
 class ComponentSettingsSlider(ComponentSettingsBase):
@@ -266,6 +284,8 @@ class ComponentSettingsDialog(QDialog):
                 )
             elif parameter_dict["type"] == int:
                 widget = ComponentSettingsSlider(self, parameter, parameter_dict, self._settings)
+            elif parameter_dict["type"] == str:
+                widget = ComponentSettingText(self, parameter, parameter_dict, self._settings)
             elif parameter_dict["type"] == bool:
                 widget = ComponentSettingsCheckBox(self, parameter, parameter_dict, self._settings)
             elif parameter_dict["type"] == "intrange":

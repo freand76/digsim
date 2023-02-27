@@ -12,6 +12,7 @@ from ._ic import IntegratedCircuit  # noqa: F401
 from ._led import Led  # noqa: F401
 from ._mem64kbyte import Mem64kByte  # noqa: F401
 from ._memstdout import MemStdOut  # noqa: F401
+from ._note import Note  # noqa: F401
 from ._on_off_switch import OnOffSwitch  # noqa: F401
 from ._seven_segment import SevenSegment  # noqa: F401
 from ._static_level import GND, VDD  # noqa: F401

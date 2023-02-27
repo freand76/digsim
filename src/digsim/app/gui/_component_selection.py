@@ -132,3 +132,5 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(
             SelectableComponentWidget("YosysComponent", self, circuit_area, display_name="Yosys")
         )
+        self.layout().addWidget(DescriptionText(self, "Other"))
+        self.layout().addWidget(SelectableComponentWidget("Note", self, circuit_area))

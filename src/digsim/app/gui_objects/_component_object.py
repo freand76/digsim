@@ -3,6 +3,8 @@
 
 """ A component placed in the GUI """
 
+# pylint: disable=too-many-public-methods
+
 import abc
 from functools import partial
 
@@ -36,8 +38,11 @@ class ComponentObject(GuiObject):
         self._port_display_name = {}
         self.update_ports()
 
+    def update_size(self):
+        """update component object size"""
+
     def center(self):
-        """move component so pos is center instead of top-left corner"""
+        """Move component with pos as center instead of top-left corner"""
         self._pos = self._pos - QPoint(self._width / 2, self._height / 2)
 
     def update_ports(self):
