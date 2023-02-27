@@ -7,5 +7,5 @@
 
 ## 6502 CPU [Link](https://github.com/Arlet/verilog-6502)
 ```
-> python -m digsim.synth -i verilog/6502/addsub.v verilog/6502/ALU.v verilog/6502/cpu.v -o examples/yosys_6502/6502.json -t cpu
+> python -m digsim.synth -i verilog/6502/ALU.v verilog/6502/cpu.v -o examples/yosys_6502/6502.json -t cpu
 ```
