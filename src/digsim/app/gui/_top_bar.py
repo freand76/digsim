@@ -120,7 +120,7 @@ class LoadSaveWidget(QFrame):
 
     def load(self):
         """Button action: Load"""
-        if not are_you_sure_messagebox(self.parent(), "Load circuit"):
+        if self._app_model.has_changes() and not are_you_sure_messagebox(self.parent(), "Load circuit"):
             return
         path = QFileDialog.getOpenFileName(
             self, "Load Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
