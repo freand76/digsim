@@ -443,8 +443,7 @@ class _SR_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "R"))
         self.add_port(PortOutDelta(self, "Q"))
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -491,8 +490,7 @@ class _DFF_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -522,8 +520,7 @@ class _DFFE2_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -566,8 +563,7 @@ class _DFF3_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -626,8 +622,7 @@ class _DFFE4_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -720,8 +715,7 @@ class _ALDFF_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -764,8 +758,7 @@ class _ALDFFE_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = self._reset_level
 
     def update(self):
@@ -827,8 +820,7 @@ class _DFFSR_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -890,8 +882,7 @@ class _DFFSRE_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -986,8 +977,7 @@ class _SDFF_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -1047,8 +1037,7 @@ class _SDFFE_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -1140,8 +1129,7 @@ class _SDFFCE_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -1228,8 +1216,7 @@ class _DLATCH_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "D"))
         self.add_port(PortOutDelta(self, "Q"))
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -1258,8 +1245,7 @@ class _DLATCH3_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "D"))
         self.add_port(PortOutDelta(self, "Q"))
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
@@ -1315,8 +1301,7 @@ class _DLATCHSR_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "D"))
         self.add_port(PortOutDelta(self, "Q"))
 
-    def init(self):
-        super().init()
+    def default_state(self):
         self.Q.value = 0
 
     def update(self):
