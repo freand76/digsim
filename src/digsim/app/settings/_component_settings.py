@@ -268,7 +268,7 @@ class ComponentSettingsDialog(QDialog):
         super().__init__(parent)
         self._app_model = app_model
         self.setLayout(QVBoxLayout(self))
-        self.setWindowTitle(f"Setup {name} component")
+        self.setWindowTitle(f"Setup {name}")
         self.setFocusPolicy(Qt.StrongFocus)
         self.setStyleSheet("QLabel{font-size: 18pt;}")
 
