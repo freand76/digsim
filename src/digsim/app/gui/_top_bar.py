@@ -8,7 +8,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QLabel, QPushButton
 
-from ._utils import are_you_sure_messagebox
+from ._utils import are_you_sure_destroy_circuit
 
 
 class SimControlWidget(QFrame):
@@ -120,7 +120,7 @@ class LoadSaveWidget(QFrame):
 
     def load(self):
         """Button action: Load"""
-        if self._app_model.has_changes() and not are_you_sure_messagebox(
+        if self._app_model.has_changes() and not are_you_sure_destroy_circuit(
             self.parent(), "Load circuit"
         ):
             return
@@ -142,7 +142,7 @@ class LoadSaveWidget(QFrame):
 
     def clear(self):
         """Button action: Save"""
-        if are_you_sure_messagebox(self.parent(), "Clear circuit"):
+        if are_you_sure_destroy_circuit(self.parent(), "Clear circuit"):
             self._app_model.clear_circuit()
 
     def _control_notify(self, started):

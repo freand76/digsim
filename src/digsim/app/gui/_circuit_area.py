@@ -6,11 +6,88 @@
 from functools import partial
 
 from PySide6.QtCore import QPoint, QRect, Qt, QTimer
-from PySide6.QtGui import QPainter
-from PySide6.QtWidgets import QPushButton, QScrollArea, QWidget
+from PySide6.QtGui import QAction, QPainter
+from PySide6.QtWidgets import QMenu, QPushButton, QScrollArea, QWidget
 
 from digsim.app.settings import ComponentSettingsDialog
 from digsim.circuit.components.atoms import PortConnectionError
+
+from ._utils import are_you_sure_delete_component
+
+
+class ComponentContextMenu(QMenu):
+    """The component contextmenu class"""
+
+    def __init__(self, parent, app_model, component_object):
+        super().__init__(parent)
+        self._parent = parent
+        self._app_model = app_model
+        self._component_object = component_object
+        self._component = self._component_object.component
+        self._reconfigurable_parameters = None
+        # Title
+        titleAction = QAction(self._component.display_name(), self)
+        titleAction.setEnabled(False)
+        self.addAction(titleAction)
+        self.addSeparator()
+        # Settings
+        self._add_settings()
+        self._component_object.add_context_menu_action(self)
+        self.addSeparator()
+        # Bring to front / Send to back
+        raiseAction = QAction("Bring to front", self)
+        self.addAction(raiseAction)
+        raiseAction.triggered.connect(self._raise)
+        lowerAction = QAction("Send to back", self)
+        self.addAction(lowerAction)
+        lowerAction.triggered.connect(self._lower)
+        self.addSeparator()
+        # Delete
+        deleteAction = QAction("Delete", self)
+        self.addAction(deleteAction)
+        deleteAction.triggered.connect(self._delete)
+        self._menu_action = None
+
+    def _add_settings(self):
+        self._reconfigurable_parameters = self._component.get_reconfigurable_parameters()
+        if len(self._reconfigurable_parameters) > 0:
+            settingsAction = QAction("Settings", self)
+            self.addAction(settingsAction)
+            settingsAction.triggered.connect(self._settings)
+
+    def create(self, position):
+        """Create context menu for component"""
+        self._menu_action = self.exec_(position)
+
+    def get_action(self):
+        """Get context menu action"""
+        return self._menu_action.text() if self._menu_action is not None else ""
+
+    def _raise(self):
+        self._parent.raise_()
+
+    def _lower(self):
+        self._parent.lower()
+
+    def _delete(self):
+        if are_you_sure_delete_component(self._parent, self._component.display_name()):
+            self._app_model.select(self._component_object)
+            self._app_model.delete()
+
+    def _settings(self):
+        """Start the settings dialog for reconfiguration"""
+        ok, settings = ComponentSettingsDialog.start(
+            self._parent,
+            self._app_model,
+            self._component.name(),
+            self._reconfigurable_parameters,
+        )
+        if ok:
+            self._component.update_settings(settings)
+            self._app_model.set_changed()
+            # Settings can change the component size
+            self._component_object.update_size()
+            self._app_model.sig_update_gui_components.emit()
 
 
 class ComponentWidget(QPushButton):
@@ -26,10 +103,6 @@ class ComponentWidget(QPushButton):
 
         self.setMouseTracking(True)
         self.move(self._component_object.pos)
-
-    def app_model(self):
-        """Get app_model from widget"""
-        return self._app_model
 
     def sizeHint(self):
         """QT event callback function"""
@@ -93,9 +166,8 @@ class ComponentWidget(QPushButton):
             if self._app_model.has_new_wire():
                 self._app_model.new_wire_abort()
             else:
-                self._component_object.create_context_menu(self, self.mapToGlobal(event.pos()))
-                self._component_object.update_size()
-                self._app_model.sig_update_gui_components.emit()
+                contect_menu = ComponentContextMenu(self, self._app_model, self._component_object)
+                contect_menu.create(self.mapToGlobal(event.pos()))
         self.update()
 
     def mouseReleaseEvent(self, event):
@@ -171,7 +243,8 @@ class CircuitArea(QWidget):
         if self._app_model.is_running:
             return
         if event.key() == Qt.Key_Delete:
-            self._app_model.delete()
+            if are_you_sure_delete_component(self):
+                self._app_model.delete()
         elif event.key() == Qt.Key_Escape:
             if self._app_model.has_new_wire():
                 self._abort_wire()

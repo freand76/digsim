@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 from ._circuit_area import CircuitArea, ScrollableCircuitArea
 from ._component_selection import ComponentSelection
 from ._top_bar import TopBar
-from ._utils import are_you_sure_messagebox
+from ._utils import are_you_sure_destroy_circuit
 
 
 class CircuitEditor(QSplitter):
@@ -102,7 +102,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """QT event callback function"""
-        if not self._app_model.has_changes() or are_you_sure_messagebox(
+        if not self._app_model.has_changes() or are_you_sure_destroy_circuit(
             self.parent(), "Close Application"
         ):
             self._app_model.model_stop()

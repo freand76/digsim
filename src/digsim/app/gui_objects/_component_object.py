@@ -6,13 +6,9 @@
 # pylint: disable=too-many-public-methods
 
 import abc
-from functools import partial
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
-from PySide6.QtGui import QAction, QFont, QFontMetrics, QPen
-from PySide6.QtWidgets import QMenu
-
-from digsim.app.settings import ComponentSettingsDialog
+from PySide6.QtGui import QFont, QFontMetrics, QPen
 
 from ._gui_object import GuiObject
 
@@ -37,6 +33,9 @@ class ComponentObject(GuiObject):
         self._port_rects = {}
         self._port_display_name = {}
         self.update_ports()
+
+    def add_context_menu_action(self, menu):
+        """Add component specific context menu items"""
 
     def update_size(self):
         """update component object size"""
@@ -199,35 +198,6 @@ class ComponentObject(GuiObject):
             ):
                 return portname
         return None
-
-    def create_context_menu(self, parent, position):
-        """Create context menu for component"""
-        reconfigurable_parameters = self._component.get_reconfigurable_parameters()
-        action_list = {}
-        if len(reconfigurable_parameters) > 0:
-            action_list["Settings"] = partial(
-                self.settings_dialog, parent, reconfigurable_parameters
-            )
-
-        if len(action_list) > 0:
-            menu = QMenu(parent)
-            for action in action_list:
-                menu.addAction(QAction(action, parent))
-            menu_action = menu.exec_(position)
-            if menu_action is not None:
-                action_list[menu_action.text()]()
-
-    def settings_dialog(self, parent, reconfigurable_parameters):
-        """Start the settings dialog for reconfiguration"""
-        ok, settings = ComponentSettingsDialog.start(
-            parent,
-            parent.app_model(),
-            self._component.name(),
-            reconfigurable_parameters,
-        )
-        if ok:
-            self._component.update_settings(settings)
-            parent.app_model().set_changed()
 
     @property
     def component(self):

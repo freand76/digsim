@@ -6,7 +6,7 @@
 import os
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QFont, QFontMetrics, QPen, QPixmap
+from PySide6.QtGui import QAction, QFont, QFontMetrics, QPen, QPixmap
 
 from ._component_object import ComponentObject
 
@@ -167,6 +167,14 @@ class ImageObjectYosys(ImageObject):
     def paint_component(self, painter):
         self.paint_component_base(painter)
         self.paint_component_name(painter)
+
+    def add_context_menu_action(self, menu):
+        reloadAction = QAction("Reload", menu)
+        menu.addAction(reloadAction)
+        reloadAction.triggered.connect(self._reload)
+
+    def _reload(self):
+        print("Reload not implemented yet")
 
 
 class ImageObjectIC(ImageObject):
