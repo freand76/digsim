@@ -3,6 +3,8 @@
 
 """ A GUI component object factory module """
 
+from digsim.circuit.components.atoms import DigsimException
+
 from ._bus_bit_object import BitsBusObject, BusBitsObject
 from ._gui_note_object import GuiNoteObject
 from ._hexdigit_object import HexDigitObject
@@ -21,12 +23,12 @@ from ._image_objects import (
     ImageObjectPushButton,
     ImageObjectStaticValue,
     ImageObjectXOR,
-    ImageObjectYosys,
 )
 from ._seven_segment_object import SevenSegmentObject
+from ._yosys_object import YosysObject
 
 
-class ComponentObjectFactoryError(Exception):
+class ComponentObjectFactoryError(DigsimException):
     """ComponentObjectFactoryError"""
 
 
@@ -49,7 +51,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT = {
     "StaticValue": ImageObjectStaticValue,
     "XOR": ImageObjectXOR,
     "IntegratedCircuit": ImageObjectIC,
-    "YosysComponent": ImageObjectYosys,
+    "YosysComponent": YosysObject,
     "Note": GuiNoteObject,
 }
 

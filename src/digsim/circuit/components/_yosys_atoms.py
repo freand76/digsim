@@ -13,10 +13,10 @@ https://github.com/YosysHQ/yosys/blob/master/techlibs/common/simcells.v
 # pylint: disable=too-many-lines
 # pylint: disable=too-many-branches
 
-from .atoms import Component, PortIn, PortOutDelta, PortWire
+from .atoms import Component, DigsimException, PortIn, PortOutDelta, PortWire
 
 
-class YosysNotImplementedException(Exception):
+class YosysNotImplementedException(DigsimException):
     """Exception for not implemented components"""
 
 

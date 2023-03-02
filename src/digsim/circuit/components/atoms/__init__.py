@@ -9,6 +9,7 @@ from ._component import (  # noqa: F401
     ComponentException,
     MultiComponent,
 )
+from ._digsim_exception import DigsimException  # noqa: F401
 from ._port import (  # noqa: F401
     PortConnectionError,
     PortIn,

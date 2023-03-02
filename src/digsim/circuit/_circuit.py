@@ -11,10 +11,10 @@ import json
 import os
 
 from ._waves_writer import WavesWriter
-from .components.atoms import Component
+from .components.atoms import Component, DigsimException
 
 
-class CircuitError(Exception):
+class CircuitError(DigsimException):
     """A circuit error class"""
 
 

@@ -13,10 +13,10 @@ import json
 
 import digsim.circuit.components._yosys_atoms
 
-from .atoms import Component, MultiComponent, PortMultiBitWire, PortOutDelta
+from .atoms import Component, DigsimException, MultiComponent, PortMultiBitWire, PortOutDelta
 
 
-class YosysComponentException(Exception):
+class YosysComponentException(DigsimException):
     """Yosys component exception class"""
 
 
@@ -36,46 +36,74 @@ class StaticLevels(Component):
 class YosysComponent(MultiComponent):
     """Class to create a yosys component from a yosys json netlist"""
 
-    def __init__(self, circuit, name=None, path=None, nets=True):
+    def __init__(self, circuit, path=None, name=None, nets=True):
         super().__init__(circuit, name)
         self._circuit = circuit
         self._path = path
         self._nets = nets
-        self._port_connections = {}
-        self._json = None
         self._yosys_name = None
         self._gates_comp = None
         self._net_comp = None
-
+        self._port_connections = None
+        self._external_interface = None
         self._setup_base()
 
         if nets:
             self._net_comp = Component(self._circuit, "nets")
             self.add(self._net_comp)
 
-        if self._path is not None:
-            self.load(self._path)
+        self._load_netlist(self._path)
 
     def _setup_base(self):
         self._gates_comp = MultiComponent(self._circuit, "gates")
         self.add(self._gates_comp)
+
+    def _get_external_interface(self, netlist_dict):
+        external_interface = {}
+        ports = netlist_dict["modules"][self._yosys_name]["ports"]
+        for portname, port_dict in ports.items():
+            ext_port = {"width": len(port_dict["bits"]), "dir": port_dict["direction"]}
+            external_interface[portname] = ext_port
+        return external_interface
+
+    def _setup_from_netlist(self, netlist_dict, reload_netlist=False):
+        self._port_connections = {}
         static_levels = StaticLevels(self._circuit, "StaticLevels")
         self._gates_comp.add(static_levels)
         self._add_port("0", static_levels.low, driver=True)
         self._add_port("1", static_levels.high, driver=True)
+        self._parse_cells(netlist_dict)
+        self._make_cell_connections()
+        self._connect_external_ports(netlist_dict, reload_netlist)
+        self._add_netnames(netlist_dict)
 
-    def load(self, filename):
+    def _load_netlist(self, filename):
         """Load yosys json netlist file"""
         self._path = filename
         with open(self._path, encoding="utf-8") as json_file:
-            self._json = json.load(json_file)
-        self._yosys_name = self._get_component_name()
-        self.set_name(self._yosys_name)
-        self.set_display_name(self._yosys_name)
-        self._parse_cells()
-        self._make_cell_connections()
-        self._connect_external_ports()
-        self._add_netnames()
+            netlist_dict = json.load(json_file)
+            self._yosys_name = self._get_component_name(netlist_dict)
+            self.set_name(self._yosys_name)
+            self.set_display_name(self._yosys_name)
+            self._external_interface = self._get_external_interface(netlist_dict)
+            self._setup_from_netlist(netlist_dict)
+
+    def reload_netlist(self):
+        """Reload yosys json netlist file"""
+        with open(self._path, encoding="utf-8") as json_file:
+            netlist_dict = json.load(json_file)
+            external_interface = self._get_external_interface(netlist_dict)
+            if external_interface != self._external_interface:
+                raise YosysComponentException("Yosys component interface differs")
+            # Disconnect ports
+            self._disconnect_external_ports()
+            # Remove yosys atoms
+            self._gates_comp.remove_all_components()
+            # Remove nets
+            if self._net_comp is not None:
+                self._net_comp.delete_all_ports()
+            # Setup netlist
+            self._setup_from_netlist(netlist_dict, reload_netlist=True)
 
     def _add_port(self, connection_id, port_instance, driver=False):
         if self._port_connections.get(connection_id) is None:
@@ -85,14 +113,14 @@ class YosysComponent(MultiComponent):
         else:
             self._port_connections[connection_id]["dst"].append(port_instance)
 
-    def _get_component_name(self):
-        modules = self._json["modules"]
+    def _get_component_name(self, netlist_dict):
+        modules = netlist_dict["modules"]
         if len(modules) > 1:
             raise YosysComponentException("Only one module per file is supported")
         return list(modules.keys())[0]
 
-    def _parse_cells(self):
-        cells = self._json["modules"][self._yosys_name]["cells"]
+    def _parse_cells(self, netlist_dict):
+        cells = netlist_dict["modules"][self._yosys_name]["cells"]
         for cell, cell_dict in cells.items():
             cell_type = cell_dict["type"]
             cell_name = f'{cell.split("$")[-1]}_{cell_type[2:-1]}'
@@ -118,26 +146,45 @@ class YosysComponent(MultiComponent):
             for port in src_dst_dict["dst"]:
                 driver_port.wire = port
 
-    def _connect_external_port(self, portname, port_dict, port_is_output):
+    def _disconnect_external_ports(self):
+        for port in self.inports():
+            for bit_id in range(port.width):
+                bit_port = port.get_bit(bit_id)
+                bit_port.remove_wires()
+        for port in self.outports():
+            for bit_id in range(port.width):
+                bit_port = port.get_bit(bit_id)
+                bit_port.set_driver(None)
+
+    def _connect_external_port(self, portname, port_dict, port_is_output, reload_netlist=False):
         port_width = len(port_dict["bits"])
-        external_port = PortMultiBitWire(self, portname, width=port_width, output=port_is_output)
+        if reload_netlist:
+            external_port = self.port(portname)
+        else:
+            external_port = PortMultiBitWire(
+                self, portname, width=port_width, output=port_is_output
+            )
         for idx, connection_id in enumerate(port_dict["bits"]):
-            port_instance = self._port_connections[connection_id]["src"]
+            connection_id_dict = self._port_connections.get(connection_id)
+            if connection_id_dict is None:
+                continue
+            port_instance = connection_id_dict["src"]
             if port_is_output:
                 port_instance.wire = external_port.get_bit(idx)
                 continue
 
-            portlist = self._port_connections[connection_id]["dst"]
+            portlist = connection_id_dict["dst"]
             for port in portlist:
                 external_port.get_bit(idx).wire = port
                 self._add_port(connection_id, external_port.get_bit(idx), driver=True)
-        self.add_port(external_port)
+        if not reload_netlist:
+            self.add_port(external_port)
 
-    def _connect_external_ports(self):
-        ports = self._json["modules"][self._yosys_name]["ports"]
+    def _connect_external_ports(self, netlist_dict, reload_netlist=False):
+        ports = netlist_dict["modules"][self._yosys_name]["ports"]
         for portname, port_dict in ports.items():
             port_is_output = port_dict["direction"] == "output"
-            self._connect_external_port(portname, port_dict, port_is_output)
+            self._connect_external_port(portname, port_dict, port_is_output, reload_netlist)
 
     def _add_netname(self, netname, netname_dict):
         netname_valid = False
@@ -157,11 +204,11 @@ class YosysComponent(MultiComponent):
                 port_instance = self._port_connections[connection_id]["src"]
                 port_instance.wire = net_port.get_bit(idx)
 
-    def _add_netnames(self):
+    def _add_netnames(self, netlist_dict):
         if self._net_comp is None:
             return
 
-        netnames = self._json["modules"][self._yosys_name]["netnames"]
+        netnames = netlist_dict["modules"][self._yosys_name]["netnames"]
         for netname, netname_dict in netnames.items():
             if netname_dict["hide_name"] != 0:
                 continue

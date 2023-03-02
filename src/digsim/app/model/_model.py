@@ -17,7 +17,7 @@ from PySide6.QtCore import QThread, Signal
 import digsim.app.gui_objects
 import digsim.circuit.components
 from digsim.circuit import Circuit
-from digsim.circuit.components.atoms import CallbackComponent, Component
+from digsim.circuit.components.atoms import CallbackComponent, Component, DigsimException
 
 
 class AppModel(QThread):
@@ -171,6 +171,8 @@ class AppModel(QThread):
         wire_object.disconnect()
         if wire_object.key in self._wire_objects:
             del self._wire_objects[wire_object.key]
+        self._changed = True
+        self.sig_control_notify.emit(self._started)
 
     def _delete_component(self, component_object):
         for port in component_object.component.ports:
@@ -229,6 +231,8 @@ class AppModel(QThread):
         self._wire_objects[self._new_wire.key] = self._new_wire
         self._new_wire = None
         self._new_wire_end_pos = None
+        self._changed = True
+        self.sig_control_notify.emit(self._started)
 
     def new_wire_abort(self):
         """Abort new wire object"""
@@ -321,7 +325,10 @@ class AppModel(QThread):
         circuit_folder = os.path.dirname(path)
         if len(circuit_folder) == 0:
             circuit_folder = "."
-        self._circuit.from_dict(circuit_dict, circuit_folder)
+        try:
+            self._circuit.from_dict(circuit_dict, circuit_folder)
+        except DigsimException as e:
+            print("ComponentException", str(e))
         for comp in self._circuit.get_toplevel_components():
             x = circuit_dict["gui"][comp.name()]["x"]
             y = circuit_dict["gui"][comp.name()]["y"]

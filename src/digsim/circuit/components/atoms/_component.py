@@ -10,8 +10,10 @@ import abc
 import copy
 import importlib
 
+from ._digsim_exception import DigsimException
 
-class ComponentException(Exception):
+
+class ComponentException(DigsimException):
     """Component error exception class"""
 
 
@@ -52,6 +54,12 @@ class Component(abc.ABC):
         self.__dict__[port.name()] = port
         self._ports.append(port)
 
+    def delete_all_ports(self):
+        """
+        Deleta all component ports
+        """
+        self._ports = []
+
     def path(self):
         """Get component path"""
         if self._parent is not None:
@@ -83,7 +91,7 @@ class Component(abc.ABC):
         for port in self._ports:
             if port.name() == portname:
                 return port
-        raise ComponentException(f"Port {self.name}:{portname} not found")
+        raise ComponentException(f"Port {self.name()}:{portname} not found")
 
     @property
     def circuit(self):
@@ -261,6 +269,10 @@ class MultiComponent(Component):
         super().init()
         for component in self._components:
             component.init()
+
+    def remove_all_components(self):
+        """Remove all sub components from multicomponent"""
+        self._components = []
 
     def default_state(self):
         super().default_state()

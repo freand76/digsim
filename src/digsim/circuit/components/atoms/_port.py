@@ -3,11 +3,14 @@
 
 """ This module contains the classes for all component ports """
 
+# pylint: disable=too-many-public-methods
 
 import abc
 
+from ._digsim_exception import DigsimException
 
-class PortConnectionError(Exception):
+
+class PortConnectionError(DigsimException):
     """Exception for illegal connections"""
 
 
@@ -23,6 +26,12 @@ class Port(abc.ABC):
         self._value = None  # The value of this port
         self._edge_detect_value = "X"  # Last edge detect value
         self.init()  # Initialize the port
+
+    def init(self):
+        """Initialize port, will be called when compponent/circuit is initialized"""
+        self._value = "X"
+        self._edge_detect_value = "X"
+        self.update_wires("X")
 
     @property
     def value(self):
@@ -66,11 +75,11 @@ class Port(abc.ABC):
         self._wired_ports.append(port)
         port.value = self._value  # Update wires when port is connected
 
-    def init(self):
-        """Initialize port, will be called when compponent/circuit is initialized"""
-        self._value = "X"
-        self._edge_detect_value = "X"
-        self.update_wires("X")
+    def remove_wires(self):
+        """Remove wires port"""
+        for port in self._wired_ports:
+            port.set_driver(None)
+        self._wired_ports = []
 
     def name(self):
         """Get port name"""
