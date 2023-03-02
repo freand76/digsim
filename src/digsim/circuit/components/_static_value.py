@@ -9,7 +9,7 @@ from .atoms import Component, PortOutImmediate
 class StaticValue(Component):
     """Static value component class"""
 
-    def __init__(self, circuit, name="StaticValue", width=1, value=0):
+    def __init__(self, circuit, name=None, width=1, value=0):
         super().__init__(circuit, name)
         self.parameter_set("width", width)
         self.parameter_set("value", value)

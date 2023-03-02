@@ -9,7 +9,7 @@ from .atoms import CallbackComponent, PortOutImmediate
 class PushButton(CallbackComponent):
     """PushButton component class"""
 
-    def __init__(self, circuit, name="PushButton", inverted=False):
+    def __init__(self, circuit, name=None, inverted=False):
         super().__init__(circuit, name)
         portout = PortOutImmediate(self, "O")
         self.add_port(portout)

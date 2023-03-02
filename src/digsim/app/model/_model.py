@@ -72,15 +72,17 @@ class AppModel(QThread):
         """Get component object (from component)"""
         return self._component_objects[component]
 
+    def _get_component_class(self, name):
+        return getattr(digsim.circuit.components, name)
+
     def get_component_parameters(self, name):
         """Get parameters for a component"""
-        component_class = getattr(digsim.circuit.components, name)
-        return component_class.get_parameters()
+        return self._get_component_class(name).get_parameters()
 
     def add_component_by_name(self, name, pos, settings):
         """Add component object from class name"""
-        component_class = getattr(digsim.circuit.components, name)
-        component = component_class(self._circuit, name=name, **settings)
+        component_class = self._get_component_class(name)
+        component = component_class(self._circuit, **settings)
         self._circuit_init()
         component_object = self._add_component(component, pos.x(), pos.y())
         component_object.center()  # Component is plced @ mouse pointer, make it center

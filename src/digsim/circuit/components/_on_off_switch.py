@@ -9,7 +9,7 @@ from .atoms import CallbackComponent, PortOutDelta
 class OnOffSwitch(CallbackComponent):
     """On/Off Switch  component class"""
 
-    def __init__(self, circuit, name="OnOffSwitch", start_on=False):
+    def __init__(self, circuit, name=None, start_on=False):
         super().__init__(circuit, name)
         portout = PortOutDelta(self, "O", delay_ns=0)
         self.add_port(portout)

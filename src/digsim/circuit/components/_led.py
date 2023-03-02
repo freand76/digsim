@@ -9,7 +9,7 @@ from .atoms import CallbackComponent, PortIn
 class Led(CallbackComponent):
     """LED component class"""
 
-    def __init__(self, circuit, name="LED", callback=None):
+    def __init__(self, circuit, name=None, callback=None):
         super().__init__(circuit, name, callback)
         self.add_port(PortIn(self, "I"))
 

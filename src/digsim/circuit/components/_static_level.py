@@ -9,7 +9,7 @@ from .atoms import Component, PortOutDelta
 class VDD(Component):
     """VDD / Logic1 component class"""
 
-    def __init__(self, circuit, name="VDD"):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortOutDelta(self, "O", delay_ns=0))
 
@@ -20,7 +20,7 @@ class VDD(Component):
 class GND(Component):
     """GND / Logic0 component class"""
 
-    def __init__(self, circuit, name="GND"):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortOutDelta(self, "O", delay_ns=0))
 

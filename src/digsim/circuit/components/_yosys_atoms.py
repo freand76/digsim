@@ -45,7 +45,7 @@ class ClassNameParameterComponent(Component):
 class _BUF_(Component):
     """module _BUF_ (A, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortOutDelta(self, "Y"))
@@ -57,7 +57,7 @@ class _BUF_(Component):
 class _NOT_(Component):
     """module _NOT_ (A, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortOutDelta(self, "Y"))
@@ -72,7 +72,7 @@ class _NOT_(Component):
 class _AND_(Component):
     """module _AND_ (A, B, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -88,7 +88,7 @@ class _AND_(Component):
 class _NAND_(Component):
     """module _NAND_ (A, B, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -104,7 +104,7 @@ class _NAND_(Component):
 class _OR_(Component):
     """module _OR_ (A, B, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -120,7 +120,7 @@ class _OR_(Component):
 class _NOR_(Component):
     """module _NOR_ (A, B, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -136,7 +136,7 @@ class _NOR_(Component):
 class _XOR_(Component):
     """module _XOR_ (A, B, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -152,7 +152,7 @@ class _XOR_(Component):
 class _XNOR_(Component):
     """module _XNOR_ (A, B, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -168,7 +168,7 @@ class _XNOR_(Component):
 class _ANDNOT_(Component):
     """module _ANDNOT_ (A, B, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -184,7 +184,7 @@ class _ANDNOT_(Component):
 class _ORNOT_(Component):
     """module _ORNOT_ (A, B, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -200,7 +200,7 @@ class _ORNOT_(Component):
 class _MUX_(Component):
     """module _MUX_ (A, B, S, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -217,7 +217,7 @@ class _MUX_(Component):
 class _NMUX_(Component):
     """module _NMUX_ (A, B, S, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -234,7 +234,7 @@ class _NMUX_(Component):
 class _MUX4_(Component):
     """module _MUX4_ (A, B, C, D, S, T, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -258,7 +258,7 @@ class _MUX4_(Component):
 class _MUX8_(Component):
     """module _MUX8_ (A, B, C, D, E, F, G, H, S, T, U, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -295,7 +295,7 @@ class _MUX8_(Component):
 class _MUX16_(Component):
     """module _MUX16_ (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, S, T, U, V, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -357,7 +357,7 @@ class _MUX16_(Component):
 class _AOI3_(Component):
     """module _AOI3_ (A, B, C, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -374,7 +374,7 @@ class _AOI3_(Component):
 class _OAI3_(Component):
     """module _OAI3_ (A, B, C, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -391,7 +391,7 @@ class _OAI3_(Component):
 class _AOI4_(Component):
     """module _AOI4_ (A, B, C, D, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -409,7 +409,7 @@ class _AOI4_(Component):
 class _OAI4_(Component):
     """module _OAI4_ (A, B, C, D, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -427,7 +427,7 @@ class _OAI4_(Component):
 class _TBUF_(Component):
     """module _TBUF_ (A, E, Y)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         raise YosysNotImplementedException("NOT IMPLEMENTED: Tri-state buffer")
 
@@ -435,7 +435,7 @@ class _TBUF_(Component):
 class _SR_(ClassNameParameterComponent):
     """Set-reset latch"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._set_level = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -472,7 +472,7 @@ class _SR_PP_(_SR_):
 class _FF_(Component):
     """module module _FF_ (D, Q)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         raise YosysNotImplementedException(
             "NOT IMPLEMENTED: D-type flip-flop that is clocked from the implicit global clock"
@@ -482,7 +482,7 @@ class _FF_(Component):
 class _DFF_(ClassNameParameterComponent):
     """D-type flip-flop"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self.add_port(PortIn(self, "C"))
@@ -510,7 +510,7 @@ class _DFF_P_(_DFF_):
 class _DFFE2_(ClassNameParameterComponent):
     """D-type flip-flop with clock enable"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._enable_level = self.name_to_level(1)
@@ -552,7 +552,7 @@ class _DFFE_PP_(_DFFE2_):
 class _DFF3_(ClassNameParameterComponent):
     """D-type flip-flop with reset"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -609,7 +609,7 @@ class _DFF_PP1_(_DFF3_):
 class _DFFE4_(ClassNameParameterComponent):
     """D-type flip-flop with reset and clock enable"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -704,7 +704,7 @@ class _DFFE_PP1P_(_DFFE4_):
 class _ALDFF_(ClassNameParameterComponent):
     """D-type flip-flop with async load"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._load_level = self.name_to_level(1)
@@ -745,7 +745,7 @@ class _ALDFF_PP_(_ALDFF_):
 class _ALDFFE_(ClassNameParameterComponent):
     """D-type flip-flop with async load and clock enable"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._load_level = self.name_to_level(1)
@@ -808,7 +808,7 @@ class _ALDFFE_PPP_(_ALDFFE_):
 class _DFFSR_(ClassNameParameterComponent):
     """D-type flip-flop with with set and reset"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._set_level = self.name_to_level(1)
@@ -868,7 +868,7 @@ class _DFFSR_PPP_(_DFFSR_):
 class _DFFSRE_(ClassNameParameterComponent):
     """D-type flip-flop with with set, reset and clock enable"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._set_level = self.name_to_level(1)
@@ -966,7 +966,7 @@ class _DFFSRE_PPPP_(_DFFSRE_):
 class _SDFF_(ClassNameParameterComponent):
     """D-type flip-flop with sync reset"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -1024,7 +1024,7 @@ class _SDFF_PP1_(_SDFF_):
 class _SDFFE_(ClassNameParameterComponent):
     """D-type flip-flop with sync reset and clock enable (with reset having priority)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -1116,7 +1116,7 @@ class _SDFFE_PP1P_(_SDFFE_):
 class _SDFFCE_(ClassNameParameterComponent):
     """D-type flip-flop with sync reset and clock enable (with clock enable having priority)"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -1209,7 +1209,7 @@ class _SDFFCE_PP1P_(_SDFFCE_):
 class _DLATCH_(ClassNameParameterComponent):
     """D-type latch"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._enable_level = self.name_to_level(0)
         self.add_port(PortIn(self, "E"))
@@ -1235,7 +1235,7 @@ class _DLATCH_P_(_DLATCH_):
 class _DLATCH3_(ClassNameParameterComponent):
     """D-type latch with reset"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._enable_level = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -1290,7 +1290,7 @@ class _DLATCH_PP1_(_DLATCH3_):
 class _DLATCHSR_(ClassNameParameterComponent):
     """D-type latch with set and reset"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self._enable_level = self.name_to_level(0)
         self._set_level = self.name_to_level(1)

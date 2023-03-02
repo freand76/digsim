@@ -28,7 +28,7 @@ class HexDigit(CallbackComponent):
         15: "AEFG",
     }
 
-    def __init__(self, circuit, name="HexDigit", digits=1, dot=True):
+    def __init__(self, circuit, name=None, digits=1, dot=True):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "val", width=(4 * digits)))
         self.parameter_set("digits", digits)

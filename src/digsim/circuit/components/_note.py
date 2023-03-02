@@ -9,7 +9,7 @@ from .atoms import Component
 class Note(Component):
     """Note component"""
 
-    def __init__(self, circuit, name="Note", text=""):
+    def __init__(self, circuit, name=None, text=""):
         super().__init__(circuit, name)
         self.parameter_set("text", text)
 

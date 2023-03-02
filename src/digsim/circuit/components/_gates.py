@@ -13,7 +13,7 @@ from .atoms import Component, ComponentException, MultiComponent, PortIn, PortOu
 class NOT(Component):
     """NOT logic gate"""
 
-    def __init__(self, circuit, name="NOT"):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortOutDelta(self, "Y"))
@@ -58,7 +58,7 @@ class ConfigPortsComponent(Component):
 class OR(ConfigPortsComponent):
     """OR logic gate"""
 
-    def __init__(self, circuit, name="OR", ports=2):
+    def __init__(self, circuit, name=None, ports=2):
         super().__init__(circuit, name, ports)
 
     def update(self):
@@ -73,7 +73,7 @@ class OR(ConfigPortsComponent):
 class AND(ConfigPortsComponent):
     """AND logic gate"""
 
-    def __init__(self, circuit, name="AND", ports=2):
+    def __init__(self, circuit, name=None, ports=2):
         super().__init__(circuit, name, ports)
 
     def update(self):
@@ -88,7 +88,7 @@ class AND(ConfigPortsComponent):
 class XOR(ConfigPortsComponent):
     """XOR logic gate"""
 
-    def __init__(self, circuit, name="XOR", ports=2):
+    def __init__(self, circuit, name=None, ports=2):
         super().__init__(circuit, name, ports)
 
     def update(self):
@@ -104,7 +104,7 @@ class XOR(ConfigPortsComponent):
 class NAND(ConfigPortsComponent):
     """NAND logic gate"""
 
-    def __init__(self, circuit, name="NAND", ports=2):
+    def __init__(self, circuit, name=None, ports=2):
         super().__init__(circuit, name, ports)
 
     def update(self):
@@ -119,7 +119,7 @@ class NAND(ConfigPortsComponent):
 class NOR(ConfigPortsComponent):
     """NOR logic gate"""
 
-    def __init__(self, circuit, name="OR", ports=2):
+    def __init__(self, circuit, name=None, ports=2):
         super().__init__(circuit, name, ports)
 
     def update(self):
@@ -134,7 +134,7 @@ class NOR(ConfigPortsComponent):
 class DFF(Component):
     """D-FlipFlop"""
 
-    def __init__(self, circuit, name="DFF", async_reset=False, clock_enable=False, width=1):
+    def __init__(self, circuit, name=None, async_reset=False, clock_enable=False, width=1):
         super().__init__(circuit, name)
         self._async_reset = async_reset
         self._clock_enable = clock_enable
@@ -185,7 +185,7 @@ class DFF(Component):
 class MUX(Component):
     """MUX"""
 
-    def __init__(self, circuit, name="MUX", ports=2, width=1):
+    def __init__(self, circuit, name=None, ports=2, width=1):
         super().__init__(circuit, name)
         if ports not in [2, 4, 8]:
             raise ComponentException(f"Mux cannot have {ports} number of ports")
@@ -229,10 +229,10 @@ class MUX(Component):
 class SR(MultiComponent):
     """SR logic gate composed of two NAND gates"""
 
-    def __init__(self, circuit, name="SR"):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
-        _nands = NAND(circuit, name=f"{name}_S")
-        _nandr = NAND(circuit, name=f"{name}_R")
+        _nands = NAND(circuit)
+        _nandr = NAND(circuit)
         self.add(_nands)
         self.add(_nandr)
         _nands.Y.wire = _nandr.A

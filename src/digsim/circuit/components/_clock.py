@@ -9,7 +9,7 @@ from .atoms import CallbackComponent, PortOutDelta, PortOutImmediate
 class Clock(CallbackComponent):
     """Clock component class"""
 
-    def __init__(self, circuit, name="Clock", frequency=1):
+    def __init__(self, circuit, name=None, frequency=1):
         super().__init__(circuit, name)
         self._feedback = PortOutDelta(self, "feedback")
         portout = PortOutImmediate(self, "O")

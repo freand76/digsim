@@ -10,7 +10,7 @@ class SevenSegment(CallbackComponent):
 
     PORTLIST = ["A", "B", "C", "D", "E", "F", "G", "dot"]
 
-    def __init__(self, circuit, name="SevemSegment"):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         for portname in self.PORTLIST:
             self.add_port(PortIn(self, portname))

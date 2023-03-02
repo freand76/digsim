@@ -18,9 +18,9 @@ class ComponentException(Exception):
 class Component(abc.ABC):
     """The component base class"""
 
-    def __init__(self, circuit, name="", display_name=None):
+    def __init__(self, circuit, name=None, display_name=None):
         self._circuit = circuit
-        self._name = name
+        self._name = name or self.__class__.__name__
         self._parent = None
         self._ports = []
         self._edge_detect_dict = {}

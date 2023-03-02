@@ -36,7 +36,7 @@ class StaticLevels(Component):
 class YosysComponent(MultiComponent):
     """Class to create a yosys component from a yosys json netlist"""
 
-    def __init__(self, circuit, name="Yosys", path=None, nets=True):
+    def __init__(self, circuit, name=None, path=None, nets=True):
         super().__init__(circuit, name)
         self._circuit = circuit
         self._path = path

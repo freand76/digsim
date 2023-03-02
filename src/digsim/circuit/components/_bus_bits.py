@@ -9,7 +9,7 @@ from .atoms import Component, PortMultiBitWire
 class Bus2Bits(Component):
     """Bus to Bits splitter"""
 
-    def __init__(self, circuit, name="Bus2Bits", width=1, enable=None):
+    def __init__(self, circuit, name=None, width=1, enable=None):
         super().__init__(circuit, name)
         self._bus = PortMultiBitWire(self, "bus", width=width)
         self.add_port(self._bus)
@@ -46,7 +46,7 @@ class Bus2Bits(Component):
 class Bits2Bus(Component):
     """Bits to Bus merger"""
 
-    def __init__(self, circuit, name="Bits2Bus", width=1):
+    def __init__(self, circuit, name=None, width=1):
         super().__init__(circuit, name)
         self._bus = PortMultiBitWire(self, "bus", width=width, output=True)
         self.add_port(self._bus)
