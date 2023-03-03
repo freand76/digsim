@@ -18,8 +18,8 @@ class BusBitsObject(ComponentObject):
     WIRE_LENGTH_COMPONENT = 5
     WIRE_LENGTH_SELECTABLE = 15
 
-    def __init__(self, component, xpos, ypos):
-        super().__init__(component, xpos, ypos)
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos)
         _, bus_w, _ = self.get_port_display_name_metrics("bus")
         self._width = (
             2 * self.RECT_TO_BORDER

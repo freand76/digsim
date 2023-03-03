@@ -24,8 +24,9 @@ class ComponentObject(GuiObject):
     PORT_CLICK_BOX_SIDE = 20
     MIN_PORT_TO_PORT_DISTANCE = 20
 
-    def __init__(self, component, xpos, ypos):
+    def __init__(self, app_model, component, xpos, ypos):
         super().__init__()
+        self._app_model = app_model
         self._component = component
         self._pos = QPoint(xpos, ypos)
         self._height = self.DEFAULT_HEIGHT

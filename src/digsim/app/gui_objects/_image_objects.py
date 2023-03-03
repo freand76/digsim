@@ -3,6 +3,8 @@
 
 """ A component with an image as symbol the GUI """
 
+# pylint: disable=too-many-arguments
+
 import os
 
 from PySide6.QtCore import QPoint, Qt
@@ -19,8 +21,8 @@ class ImageObject(ComponentObject):
     _pixmap = None
     _pixmap_active = None
 
-    def __init__(self, component, xpos, ypos, show_name=True):
-        super().__init__(component, xpos, ypos)
+    def __init__(self, app_model, component, xpos, ypos, show_name=True):
+        super().__init__(app_model, component, xpos, ypos)
         self._show_name = show_name
         self.setup_size()
         self.update_ports()
@@ -128,8 +130,8 @@ class ImageObjectStaticValue(ImageObject):
     IMAGE_FILENAME = "images/ZERO.png"
     ACTIVE_IMAGE_FILENAME = "images/ONE.png"
 
-    def __init__(self, component, xpos, ypos):
-        super().__init__(component, xpos, ypos, show_name=False)
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos, show_name=False)
 
     def paint_component(self, painter):
         if self.component.O.width == 1:
@@ -155,8 +157,8 @@ class ImageObjectLed(ImageObject):
     IMAGE_FILENAME = "images/LED_OFF.png"
     ACTIVE_IMAGE_FILENAME = "images/LED_ON.png"
 
-    def __init__(self, component, xpos, ypos):
-        super().__init__(component, xpos, ypos, show_name=False)
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos, show_name=False)
 
 
 class ImageObjectIC(ImageObject):
@@ -175,8 +177,8 @@ class ImageObjectPushButton(ImageObject):
     IMAGE_FILENAME = "images/PB.png"
     BUTTON_RADIUS = 35
 
-    def __init__(self, component, xpos, ypos):
-        super().__init__(component, xpos, ypos, show_name=False)
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos, show_name=False)
 
     def paint_component(self, painter):
         super().paint_component(painter)
@@ -219,8 +221,8 @@ class ImageObjectOnOffSwitch(ImageObjectWithActiveRect):
     IMAGE_FILENAME = "images/Switch_OFF.png"
     ACTIVE_IMAGE_FILENAME = "images/Switch_ON.png"
 
-    def __init__(self, component, xpos, ypos):
-        super().__init__(component, xpos, ypos, show_name=False)
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos, show_name=False)
 
 
 class ImageObjectClock(ImageObjectWithActiveRect):
@@ -228,5 +230,5 @@ class ImageObjectClock(ImageObjectWithActiveRect):
 
     IMAGE_FILENAME = "images/Clock.png"
 
-    def __init__(self, component, xpos, ypos):
-        super().__init__(component, xpos, ypos, show_name=False)
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos, show_name=False)

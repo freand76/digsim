@@ -24,3 +24,4 @@ class YosysObject(ImageObject):
 
     def _reload(self):
         self.component.reload_netlist()
+        self._app_model.model_reset()

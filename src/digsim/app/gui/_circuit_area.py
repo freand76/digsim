@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QMenu, QPushButton, QScrollArea, QWidget
 from digsim.app.settings import ComponentSettingsDialog
 from digsim.circuit.components.atoms import PortConnectionError
 
-from ._utils import are_you_sure_delete_component
+from ._utils import are_you_sure_delete_object
 
 
 class ComponentContextMenu(QMenu):
@@ -70,7 +70,7 @@ class ComponentContextMenu(QMenu):
         self._parent.lower()
 
     def _delete(self):
-        if are_you_sure_delete_component(self._parent, self._component.display_name()):
+        if are_you_sure_delete_object(self._parent, self._component.display_name()):
             self._app_model.select(self._component_object)
             self._app_model.delete()
 
@@ -243,7 +243,7 @@ class CircuitArea(QWidget):
         if self._app_model.is_running:
             return
         if event.key() == Qt.Key_Delete:
-            if are_you_sure_delete_component(self):
+            if are_you_sure_delete_object(self):
                 self._app_model.delete()
         elif event.key() == Qt.Key_Escape:
             if self._app_model.has_new_wire():

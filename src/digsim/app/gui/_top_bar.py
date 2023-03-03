@@ -47,9 +47,7 @@ class SimControlWidget(QFrame):
 
     def reset(self):
         """Button action: Reset"""
-        self._time_s = 0
         self._app_model.model_reset()
-        self._reset_button.setEnabled(False)
 
     def _control_notify(self, started):
         if started:

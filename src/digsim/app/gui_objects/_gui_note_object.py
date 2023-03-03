@@ -16,8 +16,8 @@ class GuiNoteObject(ComponentObject):
     NOTE_MINIMUM_WIDTH = 50
     NOTE_MINIMUM_HEIGHT = 50
 
-    def __init__(self, component, xpos, ypos):
-        super().__init__(component, xpos, ypos)
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos)
         self.update_size()
 
     def _get_lines(self):

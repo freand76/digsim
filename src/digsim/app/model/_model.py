@@ -94,7 +94,7 @@ class AppModel(QThread):
     def _add_component(self, component, xpos, ypos):
         """Add component object in position"""
         component_object_class = digsim.app.gui_objects.class_factory(type(component).__name__)
-        self._component_objects[component] = component_object_class(component, xpos, ypos)
+        self._component_objects[component] = component_object_class(self, component, xpos, ypos)
         if isinstance(component, CallbackComponent):
             component.set_callback(partial(AppModel.comp_cb, self))
         return self._component_objects[component]
@@ -264,7 +264,7 @@ class AppModel(QThread):
         self._started = False
 
     def model_reset(self):
-        """Resetp model simulation"""
+        """Reset model simulation"""
         if not self._started:
             self._circuit_init()
 

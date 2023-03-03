@@ -47,8 +47,8 @@ class SevenSegmentObject(ComponentObject):
     DIGIT_WIDTH = 54
     DIGIT_HEIGHT = 80
 
-    def __init__(self, component, xpos, ypos):
-        super().__init__(component, xpos, ypos)
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos)
         self.setup_size()
 
     def setup_size(self):

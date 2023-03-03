@@ -26,15 +26,15 @@ def are_you_sure_destroy_circuit(parent, dialog_text):
     )
 
 
-def are_you_sure_delete_component(parent, component_name=None):
+def are_you_sure_delete_object(parent, component_name=None):
     """Are you sure messagebox"""
     if component_name is not None:
         message_text = f"Are you sure want to delete the '{component_name}' component?"
     else:
-        message_text = "Are you sure want to delete the selected component(s)?"
+        message_text = "Are you sure want to delete the selected object(s)?"
 
     return warning_messagebox(
         parent,
-        "Delete component?",
+        "Delete object?",
         message_text,
     )
