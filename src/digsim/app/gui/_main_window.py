@@ -20,6 +20,7 @@ from ._circuit_area import CircuitArea, ScrollableCircuitArea
 from ._component_selection import ComponentSelection
 from ._top_bar import TopBar
 from ._utils import are_you_sure_destroy_circuit
+from ._warning_dialog import WarningDialog
 
 
 class CircuitEditor(QSplitter):
@@ -95,10 +96,16 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(central_widget)
         self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
         self._app_model.sig_error.connect(self.error_dialog)
+        self._app_model.sig_warning_log.connect(self.warning_log_dialog)
 
     def error_dialog(self, error_message):
-        """Error dialog for circuit area"""
+        """Execute Error dialog"""
         QMessageBox.critical(self.parent(), "Error!", error_message, QMessageBox.Ok)
+
+    def warning_log_dialog(self, title, warning_message):
+        """Execute warning log dialog"""
+        warning_dialog = WarningDialog(self, title, warning_message)
+        warning_dialog.exec_()
 
     def closeEvent(self, event):
         """QT event callback function"""

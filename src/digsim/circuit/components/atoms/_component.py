@@ -91,7 +91,7 @@ class Component(abc.ABC):
         for port in self._ports:
             if port.name() == portname:
                 return port
-        raise ComponentException(f"Port {self.name()}:{portname} not found")
+        raise ComponentException(f"Port '{self.name()}:{portname}' not found")
 
     @property
     def circuit(self):

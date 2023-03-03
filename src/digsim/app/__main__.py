@@ -21,7 +21,9 @@ if __name__ == "__main__":
     parser.add_argument("--load", help="The circuit to load when starting the application")
     args = parser.parse_args()
 
+    window.show()
+
     if args.load is not None:
         app_model.load_circuit(args.load)
-    window.show()
+
     sys.exit(app.exec())

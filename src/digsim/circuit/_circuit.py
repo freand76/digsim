@@ -266,7 +266,9 @@ class Circuit:
 
         return circuit_dict
 
-    def from_dict(self, circuit_dict, folder=None):
+    def from_dict(
+        self, circuit_dict, folder=None, component_exceptions=True, connect_exceptions=True
+    ):
         """Clear circuit and add components from dict"""
         self._folder = folder
         self.clear()
@@ -283,11 +285,24 @@ class Circuit:
             raise CircuitError("No 'circuit/connections' in JSON")
         json_connections = json_circuit["wires"]
 
+        exception_str_list = []
         for json_component in json_components:
-            Component.from_dict(self, json_component)
+            try:
+                Component.from_dict(self, json_component)
+            except DigsimException as exc:
+                if component_exceptions:
+                    raise exc
+                exception_str_list.append(f"{str(exc.__class__.__name__)}:{str(exc)}")
 
         for json_connection in json_connections:
-            self._connect_from_dict(json_connection["src"], json_connection["dst"])
+            try:
+                self._connect_from_dict(json_connection["src"], json_connection["dst"])
+            except DigsimException as exc:
+                if connect_exceptions:
+                    raise exc
+                exception_str_list.append(f"{exc.__class__.__name__}:{str(exc)}")
+
+        return exception_str_list
 
     def to_json_file(self, filename):
         """Store circuit in json file"""

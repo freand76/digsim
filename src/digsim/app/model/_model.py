@@ -28,6 +28,7 @@ class AppModel(QThread):
     sig_sim_time_notify = Signal(float)
     sig_update_gui_components = Signal()
     sig_error = Signal(str)
+    sig_warning_log = Signal(str, str)
 
     def __init__(self):
         super().__init__()
@@ -325,10 +326,15 @@ class AppModel(QThread):
         circuit_folder = os.path.dirname(path)
         if len(circuit_folder) == 0:
             circuit_folder = "."
+        exception_str_list = []
         try:
-            self._circuit.from_dict(circuit_dict, circuit_folder)
-        except DigsimException as e:
-            print("ComponentException", str(e))
+            exception_str_list = self._circuit.from_dict(
+                circuit_dict, circuit_folder, component_exceptions=False, connect_exceptions=False
+            )
+        except DigsimException as exc:
+            self.sig_error.emit(f"Load Circuit error: {str(exc)}")
+            return
+
         for comp in self._circuit.get_toplevel_components():
             x = circuit_dict["gui"][comp.name()]["x"]
             y = circuit_dict["gui"][comp.name()]["y"]
@@ -342,6 +348,8 @@ class AppModel(QThread):
         self._changed = False
         self.sig_update_gui_components.emit()
         self.sig_control_notify.emit(self._started)
+        if len(exception_str_list) > 0:
+            self.sig_warning_log.emit("Load Circuit Warning", "\n".join(exception_str_list))
 
     def clear_circuit(self):
         """Clear the circuit"""
