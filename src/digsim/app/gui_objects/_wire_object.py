@@ -55,7 +55,7 @@ class WireObject(GuiObject):
     def _create_line(self, src, dst):
         self._line_path = []
         if self._src_port is not None:
-            component_object = self._app_model.components.get_component_object(
+            component_object = self._app_model.component_objects.get_object(
                 self._src_port.parent()
             )
             source = src
@@ -63,7 +63,7 @@ class WireObject(GuiObject):
         else:
             source = dst
             dest = src
-            component_object = self._app_model.components.get_component_object(
+            component_object = self._app_model.component_objects.get_object(
                 self._dst_port.parent()
             )
 
@@ -138,10 +138,10 @@ class WireObject(GuiObject):
     def update(self):
         """Update the wire position if the connected components move"""
         if self._src_port is not None:
-            src_comp = self._app_model.components.get_component_object(self._src_port.parent())
+            src_comp = self._app_model.component_objects.get_object(self._src_port.parent())
             self._src_point = src_comp.pos + src_comp.get_port_pos(self._src_port.name())
         if self._dst_port is not None:
-            dst_comp = self._app_model.components.get_component_object(self._dst_port.parent())
+            dst_comp = self._app_model.component_objects.get_object(self._dst_port.parent())
             self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name())
         if self._src_port is not None and self._dst_port is not None:
             self._create_line(self._src_point, self._dst_point)

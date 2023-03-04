@@ -49,8 +49,8 @@ class SimControlWidget(QFrame):
         """Button action: Reset"""
         self._app_model.model_reset()
 
-    def _control_notify(self, started):
-        if started:
+    def _control_notify(self):
+        if self._app_model.is_running:
             self._start_button.setText("Stop Similation")
             self._start_button.setEnabled(True)
         else:
@@ -114,7 +114,7 @@ class LoadSaveWidget(QFrame):
         self._clear_button.clicked.connect(self.clear)
         self.layout().addWidget(self._clear_button)
         self._app_model.sig_control_notify.connect(self._control_notify)
-        self._control_notify(False)
+        self._control_notify()
 
     def load(self):
         """Button action: Load"""
@@ -143,15 +143,15 @@ class LoadSaveWidget(QFrame):
         if are_you_sure_destroy_circuit(self.parent(), "Clear circuit"):
             self._app_model.clear_circuit()
 
-    def _control_notify(self, started):
-        if started:
+    def _control_notify(self):
+        if self._app_model.is_running:
             self._load_button.setEnabled(False)
             self._save_button.setEnabled(False)
             self._clear_button.setEnabled(False)
         else:
             self._load_button.setEnabled(True)
             self._save_button.setEnabled(self._app_model.has_changes())
-            self._clear_button.setEnabled(self._app_model.has_objects())
+            self._clear_button.setEnabled(not self._app_model.component_objects.is_empty())
 
 
 class TopBar(QFrame):

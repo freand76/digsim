@@ -55,8 +55,8 @@ class CircuitEditor(QSplitter):
         self.layout().setStretchFactor(scrollable_circuit_area, 1)
         circuit_area.setFocus()
 
-    def _control_notify(self, started):
-        self._selection_area.setEnabled(not started)
+    def _control_notify(self):
+        self._selection_area.setEnabled(not self._app_model.is_running)
 
 
 class CentralWidget(QWidget):
