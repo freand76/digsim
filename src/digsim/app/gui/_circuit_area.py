@@ -71,8 +71,8 @@ class ComponentContextMenu(QMenu):
 
     def _delete(self):
         if are_you_sure_delete_object(self._parent, self._component.display_name()):
-            self._app_model.select(self._component_object)
-            self._app_model.delete()
+            self._app_model.objects.select(self._component_object)
+            self._app_model.objects.delete()
 
     def _settings(self):
         """Start the settings dialog for reconfiguration"""
@@ -137,9 +137,9 @@ class ComponentWidget(QPushButton):
 
     def _new_wire_end(self):
         try:
-            self._app_model.wire_objects.new.end(self.component, self._active_port)
+            self._app_model.objects.wires.new.end(self.component, self._active_port)
         except PortConnectionError as exc:
-            self._app_model.wire_objects.new.abort()
+            self._app_model.objects.wires.new.abort()
             self._app_model.sig_error.emit(str(exc))
             self.parent().update()
 
@@ -148,23 +148,23 @@ class ComponentWidget(QPushButton):
         super().mousePressEvent(event)
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
-                self._app_model.add_gui_event(self.component.onpress)
-            elif self._app_model.wire_objects.new.ongoing():
+                self._app_model.model_add_event(self.component.onpress)
+            elif self._app_model.objects.wires.new.ongoing():
                 if self._active_port is not None:
                     self._new_wire_end()
             else:
-                self._app_model.select(self._component_object)
+                self._app_model.objects.select(self._component_object)
                 if self._active_port is None:
                     # Prepare to move
                     self.setCursor(Qt.ClosedHandCursor)
                     self._mouse_grab_pos = event.pos()
                 else:
-                    self._app_model.wire_objects.new.start(self.component, self._active_port)
+                    self._app_model.objects.wires.new.start(self.component, self._active_port)
         elif event.button() == Qt.RightButton:
             if self._app_model.is_running:
                 return
-            if self._app_model.wire_objects.new.ongoing():
-                self._app_model.wire_objects.new.abort()
+            if self._app_model.objects.wires.new.ongoing():
+                self._app_model.objects.wires.new.abort()
             else:
                 contect_menu = ComponentContextMenu(self, self._app_model, self._component_object)
                 contect_menu.create(self.mapToGlobal(event.pos()))
@@ -175,7 +175,7 @@ class ComponentWidget(QPushButton):
         super().mouseReleaseEvent(event)
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
-                self._app_model.add_gui_event(self.component.onrelease)
+                self._app_model.model_add_event(self.component.onrelease)
             else:
                 # Move complete
                 self.setCursor(Qt.ArrowCursor)
@@ -195,15 +195,15 @@ class ComponentWidget(QPushButton):
                 self.setCursor(Qt.ArrowCursor)
             self.update()
 
-        if self._app_model.wire_objects.new.ongoing():
+        if self._app_model.objects.wires.new.ongoing():
             end_pos = event.pos()
             if self._active_port:
                 end_pos = self._component_object.get_port_pos(self._active_port)
-            self._app_model.wire_objects.new.set_end_pos(self.pos() + end_pos)
+            self._app_model.objects.wires.new.set_end_pos(self.pos() + end_pos)
             self.parent().update()
 
         elif self._mouse_grab_pos is not None:
-            self._app_model.move_selected_components(event.pos() - self._mouse_grab_pos)
+            self._app_model.objects.move_selected_components(event.pos() - self._mouse_grab_pos)
             self.parent().update()
 
 
@@ -234,7 +234,7 @@ class CircuitArea(QWidget):
         self._panning_callback = callback
 
     def _abort_wire(self):
-        self._app_model.wire_objects.new.abort()
+        self._app_model.objects.wires.new.abort()
         self.update()
 
     def keyPressEvent(self, event):
@@ -243,13 +243,14 @@ class CircuitArea(QWidget):
         if self._app_model.is_running:
             return
         if event.key() == Qt.Key_Delete:
-            if are_you_sure_delete_object(self):
-                self._app_model.delete()
+            selected_objects = self._app_model.objects.get_selected()
+            if len(selected_objects) > 0 and are_you_sure_delete_object(self):
+                self._app_model.objects.delete()
         elif event.key() == Qt.Key_Escape:
-            if self._app_model.wire_objects.new.ongoing():
+            if self._app_model.objects.wires.new.ongoing():
                 self._abort_wire()
         elif event.key() == Qt.Key_Control:
-            self._app_model.multi_select(True)
+            self._app_model.objects.multi_select(True)
         elif event.key() == Qt.Key_Shift:
             self.setCursor(Qt.OpenHandCursor)
             self._panning_mode = True
@@ -261,7 +262,7 @@ class CircuitArea(QWidget):
         if self._app_model.is_running:
             return
         if event.key() == Qt.Key_Control:
-            self._app_model.multi_select(False)
+            self._app_model.objects.multi_select(False)
         elif event.key() == Qt.Key_Shift:
             self.setCursor(Qt.ArrowCursor)
             self._panning_mode = False
@@ -269,11 +270,11 @@ class CircuitArea(QWidget):
     def paintEvent(self, _):
         """QT event callback function"""
         painter = QPainter(self)
-        self._app_model.wire_objects.paint(painter)
+        self._app_model.objects.wires.paint(painter)
         if self._select_box_rect is not None:
             painter.setBrush(Qt.Dense7Pattern)
             painter.drawRect(self._select_box_rect)
-            self._app_model.select_by_rect(self._select_box_rect)
+            self._app_model.objects.select_by_rect(self._select_box_rect)
         painter.end()
 
     def mousePressEvent(self, event):
@@ -283,9 +284,9 @@ class CircuitArea(QWidget):
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
                 return
-            if self._app_model.wire_objects.new.ongoing():
+            if self._app_model.objects.wires.new.ongoing():
                 return
-            if self._app_model.select_by_position(event.pos()):
+            if self._app_model.objects.select_by_position(event.pos()):
                 self.update()
                 return
             if self._panning_mode:
@@ -296,12 +297,12 @@ class CircuitArea(QWidget):
         elif event.button() == Qt.RightButton:
             if self._app_model.is_running:
                 return
-            if self._app_model.wire_objects.new.ongoing():
+            if self._app_model.objects.wires.new.ongoing():
                 self._abort_wire()
 
     def _end_selection(self):
         if self._select_box_rect is not None:
-            self._app_model.select_by_rect(self._select_box_rect)
+            self._app_model.objects.select_by_rect(self._select_box_rect)
         self._select_box_start = None
         self._select_box_rect = None
 
@@ -319,7 +320,7 @@ class CircuitArea(QWidget):
         """QT event callback function"""
         if self._app_model.is_running:
             return
-        if self._app_model.wire_objects.new.ongoing():
+        if self._app_model.objects.wires.new.ongoing():
             self._abort_wire()
 
     def mouseMoveEvent(self, event):
@@ -327,8 +328,8 @@ class CircuitArea(QWidget):
         if self._app_model.is_running:
             return
 
-        if self._app_model.wire_objects.new.ongoing():
-            self._app_model.wire_objects.new.set_end_pos(event.pos())
+        if self._app_model.objects.wires.new.ongoing():
+            self._app_model.objects.wires.new.set_end_pos(event.pos())
             self.update()
             return
 
@@ -365,28 +366,28 @@ class CircuitArea(QWidget):
         if position is None:
             position = self._top_left + QPoint(100, 100)
 
-        component_parameters = self._app_model.component_objects.get_object_parameters(name)
+        component_parameters = self._app_model.objects.components.get_object_parameters(name)
         ok, settings = ComponentSettingsDialog.start(
             self, self._app_model, name, component_parameters
         )
         if ok:
-            component_object = self._app_model.component_objects.add_object_by_name(
+            component_object = self._app_model.objects.components.add_object_by_name(
                 name, position, settings
             )
             comp = ComponentWidget(self._app_model, component_object, self)
             comp.show()
-            self._app_model.select(component_object)
+            self._app_model.objects.select(component_object)
 
     def _update_gui_components(self):
         children = self.findChildren(ComponentWidget)
         for child in children:
             child.deleteLater()
 
-        component_objects = self._app_model.component_objects.get_object_list()
+        component_objects = self._app_model.objects.components.get_object_list()
         for component_object in component_objects:
             comp = ComponentWidget(self._app_model, component_object, self)
             comp.show()
-        self._app_model.wire_objects.update()
+        self._app_model.objects.wires.update()
         self.update()
 
 

@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         """QT event callback function"""
-        if not self._app_model.has_changes() or are_you_sure_destroy_circuit(
+        if not self._app_model.is_changed or are_you_sure_destroy_circuit(
             self.parent(), "Close Application"
         ):
             self._app_model.model_stop()

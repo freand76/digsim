@@ -118,7 +118,7 @@ class LoadSaveWidget(QFrame):
 
     def load(self):
         """Button action: Load"""
-        if self._app_model.has_changes() and not are_you_sure_destroy_circuit(
+        if self._app_model.is_changed and not are_you_sure_destroy_circuit(
             self.parent(), "Load circuit"
         ):
             return
@@ -150,8 +150,8 @@ class LoadSaveWidget(QFrame):
             self._clear_button.setEnabled(False)
         else:
             self._load_button.setEnabled(True)
-            self._save_button.setEnabled(self._app_model.has_changes())
-            self._clear_button.setEnabled(not self._app_model.component_objects.is_empty())
+            self._save_button.setEnabled(self._app_model.is_changed)
+            self._clear_button.setEnabled(not self._app_model.objects.components.is_empty())
 
 
 class TopBar(QFrame):

@@ -31,6 +31,10 @@ class ModelComponents:
         for _, comp in self._component_objects.items():
             self._app_model.sig_component_notify.emit(comp.component)
 
+    def get_dict(self):
+        """Get component objects dict"""
+        return self._component_objects
+
     def is_empty(self):
         """Return True if there are component objects in the model"""
         return len(self._component_objects) == 0
@@ -59,7 +63,7 @@ class ModelComponents:
         """Add component object from class name"""
         component_class = self._get_component_class(name)
         component = component_class(self._circuit, **settings)
-        self._app_model.circuit_init()
+        self._app_model.model_init()
         component_object = self.add_object(component, pos.x(), pos.y())
         component_object.center()  # Component is plced @ mouse pointer, make it center
         self._app_model.model_changed()
@@ -89,8 +93,8 @@ class ModelComponents:
     def delete(self, component_object):
         """Deleta a component object in the model"""
         for port in component_object.component.ports:
-            for wire in self._app_model.wire_objects.get_object_list():
+            for wire in self._app_model.objects.wires.get_object_list():
                 if wire.has_port(port):
-                    self._app_model.wire_objects.delete(wire)
+                    self._app_model.objects.wires.delete(wire)
         del self._component_objects[component_object.component]
         self._circuit.delete_component(component_object.component)

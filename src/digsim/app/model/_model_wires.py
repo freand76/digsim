@@ -22,7 +22,7 @@ class NewWire:
     def end(self, component, portname):
         """End new wire object"""
         self._wire.set_end_port(component.port(portname))
-        self._app_model.wire_objects.add_wire(self._wire)
+        self._app_model.objects.wires.add_wire(self._wire)
         self._app_model.model_changed()
         self._wire = None
         self._end_pos = None
