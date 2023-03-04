@@ -52,5 +52,6 @@ I will try to keep track of them and give credits!
    * Add GUI settings for components
    * Add flip-flop factory for SR, JK, T...
 ### Model
+   * Add stack with old "states" for undo/redo functionality
    * Add unittest of all components
    * Add unittest of ports
