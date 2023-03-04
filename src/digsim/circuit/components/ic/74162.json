@@ -6,7 +6,7 @@
         "hdlname": "\\ttl_74162",
         "dynports": "00000000000000000000000000000001",
         "top": "00000000000000000000000000000001",
-        "src": "verilog/74xx/74162.v:3.1-64.10"
+        "src": "./verilog/74xx/74162.v:3.1-64.10"
       },
       "parameter_default_values": {
         "DELAY_FALL": "00000000000000000000000000000000",
@@ -732,7 +732,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "verilog/74xx/74162.v:22.1-54.4"
+            "src": "./verilog/74xx/74162.v:22.1-54.4"
           },
           "port_directions": {
             "C": "input",
@@ -755,7 +755,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "verilog/74xx/74162.v:22.1-54.4"
+            "src": "./verilog/74xx/74162.v:22.1-54.4"
           },
           "port_directions": {
             "C": "input",
@@ -778,7 +778,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "verilog/74xx/74162.v:22.1-54.4"
+            "src": "./verilog/74xx/74162.v:22.1-54.4"
           },
           "port_directions": {
             "C": "input",
@@ -801,7 +801,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "verilog/74xx/74162.v:22.1-54.4"
+            "src": "./verilog/74xx/74162.v:22.1-54.4"
           },
           "port_directions": {
             "C": "input",
@@ -1040,70 +1040,70 @@
           "hide_name": 0,
           "bits": [ 2 ],
           "attributes": {
-            "src": "verilog/74xx/74162.v:5.9-5.18"
+            "src": "./verilog/74xx/74162.v:5.9-5.18"
           }
         },
         "Clk": {
           "hide_name": 0,
           "bits": [ 10 ],
           "attributes": {
-            "src": "verilog/74xx/74162.v:10.9-10.12"
+            "src": "./verilog/74xx/74162.v:10.9-10.12"
           }
         },
         "D": {
           "hide_name": 0,
           "bits": [ 6, 7, 8, 9 ],
           "attributes": {
-            "src": "verilog/74xx/74162.v:9.21-9.22"
+            "src": "./verilog/74xx/74162.v:9.21-9.22"
           }
         },
         "ENP": {
           "hide_name": 0,
           "bits": [ 5 ],
           "attributes": {
-            "src": "verilog/74xx/74162.v:8.9-8.12"
+            "src": "./verilog/74xx/74162.v:8.9-8.12"
           }
         },
         "ENT": {
           "hide_name": 0,
           "bits": [ 4 ],
           "attributes": {
-            "src": "verilog/74xx/74162.v:7.9-7.12"
+            "src": "./verilog/74xx/74162.v:7.9-7.12"
           }
         },
         "Load_bar": {
           "hide_name": 0,
           "bits": [ 3 ],
           "attributes": {
-            "src": "verilog/74xx/74162.v:6.9-6.17"
+            "src": "./verilog/74xx/74162.v:6.9-6.17"
           }
         },
         "Q": {
           "hide_name": 0,
           "bits": [ 12, 13, 14, 15 ],
           "attributes": {
-            "src": "verilog/74xx/74162.v:12.22-12.23"
+            "src": "./verilog/74xx/74162.v:12.22-12.23"
           }
         },
         "Q_current": {
           "hide_name": 0,
           "bits": [ 12, 13, 14, 15 ],
           "attributes": {
-            "src": "verilog/74xx/74162.v:17.17-17.26"
+            "src": "./verilog/74xx/74162.v:17.17-17.26"
           }
         },
         "RCO": {
           "hide_name": 0,
           "bits": [ 11 ],
           "attributes": {
-            "src": "verilog/74xx/74162.v:11.10-11.13"
+            "src": "./verilog/74xx/74162.v:11.10-11.13"
           }
         },
         "RCO_current": {
           "hide_name": 0,
           "bits": [ 11 ],
           "attributes": {
-            "src": "verilog/74xx/74162.v:16.6-16.17"
+            "src": "./verilog/74xx/74162.v:16.6-16.17"
           }
         }
       }

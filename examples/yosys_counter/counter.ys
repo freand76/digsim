@@ -1,6 +1,0 @@
-read -sv counter.v
-hierarchy -top counter
-clean
-proc; opt; techmap; opt
-write_json counter.json
-show
