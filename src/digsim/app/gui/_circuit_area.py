@@ -84,7 +84,7 @@ class ComponentContextMenu(QMenu):
         )
         if ok:
             self._component.update_settings(settings)
-            self._app_model.set_changed()
+            self._app_model.model_changed()
             # Settings can change the component size
             self._component_object.update_size()
             self._app_model.sig_update_gui_components.emit()
@@ -365,12 +365,14 @@ class CircuitArea(QWidget):
         if position is None:
             position = self._top_left + QPoint(100, 100)
 
-        component_parameters = self._app_model.get_component_parameters(name)
+        component_parameters = self._app_model.components.get_component_parameters(name)
         ok, settings = ComponentSettingsDialog.start(
             self, self._app_model, name, component_parameters
         )
         if ok:
-            component_object = self._app_model.add_component_by_name(name, position, settings)
+            component_object = self._app_model.components.add_component_by_name(
+                name, position, settings
+            )
             comp = ComponentWidget(self._app_model, component_object, self)
             comp.show()
             self._app_model.select(component_object)
@@ -380,7 +382,7 @@ class CircuitArea(QWidget):
         for child in children:
             child.deleteLater()
 
-        component_objects = self._app_model.get_component_objects()
+        component_objects = self._app_model.components.get_component_objects()
         for component_object in component_objects:
             comp = ComponentWidget(self._app_model, component_object, self)
             comp.show()

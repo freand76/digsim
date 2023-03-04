@@ -10,14 +10,14 @@ import json
 import os
 import queue
 import time
-from functools import partial
 
 from PySide6.QtCore import QThread, Signal
 
 import digsim.app.gui_objects
-import digsim.circuit.components
 from digsim.circuit import Circuit
-from digsim.circuit.components.atoms import CallbackComponent, Component, DigsimException
+from digsim.circuit.components.atoms import Component, DigsimException
+
+from ._model_components import ModelComponents
 
 
 class AppModel(QThread):
@@ -32,85 +32,38 @@ class AppModel(QThread):
 
     def __init__(self):
         super().__init__()
-        self._component_objects = {}
         self._wire_objects = {}
         self._circuit = Circuit(name="DigSimCircuit", vcd="gui.vcd")
+        self._model_components = ModelComponents(self, self._circuit)
         self._started = False
         self._changed = False
         self._sim_tick_ms = 50
         self._gui_event_queue = queue.Queue()
-        self._component_callback_list = []
         self._new_wire = None
         self._new_wire_end_pos = None
         self._multi_select = False
 
+    @property
+    def components(self):
+        """return the model components"""
+        return self._model_components
+
     def clear(self):
         """Clear components and wires"""
-        self._component_objects = {}
+        self._model_components.clear()
         self._wire_objects = {}
 
-    @property
-    def callback_list(self):
-        """
-        Get callback list,
-        the components that have change during the last simulation execution
-        """
-        return self._component_callback_list
-
-    @staticmethod
-    def comp_cb(model, comp):
-        """Add component to callback list (if not available)"""
-        if comp not in model.callback_list:
-            model.callback_list.append(comp)
-
-    def _circuit_init(self):
+    def circuit_init(self):
+        """(Re)initialize the circuit"""
         self._circuit.init()
-        for _, comp in self._component_objects.items():
-            self.sig_component_notify.emit(comp.component)
+        self._model_components.init()
         self.sig_sim_time_notify.emit(0)
-
-    def get_component_object(self, component):
-        """Get component object (from component)"""
-        return self._component_objects[component]
-
-    def _get_component_class(self, name):
-        return getattr(digsim.circuit.components, name)
-
-    def get_component_parameters(self, name):
-        """Get parameters for a component"""
-        return self._get_component_class(name).get_parameters()
-
-    def add_component_by_name(self, name, pos, settings):
-        """Add component object from class name"""
-        component_class = self._get_component_class(name)
-        component = component_class(self._circuit, **settings)
-        self._circuit_init()
-        component_object = self._add_component(component, pos.x(), pos.y())
-        component_object.center()  # Component is plced @ mouse pointer, make it center
-        self._changed = True
-        self.sig_control_notify.emit(self._started)
-        return component_object
-
-    def _add_component(self, component, xpos, ypos):
-        """Add component object in position"""
-        component_object_class = digsim.app.gui_objects.class_factory(type(component).__name__)
-        self._component_objects[component] = component_object_class(self, component, xpos, ypos)
-        if isinstance(component, CallbackComponent):
-            component.set_callback(partial(AppModel.comp_cb, self))
-        return self._component_objects[component]
 
     def add_wire(self, src_port, dst_port, connect=True):
         """Add wire object between source and destination port"""
         wire = digsim.app.gui_objects.WireObject(self, src_port, dst_port, connect)
         self._wire_objects[wire.key] = wire
         self.sig_component_notify.emit(dst_port.parent())
-
-    def get_component_objects(self):
-        """Get list of component objects"""
-        component_objects = []
-        for _, comp in self._component_objects.items():
-            component_objects.append(comp)
-        return component_objects
 
     def get_wire_objects(self):
         """Get list of wire objects"""
@@ -121,7 +74,7 @@ class AppModel(QThread):
 
     def get_placed_objects(self):
         """Get list of all placed objects"""
-        placed_objects = self.get_component_objects()
+        placed_objects = self._model_components.get_component_objects()
         placed_objects.extend(self.get_wire_objects())
         return placed_objects
 
@@ -172,28 +125,18 @@ class AppModel(QThread):
         wire_object.disconnect()
         if wire_object.key in self._wire_objects:
             del self._wire_objects[wire_object.key]
-        self._changed = True
-        self.sig_control_notify.emit(self._started)
-
-    def _delete_component(self, component_object):
-        for port in component_object.component.ports:
-            for wire in self.get_wire_objects():
-                if wire.has_port(port):
-                    self._delete_wire(wire)
-        del self._component_objects[component_object.component]
-        self._circuit.delete_component(component_object.component)
-        self._changed = True
-        self.sig_control_notify.emit(self._started)
+        self.model_changed()
 
     def delete(self):
         """Delete selected object(s)"""
         selected_objects = self.get_selected_objects()
         for obj in selected_objects:
             if isinstance(obj, digsim.app.gui_objects.ComponentObject):
-                self._delete_component(obj)
+                self._model_components.delete_component(obj)
         for obj in selected_objects:
             if isinstance(obj, digsim.app.gui_objects.WireObject):
                 self._delete_wire(obj)
+        self.model_changed()
         self.sig_update_gui_components.emit()
 
     def update_wires(self):
@@ -210,7 +153,7 @@ class AppModel(QThread):
                 obj.pos = obj.pos + delta_pos
                 self.sig_component_notify.emit(obj.component)
                 self.update_wires()
-                self._changed = True
+                self.model_changed()
 
     def paint_wires(self, painter):
         """Paint wire objects"""
@@ -232,8 +175,7 @@ class AppModel(QThread):
         self._wire_objects[self._new_wire.key] = self._new_wire
         self._new_wire = None
         self._new_wire_end_pos = None
-        self._changed = True
-        self.sig_control_notify.emit(self._started)
+        self.model_changed()
 
     def new_wire_abort(self):
         """Abort new wire object"""
@@ -266,7 +208,13 @@ class AppModel(QThread):
     def model_reset(self):
         """Reset model simulation"""
         if not self._started:
-            self._circuit_init()
+            self.circuit_init()
+
+    def model_changed(self):
+        """Set changed to True, for example when gui has moved component"""
+        self._changed = True
+        self.sig_control_notify.emit(self._started)
+        self.sig_update_gui_components.emit()
 
     def add_gui_event(self, func):
         """Add medel events (functions) from the GUI"""
@@ -279,8 +227,6 @@ class AppModel(QThread):
         while self._started:
             next_tick += self._sim_tick_ms / 1000
 
-            self._component_callback_list = []
-
             # Execute one GUI event at a time
             if not self._gui_event_queue.empty():
                 gui_event_func = self._gui_event_queue.get()
@@ -288,8 +234,7 @@ class AppModel(QThread):
 
             self._circuit.run(ms=self._sim_tick_ms)
 
-            for comp in self._component_callback_list:
-                self.sig_component_notify.emit(comp)
+            self._model_components.update_callback_components()
 
             now = time.perf_counter()
             sleep_time = next_tick - now
@@ -338,13 +283,13 @@ class AppModel(QThread):
         for comp in self._circuit.get_toplevel_components():
             x = circuit_dict["gui"][comp.name()]["x"]
             y = circuit_dict["gui"][comp.name()]["y"]
-            self._add_component(comp, x, y)
+            self._model_components.add_component(comp, x, y)
 
         for comp in self._circuit.get_toplevel_components():
             for src_port in comp.outports():
                 for dst_port in src_port.get_wires():
                     self.add_wire(src_port, dst_port, connect=False)
-        self._circuit_init()
+        self.circuit_init()
         self._changed = False
         self.sig_update_gui_components.emit()
         self.sig_control_notify.emit(self._started)
@@ -360,13 +305,7 @@ class AppModel(QThread):
 
     def has_objects(self):
         """Return True if there are objects in the model"""
-        return len(self._component_objects) > 0
-
-    def set_changed(self):
-        """Set changed to True, for example when gui has moved component"""
-        self._changed = True
-        self.sig_control_notify.emit(self._started)
-        self.sig_update_gui_components.emit()
+        return self._model_components.has_objects()
 
     def has_changes(self):
         """Return True if there are changes in the model since last save"""
