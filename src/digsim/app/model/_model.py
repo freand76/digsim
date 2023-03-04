@@ -119,8 +119,8 @@ class AppModel(QThread):
         selected_objects = self.get_selected_objects()
         for obj in selected_objects:
             if ModelComponents.is_component_object(obj):
-                obj.pos = obj.pos + delta_pos
-                self.sig_component_notify.emit(obj.component)
+                obj.move_delta(delta_pos)
+                obj.update()
                 self._model_wires.update()
                 self.model_changed(update_components=False)
 

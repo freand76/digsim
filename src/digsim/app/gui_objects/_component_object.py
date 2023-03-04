@@ -45,6 +45,14 @@ class ComponentObject(GuiObject):
         """Move component with pos as center instead of top-left corner"""
         self._pos = self._pos - QPoint(self._width / 2, self._height / 2)
 
+    def move_delta(self, delta_pos):
+        """Move component object a delta position"""
+        self._pos = self._pos + delta_pos
+
+    def update(self):
+        """Update GUI for this component object"""
+        self._app_model.sig_component_notify.emit(self.component)
+
     def update_ports(self):
         """Update port positions for the placed component"""
         max_ports = max(len(self._component.inports()), len(self._component.outports()))
