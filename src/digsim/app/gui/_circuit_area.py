@@ -71,8 +71,7 @@ class ComponentContextMenu(QMenu):
 
     def _delete(self):
         if are_you_sure_delete_object(self._parent, self._component.display_name()):
-            self._app_model.objects.select(self._component_object)
-            self._app_model.objects.delete()
+            self._app_model.objects.delete([self._component_object])
 
     def _settings(self):
         """Start the settings dialog for reconfiguration"""
@@ -245,7 +244,7 @@ class CircuitArea(QWidget):
         if event.key() == Qt.Key_Delete:
             selected_objects = self._app_model.objects.get_selected()
             if len(selected_objects) > 0 and are_you_sure_delete_object(self):
-                self._app_model.objects.delete()
+                self._app_model.objects.delete(selected_objects)
         elif event.key() == Qt.Key_Escape:
             if self._app_model.objects.wires.new.ongoing():
                 self._abort_wire()

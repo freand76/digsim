@@ -62,11 +62,16 @@ class ModelObjects:
                 comp.select(True)
             elif not self._multi_select:
                 comp.select(False)
+        self._app_model.sig_control_notify.emit()
+        self._app_model.sig_update_gui_components.emit()
 
     def select_by_position(self, pos):
         """Select object from position"""
         self.select(None)
-        return self._model_wires.select(pos, self._multi_select)
+        object_selected = self._model_wires.select(pos, self._multi_select)
+        if object_selected:
+            self._app_model.sig_control_notify.emit()
+        return object_selected
 
     def select_by_rect(self, rect):
         """Select object be rectangle"""
@@ -85,9 +90,8 @@ class ModelObjects:
                 self._model_wires.update()
                 self._app_model.model_changed(update_components=False)
 
-    def delete(self):
+    def delete(self, selected_objects):
         """Delete selected object(s)"""
-        selected_objects = self.get_selected()
         for obj in selected_objects:
             if ModelComponents.is_component_object(obj):
                 self._model_components.delete(obj)
@@ -96,3 +100,7 @@ class ModelObjects:
                 self._model_wires.delete(obj)
         self._app_model.model_changed()
         self._app_model.sig_update_gui_components.emit()
+
+    def has_selection(self):
+        """Return True if anything is selected"""
+        return len(self.get_selected()) > 0

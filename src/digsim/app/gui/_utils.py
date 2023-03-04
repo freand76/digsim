@@ -38,3 +38,10 @@ def are_you_sure_delete_object(parent, component_name=None):
         "Delete object?",
         message_text,
     )
+
+
+def delete_selected_objects(app_model, parent):
+    """Delete selected objects"""
+    selected_objects = app_model.objects.get_selected()
+    if len(selected_objects) > 0 and are_you_sure_delete_object(parent):
+        app_model.objects.delete(selected_objects)
