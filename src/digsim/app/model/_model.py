@@ -10,7 +10,6 @@ import time
 
 from PySide6.QtCore import QThread, Signal
 
-from digsim.circuit import Circuit
 from digsim.circuit.components.atoms import Component, DigsimException
 
 from ._model_objects import ModelObjects
@@ -28,8 +27,7 @@ class AppModel(QThread):
 
     def __init__(self):
         super().__init__()
-        self._circuit = Circuit(name="DigSimCircuit", vcd="gui.vcd")
-        self._model_objects = ModelObjects(self, self._circuit)
+        self._model_objects = ModelObjects(self)
         self._started = False
         self._changed = False
         self._sim_tick_ms = 50
@@ -53,7 +51,7 @@ class AppModel(QThread):
 
     def model_init(self):
         """(Re)initialize the model/circuit"""
-        self._circuit.init()
+        self.objects.circuit.init()
         self.objects.init()
         self.sig_sim_time_notify.emit(0)
 
@@ -96,7 +94,7 @@ class AppModel(QThread):
                 gui_event_func = self._gui_event_queue.get()
                 gui_event_func()
 
-            self._circuit.run(ms=self._sim_tick_ms)
+            self.objects.circuit.run(ms=self._sim_tick_ms)
 
             self.objects.components.update_callback_objects()
 
@@ -104,14 +102,14 @@ class AppModel(QThread):
             sleep_time = next_tick - now
             if sleep_time > 0:
                 time.sleep(sleep_time)
-            self.sig_sim_time_notify.emit(self._circuit.time_ns / 1000000000)
+            self.sig_sim_time_notify.emit(self.objects.circuit.time_ns / 1000000000)
 
         self.sig_control_notify.emit()
 
     def save_circuit(self, path):
         """Save the circuit with GUI information"""
         circuit_folder = os.path.dirname(path)
-        circuit_dict = self._circuit.to_dict(circuit_folder)
+        circuit_dict = self.objects.circuit.to_dict(circuit_folder)
         circuit_dict["gui"] = {}
         for comp, comp_object in self.objects.components.get_dict().items():
             circuit_dict["gui"][comp.name()] = comp_object.to_dict()
@@ -132,19 +130,19 @@ class AppModel(QThread):
             circuit_folder = "."
         exception_str_list = []
         try:
-            exception_str_list = self._circuit.from_dict(
+            exception_str_list = self.objects.circuit.from_dict(
                 circuit_dict, circuit_folder, component_exceptions=False, connect_exceptions=False
             )
         except DigsimException as exc:
             self.sig_error.emit(f"Load Circuit error: {str(exc)}")
             return
 
-        for comp in self._circuit.get_toplevel_components():
+        for comp in self.objects.circuit.get_toplevel_components():
             x = circuit_dict["gui"][comp.name()]["x"]
             y = circuit_dict["gui"][comp.name()]["y"]
             self.objects.components.add_object(comp, x, y)
 
-        for comp in self._circuit.get_toplevel_components():
+        for comp in self.objects.circuit.get_toplevel_components():
             for src_port in comp.outports():
                 for dst_port in src_port.get_wires():
                     self.objects.wires.add_object(src_port, dst_port, connect=False)

@@ -3,6 +3,8 @@
 
 """Handle objects in the model"""
 
+from digsim.circuit import Circuit
+
 from ._model_components import ModelComponents
 from ._model_wires import ModelWires
 
@@ -10,11 +12,17 @@ from ._model_wires import ModelWires
 class ModelObjects:
     """Class to objects in the model"""
 
-    def __init__(self, app_model, circuit):
+    def __init__(self, app_model):
         self._app_model = app_model
-        self._model_components = ModelComponents(app_model, circuit)
+        self._circuit = Circuit(name="DigSimCircuit", vcd="gui.vcd")
+        self._model_components = ModelComponents(app_model, self._circuit)
         self._model_wires = ModelWires(app_model)
         self._multi_select = False
+
+    @property
+    def circuit(self):
+        """return the model circuit"""
+        return self._circuit
 
     @property
     def components(self):
