@@ -293,7 +293,6 @@ class Circuit:
                 if component_exceptions:
                     raise exc
                 exception_str_list.append(f"{str(exc.__class__.__name__)}:{str(exc)}")
-
         for json_connection in json_connections:
             try:
                 self._connect_from_dict(json_connection["src"], json_connection["dst"])

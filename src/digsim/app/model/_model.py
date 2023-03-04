@@ -10,7 +10,7 @@ import time
 
 from PySide6.QtCore import QThread, Signal
 
-from digsim.circuit.components.atoms import Component, DigsimException
+from digsim.circuit.components.atoms import Component
 
 from ._model_objects import ModelObjects
 
@@ -109,10 +109,7 @@ class AppModel(QThread):
     def save_circuit(self, path):
         """Save the circuit with GUI information"""
         circuit_folder = os.path.dirname(path)
-        circuit_dict = self.objects.circuit.to_dict(circuit_folder)
-        circuit_dict["gui"] = {}
-        for comp, comp_object in self.objects.components.get_dict().items():
-            circuit_dict["gui"][comp.name()] = comp_object.to_dict()
+        circuit_dict = self.objects.circuit_to_dict(circuit_folder)
         json_object = json.dumps(circuit_dict, indent=4)
         with open(path, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)
@@ -124,28 +121,10 @@ class AppModel(QThread):
         self.objects.clear()
         with open(path, mode="r", encoding="utf-8") as json_file:
             circuit_dict = json.load(json_file)
-
         circuit_folder = os.path.dirname(path)
         if len(circuit_folder) == 0:
             circuit_folder = "."
-        exception_str_list = []
-        try:
-            exception_str_list = self.objects.circuit.from_dict(
-                circuit_dict, circuit_folder, component_exceptions=False, connect_exceptions=False
-            )
-        except DigsimException as exc:
-            self.sig_error.emit(f"Load Circuit error: {str(exc)}")
-            return
-
-        for comp in self.objects.circuit.get_toplevel_components():
-            x = circuit_dict["gui"][comp.name()]["x"]
-            y = circuit_dict["gui"][comp.name()]["y"]
-            self.objects.components.add_object(comp, x, y)
-
-        for comp in self.objects.circuit.get_toplevel_components():
-            for src_port in comp.outports():
-                for dst_port in src_port.get_wires():
-                    self.objects.wires.add_object(src_port, dst_port, connect=False)
+        exception_str_list = self.objects.dict_to_circuit(circuit_dict, circuit_folder)
         self.model_init()
         self._changed = False
         self.sig_update_gui_components.emit()
@@ -155,7 +134,8 @@ class AppModel(QThread):
 
     def clear_circuit(self):
         """Clear the circuit"""
-        self.clear()
+        self.objects.push_undo_state()
+        self.objects.clear()
         self._changed = False
         self.sig_update_gui_components.emit()
         self.sig_control_notify.emit()

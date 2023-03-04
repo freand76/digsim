@@ -164,9 +164,11 @@ class LoadSaveWidget(QFrame):
 
     def _undo(self):
         """Button action: Undo"""
+        self._app_model.objects.undo()
 
     def _redo(self):
         """Button action: Redo"""
+        self._app_model.objects.redo()
 
     def _control_notify(self):
         if self._app_model.is_running:
@@ -181,8 +183,8 @@ class LoadSaveWidget(QFrame):
             self._save_button.setEnabled(self._app_model.is_changed)
             self._clear_button.setEnabled(not self._app_model.objects.components.is_empty())
             self._delete_button.setEnabled(self._app_model.objects.has_selection())
-            self._undo_button.setEnabled(False)
-            self._redo_button.setEnabled(False)
+            self._undo_button.setEnabled(self._app_model.objects.can_undo())
+            self._redo_button.setEnabled(self._app_model.objects.can_redo())
 
 
 class TopBar(QFrame):

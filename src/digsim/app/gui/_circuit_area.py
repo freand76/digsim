@@ -155,6 +155,7 @@ class ComponentWidget(QPushButton):
                 self._app_model.objects.select(self._component_object)
                 if self._active_port is None:
                     # Prepare to move
+                    self._app_model.objects.push_undo_state()
                     self.setCursor(Qt.ClosedHandCursor)
                     self._mouse_grab_pos = event.pos()
                 else:

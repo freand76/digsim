@@ -3,7 +3,10 @@
 
 """Handle objects in the model"""
 
+# pylint: disable=too-many-public-methods
+
 from digsim.circuit import Circuit
+from digsim.circuit.components.atoms import DigsimException
 
 from ._model_components import ModelComponents
 from ._model_wires import ModelWires
@@ -18,6 +21,8 @@ class ModelObjects:
         self._model_components = ModelComponents(app_model, self._circuit)
         self._model_wires = ModelWires(app_model)
         self._multi_select = False
+        self._undo_stack = []
+        self._redo_stack = []
 
     @property
     def circuit(self):
@@ -42,6 +47,7 @@ class ModelObjects:
         """Clear components and wires"""
         self._model_components.clear()
         self._model_wires.clear()
+        self._circuit.clear()
 
     def get_list(self):
         """Get list of all model objects"""
@@ -71,14 +77,12 @@ class ModelObjects:
             elif not self._multi_select:
                 comp.select(False)
         self._app_model.sig_control_notify.emit()
-        self._app_model.sig_update_gui_components.emit()
 
     def select_by_position(self, pos):
         """Select object from position"""
         self.select(None)
         object_selected = self._model_wires.select(pos, self._multi_select)
-        if object_selected:
-            self._app_model.sig_control_notify.emit()
+        self._app_model.sig_control_notify.emit()
         return object_selected
 
     def select_by_rect(self, rect):
@@ -87,6 +91,7 @@ class ModelObjects:
         for obj in self.get_list():
             if obj.in_rect(rect):
                 obj.select(True)
+        self._app_model.sig_control_notify.emit()
 
     def move_selected_components(self, delta_pos):
         """Move selected objects"""
@@ -100,6 +105,7 @@ class ModelObjects:
 
     def delete(self, selected_objects):
         """Delete selected object(s)"""
+        self.push_undo_state()
         for obj in selected_objects:
             if ModelComponents.is_component_object(obj):
                 self._model_components.delete(obj)
@@ -112,3 +118,74 @@ class ModelObjects:
     def has_selection(self):
         """Return True if anything is selected"""
         return len(self.get_selected()) > 0
+
+    def circuit_to_dict(self, circuit_folder):
+        """Convert circuit and objects to dict"""
+        circuit_dict = self.circuit.to_dict(circuit_folder)
+        circuit_dict["gui"] = {}
+        for comp, comp_object in self.components.get_dict().items():
+            circuit_dict["gui"][comp.name()] = comp_object.to_dict()
+        return circuit_dict
+
+    def dict_to_circuit(self, circuit_dict, circuit_folder):
+        """Convert dict to circuit and objects"""
+        exception_str_list = []
+        try:
+            exception_str_list = self.circuit.from_dict(
+                circuit_dict, circuit_folder, component_exceptions=False, connect_exceptions=False
+            )
+        except DigsimException as exc:
+            self.sig_error.emit(f"Circuit error: {str(exc)}")
+            return exception_str_list
+
+        for comp in self.circuit.get_toplevel_components():
+            x = circuit_dict["gui"][comp.name()]["x"]
+            y = circuit_dict["gui"][comp.name()]["y"]
+            self.components.add_object(comp, x, y)
+
+        for comp in self.circuit.get_toplevel_components():
+            for src_port in comp.outports():
+                for dst_port in src_port.get_wires():
+                    self.wires.add_object(src_port, dst_port, connect=False)
+        return exception_str_list
+
+    def _restore_state(self, state):
+        self.clear()
+        exception_str_list = self.dict_to_circuit(state, "/")
+        self._app_model.model_init()
+        self._app_model.model_changed()
+        if len(exception_str_list) > 0:
+            self.sig_warning_log.emit("Load Circuit Warning", "\n".join(exception_str_list))
+
+    def push_undo_state(self, clear_redo_stack=True):
+        """Push undo state to stack"""
+        self._undo_stack.append(self.circuit_to_dict("/"))
+        if clear_redo_stack:
+            self._redo_stack = []
+            self._app_model.sig_control_notify.emit()
+
+    def push_redo_state(self):
+        """Push redo state to stack"""
+        self._redo_stack.append(self.circuit_to_dict("/"))
+
+    def undo(self):
+        """Undo to last saved state"""
+        self.push_redo_state()
+        state = self._undo_stack.pop()
+        self._restore_state(state)
+        self._app_model.sig_control_notify.emit()
+
+    def redo(self):
+        """Undo to last saved state"""
+        self.push_undo_state(clear_redo_stack=False)
+        state = self._redo_stack.pop()
+        self._restore_state(state)
+        self._app_model.sig_control_notify.emit()
+
+    def can_undo(self):
+        """Return true if the undo stack is not empty"""
+        return len(self._undo_stack) > 0
+
+    def can_redo(self):
+        """Return true if the undo stack is not empty"""
+        return len(self._redo_stack) > 0
