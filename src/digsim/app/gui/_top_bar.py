@@ -5,8 +5,18 @@
 
 # pylint: disable=too-few-public-methods
 
-from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QStyle
+import os
+
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QFileDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QStyle,
+)
 
 from ._utils import are_you_sure_destroy_circuit
 
@@ -91,6 +101,101 @@ class SimTimeWidget(QFrame):
 
     def _sim_time_notify(self, time_s):
         self._sim_time.setText(f"{time_s:.2f} s")
+
+
+class VcdFilenameWidget(QFrame):
+    """
+    The widget showing the vcd filename
+    """
+
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.setFrameShape(QFrame.StyledPanel)
+        self.setFrameShadow(QFrame.Sunken)
+        self.setLayout(QHBoxLayout(self))
+        self.layout().setContentsMargins(5, 1, 5, 1)
+        self.layout().setSpacing(5)
+        self._vcd_filename = QLabel("<vcd file>")
+        self._vcd_filename.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self._vcd_filename.setMinimumWidth(200)
+        self.layout().addWidget(self._vcd_filename)
+
+    def set_filename(self, filename):
+        """Set filename in VcdFilenameWdiget"""
+        self._vcd_filename.setText(filename)
+
+
+class VcdControlWidget(QFrame):
+    """
+    The widget for controlling the vcd output file
+    """
+
+    def __init__(self, app_model, parent):
+        super().__init__(parent)
+        self._app_model = app_model
+        self._vcd_filename = None
+        self.setLayout(QHBoxLayout(self))
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(5)
+        self._enable_vcd = QCheckBox("VCD output", self)
+        self._enable_vcd.stateChanged.connect(self._enable)
+        self._vcd_path = QPushButton("", self)
+        self._vcd_path.setIcon(self.style().standardIcon(QStyle.SP_FileIcon))
+        self._vcd_path.clicked.connect(self._change_vcd_file)
+        self._vcd_path.setToolTip("Select VCD output")
+        self._filename_widget = VcdFilenameWidget(self)
+        self.layout().addWidget(self._enable_vcd)
+        self.layout().addWidget(self._vcd_path)
+        self.layout().addWidget(self._filename_widget)
+        self._enable_buttons(False)
+
+    def _enable_buttons(self, enable):
+        self._vcd_path.setEnabled(enable)
+        self._filename_widget.setEnabled(enable)
+
+    def _disable_vcd_selection(self):
+        self._enable_vcd.setChecked(False)
+        self._enable_buttons(False)
+
+    def _start_vcd(self, filename):
+        self._vcd_filename = filename
+        display_filename = os.path.basename(self._vcd_filename)
+        self._filename_widget.set_filename(display_filename)
+        self._enable_buttons(True)
+        # Enable VCD in the model
+
+    def _open_filedialog(self):
+        default_filename = self._vcd_filename
+        if default_filename is None:
+            default_filename = "vcd_file.vcd"
+        path = QFileDialog.getSaveFileName(
+            self, "VCD Output name", default_filename, "VCD Files (*.vcd);;All Files (*.*)"
+        )
+        if len(path[0]) == 0:
+            return None
+        return path[0]
+
+    def _change_vcd_file(self):
+        filename = self._open_filedialog()
+        if filename is not None:
+            self._start_vcd(filename)
+
+    def _enable(self, _):
+        is_checked = self._enable_vcd.isChecked()
+        if is_checked:
+            if self._vcd_filename is not None:
+                self._enable_buttons(True)
+            else:
+                filename = self._open_filedialog()
+
+                if filename is not None:
+                    self._enable_buttons(True)
+                    self._start_vcd(filename)
+                else:
+                    QTimer.singleShot(0, self._disable_vcd_selection)
+        else:
+            self._enable_buttons(False)
+            # Disable VCD in the model
 
 
 class LoadSaveWidget(QFrame):
@@ -185,4 +290,5 @@ class TopBar(QFrame):
         self.layout().addWidget(SimControlWidget(app_model, self))
         self.layout().addWidget(SimTimeWidget(app_model, self))
         self.layout().addStretch(1)
+        self.layout().addWidget(VcdControlWidget(app_model, self))
         self.layout().addWidget(LoadSaveWidget(app_model, self))
