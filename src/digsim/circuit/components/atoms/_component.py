@@ -226,7 +226,7 @@ class Component(abc.ABC):
 
     def settings_to_dict(self):
         """Return component settings as a dict"""
-        return self._parameters
+        return copy.deepcopy(self._parameters)
 
     @classmethod
     def get_parameters(cls):
