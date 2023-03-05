@@ -24,24 +24,3 @@ def are_you_sure_destroy_circuit(parent, dialog_text):
         dialog_text,
         "Are you sure want to destroy the current circuit?",
     )
-
-
-def are_you_sure_delete_object(parent, component_name=None):
-    """Are you sure messagebox"""
-    if component_name is not None:
-        message_text = f"Are you sure want to delete the '{component_name}' component?"
-    else:
-        message_text = "Are you sure want to delete the selected object(s)?"
-
-    return warning_messagebox(
-        parent,
-        "Delete object?",
-        message_text,
-    )
-
-
-def delete_selected_objects(app_model, parent):
-    """Delete selected objects"""
-    selected_objects = app_model.objects.get_selected()
-    if len(selected_objects) > 0 and are_you_sure_delete_object(parent):
-        app_model.objects.delete(selected_objects)

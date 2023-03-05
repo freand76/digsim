@@ -93,7 +93,6 @@ class ModelWires:
 
     def delete(self, wire_object):
         """Delete wire objects"""
-        self._app_model.objects.push_undo_state()
         wire_object.disconnect()
         if wire_object.key in self._wire_objects:
             del self._wire_objects[wire_object.key]

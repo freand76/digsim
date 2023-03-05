@@ -6,6 +6,7 @@
 # pylint: disable=too-few-public-methods
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
@@ -97,6 +98,13 @@ class MainWindow(QMainWindow):
         self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
         self._app_model.sig_error.connect(self.error_dialog)
         self._app_model.sig_warning_log.connect(self.warning_log_dialog)
+
+        QShortcut(QKeySequence("Ctrl+Z"), self, self._app_model.objects.undo)
+        QShortcut(QKeySequence("Ctrl+Y"), self, self._app_model.objects.redo)
+        QShortcut(QKeySequence("Del"), self, self._app_model.objects.delete_selected)
+
+    def _undo_shortcut(self):
+        self._app_model.objects.undo()
 
     def error_dialog(self, error_message):
         """Execute Error dialog"""

@@ -8,7 +8,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFileDialog, QFrame, QHBoxLayout, QLabel, QPushButton, QStyle
 
-from ._utils import are_you_sure_destroy_circuit, delete_selected_objects
+from ._utils import are_you_sure_destroy_circuit
 
 
 class SimControlWidget(QFrame):
@@ -106,17 +106,17 @@ class LoadSaveWidget(QFrame):
         self.layout().setSpacing(5)
         self._delete_button = QPushButton("", self)
         self._delete_button.setIcon(self.style().standardIcon(QStyle.SP_TrashIcon))
-        self._delete_button.clicked.connect(self._delete)
+        self._delete_button.clicked.connect(self._app_model.objects.delete_selected)
         self._delete_button.setToolTip("Delete")
         self.layout().addWidget(self._delete_button)
         self._undo_button = QPushButton("", self)
         self._undo_button.setIcon(self.style().standardIcon(QStyle.SP_ArrowBack))
         self._undo_button.setToolTip("Undo")
-        self._undo_button.clicked.connect(self._undo)
+        self._undo_button.clicked.connect(self._app_model.objects.undo)
         self.layout().addWidget(self._undo_button)
         self._redo_button = QPushButton("", self)
         self._redo_button.setIcon(self.style().standardIcon(QStyle.SP_ArrowForward))
-        self._redo_button.clicked.connect(self._redo)
+        self._redo_button.clicked.connect(self._app_model.objects.redo)
         self._redo_button.setToolTip("Redo")
         self.layout().addWidget(self._redo_button)
         self._load_button = QPushButton("Load Circuit", self)
@@ -155,20 +155,7 @@ class LoadSaveWidget(QFrame):
 
     def _clear(self):
         """Button action: Save"""
-        if are_you_sure_destroy_circuit(self.parent(), "Clear circuit"):
-            self._app_model.clear_circuit()
-
-    def _delete(self):
-        """Button action: Delete"""
-        delete_selected_objects(self._app_model, self)
-
-    def _undo(self):
-        """Button action: Undo"""
-        self._app_model.objects.undo()
-
-    def _redo(self):
-        """Button action: Redo"""
-        self._app_model.objects.redo()
+        self._app_model.clear_circuit()
 
     def _control_notify(self):
         if self._app_model.is_running:

@@ -103,9 +103,7 @@ class ModelObjects:
                 self._model_wires.update()
                 self._app_model.model_changed(update_components=False)
 
-    def delete(self, selected_objects):
-        """Delete selected object(s)"""
-        self.push_undo_state()
+    def _delete(self, selected_objects):
         for obj in selected_objects:
             if ModelComponents.is_component_object(obj):
                 self._model_components.delete(obj)
@@ -114,6 +112,13 @@ class ModelObjects:
                 self._model_wires.delete(obj)
         self._app_model.model_changed()
         self._app_model.sig_synchronize_gui.emit()
+
+    def delete_selected(self):
+        """Delete selected object(s)"""
+        self.push_undo_state()
+        selected_objects = self._app_model.objects.get_selected()
+        if len(selected_objects) > 0:
+            self._delete(selected_objects)
 
     def has_selection(self):
         """Return True if anything is selected"""
@@ -158,6 +163,7 @@ class ModelObjects:
             self.sig_warning_log.emit("Load Circuit Warning", "\n".join(exception_str_list))
 
     def reset_undo_stack(self):
+        """Clear undo/redo stacks"""
         self._undo_stack = []
         self._redo_stack = []
         self._app_model.sig_control_notify.emit()
@@ -175,19 +181,21 @@ class ModelObjects:
 
     def undo(self):
         """Undo to last saved state"""
-        self.push_redo_state()
-        state = self._undo_stack.pop()
-        self._restore_state(state)
-        self._app_model.sig_control_notify.emit()
-        self._app_model.sig_synchronize_gui.emit()
+        if len(self._undo_stack) > 0:
+            self.push_redo_state()
+            state = self._undo_stack.pop()
+            self._restore_state(state)
+            self._app_model.sig_control_notify.emit()
+            self._app_model.sig_synchronize_gui.emit()
 
     def redo(self):
         """Undo to last saved state"""
-        self.push_undo_state(clear_redo_stack=False)
-        state = self._redo_stack.pop()
-        self._restore_state(state)
-        self._app_model.sig_control_notify.emit()
-        self._app_model.sig_synchronize_gui.emit()
+        if len(self._redo_stack) > 0:
+            self.push_undo_state(clear_redo_stack=False)
+            state = self._redo_stack.pop()
+            self._restore_state(state)
+            self._app_model.sig_control_notify.emit()
+            self._app_model.sig_synchronize_gui.emit()
 
     def can_undo(self):
         """Return true if the undo stack is not empty"""

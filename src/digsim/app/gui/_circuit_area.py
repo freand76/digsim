@@ -12,8 +12,6 @@ from PySide6.QtWidgets import QMenu, QPushButton, QScrollArea, QWidget
 from digsim.app.settings import ComponentSettingsDialog
 from digsim.circuit.components.atoms import PortConnectionError
 
-from ._utils import are_you_sure_delete_object
-
 
 class ComponentContextMenu(QMenu):
     """The component contextmenu class"""
@@ -45,7 +43,7 @@ class ComponentContextMenu(QMenu):
         # Delete
         deleteAction = QAction("Delete", self)
         self.addAction(deleteAction)
-        deleteAction.triggered.connect(self._delete)
+        deleteAction.triggered.connect(self._app_model.objects.delete_selected)
         self._menu_action = None
 
     def _add_settings(self):
@@ -68,10 +66,6 @@ class ComponentContextMenu(QMenu):
 
     def _lower(self):
         self._parent.lower()
-
-    def _delete(self):
-        if are_you_sure_delete_object(self._parent, self._component.display_name()):
-            self._app_model.objects.delete([self._component_object])
 
     def _settings(self):
         """Start the settings dialog for reconfiguration"""
@@ -247,11 +241,7 @@ class CircuitArea(QWidget):
         super().keyPressEvent(event)
         if self._app_model.is_running:
             return
-        if event.key() == Qt.Key_Delete:
-            selected_objects = self._app_model.objects.get_selected()
-            if len(selected_objects) > 0 and are_you_sure_delete_object(self):
-                self._app_model.objects.delete(selected_objects)
-        elif event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key_Escape:
             if self._app_model.objects.wires.new.ongoing():
                 self._abort_wire()
         elif event.key() == Qt.Key_Control:
