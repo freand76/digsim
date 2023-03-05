@@ -82,6 +82,7 @@ class ComponentContextMenu(QMenu):
             self._reconfigurable_parameters,
         )
         if ok:
+            self._app_model.objects.push_undo_state()
             self._component.update_settings(settings)
             self._app_model.model_changed()
             # Settings can change the component size
@@ -97,7 +98,8 @@ class ComponentWidget(QPushButton):
         self._app_model = app_model
         self._app_model.sig_component_notify.connect(self._component_notify)
         self._component_object = component_object
-        self._mouse_grab_pos = None
+        self._move_start_pos = None
+        self._move_store_state = False
         self._active_port = None
 
         self.setMouseTracking(True)
@@ -155,9 +157,9 @@ class ComponentWidget(QPushButton):
                 self._app_model.objects.select(self._component_object)
                 if self._active_port is None:
                     # Prepare to move
-                    self._app_model.objects.push_undo_state()
                     self.setCursor(Qt.ClosedHandCursor)
-                    self._mouse_grab_pos = event.pos()
+                    self._move_store_state = True
+                    self._move_start_pos = event.pos()
                 else:
                     self._app_model.objects.wires.new.start(self.component, self._active_port)
         elif event.button() == Qt.RightButton:
@@ -179,7 +181,7 @@ class ComponentWidget(QPushButton):
             else:
                 # Move complete
                 self.setCursor(Qt.ArrowCursor)
-                self._mouse_grab_pos = None
+                self._move_start_pos = None
 
     def mouseMoveEvent(self, event):
         """QT event callback function"""
@@ -202,8 +204,11 @@ class ComponentWidget(QPushButton):
             self._app_model.objects.wires.new.set_end_pos(self.pos() + end_pos)
             self.parent().update()
 
-        elif self._mouse_grab_pos is not None:
-            self._app_model.objects.move_selected_components(event.pos() - self._mouse_grab_pos)
+        elif self._move_start_pos is not None:
+            if self._move_store_state:
+                self._move_store_state = False
+                self._app_model.objects.push_undo_state()
+            self._app_model.objects.move_selected_components(event.pos() - self._move_start_pos)
             self.parent().update()
 
 

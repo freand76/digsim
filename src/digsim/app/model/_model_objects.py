@@ -157,6 +157,11 @@ class ModelObjects:
         if len(exception_str_list) > 0:
             self.sig_warning_log.emit("Load Circuit Warning", "\n".join(exception_str_list))
 
+    def reset_undo_stack(self):
+        self._undo_stack = []
+        self._redo_stack = []
+        self._app_model.sig_control_notify.emit()
+
     def push_undo_state(self, clear_redo_stack=True):
         """Push undo state to stack"""
         self._undo_stack.append(self.circuit_to_dict("/"))
@@ -174,6 +179,7 @@ class ModelObjects:
         state = self._undo_stack.pop()
         self._restore_state(state)
         self._app_model.sig_control_notify.emit()
+        self._app_model.sig_update_gui_components.emit()
 
     def redo(self):
         """Undo to last saved state"""
@@ -181,6 +187,7 @@ class ModelObjects:
         state = self._redo_stack.pop()
         self._restore_state(state)
         self._app_model.sig_control_notify.emit()
+        self._app_model.sig_update_gui_components.emit()
 
     def can_undo(self):
         """Return true if the undo stack is not empty"""

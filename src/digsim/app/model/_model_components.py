@@ -61,6 +61,7 @@ class ModelComponents:
 
     def add_object_by_name(self, name, pos, settings):
         """Add component object from class name"""
+        self._app_model.objects.push_undo_state()
         component_class = self._get_component_class(name)
         component = component_class(self._circuit, **settings)
         self._app_model.model_init()

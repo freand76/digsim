@@ -21,6 +21,7 @@ class NewWire:
 
     def end(self, component, portname):
         """End new wire object"""
+        self._app_model.objects.push_undo_state()
         self._wire.set_end_port(component.port(portname))
         self._app_model.objects.wires.add_wire(self._wire)
         self._app_model.model_changed()
@@ -92,6 +93,7 @@ class ModelWires:
 
     def delete(self, wire_object):
         """Delete wire objects"""
+        self._app_model.objects.push_undo_state()
         wire_object.disconnect()
         if wire_object.key in self._wire_objects:
             del self._wire_objects[wire_object.key]

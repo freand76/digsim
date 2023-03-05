@@ -127,6 +127,7 @@ class AppModel(QThread):
         exception_str_list = self.objects.dict_to_circuit(circuit_dict, circuit_folder)
         self.model_init()
         self._changed = False
+        self.objects.reset_undo_stack()
         self.sig_update_gui_components.emit()
         self.sig_control_notify.emit()
         if len(exception_str_list) > 0:
