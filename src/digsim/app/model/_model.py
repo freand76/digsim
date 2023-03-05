@@ -21,7 +21,7 @@ class AppModel(QThread):
     sig_component_notify = Signal(Component)
     sig_control_notify = Signal()
     sig_sim_time_notify = Signal(float)
-    sig_update_gui_components = Signal()
+    sig_synchronize_gui = Signal()
     sig_error = Signal(str)
     sig_warning_log = Signal(str, str)
 
@@ -76,7 +76,7 @@ class AppModel(QThread):
         if update_control:
             self.sig_control_notify.emit()
         if update_components:
-            self.sig_update_gui_components.emit()
+            self.sig_synchronize_gui.emit()
 
     def model_add_event(self, func):
         """Add medel events (functions) from the GUI"""
@@ -128,7 +128,7 @@ class AppModel(QThread):
         self.model_init()
         self._changed = False
         self.objects.reset_undo_stack()
-        self.sig_update_gui_components.emit()
+        self.sig_synchronize_gui.emit()
         self.sig_control_notify.emit()
         if len(exception_str_list) > 0:
             self.sig_warning_log.emit("Load Circuit Warning", "\n".join(exception_str_list))
@@ -138,5 +138,5 @@ class AppModel(QThread):
         self.objects.push_undo_state()
         self.objects.clear()
         self._changed = False
-        self.sig_update_gui_components.emit()
+        self.sig_synchronize_gui.emit()
         self.sig_control_notify.emit()

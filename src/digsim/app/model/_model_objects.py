@@ -113,7 +113,7 @@ class ModelObjects:
             if ModelWires.is_wire_object(obj):
                 self._model_wires.delete(obj)
         self._app_model.model_changed()
-        self._app_model.sig_update_gui_components.emit()
+        self._app_model.sig_synchronize_gui.emit()
 
     def has_selection(self):
         """Return True if anything is selected"""
@@ -179,7 +179,7 @@ class ModelObjects:
         state = self._undo_stack.pop()
         self._restore_state(state)
         self._app_model.sig_control_notify.emit()
-        self._app_model.sig_update_gui_components.emit()
+        self._app_model.sig_synchronize_gui.emit()
 
     def redo(self):
         """Undo to last saved state"""
@@ -187,7 +187,7 @@ class ModelObjects:
         state = self._redo_stack.pop()
         self._restore_state(state)
         self._app_model.sig_control_notify.emit()
-        self._app_model.sig_update_gui_components.emit()
+        self._app_model.sig_synchronize_gui.emit()
 
     def can_undo(self):
         """Return true if the undo stack is not empty"""

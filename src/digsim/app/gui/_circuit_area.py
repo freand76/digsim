@@ -87,7 +87,7 @@ class ComponentContextMenu(QMenu):
             self._app_model.model_changed()
             # Settings can change the component size
             self._component_object.update_size()
-            self._app_model.sig_update_gui_components.emit()
+            self._app_model.sig_synchronize_gui.emit()
 
 
 class ComponentWidget(QPushButton):
@@ -220,7 +220,7 @@ class CircuitArea(QWidget):
         self.setFixedWidth(5000)
         self.setFixedHeight(5000)
         self._app_model = app_model
-        self._app_model.sig_update_gui_components.connect(self._update_gui_components)
+        self._app_model.sig_synchronize_gui.connect(self._synchronize_gui)
         self._select_box_start = None
         self._select_box_rect = None
         self.setMouseTracking(True)
@@ -383,7 +383,7 @@ class CircuitArea(QWidget):
             comp.show()
             self._app_model.objects.select(component_object)
 
-    def _update_gui_components(self):
+    def _synchronize_gui(self):
         children = self.findChildren(ComponentWidget)
         for child in children:
             child.deleteLater()
