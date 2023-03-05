@@ -17,7 +17,7 @@ class ModelObjects:
 
     def __init__(self, app_model):
         self._app_model = app_model
-        self._circuit = Circuit(name="DigSimCircuit", vcd="gui.vcd")
+        self._circuit = Circuit(name="DigSimCircuit")
         self._model_components = ModelComponents(app_model, self._circuit)
         self._model_wires = ModelWires(app_model)
         self._multi_select = False

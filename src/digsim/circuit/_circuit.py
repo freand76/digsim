@@ -135,8 +135,9 @@ class Circuit:
 
     def vcd_close(self):
         """Close gtkwave .vcd file"""
-        self._vcd.close()
-        self._vcd = None
+        if self._vcd is not None:
+            self._vcd.close()
+            self._vcd = None
 
     def _vcd_init(self):
         port_info = []

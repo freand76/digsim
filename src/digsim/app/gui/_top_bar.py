@@ -148,10 +148,15 @@ class VcdControlWidget(QFrame):
         self.layout().addWidget(self._vcd_path)
         self.layout().addWidget(self._filename_widget)
         self._enable_buttons(False)
+        self._app_model.sig_control_notify.connect(self._control_notify)
 
     def _enable_buttons(self, enable):
         self._vcd_path.setEnabled(enable)
         self._filename_widget.setEnabled(enable)
+
+    def _control_notify(self):
+        self._enable_vcd.setEnabled(not self._app_model.is_running)
+        self._enable_buttons(not self._app_model.is_running and self._enable_vcd.isChecked())
 
     def _disable_vcd_selection(self):
         self._enable_vcd.setChecked(False)
@@ -162,7 +167,10 @@ class VcdControlWidget(QFrame):
         display_filename = os.path.basename(self._vcd_filename)
         self._filename_widget.set_filename(display_filename)
         self._enable_buttons(True)
+        # Close old vcd (if any)
+        self._app_model.objects.circuit.vcd_close()
         # Enable VCD in the model
+        self._app_model.objects.circuit.vcd(self._vcd_filename)
 
     def _open_filedialog(self):
         default_filename = self._vcd_filename
@@ -196,6 +204,7 @@ class VcdControlWidget(QFrame):
         else:
             self._enable_buttons(False)
             # Disable VCD in the model
+            self._app_model.objects.circuit.vcd_close()
 
 
 class LoadSaveWidget(QFrame):
