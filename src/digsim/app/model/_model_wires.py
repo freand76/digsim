@@ -55,8 +55,9 @@ class ModelWires:
         """Test if this object is a wire object"""
         return isinstance(obj, WireObject)
 
-    def __init__(self, app_model):
+    def __init__(self, app_model, circuit):
         self._app_model = app_model
+        self._circuit = circuit
         self._wire_objects = {}
         self._new_wire = NewWire(self._app_model)
 
@@ -69,7 +70,7 @@ class ModelWires:
         """Clear wire objects"""
         self._wire_objects = {}
 
-    def add_object(self, src_port, dst_port, connect=True):
+    def _add_object(self, src_port, dst_port, connect=True):
         """Add wire object between source and destination port"""
         wire = WireObject(self._app_model, src_port, dst_port, connect)
         self.add_wire(wire)
@@ -114,3 +115,10 @@ class ModelWires:
         for _, wire in self._wire_objects.items():
             wire.paint(painter)
         self._new_wire.paint(painter)
+
+    def create_circuit_wires(self):
+        """Create model wires from circuit"""
+        for comp in self._circuit.get_toplevel_components():
+            for src_port in comp.outports():
+                for dst_port in src_port.get_wires():
+                    self._add_object(src_port, dst_port, connect=False)

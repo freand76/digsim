@@ -59,18 +59,7 @@ class ModelComponents:
         """Get parameters for a component"""
         return self._get_component_class(name).get_parameters()
 
-    def add_object_by_name(self, name, pos, settings):
-        """Add component object from class name"""
-        self._app_model.objects.push_undo_state()
-        component_class = self._get_component_class(name)
-        component = component_class(self._circuit, **settings)
-        self._app_model.model_init()
-        component_object = self.add_object(component, pos.x(), pos.y())
-        component_object.center()  # Component is plced @ mouse pointer, make it center
-        self._app_model.model_changed()
-        return component_object
-
-    def add_object(self, component, xpos, ypos):
+    def _add_object(self, component, xpos, ypos):
         """Add component object in position"""
         component_object_class = digsim.app.gui_objects.class_factory(type(component).__name__)
         self._component_objects[component] = component_object_class(
@@ -79,6 +68,17 @@ class ModelComponents:
         if isinstance(component, CallbackComponent):
             component.set_callback(self._component_callback)
         return self._component_objects[component]
+
+    def add_object_by_name(self, name, pos, settings):
+        """Add component object from class name"""
+        self._app_model.objects.push_undo_state()
+        component_class = self._get_component_class(name)
+        component = component_class(self._circuit, **settings)
+        self._app_model.model_init()
+        component_object = self._add_object(component, pos.x(), pos.y())
+        component_object.center()  # Component is plced @ mouse pointer, make it center
+        self._app_model.model_changed()
+        return component_object
 
     def get_object(self, component):
         """Get component object (from component)"""
@@ -92,10 +92,26 @@ class ModelComponents:
         return component_objects
 
     def delete(self, component_object):
-        """Deleta a component object in the model"""
+        """Delete a component object in the model"""
         for port in component_object.component.ports:
             for wire in self._app_model.objects.wires.get_object_list():
                 if wire.has_port(port):
                     self._app_model.objects.wires.delete(wire)
         del self._component_objects[component_object.component]
         self._circuit.delete_component(component_object.component)
+
+    def create_from_dict(self, circuit_dict):
+        """Create model components from circuit_dict"""
+        for comp in self._circuit.get_toplevel_components():
+            gui_dict = circuit_dict.get("gui", {})
+            component_dict = gui_dict.get(comp.name(), {})
+            x = component_dict.get("x", 100)
+            y = component_dict.get("y", 100)
+            self._add_object(comp, x, y)
+
+    def get_circuit_dict(self):
+        """Create model components dict"""
+        model_components_dict = {"gui": {}}
+        for comp, comp_object in self.get_dict().items():
+            model_components_dict["gui"][comp.name()] = comp_object.to_dict()
+        return model_components_dict

@@ -19,7 +19,7 @@ class ModelObjects:
         self._app_model = app_model
         self._circuit = Circuit(name="DigSimCircuit")
         self._model_components = ModelComponents(app_model, self._circuit)
-        self._model_wires = ModelWires(app_model)
+        self._model_wires = ModelWires(app_model, self._circuit)
         self._multi_select = False
         self._undo_stack = []
         self._redo_stack = []
@@ -127,9 +127,8 @@ class ModelObjects:
     def circuit_to_dict(self, circuit_folder):
         """Convert circuit and objects to dict"""
         circuit_dict = self.circuit.to_dict(circuit_folder)
-        circuit_dict["gui"] = {}
-        for comp, comp_object in self.components.get_dict().items():
-            circuit_dict["gui"][comp.name()] = comp_object.to_dict()
+        model_components_dict = self.components.get_circuit_dict()
+        circuit_dict.update(model_components_dict)
         return circuit_dict
 
     def dict_to_circuit(self, circuit_dict, circuit_folder):
@@ -143,15 +142,11 @@ class ModelObjects:
             self.sig_error.emit(f"Circuit error: {str(exc)}")
             return exception_str_list
 
-        for comp in self.circuit.get_toplevel_components():
-            x = circuit_dict["gui"][comp.name()]["x"]
-            y = circuit_dict["gui"][comp.name()]["y"]
-            self.components.add_object(comp, x, y)
+        # Create GUI components
+        self.components.create_from_dict(circuit_dict)
+        # Create GUI wires
+        self.wires.create_circuit_wires()
 
-        for comp in self.circuit.get_toplevel_components():
-            for src_port in comp.outports():
-                for dst_port in src_port.get_wires():
-                    self.wires.add_object(src_port, dst_port, connect=False)
         return exception_str_list
 
     def _restore_state(self, state):
