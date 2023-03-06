@@ -30,7 +30,7 @@ class ComponentContextMenu(QMenu):
         self.addSeparator()
         # Settings
         self._add_settings()
-        self._component_object.add_context_menu_action(self)
+        self._component_object.add_context_menu_action(self, parent)
         self.addSeparator()
         # Bring to front / Send to back
         raiseAction = QAction("Bring to front", self)
@@ -239,7 +239,10 @@ class CircuitArea(QWidget):
     def keyPressEvent(self, event):
         """QT event callback function"""
         super().keyPressEvent(event)
+        if event.isAutoRepeat():
+            return
         if self._app_model.is_running:
+            self._app_model.shortcut_press(event.key())
             return
         if event.key() == Qt.Key_Escape:
             if self._app_model.objects.wires.new.ongoing():
@@ -254,6 +257,10 @@ class CircuitArea(QWidget):
     def keyReleaseEvent(self, event):
         """QT event callback function"""
         super().keyReleaseEvent(event)
+        if event.isAutoRepeat():
+            return
+        if self._app_model.is_running:
+            self._app_model.shortcut_release(event.key())
         if self._app_model.is_running:
             return
         if event.key() == Qt.Key_Control:

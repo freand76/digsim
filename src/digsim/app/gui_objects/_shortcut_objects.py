@@ -1,0 +1,75 @@
+# Copyright (c) Fredrik Andersson, 2023
+# All rights reserved
+
+""" A button component with an image as symbol the GUI """
+
+# pylint: disable=too-few-public-methods
+
+from functools import partial
+
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction, QPen
+
+from digsim.app.settings import ShortcutDialog
+
+from ._image_objects import ImageObject, ImageObjectWithActiveRect
+
+
+class _ShortcutObject:
+    """The class for a ShortcutObject component placed in the GUI"""
+
+    @classmethod
+    def add_context_menu_action(cls, menu, parent, app_model, component):
+        """Add context menu action"""
+        shortcutAction = QAction("Shortcut", menu)
+        menu.addAction(shortcutAction)
+        shortcutAction.triggered.connect(partial(cls._shortcut, parent, app_model, component))
+
+    @classmethod
+    def _shortcut(cls, parent, app_model, component):
+        shortcutDialog = ShortcutDialog(parent, app_model)
+        key = shortcutDialog.start()
+        if key is not None:
+            app_model.set_shortcut_component(key, component)
+
+
+class ButtonObject(ImageObject):
+    """The class for a PushButton image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/PB.png"
+    BUTTON_RADIUS = 35
+
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos, show_name=False)
+        self._parent = None
+
+    def paint_component(self, painter):
+        super().paint_component(painter)
+        if self.component.active:
+            pen = QPen()
+            pen.setWidth(4)
+            pen.setColor(Qt.green)
+            painter.setPen(pen)
+            painter.setBrush(Qt.NoBrush)
+            painter.drawEllipse(
+                self._width / 2 - self.BUTTON_RADIUS,
+                self._height / 2 - self.BUTTON_RADIUS,
+                self.BUTTON_RADIUS * 2,
+                self.BUTTON_RADIUS * 2,
+            )
+
+    def add_context_menu_action(self, menu, parent):
+        _ShortcutObject.add_context_menu_action(menu, parent, self._app_model, self._component)
+
+
+class OnOffSwitchObject(ImageObjectWithActiveRect):
+    """The class for a On/Off-Switch image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/Switch_OFF.png"
+    ACTIVE_IMAGE_FILENAME = "images/Switch_ON.png"
+
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos, show_name=False)
+
+    def add_context_menu_action(self, menu, parent):
+        _ShortcutObject.add_context_menu_action(menu, parent, self._app_model, self._component)

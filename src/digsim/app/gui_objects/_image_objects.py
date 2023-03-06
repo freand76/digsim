@@ -171,31 +171,6 @@ class ImageObjectIC(ImageObject):
         self.paint_component_name(painter)
 
 
-class ImageObjectPushButton(ImageObject):
-    """The class for a PushButton image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/PB.png"
-    BUTTON_RADIUS = 35
-
-    def __init__(self, app_model, component, xpos, ypos):
-        super().__init__(app_model, component, xpos, ypos, show_name=False)
-
-    def paint_component(self, painter):
-        super().paint_component(painter)
-        if self.component.active:
-            pen = QPen()
-            pen.setWidth(4)
-            pen.setColor(Qt.green)
-            painter.setPen(pen)
-            painter.setBrush(Qt.NoBrush)
-            painter.drawEllipse(
-                self._width / 2 - self.BUTTON_RADIUS,
-                self._height / 2 - self.BUTTON_RADIUS,
-                self.BUTTON_RADIUS * 2,
-                self.BUTTON_RADIUS * 2,
-            )
-
-
 class ImageObjectWithActiveRect(ImageObject):
     """
     A base class for a image component placed in the GUI.
@@ -213,16 +188,6 @@ class ImageObjectWithActiveRect(ImageObject):
             painter.setPen(pen)
             painter.setBrush(Qt.NoBrush)
             painter.drawRoundedRect(xpos, ypos, self._pixmap.width(), self._pixmap.height(), 5, 5)
-
-
-class ImageObjectOnOffSwitch(ImageObjectWithActiveRect):
-    """The class for a On/Off-Switch image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/Switch_OFF.png"
-    ACTIVE_IMAGE_FILENAME = "images/Switch_ON.png"
-
-    def __init__(self, app_model, component, xpos, ypos):
-        super().__init__(app_model, component, xpos, ypos, show_name=False)
 
 
 class ImageObjectClock(ImageObjectWithActiveRect):

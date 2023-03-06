@@ -4,3 +4,4 @@
 """ All classes within digsim.app.settings namespace """
 
 from ._component_settings import ComponentSettingsDialog  # noqa: F401
+from ._shortcut_dialog import ShortcutDialog  # noqa: F401

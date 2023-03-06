@@ -35,7 +35,7 @@ class ComponentObject(GuiObject):
         self._port_display_name = {}
         self.update_ports()
 
-    def add_context_menu_action(self, menu):
+    def add_context_menu_action(self, menu, parent):
         """Add component specific context menu items"""
 
     def update_size(self):

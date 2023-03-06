@@ -18,13 +18,12 @@ from ._image_objects import (
     ImageObjectNAND,
     ImageObjectNOR,
     ImageObjectNOT,
-    ImageObjectOnOffSwitch,
     ImageObjectOR,
-    ImageObjectPushButton,
     ImageObjectStaticValue,
     ImageObjectXOR,
 )
 from ._seven_segment_object import SevenSegmentObject
+from ._shortcut_objects import ButtonObject, OnOffSwitchObject
 from ._yosys_object import YosysObject
 
 
@@ -45,8 +44,8 @@ CLASS_NAME_TO_COMPONENT_OBJECT = {
     "NOT": ImageObjectNOT,
     "MUX": ImageObjectMUX,
     "OR": ImageObjectOR,
-    "OnOffSwitch": ImageObjectOnOffSwitch,
-    "PushButton": ImageObjectPushButton,
+    "OnOffSwitch": OnOffSwitchObject,
+    "PushButton": ButtonObject,
     "SevenSegment": SevenSegmentObject,
     "StaticValue": ImageObjectStaticValue,
     "XOR": ImageObjectXOR,

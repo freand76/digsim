@@ -17,7 +17,7 @@ class YosysObject(ImageObject):
         self.paint_component_base(painter)
         self.paint_component_name(painter)
 
-    def add_context_menu_action(self, menu):
+    def add_context_menu_action(self, menu, parent):
         reloadAction = QAction("Reload", menu)
         menu.addAction(reloadAction)
         reloadAction.triggered.connect(self._reload)

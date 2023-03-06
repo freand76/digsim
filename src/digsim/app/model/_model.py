@@ -8,7 +8,7 @@ import os
 import queue
 import time
 
-from PySide6.QtCore import QThread, Signal
+from PySide6.QtCore import Qt, QThread, Signal
 
 from digsim.circuit.components.atoms import Component
 
@@ -33,6 +33,7 @@ class AppModel(QThread):
         self._sim_tick_ms = 50
         self._gui_event_queue = queue.Queue()
         self._multi_select = False
+        self._shortcut_component = {}
 
     @property
     def objects(self):
@@ -140,3 +141,43 @@ class AppModel(QThread):
         self._changed = False
         self.sig_synchronize_gui.emit()
         self.sig_control_notify.emit()
+
+    def set_shortcut_component(self, key, component):
+        """Set shortcut"""
+        self._shortcut_component[key] = component
+
+    def get_shortcut_component(self, key):
+        """Get shortcut"""
+        return self._shortcut_component.get(key)
+
+    def _qtkey_to_key(self, qt_key):
+        return {
+            Qt.Key_0: "0",
+            Qt.Key_1: "1",
+            Qt.Key_2: "2",
+            Qt.Key_3: "3",
+            Qt.Key_4: "4",
+            Qt.Key_5: "5",
+            Qt.Key_6: "6",
+            Qt.Key_7: "7",
+            Qt.Key_8: "8",
+            Qt.Key_9: "9",
+        }.get(qt_key)
+
+    def shortcut_press(self, qtkey):
+        """Handle shortcut keypress"""
+        key = self._qtkey_to_key(qtkey)
+        if key is None:
+            return
+        component = self.get_shortcut_component(key)
+        if component is not None:
+            self.model_add_event(component.onpress)
+
+    def shortcut_release(self, qtkey):
+        """Handle shortcut keyrelease"""
+        key = self._qtkey_to_key(qtkey)
+        if key is None:
+            return
+        component = self.get_shortcut_component(key)
+        if component is not None:
+            self.model_add_event(component.onrelease)
