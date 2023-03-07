@@ -242,7 +242,6 @@ class CircuitArea(QWidget):
         if event.isAutoRepeat():
             return
         if self._app_model.is_running:
-            self._app_model.shortcut_press(event.key())
             return
         if event.key() == Qt.Key_Escape:
             if self._app_model.objects.wires.new.ongoing():
@@ -259,8 +258,6 @@ class CircuitArea(QWidget):
         super().keyReleaseEvent(event)
         if event.isAutoRepeat():
             return
-        if self._app_model.is_running:
-            self._app_model.shortcut_release(event.key())
         if self._app_model.is_running:
             return
         if event.key() == Qt.Key_Control:

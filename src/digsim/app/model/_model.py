@@ -8,11 +8,12 @@ import os
 import queue
 import time
 
-from PySide6.QtCore import Qt, QThread, Signal
+from PySide6.QtCore import QThread, Signal
 
 from digsim.circuit.components.atoms import Component
 
 from ._model_objects import ModelObjects
+from ._model_shortcuts import ModelShortcuts
 
 
 class AppModel(QThread):
@@ -28,17 +29,22 @@ class AppModel(QThread):
     def __init__(self):
         super().__init__()
         self._model_objects = ModelObjects(self)
+        self._model_shortcuts = ModelShortcuts(self)
         self._started = False
         self._changed = False
         self._sim_tick_ms = 50
         self._gui_event_queue = queue.Queue()
         self._multi_select = False
-        self._shortcut_component = {}
 
     @property
     def objects(self):
         """return the model objects"""
         return self._model_objects
+
+    @property
+    def shortcuts(self):
+        """return the model shortcuts"""
+        return self._model_shortcuts
 
     @property
     def is_running(self):
@@ -49,6 +55,12 @@ class AppModel(QThread):
     def is_changed(self):
         """Return True if there are changes in the model since last save"""
         return self._changed
+
+    def _model_clear(self):
+        """Clear model"""
+        self.objects.clear()
+        self.shortcuts.clear()
+        self._changed = False
 
     def model_init(self):
         """(Re)initialize the model/circuit"""
@@ -111,6 +123,8 @@ class AppModel(QThread):
         """Save the circuit with GUI information"""
         circuit_folder = os.path.dirname(path)
         circuit_dict = self.objects.circuit_to_dict(circuit_folder)
+        shortcuts_dict = self.shortcuts.to_dict()
+        circuit_dict.update(shortcuts_dict)
         json_object = json.dumps(circuit_dict, indent=4)
         with open(path, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)
@@ -119,13 +133,14 @@ class AppModel(QThread):
 
     def load_circuit(self, path):
         """Load a circuit with GUI information"""
-        self.objects.clear()
+        self._model_clear()
         with open(path, mode="r", encoding="utf-8") as json_file:
             circuit_dict = json.load(json_file)
         circuit_folder = os.path.dirname(path)
         if len(circuit_folder) == 0:
             circuit_folder = "."
         exception_str_list = self.objects.dict_to_circuit(circuit_dict, circuit_folder)
+        self.shortcuts.from_dict(circuit_dict)
         self.model_init()
         self._changed = False
         self.objects.reset_undo_stack()
@@ -137,47 +152,6 @@ class AppModel(QThread):
     def clear_circuit(self):
         """Clear the circuit"""
         self.objects.push_undo_state()
-        self.objects.clear()
-        self._changed = False
+        self._model_clear()
         self.sig_synchronize_gui.emit()
         self.sig_control_notify.emit()
-
-    def set_shortcut_component(self, key, component):
-        """Set shortcut"""
-        self._shortcut_component[key] = component
-
-    def get_shortcut_component(self, key):
-        """Get shortcut"""
-        return self._shortcut_component.get(key)
-
-    def _qtkey_to_key(self, qt_key):
-        return {
-            Qt.Key_0: "0",
-            Qt.Key_1: "1",
-            Qt.Key_2: "2",
-            Qt.Key_3: "3",
-            Qt.Key_4: "4",
-            Qt.Key_5: "5",
-            Qt.Key_6: "6",
-            Qt.Key_7: "7",
-            Qt.Key_8: "8",
-            Qt.Key_9: "9",
-        }.get(qt_key)
-
-    def shortcut_press(self, qtkey):
-        """Handle shortcut keypress"""
-        key = self._qtkey_to_key(qtkey)
-        if key is None:
-            return
-        component = self.get_shortcut_component(key)
-        if component is not None:
-            self.model_add_event(component.onpress)
-
-    def shortcut_release(self, qtkey):
-        """Handle shortcut keyrelease"""
-        key = self._qtkey_to_key(qtkey)
-        if key is None:
-            return
-        component = self.get_shortcut_component(key)
-        if component is not None:
-            self.model_add_event(component.onrelease)

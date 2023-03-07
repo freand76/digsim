@@ -70,7 +70,7 @@
                 "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
                 "settings": {
-                    "text": "Enable the counter with this switch"
+                    "text": "Enable the counter with this switch\nUse shortcut key 2 to toggle."
                 }
             },
             {
@@ -78,7 +78,7 @@
                 "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
                 "settings": {
-                    "text": "This push-button will reset the counter"
+                    "text": "This push-button will reset the counter\nUse shortcut key 1 to push."
                 }
             },
             {
@@ -186,5 +186,9 @@
             "x": 809,
             "y": 513
         }
+    },
+    "shortcuts": {
+        "1": "PushButton_2",
+        "2": "OnOffSwitch"
     }
 }

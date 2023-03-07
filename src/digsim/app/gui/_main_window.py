@@ -103,6 +103,24 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence("Ctrl+Y"), self, self._app_model.objects.redo)
         QShortcut(QKeySequence("Del"), self, self._app_model.objects.delete_selected)
 
+    def keyPressEvent(self, event):
+        """QT event callback function"""
+        super().keyPressEvent(event)
+        if event.isAutoRepeat():
+            return
+        if self._app_model.is_running:
+            self._app_model.shortcuts.press(event.key())
+            return
+
+    def keyReleaseEvent(self, event):
+        """QT event callback function"""
+        super().keyReleaseEvent(event)
+        if event.isAutoRepeat():
+            return
+        if self._app_model.is_running:
+            self._app_model.shortcuts.release(event.key())
+            return
+
     def _undo_shortcut(self):
         self._app_model.objects.undo()
 

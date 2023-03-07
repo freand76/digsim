@@ -30,7 +30,7 @@ class _ShortcutObject:
         shortcutDialog = ShortcutDialog(parent, app_model)
         key = shortcutDialog.start()
         if key is not None:
-            app_model.set_shortcut_component(key, component)
+            app_model.shortcuts.set_component(key, component)
 
 
 class ButtonObject(ImageObject):
