@@ -43,7 +43,7 @@ class ComponentContextMenu(QMenu):
         # Delete
         deleteAction = QAction("Delete", self)
         self.addAction(deleteAction)
-        deleteAction.triggered.connect(self._app_model.objects.delete_selected)
+        deleteAction.triggered.connect(self._delete)
         self._menu_action = None
 
     def _add_settings(self):
@@ -60,6 +60,10 @@ class ComponentContextMenu(QMenu):
     def get_action(self):
         """Get context menu action"""
         return self._menu_action.text() if self._menu_action is not None else ""
+
+    def _delete(self):
+        self._app_model.objects.select(self._component_object)
+        self._app_model.objects.delete_selected()
 
     def _raise(self):
         self._parent.raise_()
