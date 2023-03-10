@@ -6,6 +6,7 @@ Module that handles the circuit simulation of components
 """
 
 # pylint: disable=too-many-public-methods
+# pylint: disable=too-many-arguments
 
 import json
 import os
@@ -168,10 +169,10 @@ class Circuit:
         Return False if ther are now events of if the stop_time has passed
         """
         if len(self._circuit_events) == 0:
-            return False
+            return False, False
         self._circuit_events.sort()
         if stop_time_ns is None or self._circuit_events[0].time_ns > stop_time_ns:
-            return False
+            return False, False
         event = self._circuit_events.pop(0)
         # print(
         #     f"Execute event {event.port.path()}.{event.port.name()}"
@@ -179,18 +180,30 @@ class Circuit:
         # )
         self._time_ns = event.time_ns
         event.port.delta_cycle(event.value)
+        toplevel = event.port.parent().is_toplevel()
         if self._vcd is not None:
             self._vcd.write(event.port, self._time_ns)
-        return True
+        return True, toplevel
 
-    def run(self, s=None, ms=None, us=None, ns=None):
+    def _is_toplevel_event(self):
+        if len(self._circuit_events) == 0:
+            return False
+        event = self._circuit_events[0]
+        return event.port.parent().is_toplevel()
+
+    def run(self, s=None, ms=None, us=None, ns=None, single_step=False):
         """Run simulation for a period of time"""
         stop_time_ns = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
+        single_step_stop = False
         while len(self._circuit_events) > 0 and self._time_ns <= stop_time_ns:
-            if not self.process_single_event(stop_time_ns):
+            more_events, top_level_event = self.process_single_event(stop_time_ns)
+            if not more_events:
                 break
-
+            if single_step and top_level_event:
+                stop_time_ns = self._time_ns
+                single_step_stop = True
         self._time_ns = max(self._time_ns, stop_time_ns)
+        return single_step_stop
 
     def run_until(self, s=None, ms=None, us=None, ns=None):
         """Run simulation until a specified time"""

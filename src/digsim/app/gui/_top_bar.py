@@ -29,33 +29,39 @@ class SimControlWidget(QFrame):
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self._time_s = 0
-        self._started = False
         self._app_model = app_model
         self.setLayout(QHBoxLayout(self))
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(5)
         self._start_button = QPushButton("Start Simulation", self)
-        self._start_button.clicked.connect(self.start_stop)
+        self._start_button.clicked.connect(self._start_stop)
         self.layout().addWidget(self._start_button)
+        self._single_step_button = QPushButton("Single Step", self)
+        self._single_step_button.clicked.connect(self._single_step)
+        self.layout().addWidget(self._single_step_button)
         self._reset_button = QPushButton("Reset Simulation", self)
-        self._reset_button.clicked.connect(self.reset)
+        self._reset_button.clicked.connect(self._reset)
         self._reset_button.setEnabled(False)
         self.layout().addWidget(self._reset_button)
         self._app_model.sig_control_notify.connect(self._control_notify)
         self._app_model.sig_sim_time_notify.connect(self._sim_time_notify)
 
-    def start_stop(self):
+    def _start_stop(self):
         """Button action: Start/Stop"""
-        if not self._started:
-            self._started = True
+        if not self._app_model.is_running:
             self._start_button.setEnabled(False)
             self._app_model.model_start()
         else:
-            self._started = False
             self._start_button.setEnabled(False)
             self._app_model.model_stop()
 
-    def reset(self):
+    def _single_step(self):
+        """Button action: Reset"""
+        self._start_button.setEnabled(False)
+        self._single_step_button.setEnabled(False)
+        self._app_model.model_single_step()
+
+    def _reset(self):
         """Button action: Reset"""
         self._app_model.model_reset()
 
@@ -63,9 +69,11 @@ class SimControlWidget(QFrame):
         if self._app_model.is_running:
             self._start_button.setText("Stop Similation")
             self._start_button.setEnabled(True)
+            self._single_step_button.setEnabled(False)
         else:
             self._start_button.setText("Start Similation")
             self._start_button.setEnabled(True)
+            self._single_step_button.setEnabled(True)
             if self._time_s > 0:
                 self._reset_button.setEnabled(True)
 

@@ -71,5 +71,16 @@ class OnOffSwitchObject(ImageObjectWithActiveRect):
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos, show_name=False)
 
+    def double_click_action(self, running):
+        if not running:
+            self._toggle()
+
     def add_context_menu_action(self, menu, parent):
         _ShortcutObject.add_context_menu_action(menu, parent, self._app_model, self._component)
+        toggleAction = QAction("Toggle Switch", menu)
+        menu.addAction(toggleAction)
+        toggleAction.triggered.connect(self._toggle)
+
+    def _toggle(self):
+        self.component.toggle()
+        self.update()

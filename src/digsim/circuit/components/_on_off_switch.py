@@ -49,7 +49,7 @@ class OnOffSwitch(CallbackComponent):
 
     @property
     def active(self):
-        return self.O.value == 1
+        return self._on
 
     @classmethod
     def get_parameters(cls):

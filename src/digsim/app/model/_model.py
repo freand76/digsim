@@ -3,6 +3,8 @@
 
 """ An application model for a GUI simulated circuit """
 
+# pylint: disable=too-many-instance-attributes
+
 import json
 import os
 import queue
@@ -31,6 +33,7 @@ class AppModel(QThread):
         self._model_objects = ModelObjects(self)
         self._model_shortcuts = ModelShortcuts(self)
         self._started = False
+        self._single_step = False
         self._changed = False
         self._sim_tick_ms = 50
         self._gui_event_queue = queue.Queue()
@@ -71,6 +74,14 @@ class AppModel(QThread):
     def model_start(self):
         """Start model simulation thread"""
         self._started = True
+        self._single_step = False
+        self.start()
+        self.sig_control_notify.emit()
+
+    def model_single_step(self):
+        """Start model simulation thread"""
+        self._started = True
+        self._single_step = True
         self.start()
         self.sig_control_notify.emit()
 
@@ -107,7 +118,11 @@ class AppModel(QThread):
                 gui_event_func = self._gui_event_queue.get()
                 gui_event_func()
 
-            self.objects.circuit.run(ms=self._sim_tick_ms)
+            single_step_stop = self.objects.circuit.run(
+                ms=self._sim_tick_ms, single_step=self._single_step
+            )
+            if single_step_stop:
+                self._started = False
 
             self.objects.components.update_callback_objects()
 
@@ -116,7 +131,7 @@ class AppModel(QThread):
             if sleep_time > 0:
                 time.sleep(sleep_time)
             self.sig_sim_time_notify.emit(self.objects.circuit.time_ns / 1000000000)
-
+        self._single_step = False
         self.sig_control_notify.emit()
 
     def save_circuit(self, path):

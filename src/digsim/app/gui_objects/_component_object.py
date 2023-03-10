@@ -38,6 +38,9 @@ class ComponentObject(GuiObject):
     def add_context_menu_action(self, menu, parent):
         """Add component specific context menu items"""
 
+    def double_click_action(self, running):
+        """Handle doubleclick events"""
+
     def update_size(self):
         """update component object size"""
 

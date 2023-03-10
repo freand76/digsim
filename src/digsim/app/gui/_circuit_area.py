@@ -138,6 +138,10 @@ class ComponentWidget(QPushButton):
             self._app_model.sig_error.emit(str(exc))
             self.parent().update()
 
+    def mouseDoubleClickEvent(self, _):
+        """QT event callback function"""
+        self._component_object.double_click_action(self._app_model.is_running)
+
     def mousePressEvent(self, event):
         """QT event callback function"""
         super().mousePressEvent(event)
