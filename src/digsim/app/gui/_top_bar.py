@@ -4,8 +4,11 @@
 """The top bar of the main window/gui application"""
 
 # pylint: disable=too-few-public-methods
+# pylint: disable=too-many-instance-attributes
 
 import os
+
+import qtawesome as qta
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
@@ -232,20 +235,25 @@ class LoadSaveWidget(QFrame):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(5)
         self._delete_button = QPushButton("", self)
-        self._delete_button.setIcon(self.style().standardIcon(QStyle.SP_TrashIcon))
+        self._delete_button.setIcon(qta.icon("mdi.delete-forever"))
         self._delete_button.clicked.connect(self._app_model.objects.delete_selected)
         self._delete_button.setToolTip("Delete")
         self.layout().addWidget(self._delete_button)
         self._undo_button = QPushButton("", self)
-        self._undo_button.setIcon(self.style().standardIcon(QStyle.SP_ArrowBack))
+        self._undo_button.setIcon(qta.icon("mdi.undo"))
         self._undo_button.setToolTip("Undo")
         self._undo_button.clicked.connect(self._app_model.objects.undo)
         self.layout().addWidget(self._undo_button)
         self._redo_button = QPushButton("", self)
-        self._redo_button.setIcon(self.style().standardIcon(QStyle.SP_ArrowForward))
+        self._redo_button.setIcon(qta.icon("mdi.redo"))
         self._redo_button.clicked.connect(self._app_model.objects.redo)
         self._redo_button.setToolTip("Redo")
         self.layout().addWidget(self._redo_button)
+        self._settings_button = QPushButton("", self)
+        self._settings_button.setIcon(qta.icon("fa.cog"))
+        # self._settings__button.clicked.connect(self._app_model.objects.redo)
+        self._settings_button.setToolTip("Settings")
+        self.layout().addWidget(self._settings_button)
         self._load_button = QPushButton("Load Circuit", self)
         self._load_button.clicked.connect(self._load)
         self.layout().addWidget(self._load_button)
