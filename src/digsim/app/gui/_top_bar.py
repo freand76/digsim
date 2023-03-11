@@ -26,6 +26,8 @@ class SimControlWidget(QFrame):
     The widget for controlling the simulation in the top bar
     """
 
+    CONTROL_WIDGET_WIDTH = 120
+
     def __init__(self, app_model, parent):
         super().__init__(parent)
         self._time_s = 0
@@ -35,13 +37,16 @@ class SimControlWidget(QFrame):
         self.layout().setSpacing(5)
         self._start_button = QPushButton("Start Simulation", self)
         self._start_button.clicked.connect(self._start_stop)
+        self._start_button.setMinimumWidth(self.CONTROL_WIDGET_WIDTH)
         self.layout().addWidget(self._start_button)
         self._single_step_button = QPushButton("Single Step", self)
         self._single_step_button.clicked.connect(self._single_step)
+        self._single_step_button.setMinimumWidth(self.CONTROL_WIDGET_WIDTH)
         self.layout().addWidget(self._single_step_button)
         self._reset_button = QPushButton("Reset Simulation", self)
         self._reset_button.clicked.connect(self._reset)
         self._reset_button.setEnabled(False)
+        self._reset_button.setMinimumWidth(self.CONTROL_WIDGET_WIDTH)
         self.layout().addWidget(self._reset_button)
         self._app_model.sig_control_notify.connect(self._control_notify)
         self._app_model.sig_sim_time_notify.connect(self._sim_time_notify)
