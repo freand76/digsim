@@ -4,6 +4,7 @@
 """ A component placed in the GUI """
 
 # pylint: disable=too-many-public-methods
+# pylint: disable=too-many-instance-attributes
 
 import abc
 
@@ -29,6 +30,7 @@ class ComponentObject(GuiObject):
         self._app_model = app_model
         self._component = component
         self._pos = QPoint(xpos, ypos)
+        self._temp_pos = None
         self._height = self.DEFAULT_HEIGHT
         self._width = self.DEFAULT_WIDTH
         self._port_rects = {}
@@ -38,8 +40,8 @@ class ComponentObject(GuiObject):
     def add_context_menu_action(self, menu, parent):
         """Add component specific context menu items"""
 
-    def double_click_action(self, running):
-        """Handle doubleclick events"""
+    def single_click_action(self):
+        """Handle singleclick events"""
 
     def update_size(self):
         """update component object size"""
@@ -48,9 +50,21 @@ class ComponentObject(GuiObject):
         """Move component with pos as center instead of top-left corner"""
         self._pos = self._pos - QPoint(self._width / 2, self._height / 2)
 
-    def move_delta(self, delta_pos):
+    def move_delta(self, delta_pos, finalize=False):
         """Move component object a delta position"""
-        self._pos = self._pos + delta_pos
+        if self._temp_pos is None:
+            # First Movement
+            self._temp_pos = self._pos + delta_pos
+        else:
+            self._temp_pos = self._temp_pos + delta_pos
+
+        moved = False
+        if finalize:
+            moved = self._temp_pos != self._pos
+            self._pos = self._temp_pos
+            self._temp_pos = None
+
+        return moved
 
     def update(self):
         """Update GUI for this component object"""
@@ -219,6 +233,8 @@ class ComponentObject(GuiObject):
     @property
     def pos(self):
         """Get position"""
+        if self._temp_pos is not None:
+            return self._temp_pos
         return self._pos
 
     @property
@@ -238,4 +254,4 @@ class ComponentObject(GuiObject):
 
     def to_dict(self):
         """Return position as dict"""
-        return {"x": self.pos.x(), "y": self.pos.y()}
+        return {"x": self._pos.x(), "y": self._pos.y()}

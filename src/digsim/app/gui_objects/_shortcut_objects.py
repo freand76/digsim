@@ -43,6 +43,9 @@ class ButtonObject(ImageObject):
         super().__init__(app_model, component, xpos, ypos, show_name=False)
         self._parent = None
 
+    def single_click_action(self):
+        self._toggle()
+
     def paint_component(self, painter):
         super().paint_component(painter)
         if self.component.active:
@@ -71,9 +74,8 @@ class OnOffSwitchObject(ImageObjectWithActiveRect):
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos, show_name=False)
 
-    def double_click_action(self, running):
-        if not running:
-            self._toggle()
+    def single_click_action(self):
+        self._toggle()
 
     def add_context_menu_action(self, menu, parent):
         _ShortcutObject.add_context_menu_action(menu, parent, self._app_model, self._component)

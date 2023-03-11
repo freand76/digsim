@@ -92,7 +92,6 @@ class ComponentWidget(QPushButton):
         self._app_model.sig_component_notify.connect(self._component_notify)
         self._component_object = component_object
         self._move_start_pos = None
-        self._move_store_state = False
         self._active_port = None
 
         self.setMouseTracking(True)
@@ -137,10 +136,6 @@ class ComponentWidget(QPushButton):
             self._app_model.sig_error.emit(str(exc))
             self.parent().update()
 
-    def mouseDoubleClickEvent(self, _):
-        """QT event callback function"""
-        self._component_object.double_click_action(self._app_model.is_running)
-
     def mousePressEvent(self, event):
         """QT event callback function"""
         super().mousePressEvent(event)
@@ -155,7 +150,6 @@ class ComponentWidget(QPushButton):
                 if self._active_port is None:
                     # Prepare to move
                     self.setCursor(Qt.ClosedHandCursor)
-                    self._move_store_state = True
                     self._move_start_pos = event.pos()
                 else:
                     self._app_model.objects.wires.new.start(self.component, self._active_port)
@@ -175,14 +169,26 @@ class ComponentWidget(QPushButton):
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
                 self._app_model.model_add_event(self.component.onrelease)
-            else:
-                # Move complete
-                self.setCursor(Qt.ArrowCursor)
+                return
+
+            # Move complete?
+            self.setCursor(Qt.ArrowCursor)
+            has_movement = False
+            if self._move_start_pos is not None:
+                has_movement = self._app_model.objects.move_selected_components(
+                    event.pos() - self._move_start_pos,
+                    finalize=True,
+                )
                 self._move_start_pos = None
+            if not has_movement and not self._app_model.objects.wires.new.ongoing():
+                self._component_object.single_click_action()
 
     def mouseMoveEvent(self, event):
         """QT event callback function"""
         if self._app_model.is_running:
+            return
+
+        if self._app_model.objects.multi_select_ongoing():
             return
 
         active_port = self._component_object.get_port_for_point(event.pos())
@@ -202,9 +208,6 @@ class ComponentWidget(QPushButton):
             self.parent().update()
 
         elif self._move_start_pos is not None:
-            if self._move_store_state:
-                self._move_store_state = False
-                self._app_model.objects.push_undo_state()
             self._app_model.objects.move_selected_components(event.pos() - self._move_start_pos)
             self.parent().update()
 
@@ -246,15 +249,10 @@ class CircuitArea(QWidget):
             return
         if self._app_model.is_running:
             return
-        if event.key() == Qt.Key_Escape:
-            if self._app_model.objects.wires.new.ongoing():
-                self._abort_wire()
-        elif event.key() == Qt.Key_Control:
-            self._app_model.objects.multi_select(True)
-        elif event.key() == Qt.Key_Shift:
+        if event.key() == Qt.Key_Shift:
             self.setCursor(Qt.OpenHandCursor)
             self._panning_mode = True
-        event.accept()
+            event.accept()
 
     def keyReleaseEvent(self, event):
         """QT event callback function"""
@@ -263,11 +261,10 @@ class CircuitArea(QWidget):
             return
         if self._app_model.is_running:
             return
-        if event.key() == Qt.Key_Control:
-            self._app_model.objects.multi_select(False)
-        elif event.key() == Qt.Key_Shift:
+        if event.key() == Qt.Key_Shift:
             self.setCursor(Qt.ArrowCursor)
             self._panning_mode = False
+            event.accept()
 
     def paintEvent(self, _):
         """QT event callback function"""

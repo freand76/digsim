@@ -39,6 +39,10 @@ class ModelObjects:
         """return the model components"""
         return self._model_wires
 
+    def multi_select_ongoing(self):
+        """return True if multi select is ongoing"""
+        return self._multi_select
+
     def init(self):
         """Initialize objects"""
         self._model_components.init()
@@ -93,15 +97,26 @@ class ModelObjects:
                 obj.select(True)
         self._app_model.sig_control_notify.emit()
 
-    def move_selected_components(self, delta_pos):
+    def move_selected_components(self, delta_pos, finalize=False):
         """Move selected objects"""
+        if finalize:
+            self.push_undo_state()
         selected_objects = self.get_selected()
+        has_movement = False
         for obj in selected_objects:
             if ModelComponents.is_component_object(obj):
-                obj.move_delta(delta_pos)
+                if obj.move_delta(delta_pos, finalize=finalize):
+                    has_movement = True
                 obj.update()
                 self._model_wires.update()
-                self._app_model.model_changed(update_components=False)
+        if finalize:
+            if has_movement:
+                self._app_model.model_changed()
+            else:
+                # No movement, drop undo state
+                self.drop_undo_state()
+            self._app_model.sig_synchronize_gui.emit()
+        return has_movement
 
     def _delete(self, selected_objects):
         for obj in selected_objects:
@@ -168,6 +183,12 @@ class ModelObjects:
         self._undo_stack.append(self.circuit_to_dict("/"))
         if clear_redo_stack:
             self._redo_stack = []
+            self._app_model.sig_control_notify.emit()
+
+    def drop_undo_state(self):
+        """Drop last undo state"""
+        if len(self._undo_stack) > 0:
+            self._undo_stack.pop()
             self._app_model.sig_control_notify.emit()
 
     def push_redo_state(self):

@@ -107,19 +107,35 @@ class MainWindow(QMainWindow):
         """QT event callback function"""
         super().keyPressEvent(event)
         if event.isAutoRepeat():
+            event.accept()
             return
         if self._app_model.is_running:
             self._app_model.shortcuts.press(event.key())
+            event.accept()
             return
+
+        if event.key() == Qt.Key_Control:
+            self._app_model.objects.multi_select(True)
+            event.accept()
+        elif event.key() == Qt.Key_Escape:
+            if self._app_model.objects.wires.new.ongoing():
+                self._app_model.objects.wires.new.abort()
+                self._app_model.sig_synchronize_gui.emit()
+                event.accept()
 
     def keyReleaseEvent(self, event):
         """QT event callback function"""
         super().keyReleaseEvent(event)
         if event.isAutoRepeat():
+            event.accept()
             return
         if self._app_model.is_running:
             self._app_model.shortcuts.release(event.key())
+            event.accept()
             return
+        if event.key() == Qt.Key_Control:
+            self._app_model.objects.multi_select(False)
+            event.accept()
 
     def _undo_shortcut(self):
         self._app_model.objects.undo()
