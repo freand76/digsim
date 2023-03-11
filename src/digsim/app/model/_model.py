@@ -15,6 +15,7 @@ from PySide6.QtCore import QThread, Signal
 from digsim.circuit.components.atoms import Component
 
 from ._model_objects import ModelObjects
+from ._model_settings import ModelSettings
 from ._model_shortcuts import ModelShortcuts
 
 
@@ -32,6 +33,7 @@ class AppModel(QThread):
         super().__init__()
         self._model_objects = ModelObjects(self)
         self._model_shortcuts = ModelShortcuts(self)
+        self._model_settings = ModelSettings(self)
         self._started = False
         self._single_step = False
         self._changed = False
@@ -48,6 +50,11 @@ class AppModel(QThread):
     def shortcuts(self):
         """return the model shortcuts"""
         return self._model_shortcuts
+
+    @property
+    def settings(self):
+        """return the model settings"""
+        return self._model_settings
 
     @property
     def is_running(self):

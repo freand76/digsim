@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (
     QStyle,
 )
 
+from digsim.app.settings import GuiSettingsDialog
+
 from ._utils import are_you_sure_destroy_circuit
 
 
@@ -251,7 +253,7 @@ class LoadSaveWidget(QFrame):
         self.layout().addWidget(self._redo_button)
         self._settings_button = QPushButton("", self)
         self._settings_button.setIcon(qta.icon("fa.cog"))
-        # self._settings__button.clicked.connect(self._app_model.objects.redo)
+        self._settings_button.clicked.connect(self._settings_dialog)
         self._settings_button.setToolTip("Settings")
         self.layout().addWidget(self._settings_button)
         self._load_button = QPushButton("Load Circuit", self)
@@ -265,6 +267,10 @@ class LoadSaveWidget(QFrame):
         self.layout().addWidget(self._clear_button)
         self._app_model.sig_control_notify.connect(self._control_notify)
         self._control_notify()
+
+    def _settings_dialog(self):
+        settings_dialog = GuiSettingsDialog(self, self._app_model)
+        settings_dialog.start()
 
     def _load(self):
         """Button action: Load"""

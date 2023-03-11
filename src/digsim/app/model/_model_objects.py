@@ -13,7 +13,7 @@ from ._model_wires import ModelWires
 
 
 class ModelObjects:
-    """Class to objects in the model"""
+    """Class to handle objects in the model"""
 
     def __init__(self, app_model):
         self._app_model = app_model

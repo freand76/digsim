@@ -100,6 +100,11 @@ class ModelComponents:
         component_object.update_size()
         self._app_model.sig_synchronize_gui.emit()
 
+    def update_sizes(self):
+        """Update all component sizes"""
+        for comp_object in self.get_object_list():
+            comp_object.update_size()
+
     def delete(self, component_object):
         """Delete a component object in the model"""
         for port in component_object.component.ports:

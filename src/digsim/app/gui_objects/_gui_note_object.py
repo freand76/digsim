@@ -18,14 +18,17 @@ class GuiNoteObject(ComponentObject):
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
+        self._font = QFont("Arial", 8)
         self.update_size()
 
     def _get_lines(self):
         return self.component.parameter_get("text").split("\n")
 
     def update_size(self):
-        font = QFont("Arial", 8)
-        fm = QFontMetrics(font)
+        font_setting = self._app_model.settings.get("note_font")
+        if font_setting is not None:
+            self._font.fromString(font_setting)
+        fm = QFontMetrics(self._font)
         width = self.NOTE_MINIMUM_WIDTH
         lines = self._get_lines()
         for line in lines:
@@ -39,8 +42,7 @@ class GuiNoteObject(ComponentObject):
 
     def paint_component(self, painter):
         """Paint note rectangle"""
-        font = QFont("Arial", 8)
-        fm = QFontMetrics(font)
+        fm = QFontMetrics(self._font)
         lines = self._get_lines()
         pen = QPen()
         if self.selected:
@@ -52,7 +54,7 @@ class GuiNoteObject(ComponentObject):
         painter.setBrush(Qt.SolidPattern)
         painter.setBrush(Qt.yellow)
         painter.drawRect(self.get_rect())
-        painter.setFont(font)
+        painter.setFont(self._font)
         for idx, line in enumerate(lines):
             painter.drawText(
                 2 * self.NOTE_BORDER, 2 * self.NOTE_BORDER + (idx + 1) * fm.height(), line
