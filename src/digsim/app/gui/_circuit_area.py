@@ -80,12 +80,7 @@ class ComponentContextMenu(QMenu):
             self._reconfigurable_parameters,
         )
         if ok:
-            self._app_model.objects.push_undo_state()
-            self._component.update_settings(settings)
-            self._app_model.model_changed()
-            # Settings can change the component size
-            self._component_object.update_size()
-            self._app_model.sig_synchronize_gui.emit()
+            self._app_model.objects.components.update_settings(self._component_object, settings)
 
 
 class ComponentWidget(QPushButton):

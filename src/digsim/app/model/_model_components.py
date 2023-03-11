@@ -91,6 +91,15 @@ class ModelComponents:
             component_objects.append(comp)
         return component_objects
 
+    def update_settings(self, component_object, settings):
+        """Update settings for a component"""
+        self._app_model.objects.push_undo_state()
+        component_object.component.update_settings(settings)
+        self._app_model.model_changed()
+        # Settings can change the component size
+        component_object.update_size()
+        self._app_model.sig_synchronize_gui.emit()
+
     def delete(self, component_object):
         """Delete a component object in the model"""
         for port in component_object.component.ports:
