@@ -221,6 +221,7 @@ class CircuitArea(QWidget):
         self.setFixedHeight(5000)
         self._app_model = app_model
         self._app_model.sig_synchronize_gui.connect(self._synchronize_gui)
+        self._app_model.sig_repaint_wires.connect(self._repaint)
         self._select_box_start = None
         self._select_box_rect = None
         self.setMouseTracking(True)
@@ -241,6 +242,9 @@ class CircuitArea(QWidget):
     def _abort_wire(self):
         self._app_model.objects.wires.new.abort()
         self.update()
+
+    def _repaint(self):
+        self.repaint()
 
     def keyPressEvent(self, event):
         """QT event callback function"""

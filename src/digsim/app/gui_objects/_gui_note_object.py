@@ -25,9 +25,6 @@ class GuiNoteObject(ComponentObject):
         return self.component.parameter_get("text").split("\n")
 
     def update_size(self):
-        font_setting = self._app_model.settings.get("note_font")
-        if font_setting is not None:
-            self._font.fromString(font_setting)
         fm = QFontMetrics(self._font)
         width = self.NOTE_MINIMUM_WIDTH
         lines = self._get_lines()

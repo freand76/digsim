@@ -26,6 +26,7 @@ class AppModel(QThread):
     sig_control_notify = Signal()
     sig_sim_time_notify = Signal(float)
     sig_synchronize_gui = Signal()
+    sig_repaint_wires = Signal()
     sig_error = Signal(str)
     sig_warning_log = Signal(str, str)
 
@@ -37,7 +38,6 @@ class AppModel(QThread):
         self._started = False
         self._single_step = False
         self._changed = False
-        self._sim_tick_ms = 50
         self._gui_event_queue = queue.Queue()
         self._multi_select = False
 
@@ -117,8 +117,11 @@ class AppModel(QThread):
         """Simulation thread run function"""
         start_time = time.perf_counter()
         next_tick = start_time
+        sim_tick_ms = 1000 / self._model_settings.get("update_frequency")
+        real_time = self._model_settings.get("real_time")
+        color_wires = self._model_settings.get("color_wires")
         while self._started:
-            next_tick += self._sim_tick_ms / 1000
+            next_tick += sim_tick_ms / 1000
 
             # Execute one GUI event at a time
             if not self._gui_event_queue.empty():
@@ -126,7 +129,7 @@ class AppModel(QThread):
                 gui_event_func()
 
             single_step_stop = self.objects.circuit.run(
-                ms=self._sim_tick_ms, single_step=self._single_step
+                ms=sim_tick_ms, single_step=self._single_step
             )
             if single_step_stop:
                 self._started = False
@@ -135,9 +138,14 @@ class AppModel(QThread):
 
             now = time.perf_counter()
             sleep_time = next_tick - now
-            if sleep_time > 0:
+            if not self._single_step and real_time and sleep_time > 0:
                 time.sleep(sleep_time)
+            else:
+                time.sleep(0.01)  # Sleep a little, to be able to handle event
             self.sig_sim_time_notify.emit(self.objects.circuit.time_ns / 1000000000)
+            if color_wires:
+                self.sig_repaint_wires.emit()
+
         self._single_step = False
         self.sig_control_notify.emit()
 
@@ -147,6 +155,8 @@ class AppModel(QThread):
         circuit_dict = self.objects.circuit_to_dict(circuit_folder)
         shortcuts_dict = self.shortcuts.to_dict()
         circuit_dict.update(shortcuts_dict)
+        settings_dict = self.settings.to_dict()
+        circuit_dict.update(settings_dict)
         json_object = json.dumps(circuit_dict, indent=4)
         with open(path, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)
@@ -163,6 +173,7 @@ class AppModel(QThread):
             circuit_folder = "."
         exception_str_list = self.objects.dict_to_circuit(circuit_dict, circuit_folder)
         self.shortcuts.from_dict(circuit_dict)
+        self.settings.from_dict(circuit_dict)
         self.model_init()
         self._changed = False
         self.objects.reset_undo_stack()

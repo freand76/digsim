@@ -3,13 +3,15 @@
 
 """Handle settings in the model"""
 
+from digsim.app.settings import GuiSettingsDialog
+
 
 class ModelSettings:
     """Class to handle settings in the model"""
 
     def __init__(self, app_model):
         self._app_model = app_model
-        self._settings = {}
+        self._settings = GuiSettingsDialog.default_settings()
 
     def update(self, settings):
         """Update model settings"""
@@ -18,6 +20,20 @@ class ModelSettings:
         # Settings can change the component sizes
         self._app_model.objects.components.update_sizes()
         self._app_model.sig_synchronize_gui.emit()
+
+    def get_all(self):
+        """Return settings dict"""
+        return self._settings
+
+    def to_dict(self):
+        """Return settings dict to save"""
+        return {"settings": self._settings}
+
+    def from_dict(self, circuit_dict):
+        """Get settings from circuit dict"""
+        for key, data in circuit_dict.get("settings", {}).items():
+            print("From dict", key, data)
+            self._settings[key] = data
 
     def get(self, key):
         """Get model setting"""

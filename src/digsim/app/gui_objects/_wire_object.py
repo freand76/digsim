@@ -4,7 +4,7 @@
 """ A wire placed in the GUI """
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QPainterPath, QPen
+from PySide6.QtGui import QColor, QPainterPath, QPen
 
 from digsim.circuit.components.atoms import PortConnectionError
 
@@ -94,13 +94,23 @@ class WireObject(GuiObject):
     def _paint_wire(self, painter):
         pen = QPen()
         pen.setColor(Qt.darkGray)
-        if self.selected:
-            pen.setWidth(6)
-            pen.setColor(Qt.black)
-        elif self._is_bus():
+
+        if self._is_bus():
             pen.setWidth(4)
         else:
             pen.setWidth(2)
+
+        color_wires = self._app_model.settings.get("color_wires")
+        if color_wires and self._src_port is not None and self._src_port.value != 0:
+            value = self._src_port.value if self._src_port.value != "X" else 0
+            max_value = 2**self._src_port.width - 1
+            pen.setColor(QColor(0, 255 * value / max_value, 0))
+        else:
+            pen.setColor(Qt.black)
+
+        if self.selected:
+            pen.setWidth(6)
+
         painter.setPen(pen)
         path = QPainterPath(self._line_path[0])
         for point in self._line_path[1:]:

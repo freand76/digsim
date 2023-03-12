@@ -18,7 +18,6 @@ class ShortcutDialog(QDialog):
         self.setLayout(QVBoxLayout(self))
         self.setWindowTitle("Add shortcut")
         self.setFocusPolicy(Qt.StrongFocus)
-        self.setStyleSheet("QLabel{font-size: 18pt;}")
 
         self.layout().addWidget(QLabel("Select shortcut key for component"))
         self._key_selector = QComboBox(parent)
