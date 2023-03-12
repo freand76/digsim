@@ -46,10 +46,6 @@ I will try to keep track of them and give credits!
 
 ### Documentation
    * Add documentation :-)
-### App/GUI
-   * Add GUI settings
-   * Add GUI settings for components
-   * Add flip-flop factory for SR, JK, T...
 ### Model
    * Add unittest of all components
    * Add unittest of ports

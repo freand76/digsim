@@ -160,7 +160,7 @@ class ComponentSettingsCheckBox(ComponentSettingsBase):
 
 
 class ComponentSettingsIcSelector(ComponentSettingsBase):
-    """SettingsCheckbox"""
+    """IC Selector"""
 
     def __init__(self, parent, parameter, parameter_dict, settings):
         super().__init__(parent, parameter, parameter_dict, settings)
@@ -177,6 +177,25 @@ class ComponentSettingsIcSelector(ComponentSettingsBase):
 
     def _update(self, value):
         self._settings[self._parameter] = self._ic_selector.itemData(value)
+
+
+class ComponentSettingsNameSelector(ComponentSettingsBase):
+    """Name Selector"""
+
+    def __init__(self, parent, parameter, parameter_dict, settings):
+        super().__init__(parent, parameter, parameter_dict, settings)
+        self.setLayout(QVBoxLayout(self))
+        self.layout().addWidget(QLabel(self._parameter_dict["description"]))
+        component_dict = self._parameter_dict["component_list"]
+        self._component_selector = QComboBox(parent)
+        for component_name, component_desc in component_dict.items():
+            self._component_selector.addItem(component_desc, userData=component_name)
+        self.layout().addWidget(self._component_selector)
+        self._component_selector.currentIndexChanged.connect(self._update)
+        self._update(self._component_selector.currentIndex())
+
+    def _update(self, value):
+        self._settings[self._parameter] = self._component_selector.itemData(value)
 
 
 class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
@@ -293,6 +312,10 @@ class ComponentSettingsDialog(QDialog):
                 )
             elif parameter_dict["type"] == "ic_name":
                 widget = ComponentSettingsIcSelector(
+                    self, parameter, parameter_dict, self._settings
+                )
+            elif parameter_dict["type"] == "component_name":
+                widget = ComponentSettingsNameSelector(
                     self, parameter, parameter_dict, self._settings
                 )
             else:

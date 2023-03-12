@@ -121,6 +121,7 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(SelectableComponentWidget("NAND", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("NOR", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("DFF", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("FlipFlop", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("MUX", self, circuit_area))
         self.layout().addWidget(DescriptionText(self, "Bus / Bits"))
         self.layout().addWidget(SelectableComponentWidget("Bus2Bits", self, circuit_area))

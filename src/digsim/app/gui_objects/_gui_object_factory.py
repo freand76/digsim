@@ -12,6 +12,7 @@ from ._image_objects import (
     ImageObjectAND,
     ImageObjectClock,
     ImageObjectDFF,
+    ImageObjectFlipFlop,
     ImageObjectIC,
     ImageObjectLed,
     ImageObjectMUX,
@@ -52,6 +53,11 @@ CLASS_NAME_TO_COMPONENT_OBJECT = {
     "IntegratedCircuit": ImageObjectIC,
     "YosysComponent": YosysObject,
     "Note": GuiNoteObject,
+    "FlipFlop": ImageObjectFlipFlop,
+    "SRFF": ImageObjectFlipFlop,
+    "ClockedSRFF": ImageObjectFlipFlop,
+    "ClockedJKFF": ImageObjectFlipFlop,
+    "ClockedTFF": ImageObjectFlipFlop,
 }
 
 

@@ -112,6 +112,17 @@ class ImageObjectDFF(ImageObject):
         self._width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._pixmap.width()
 
 
+class ImageObjectFlipFlop(ImageObject):
+    """The class for a FlipFLop image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/FlipFlop.png"
+    PORT_TO_IMAGE_DIST = 20
+
+    def paint_component(self, painter):
+        self.paint_component_base(painter)
+        self.paint_component_name(painter)
+
+
 class ImageObjectMUX(ImageObject):
     """The class for a MUX image component placed in the GUI"""
 

@@ -373,6 +373,8 @@ class CircuitArea(QWidget):
         ok, settings = ComponentSettingsDialog.start(
             self, self._app_model, name, component_parameters
         )
+        if settings.get("name") is not None:
+            name = settings["name"]
         if ok:
             component_object = self._app_model.objects.components.add_object_by_name(
                 name, position, settings

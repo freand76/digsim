@@ -6,6 +6,7 @@
 from ._bus_bits import Bits2Bus, Bus2Bits  # noqa: F401
 from ._button import PushButton  # noqa: F401
 from ._clock import Clock  # noqa: F401
+from ._flip_flops import SRFF, ClockedJKFF, ClockedSRFF, ClockedTFF, FlipFlop  # noqa: F401
 from ._gates import AND, DFF, MUX, NAND, NOR, NOT, OR, SR, XOR  # noqa: F401
 from ._hexdigit import HexDigit  # noqa: F401
 from ._ic import IntegratedCircuit  # noqa: F401
