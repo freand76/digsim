@@ -54,7 +54,7 @@
                 "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
                 "settings": {
-                    "text": "The counter is a \"Netlist-component\" \ngenerated from verilog."
+                    "text": "The counter component is a \"Netlist-component\" \ngenerated from verilog with the Yosys tool."
                 }
             },
             {
@@ -86,7 +86,7 @@
                 "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
                 "settings": {
-                    "text": "This is a clock generator, \nThe the clock frequency can be changed,\n\"right-click\" and select \"Settings\""
+                    "text": "This is a clock generator, \nThe clock frequency can be changed,\n\"right-click\" and select \"Settings\""
                 }
             },
             {

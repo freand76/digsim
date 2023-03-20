@@ -43,9 +43,6 @@ class ButtonObject(ImageObject):
         super().__init__(app_model, component, xpos, ypos, show_name=False)
         self._parent = None
 
-    def single_click_action(self):
-        self._toggle()
-
     def paint_component(self, painter):
         super().paint_component(painter)
         if self.component.active:

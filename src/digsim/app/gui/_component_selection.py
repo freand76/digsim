@@ -123,9 +123,9 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(SelectableComponentWidget("DFF", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("FlipFlop", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("MUX", self, circuit_area))
-        self.layout().addWidget(DescriptionText(self, "Bus / Bits"))
-        self.layout().addWidget(SelectableComponentWidget("Bus2Bits", self, circuit_area))
-        self.layout().addWidget(SelectableComponentWidget("Bits2Bus", self, circuit_area))
+        self.layout().addWidget(DescriptionText(self, "Bus / Wires"))
+        self.layout().addWidget(SelectableComponentWidget("Bus2Wires", self, circuit_area))
+        self.layout().addWidget(SelectableComponentWidget("Wires2Bus", self, circuit_area))
         self.layout().addWidget(DescriptionText(self, "IC / Verilog"))
         self.layout().addWidget(
             SelectableComponentWidget("IntegratedCircuit", self, circuit_area, display_name="IC")

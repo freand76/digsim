@@ -34,8 +34,8 @@ class ComponentObjectFactoryError(DigsimException):
 
 CLASS_NAME_TO_COMPONENT_OBJECT = {
     "AND": ImageObjectAND,
-    "Bus2Bits": BusBitsObject,
-    "Bits2Bus": BitsBusObject,
+    "Bus2Wires": BusBitsObject,
+    "Wires2Bus": BitsBusObject,
     "Clock": ImageObjectClock,
     "DFF": ImageObjectDFF,
     "HexDigit": HexDigitObject,

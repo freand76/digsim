@@ -3,7 +3,7 @@
 
 """ All classes within digsim.circuit.components namespace """
 
-from ._bus_bits import Bits2Bus, Bus2Bits  # noqa: F401
+from ._bus_bits import Bus2Wires, Wires2Bus  # noqa: F401
 from ._button import PushButton  # noqa: F401
 from ._clock import Clock  # noqa: F401
 from ._flip_flops import SRFF, ClockedJKFF, ClockedSRFF, ClockedTFF, FlipFlop  # noqa: F401

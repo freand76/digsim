@@ -15,7 +15,7 @@ class FlipFlop(Component):
             "name": {
                 "type": "component_name",
                 "component_list": {
-                    "SRFF": "SR FLipFlop",
+                    "SRFF": "SR FlipFlop",
                     "ClockedSRFF": "SR FlipFlop (Edge triggered)",
                     "ClockedJKFF": "JK FlipFlop (Edge triggered)",
                     "ClockedTFF": "T FlipFlop (Edge triggered)",

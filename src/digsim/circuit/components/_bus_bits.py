@@ -6,7 +6,7 @@
 from .atoms import Component, PortMultiBitWire
 
 
-class Bus2Bits(Component):
+class Bus2Wires(Component):
     """Bus to Bits splitter"""
 
     def __init__(self, circuit, name=None, width=1, enable=None):
@@ -43,7 +43,7 @@ class Bus2Bits(Component):
         }
 
 
-class Bits2Bus(Component):
+class Wires2Bus(Component):
     """Bits to Bus merger"""
 
     def __init__(self, circuit, name=None, width=1):
