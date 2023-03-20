@@ -136,12 +136,14 @@ class AppModel(QThread):
 
             self.objects.components.update_callback_objects()
 
-            now = time.perf_counter()
-            sleep_time = next_tick - now
-            if not self._single_step and real_time and sleep_time > 0:
-                time.sleep(sleep_time)
+            if not self._single_step and real_time:
+                now = time.perf_counter()
+                sleep_time = next_tick - now
+                sleep_time = max(0.01, sleep_time)
             else:
-                time.sleep(0.01)  # Sleep a little, to be able to handle event
+                sleep_time = 0.01  # Sleep a little, to be able to handle event
+            time.sleep(sleep_time)
+
             self.sig_sim_time_notify.emit(self.objects.circuit.time_ns / 1000000000)
             if color_wires:
                 self.sig_repaint_wires.emit()
