@@ -34,28 +34,28 @@ and even if it is slower than many other verilog simulators it is not entirely u
 
 ### Install
 ```
-> python -m pip install .[app]
+> python3 -m pip install .[app]
 ```
 
 ### Start Interactive GUI
 
 ```
-> python -m digsim.app
+> python3 -m digsim.app
 ```
 
 ### Start with example circuit
 ```
-> python -m digsim.app --load example_circuits/yosys_counter.circuit
+> python3 -m digsim.app --load example_circuits/yosys_counter.circuit
 ```
 
 ### Run examples
 ```
-> python examples/example_sr.py
+> python3 examples/example_sr.py
 ```
 
 ### Look at waveforms
 ```
-> python examples/example_sr.py
+> python3 examples/example_sr.py
 > gtkwave sr.vcd
 ```
 
@@ -63,7 +63,7 @@ and even if it is slower than many other verilog simulators it is not entirely u
 
 **Yosys** must be installed and in your path
 ```
-> python -m digsim.synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
+> python3 -m digsim.synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
 ```
 
 ## Development ToDo List
