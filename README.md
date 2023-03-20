@@ -1,17 +1,20 @@
 # DigSim - Interactive Digital Logic Simulator
 
 <p align="center">
-  <img alt="The DigSim Application" src="doc/images/screenshot_digsim_app.png" width=85%>
+  <img alt="The DigSim Application" src="docs/images/screenshot_digsim_app.png" width=85%>
 </p>
 
-## Install
+[DigSim Docs](docs/documentation.md)
+
+## Quickstart
+
+### Install
 ```
 > python -m pip install .[app]
 ```
 
-## Start Interactive GUI
+### Start Interactive GUI
 
-### Start
 ```
 > python -m digsim.app
 ```
@@ -21,14 +24,14 @@
 > python -m digsim.app --load example_circuits/yosys_counter.circuit
 ```
 
-## Examples
-
-### Run
+### Run examples
 ```
 > python examples/example_sr.py
 ```
+
 ### Look at waveforms
 ```
+> python examples/example_sr.py
 > gtkwave sr.vcd
 ```
 
@@ -44,7 +47,7 @@
 Some verilog files have been "borrowed" from different github repositories,
 I will try to keep track of them and give credits!
 
-[SOURCES](https://github.com/freand76/digsim/blob/main/verilog/SOURCES.md)
+[SOURCES](verilog/SOURCES.md)
 
 ## Development ToDo List
 
