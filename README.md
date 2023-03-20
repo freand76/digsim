@@ -1,5 +1,9 @@
 # DigSim - Interactive Digital Logic Simulator
 
+<p align="center">
+  <img alt="The DigSim Application" src="doc/images/screenshot_digsim_app.png" width=85%>
+</p>
+
 ## Install
 ```
 > python -m pip install .[app]
