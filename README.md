@@ -9,6 +9,7 @@
   * [Quickstart](#quickstart)
   * [Yosys Helper Tool](#yosys-synthesis-helper-tool)
   * [Documentation](docs/documentation.md)
+  * [Borrowed verilog](verilog/SOURCES.md)
 
 ## Introduction
 
@@ -64,13 +65,6 @@ and even if it is slower than many other verilog simulators it is not entirely u
 ```
 > python -m digsim.synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
 ```
-
-## External verilog files and how to synthesise them
-
-Some verilog files have been "borrowed" from different github repositories,
-I will try to keep track of them and give credits!
-
-[SOURCES](verilog/SOURCES.md)
 
 ## Development ToDo List
 

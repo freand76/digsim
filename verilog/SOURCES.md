@@ -1,5 +1,8 @@
 # Verilog Sources
 
+Some verilog files have been "borrowed" from different github repositories,
+I will try to keep track of them and give credits!
+
 ## 74162 [Link](https://github.com/TimRudy/ice-chips-verilog)
 ```
 > python3 -m digsim.synth -i verilog/74xx/74162.v -o src/digsim/circuit/components/ic/74162.json -t ttl_74162
