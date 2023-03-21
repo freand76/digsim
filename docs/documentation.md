@@ -118,7 +118,7 @@ yosys> write_json <netlist_file.json>
 
 ### Notes
 
-Notes with (or without9 descriptive text can be added to the circuit.
+Notes with (or without) descriptive text can be added to the circuit.
 
 ## Wires
 
