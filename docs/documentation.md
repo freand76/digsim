@@ -143,5 +143,7 @@ Wires are used to connect component ports. A source port can drive multiple sink
 
 ## Simulation
 
+## VCD Generation
+
 # Python Circuits
 
