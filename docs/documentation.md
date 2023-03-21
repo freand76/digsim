@@ -24,6 +24,7 @@
 ### Output Components
 
 * LED - A LED output will be lit if it is driver by a logic one / high signal.
+  <br/><img alt="LED" src="../src/digsim/app/gui_objects/images/LED_ON.png"/>
 * Hex Digit - A Hex Digit will show the value on a bus (4 / 8 / 12 / 16 bits)
 * 7-Segment Display - A 7-Segment is almost the same as a hex digit but each segment can be controlled individually. 
 
