@@ -2,7 +2,7 @@
 
 * **Table of contents**
   * **[GUI Application](#gui-application)**
-    * [Circuit Editor](#circut-editor)
+    * [Circuit Editor](#circuit-editor)
     * [Components](#components)
     * [Wires](#wires)
     * [Simulation](#simulation)
@@ -15,15 +15,20 @@
 
 The GUI application is a circuit editor where components can be added and connected together with wires.
 
+<img alt="Circuit Editor" src="images/CircuitEditor.png" width=85%/>
+
+The circuit editor is divided into:
+ * A component selection area (the BLUE box), on the left hand side of the window.
+ * A circuit area (the RED box), on the right hand side of the window.
+ * A control area (the GREEN box) on the top side on the windows.
+
 A circuit will typically consist of:
  * One or several [Input Components](#input-components) i.e. Button(s) / Switch(es) / Clock(s)
  * Some logic such as [Gates](#logic-gates), [Flip Flops](#flip-flops) or more complex components
  * One or several [Output Components](#output-components) i.e. LED(s) / HexDigit(s) 
 
-When a circuit has been greated it can be [Simulated](#simulation) and if [VCD Generation](#vcd-generation) 
-is selected a vcd file will be created during simulation. 
-
-The circuit editor is divided into a component selection window on the left hand side and a circuit area on the right hand side.
+When a circuit has been created it can be [Simulated](#simulation).
+If [VCD Generation](#vcd-generation) is selected a **[VCD file](https://en.wikipedia.org/wiki/Value_change_dump)** will be created during simulation. 
 
 ## Components
 
@@ -94,7 +99,7 @@ The Flip Flop component will let you pick one of the following Flip Flop types.
 <img alt="Multiplexer" src="../src/digsim/app/gui_objects/images/MUX.png"/>
 </p>
 
-The multiplexed component can be configured with 2 to 8 inputs and with a data width between 1 and 32 bits.
+The multiplexer component can be configured with 2, 4 or 8 inputs and with a data width between 1 and 32 bits.
 
 ### Bus/Wire Converters
 
