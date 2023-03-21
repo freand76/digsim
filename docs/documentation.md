@@ -135,6 +135,11 @@ yosys> write_json <netlist_file.json>
 
 ### Notes
 
+
+<p float="left">
+<img alt="Note" src="images/Note.png"/>
+</p>
+
 Notes with (or without) descriptive text can be added to the circuit.
 
 ## Wires
