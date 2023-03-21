@@ -2,11 +2,28 @@
 
 * **Table of contents**
   * **[GUI Application](#gui-application)**
+    * [Circuit Editor](#circut-editor)
     * [Components](#components)
     * [Wires](#wires)
+    * [Simulation](#simulation)
+    * [VCD Generation](#vcd-generation)
   * **[Python Circuits](#python-circuits)**
 
 # GUI Application
+
+## Circuit Editor
+
+The GUI application is a circuit editor where components can be added and connected together with wires.
+
+A circuit will typically consist of:
+ * One or several [Input Components](#input-components) i.e. Button(s) / Switch(es) / Clock(s)
+ * Some logic such as [Gates](#logic-gates), [Flip Flops](#flip-flops) or more complex components
+ * One or several [Output Components](#output-components) i.e. LED(s) / HexDigit(s) 
+
+When a circuit has been greated it can be [Simulated](#simulation) and if [VCD Generation](#vcd-generation) 
+is selected a vcd file will be created during simulation. 
+
+The circuit editor is divided into a component selection window on the left hand side and a circuit area on the right hand side.
 
 ## Components
 
