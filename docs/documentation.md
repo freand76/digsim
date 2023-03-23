@@ -37,7 +37,7 @@ The circuit editor is divided into:
 A circuit will typically consist of:
  * One or several [Input Components](#input-components) i.e. Button(s) / Switch(es) / Clock(s)
  * Some logic such as [Gates](#logic-gates), [Flip Flops](#flip-flops) or more complex components
- * One or several [Output Components](#output-components) i.e. LED(s) / HexDigit(s) 
+ * One or several [Output Components](#output-components) i.e. LED(s) / Hex Digit(s) 
 
 When a circuit has been created it can be [Simulated](#simulation).
 
@@ -74,10 +74,10 @@ Components can be:
 
 ***Shortcuts** can be added to the Push Button and to the Switch, a shortcut is a key-binding that can activate a
 Push Button or toggle a Switch. The shortcut can be modified by right-clicking a component and select **Shortcut***.
- * Shortcut 1 is acivated by pressing the key "1"
- * Shortcut 2 is acivated by pressing the key "2"
+ * Shortcut 1 is activated by pressing the key "1"
+ * Shortcut 2 is activated by pressing the key "2"
  * ...
- * Shortcut 0 is acivated by pressing the key "0"
+ * Shortcut 0 is activated by pressing the key "0"
  
 ### Output Components
 
@@ -112,7 +112,7 @@ These basic logic gates have been implemented, most of them can be configured wi
  * The D Flip Flop symbol will let you add a D Flip Flop with configurable width and possibility to have clock enable and asynchronous reset.
  <br/><img alt="DFF" src="../src/digsim/app/gui_objects/images/DFF.png"/>
  * The Flip Flop component will let you pick one of the following Flip Flop types.
- <br/><img alt="FlipFLop" src="../src/digsim/app/gui_objects/images/FlipFlop.png"/>
+ <br/><img alt="FlipFlop" src="../src/digsim/app/gui_objects/images/FlipFlop.png"/>
 
     * SR Flop Flop
     * Edge Triggered SR Flip Flop
@@ -145,8 +145,8 @@ select **Reload** in the context menu.
 A test cycle could be like this:
  * Create verilog design
  * Do Yosys synthesis
- * Add yosys compoent to circuit
- * Connect conmponet with other components
+ * Add yosys component to circuit
+ * Connect component with other components
  * Run simulation to test functionality
  * Update verilog
  * Do Yosys synthesis
@@ -188,7 +188,7 @@ The VCD File that later can be loaded into [GTKWave](https://gtkwave.sourceforge
 [Yosys](https://github.com/YosysHQ/yosys) is an open-source verilog synthesis tool. 
 It can be used to create a [netlist](https://en.wikipedia.org/wiki/Netlist), a list of gates and of they are connected, from [verilog](https://en.wikipedia.org/wiki/Verilog).
 
-Yosys can be installed with your favorite packet manager, such as aptitude in ubuntu.
+Yosys can be installed with your favorite packet manager, such as aptitude in Ubuntu.
 ```
 shell> apt install yosys
 ```
