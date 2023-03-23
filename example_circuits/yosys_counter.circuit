@@ -54,7 +54,7 @@
                 "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
                 "settings": {
-                    "text": "The counter component is a \"Netlist-component\" \ngenerated from verilog with the Yosys tool."
+                    "text": "The counter component is a \"Netlist-component\" \ngenerated from verilog with the Yosys synthesis tool."
                 }
             },
             {
