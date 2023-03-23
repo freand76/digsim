@@ -236,3 +236,14 @@ shell> python3 -m digsim.synth -i <verilog file 1> <optional verilog file 2> -o 
 
 Circuits can also be created in python code and mixed with *normal* python code.
 See examples in the **examples** folder for inspiration.
+
+## Run example
+```
+shell> python3 examples/example_sr.py
+```
+
+## Run example and look at waveforms
+```
+shell> python3 examples/example_sr.py
+shell> gtkwave sr.vcd
+```
