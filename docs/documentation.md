@@ -162,7 +162,7 @@ A test cycle could be like this:
 
 Wires are used to connect component ports. A source port can drive multiple sink ports. 
 The source and sink port must be of the same type, i.e. a wire or a bus with the same bus width. 
-If a a bus needs to be splitted the [Bus/Wire Converters](#buswire-converters) can be used.    
+If a bus needs to be splitted the [Bus/Wire Converters](#buswire-converters) can be used.    
 
 ## Simulation
 
