@@ -13,6 +13,16 @@
 
 # GUI Application
 
+The application is started with:
+```
+shell> python3 -m digsim.app
+```
+
+or with the following line if a stored circuit should be loaded from the start:
+```
+shell> python3 -m digsim.app --load example_circuits/yosys_counter.circuit
+```
+
 ## Circuit Editor
 
 The GUI application is a circuit editor where components can be added and connected together with wires.
@@ -31,10 +41,25 @@ A circuit will typically consist of:
 
 When a circuit has been created it can be [Simulated](#simulation).
 
+A circuit can be:
+ * Saved
+ * Loaded
+ * Cleared
+
+There are **Delete**, **Undo**, **Redo** and **Settings** buttons in the control area.
+
 ## Components
 
 The different components are found on the left hand side of the application. 
 To add a component simply double click it or drag it into the circuit area, on the right hand side of the application.
+
+Some components have a settings dialog that pop-up during creation. The settings dialog can also be reached by right-clicking 
+the component and selecting **Settings**.
+
+Components can be:
+ * Selected - By clicking on the component
+ * Moved - By left-click dragging the component
+ * Deleted - By right-clicking and selecting **Delete**, by pressing the **Del** key or by pressing the **Delete Button** in the control area. 
 
 ### Input Components
 
@@ -211,10 +236,3 @@ shell> python3 -m digsim.synth -i <verilog file 1> <optional verilog file 2> -o 
 
 Circuits can also be created in python code and mixed with *normal* python code.
 See examples in the **examples** folder for inspiration.
-
-
-
-
-
-
-
