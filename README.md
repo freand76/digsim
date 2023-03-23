@@ -16,9 +16,9 @@
 DigSim is a python based framework used to simulate digital circuits. 
 The main purpose of the software is to to, in an educational way, play around with digital logic components and components created in verilog.
 
-When working with block design in Verilog/VHDL the simulation tools are often setup with test stimuli (a very non-interactive way of working...)
+When working with block design in Verilog/VHDL the simulation tools are setup with test stimuli (a very non-interactive way of working...)
 A block design can be synthesized and tested on an FPGA (where there are possibilities for interactivity if buttons and LED/Hexdigits are available),
-but that is often have a great cost in time (and sometimes money) leading to long turnaround time. 
+but that often have a great cost in time (and sometimes money) leading to long turnaround time. 
 
 I started developing DigSim to make it easy to implement and visualize the functionality of simple verlog blocks. 
 During developent I tried to synthesize larger verilog designs, such as the classic 6502 CPU, 
@@ -68,8 +68,8 @@ and even if it is slower than many other verilog simulators it is not entirely u
 
 ## Development ToDo List
 
-### Documentation
-   * Add documentation :-)
 ### Model
    * Add unittest of all components
-   * Add unittest of ports
+   * Add unittest of ports 
+### GUI
+   * Handle stacked components (Bring to front/Send to back)
