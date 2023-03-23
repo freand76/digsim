@@ -7,6 +7,8 @@
     * [Wires](#wires)
     * [Simulation](#simulation)
     * [VCD Generation](#vcd-generation)
+    * [Yosys Synthesis](#yosys-synthesis)
+
   * **[Python Circuits](#python-circuits)**
 
 # GUI Application
@@ -28,7 +30,6 @@ A circuit will typically consist of:
  * One or several [Output Components](#output-components) i.e. LED(s) / HexDigit(s) 
 
 When a circuit has been created it can be [Simulated](#simulation).
-If [VCD Generation](#vcd-generation) is selected a **[VCD file](https://en.wikipedia.org/wiki/Value_change_dump)** will be created during simulation. 
 
 ## Components
 
@@ -46,6 +47,13 @@ To add a component simply double click it or drag it into the circuit area, on t
  * Static Value - A static value can be setup to output value on a wire or a bus.
    <br/><img alt="Static Value" src="../src/digsim/app/gui_objects/images/ZERO.png"/>
 
+***Shortcuts** can be added to the Push Button and to the Switch, a shortcut is a key-binding that can activate a
+Push Button or toggle a Switch. The shortcut can be modified by right-clicking a component and select **Shortcut***.
+ * Shortcut 1 is acivated by pressing the key "1"
+ * Shortcut 2 is acivated by pressing the key "2"
+ * ...
+ * Shortcut 0 is acivated by pressing the key "0"
+ 
 ### Output Components
 
 * LED - A LED output will be lit if it is driver by a logic one / high signal.
@@ -56,6 +64,7 @@ To add a component simply double click it or drag it into the circuit area, on t
   <br/><img alt="7-Segment" src="images/SevenSegment.png"/>
 
 ### Logic Gates
+These basic logic gates have been implemented, most of them can be configured with 2 to 8 inputs:
 
 <p float="left">
 <img alt="OR" src="../src/digsim/app/gui_objects/images/OR.png"/>
@@ -66,40 +75,28 @@ To add a component simply double click it or drag it into the circuit area, on t
 <img alt="NAND" src="../src/digsim/app/gui_objects/images/NAND.png"/>
 <p/>
 
-These basic logic gates have been implemented, most of them can be configured with 2 to 8 inputs:
-  * OR
-  * AND
-  * NOT
-  * XOR
-  * NOR
-  * NAND
+ * OR
+ * AND
+ * NOT
+ * XOR
+ * NOR
+ * NAND
  
 ### Flip Flops
 
-<p float="left">
-<img alt="DFF" src="../src/digsim/app/gui_objects/images/DFF.png"/>
-</p>
+ * The D Flip Flop symbol will let you add a D Flip Flop with configurable width and possibility to have clock enable and asynchronous reset.
+ <br/><img alt="DFF" src="../src/digsim/app/gui_objects/images/DFF.png"/>
+ * The Flip Flop component will let you pick one of the following Flip Flop types.
+ <br/><img alt="FlipFLop" src="../src/digsim/app/gui_objects/images/FlipFlop.png"/>
 
-The D Flip FLop symbol will let you add a D Flip Flop with configurable width and possibility to have clock enable and asynchronous reset.
-
-<p float="left">
-<img alt="FlipFLop" src="../src/digsim/app/gui_objects/images/FlipFlop.png"/>
-</p>
-
-The Flip Flop component will let you pick one of the following Flip Flop types.
-
-  * SR Flop Flop
-  * Edge Triggered SR Flip Flop
-  * Edge Triggered JK Flip Flop
-  * Edge Triggered T Flip FLop
+    * SR Flop Flop
+    * Edge Triggered SR Flip Flop
+    * Edge Triggered JK Flip Flop
+    * Edge Triggered T Flip FLop
 
 ### Multiplexer
-
-<p float="left">
-<img alt="Multiplexer" src="../src/digsim/app/gui_objects/images/MUX.png"/>
-</p>
-
 The multiplexer component can be configured with 2, 4 or 8 inputs and with a data width between 1 and 32 bits.
+<br/><img alt="Multiplexer" src="../src/digsim/app/gui_objects/images/MUX.png"/>
 
 ### Bus/Wire Converters
 
@@ -107,26 +104,85 @@ The Bus/Wire converters can either be used to split a bus into several bits or t
 
 ### IC Components
 
-The IC components are pre-synthesized verilog components. More netlists, in Yosys json format,
+The IC components are pre-synthesized Yosys components. More netlists, in Yosys json format,
 can be added to the **src/digsim/circuit/components/ic** folder.
 
 ### Yosys Component
 
-[Yosys](https://github.com/YosysHQ/yosys) is an open-source verilog synthesizer tool 
+Yosys components are components where the functionality is described by a netlist created from verilog with Yosys.
+See chapter about [Yosys Synthesis](#yosys-synthesis).
 
-When adding a Yosys component the application will bring up a file dialog where you can choose a synthesized Yosys netlist in json formar.
-It is possible to use the python synthesizer helper application to create the json netlist.  
+When adding a Yosys component the application will bring up a file dialog where you can choose a Yosys netlist in json format.
+
+When the yosys component has been added to the circuit it is possible to reload the netlist by right-clicking on the component and 
+select **Reload** in the context menu. 
+
+A test cycle could be like this:
+ * Create verilog design
+ * Do Yosys synthesis
+ * Add yosys compoent to circuit
+ * Connect conmponet with other components
+ * Run simulation to test functionality
+ * Update verilog
+ * Do Yosys synthesis
+ * Right-click component and select **Reload**
+
+***Important: The interface, input and output ports in the netlist must not change between load and reload.***
+
+### Notes
+ * Notes with (or without) informative text can be added to the circuit.
+ <br/><img alt="Note" src="images/Note.png"/>
+
+## Wires
+
+Wires are used to connect component ports. A source port can drive multiple sink ports. 
+The source and sink port must be of the same type, i.e. a wire or a bus with the same bus width. 
+If a a bus needs to be splitted the [Bus/Wire Converters](#buswire-converters) can be used.    
+
+## Simulation
+
+When a circuit has been created with input component(s), automatic or manual controlled, 
+and output component(s) the circuit can be simulated.
+
+ * A simulation can be started by clicking the **Start Simulation** button.
+ * A running simulation can be stopped by clicking the **Stop Simulation** button.
+ * The simulation can be reset by clicking the **Reset Simulation** button
+ * The current simulation time can be seen in the control area.
+ * A Push Button can be activated by clicking the component.
+ * A Switch can be toggled by clicking the component.
+
+## VCD Generation
+
+If [VCD Generation](#vcd-generation) is activated, by checking the **VCD Output** checkbox in the control area,
+a [VCD file](https://en.wikipedia.org/wiki/Value_change_dump) will be created during simulation. 
+
+The VCD File that later can be loaded into [GTKWave](https://gtkwave.sourceforge.net/) or similar tool.
+
+## Yosys Synthesis
+
+[Yosys](https://github.com/YosysHQ/yosys) is an open-source verilog synthesis tool. 
+It can be used to create a [netlist](https://en.wikipedia.org/wiki/Netlist), a list of gates and of they are connected, from [verilog](https://en.wikipedia.org/wiki/Verilog).
+
+Yosys can be installed with your favorite packet manager, such as aptitude in ubuntu.
 ```
-shell> python3 -m digsim.synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
+shell> apt install yosys
 ```
+If you want the latest and greatest version it can be fetched from [github](https://github.com/YosysHQ/yosys). 
 
-It is also possible to start Yosys and do the exact same thing in the command line interface.
+More information and documentation can be found [here](https://yosyshq.net/yosys/documentation.html).
 
+When Yosys is installed it can be started, verilog can be loaded and the synthesis process can begin.
+
+### Synthesis with command line interface
+
+ * Start application
 ```
 shell> yosys
 ```
 
-For all my experiments I have found that the following "yosys-script" works out fine. 
+* Execute synthesis script
+
+For all my experiments I have used the following "yosys-script" with good results. 
 
 ```
 yosys> read -sv <verilog_file.v>
@@ -138,22 +194,27 @@ yosys> synth -top <verilog top module>
 yosys> write_json <netlist_file.json>
 ```
 
-### Notes
+### Synthesis with script
 
+```
+shell> yosys <synthesis_scriptfile.ys>
+```
 
-<p float="left">
-<img alt="Note" src="images/Note.png"/>
-</p>
+### Synthesis with python helper
 
-Notes with (or without) informative text can be added to the circuit.
-
-## Wires
-
-Wires are used to connect component ports. A source port can drive multiple sink ports. The source and sink port must be of the same type, i.e. a wire or a bus with the same bus width. If a a bus needs to be splitted the [Bus/Wire Converters](#buswire-converters) can be used.    
-
-## Simulation
-
-## VCD Generation
+It is possible to use my **python helper application** to create the json netlist.  
+```
+shell> python3 -m digsim.synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
+```
 
 # Python Circuits
+
+Circuits can also be created in python code and mixed with *normal* python code.
+See examples in the **examples** folder for inspiration.
+
+
+
+
+
+
 
