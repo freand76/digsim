@@ -306,6 +306,7 @@ class LoadSaveWidget(QFrame):
             self._delete_button.setEnabled(False)
             self._undo_button.setEnabled(False)
             self._redo_button.setEnabled(False)
+            self._settings_button.setEnabled(False)
         else:
             self._load_button.setEnabled(True)
             self._save_button.setEnabled(self._app_model.is_changed)
@@ -313,7 +314,7 @@ class LoadSaveWidget(QFrame):
             self._delete_button.setEnabled(self._app_model.objects.has_selection())
             self._undo_button.setEnabled(self._app_model.objects.can_undo())
             self._redo_button.setEnabled(self._app_model.objects.can_redo())
-
+            self._settings_button.setEnabled(True)
 
 class TopBar(QFrame):
     """
