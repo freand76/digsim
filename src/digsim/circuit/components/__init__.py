@@ -11,6 +11,7 @@ from ._gates import AND, DFF, MUX, NAND, NOR, NOT, OR, SR, XOR  # noqa: F401
 from ._hexdigit import HexDigit  # noqa: F401
 from ._ic import IntegratedCircuit  # noqa: F401
 from ._led import Led  # noqa: F401
+from ._logic_analyzer import LogicAnalyzer  # noqa: F401
 from ._mem64kbyte import Mem64kByte  # noqa: F401
 from ._memstdout import MemStdOut  # noqa: F401
 from ._note import Note  # noqa: F401

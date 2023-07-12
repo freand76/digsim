@@ -316,6 +316,7 @@ class LoadSaveWidget(QFrame):
             self._redo_button.setEnabled(self._app_model.objects.can_redo())
             self._settings_button.setEnabled(True)
 
+
 class TopBar(QFrame):
     """
     The top widget with the control and status widgets

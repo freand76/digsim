@@ -23,6 +23,7 @@ from ._image_objects import (
     ImageObjectStaticValue,
     ImageObjectXOR,
 )
+from ._logic_analyzer_object import LogicAnalyzerObject
 from ._seven_segment_object import SevenSegmentObject
 from ._shortcut_objects import ButtonObject, OnOffSwitchObject
 from ._yosys_object import YosysObject
@@ -40,6 +41,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT = {
     "DFF": ImageObjectDFF,
     "HexDigit": HexDigitObject,
     "Led": ImageObjectLed,
+    "LogicAnalyzer": LogicAnalyzerObject,
     "NAND": ImageObjectNAND,
     "NOR": ImageObjectNOR,
     "NOT": ImageObjectNOT,
