@@ -88,7 +88,7 @@ Push Button or toggle a Switch. The shortcut can be modified by right-clicking a
 * 7-Segment Display - A 7-Segment is almost the same as a hex digit but each segment can be controlled individually. 
   <br/><img alt="7-Segment" src="images/SevenSegment.png"/>
 * Logic Analyzer - An logic analyzer to show signal levels in real-time
-  <br/><img alt="Logic Analyzer" src="images/Analyzer.png"/>
+  <br/><img alt="Logic Analyzer" src="../src/digsim/app/gui_objects/images/Analyzer.png"/>
 
 ### Logic Gates
 These basic logic gates have been implemented, most of them can be configured with 2 to 8 inputs:
