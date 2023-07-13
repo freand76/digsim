@@ -129,6 +129,14 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(SelectableComponentWidget("FlipFlop", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("MUX", self, circuit_area))
         self.layout().addWidget(DescriptionText(self, "Bus / Wires"))
+        self.layout().addWidget(
+            SelectableComponentWidget("LabelWireIn", self, circuit_area, display_name="Wire Sink")
+        )
+        self.layout().addWidget(
+            SelectableComponentWidget(
+                "LabelWireOut", self, circuit_area, display_name="Wire Source"
+            )
+        )
         self.layout().addWidget(SelectableComponentWidget("Bus2Wires", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("Wires2Bus", self, circuit_area))
         self.layout().addWidget(DescriptionText(self, "IC / Verilog"))

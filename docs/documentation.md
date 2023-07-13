@@ -2,12 +2,12 @@
 
 * **Table of contents**
   * **[GUI Application](#gui-application)**
-    * [Circuit Editor](#circuit-editor)
-    * [Components](#components)
-    * [Wires](#wires)
-    * [Simulation](#simulation)
-    * [VCD Generation](#vcd-generation)
-    * [Yosys Synthesis](#yosys-synthesis)
+	* [Circuit Editor](#circuit-editor)
+	* [Components](#components)
+	* [Wires](#wires)
+	* [Simulation](#simulation)
+	* [VCD Generation](#vcd-generation)
+	* [Yosys Synthesis](#yosys-synthesis)
 
   * **[Python Circuits](#python-circuits)**
 
@@ -37,7 +37,7 @@ The circuit editor is divided into:
 A circuit will typically consist of:
  * One or several [Input Components](#input-components) i.e. Button(s) / Switch(es) / Clock(s)
  * Some logic such as [Gates](#logic-gates), [Flip Flops](#flip-flops) or more complex components
- * One or several [Output Components](#output-components) i.e. LED(s) / Hex Digit(s) 
+ * One or several [Output Components](#output-components) i.e. LED(s) / Hex Digit(s)
 
 When a circuit has been created it can be [Simulated](#simulation).
 
@@ -50,21 +50,21 @@ There are **Delete**, **Undo**, **Redo** and **Settings** buttons in the control
 
 ## Components
 
-The different components are found on the left hand side of the application. 
+The different components are found on the left hand side of the application.
 To add a component simply double click it or drag it into the circuit area, on the right hand side of the application.
 
-Some components have a settings dialog that pop-up during creation. The settings dialog can also be reached by right-clicking 
+Some components have a settings dialog that pop-up during creation. The settings dialog can also be reached by right-clicking
 the component and selecting **Settings**.
 
 Components can be:
  * Selected - By clicking on the component
  * Moved - By left-click dragging the component
- * Deleted - By right-clicking and selecting **Delete**, by pressing the **Del** key or by pressing the **Delete Button** in the control area. 
+ * Deleted - By right-clicking and selecting **Delete**, by pressing the **Del** key or by pressing the **Delete Button** in the control area.
 
 ### Input Components
 
  * Push Button - A Push Button will change its output when it is pressed
-   <br/><img alt="Button" src="../src/digsim/app/gui_objects/images/PB.png"/> 
+   <br/><img alt="Button" src="../src/digsim/app/gui_objects/images/PB.png"/>
  * On/Off Switch - An on/off switch will change its output when it is toggled
    <br/><img alt="Switch" src="../src/digsim/app/gui_objects/images/Switch_ON.png"/>
  * Clock - A clock will change its output with a certain frequency
@@ -78,14 +78,14 @@ Push Button or toggle a Switch. The shortcut can be modified by right-clicking a
  * Shortcut 2 is activated by pressing the key "2"
  * ...
  * Shortcut 0 is activated by pressing the key "0"
- 
+
 ### Output Components
 
 * LED - A LED output will be lit if it is driver by a logic one / high signal.
   <br/><img alt="LED" src="../src/digsim/app/gui_objects/images/LED_ON.png"/>
 * Hex Digit - A Hex Digit will show the value on a bus (4 / 8 / 12 / 16 bits)
   <br/><img alt="HexDigit" src="images/HexDigit.png"/>
-* 7-Segment Display - A 7-Segment is almost the same as a hex digit but each segment can be controlled individually. 
+* 7-Segment Display - A 7-Segment is almost the same as a hex digit but each segment can be controlled individually.
   <br/><img alt="7-Segment" src="images/SevenSegment.png"/>
 * Logic Analyzer - An logic analyzer to show signal levels in real-time
   <br/><img alt="Logic Analyzer" src="../src/digsim/app/gui_objects/images/Analyzer.png"/>
@@ -108,7 +108,7 @@ These basic logic gates have been implemented, most of them can be configured wi
  * XOR
  * NOR
  * NAND
- 
+
 ### Flip Flops
 
  * The D Flip Flop symbol will let you add a D Flip Flop with configurable width and possibility to have clock enable and asynchronous reset.
@@ -116,10 +116,10 @@ These basic logic gates have been implemented, most of them can be configured wi
  * The Flip Flop component will let you pick one of the following Flip Flop types.
  <br/><img alt="FlipFlop" src="../src/digsim/app/gui_objects/images/FlipFlop.png"/>
 
-    * SR Flop Flop
-    * Edge Triggered SR Flip Flop
-    * Edge Triggered JK Flip Flop
-    * Edge Triggered T Flip FLop
+	* SR Flop Flop
+	* Edge Triggered SR Flip Flop
+	* Edge Triggered JK Flip Flop
+	* Edge Triggered T Flip FLop
 
 ### Multiplexer
 The multiplexer component can be configured with 2, 4 or 8 inputs and with a data width between 1 and 32 bits.
@@ -141,8 +141,8 @@ See chapter about [Yosys Synthesis](#yosys-synthesis).
 
 When adding a Yosys component the application will bring up a file dialog where you can choose a Yosys netlist in json format.
 
-When the yosys component has been added to the circuit it is possible to reload the netlist by right-clicking on the component and 
-select **Reload** in the context menu. 
+When the yosys component has been added to the circuit it is possible to reload the netlist by right-clicking on the component and
+select **Reload** in the context menu.
 
 A test cycle could be like this:
  * Create verilog design
@@ -162,13 +162,13 @@ A test cycle could be like this:
 
 ## Wires
 
-Wires are used to connect component ports. A source port can drive multiple sink ports. 
-The source and sink port must be of the same type, i.e. a wire or a bus with the same bus width. 
-If a bus needs to be splitted the [Bus/Wire Converters](#buswire-converters) can be used.    
+Wires are used to connect component ports. A source port can drive multiple sink ports.
+The source and sink port must be of the same type, i.e. a wire or a bus with the same bus width.
+If a bus needs to be splitted the [Bus/Wire Converters](#buswire-converters) can be used.
 
 ## Simulation
 
-When a circuit has been created with input component(s), automatic or manual controlled, 
+When a circuit has been created with input component(s), automatic or manual controlled,
 and output component(s) the circuit can be simulated.
 
  * A simulation can be started by clicking the **Start Simulation** button.
@@ -181,20 +181,20 @@ and output component(s) the circuit can be simulated.
 ## VCD Generation
 
 If [VCD Generation](#vcd-generation) is activated, by checking the **VCD Output** checkbox in the control area,
-a [VCD file](https://en.wikipedia.org/wiki/Value_change_dump) will be created during simulation. 
+a [VCD file](https://en.wikipedia.org/wiki/Value_change_dump) will be created during simulation.
 
 The VCD File that later can be loaded into [GTKWave](https://gtkwave.sourceforge.net/) or similar tool.
 
 ## Yosys Synthesis
 
-[Yosys](https://github.com/YosysHQ/yosys) is an open-source verilog synthesis tool. 
+[Yosys](https://github.com/YosysHQ/yosys) is an open-source verilog synthesis tool.
 It can be used to create a [netlist](https://en.wikipedia.org/wiki/Netlist), a list of gates and of they are connected, from [verilog](https://en.wikipedia.org/wiki/Verilog).
 
 Yosys can be installed with your favorite packet manager, such as aptitude in Ubuntu.
 ```
 shell> apt install yosys
 ```
-If you want the latest and greatest version it can be fetched from [github](https://github.com/YosysHQ/yosys). 
+If you want the latest and greatest version it can be fetched from [github](https://github.com/YosysHQ/yosys).
 
 More information and documentation can be found [here](https://yosyshq.net/yosys/documentation.html).
 
@@ -209,7 +209,7 @@ shell> yosys
 
 * Execute synthesis script
 
-For all my experiments I have used the following "yosys-script" with good results. 
+For all my experiments I have used the following "yosys-script" with good results.
 
 ```
 yosys> read -sv <verilog_file.v>
@@ -229,7 +229,7 @@ shell> yosys <synthesis_scriptfile.ys>
 
 ### Synthesis with python helper
 
-It is possible to use my **python helper application** to create the json netlist.  
+It is possible to use my **python helper application** to create the json netlist.
 ```
 shell> python3 -m digsim.synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
 ```

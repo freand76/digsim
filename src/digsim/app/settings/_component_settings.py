@@ -3,6 +3,8 @@
 
 """The component settings dialog(s)"""
 
+# pylint: disable=too-many-branches
+
 import pathlib
 
 from PySide6.QtCore import Qt, Signal
@@ -16,6 +18,7 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QSlider,
     QTextEdit,
@@ -63,6 +66,24 @@ class ComponentSettingText(ComponentSettingsBase):
 
     def _update(self):
         value = self._text_edit.toPlainText()
+        self._settings[self._parameter] = value
+
+
+class ComponentSettingSingleLineText(ComponentSettingsBase):
+    """Text setting"""
+
+    def __init__(self, parent, parameter, parameter_dict, settings):
+        super().__init__(parent, parameter, parameter_dict, settings)
+        self.setLayout(QVBoxLayout(self))
+        self.layout().addWidget(QLabel(self._parameter_dict["description"]))
+        self._line_edit = QLineEdit(self)
+        self._line_edit.setText(self._parameter_dict["default"])
+        self._settings[self._parameter] = self._parameter_dict["default"]
+        self._line_edit.textChanged.connect(self._update)
+        self.layout().addWidget(self._line_edit)
+
+    def _update(self):
+        value = self._line_edit.text()
         self._settings[self._parameter] = value
 
 
@@ -198,6 +219,25 @@ class ComponentSettingsNameSelector(ComponentSettingsBase):
         self._settings[self._parameter] = self._component_selector.itemData(value)
 
 
+class ComponentSettingsLabelSelector(ComponentSettingsBase):
+    """Label Selector"""
+
+    def __init__(self, parent, parameter, parameter_dict, settings):
+        super().__init__(parent, parameter, parameter_dict, settings)
+        self.setLayout(QVBoxLayout(self))
+        self.layout().addWidget(QLabel(self._parameter_dict["description"]))
+        label_list = self._parameter_dict["label_list"]
+        self._label_selector = QComboBox(parent)
+        for label in label_list:
+            self._label_selector.addItem(label, userData=label)
+        self.layout().addWidget(self._label_selector)
+        self._label_selector.currentIndexChanged.connect(self._update)
+        self._update(self._label_selector.currentIndex())
+
+    def _update(self, value):
+        self._settings[self._parameter] = self._label_selector.itemData(value)
+
+
 class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
     """SettingsCheckbox for width number of bits (max32)"""
 
@@ -303,7 +343,13 @@ class ComponentSettingsDialog(QDialog):
             elif parameter_dict["type"] == int:
                 widget = ComponentSettingsSlider(self, parameter, parameter_dict, self._settings)
             elif parameter_dict["type"] == str:
-                widget = ComponentSettingText(self, parameter, parameter_dict, self._settings)
+                single_line = parameter_dict.get("single_line", False)
+                if single_line:
+                    widget = ComponentSettingSingleLineText(
+                        self, parameter, parameter_dict, self._settings
+                    )
+                else:
+                    widget = ComponentSettingText(self, parameter, parameter_dict, self._settings)
             elif parameter_dict["type"] == bool:
                 widget = ComponentSettingsCheckBox(self, parameter, parameter_dict, self._settings)
             elif parameter_dict["type"] == "intrange":
@@ -316,6 +362,10 @@ class ComponentSettingsDialog(QDialog):
                 )
             elif parameter_dict["type"] == "component_name":
                 widget = ComponentSettingsNameSelector(
+                    self, parameter, parameter_dict, self._settings
+                )
+            elif parameter_dict["type"] == "label_name":
+                widget = ComponentSettingsLabelSelector(
                     self, parameter, parameter_dict, self._settings
                 )
             else:

@@ -23,6 +23,7 @@ from ._image_objects import (
     ImageObjectStaticValue,
     ImageObjectXOR,
 )
+from ._label_object import LabelObject
 from ._logic_analyzer_object import LogicAnalyzerObject
 from ._seven_segment_object import SevenSegmentObject
 from ._shortcut_objects import ButtonObject, OnOffSwitchObject
@@ -40,6 +41,8 @@ CLASS_NAME_TO_COMPONENT_OBJECT = {
     "Clock": ImageObjectClock,
     "DFF": ImageObjectDFF,
     "HexDigit": HexDigitObject,
+    "LabelWireIn": LabelObject,
+    "LabelWireOut": LabelObject,
     "Led": ImageObjectLed,
     "LogicAnalyzer": LogicAnalyzerObject,
     "NAND": ImageObjectNAND,

@@ -10,6 +10,7 @@ from ._flip_flops import SRFF, ClockedJKFF, ClockedSRFF, ClockedTFF, FlipFlop  #
 from ._gates import AND, DFF, MUX, NAND, NOR, NOT, OR, SR, XOR  # noqa: F401
 from ._hexdigit import HexDigit  # noqa: F401
 from ._ic import IntegratedCircuit  # noqa: F401
+from ._label_wire import LabelWireIn, LabelWireOut  # noqa: F401
 from ._led import Led  # noqa: F401
 from ._logic_analyzer import LogicAnalyzer  # noqa: F401
 from ._mem64kbyte import Mem64kByte  # noqa: F401
