@@ -110,7 +110,7 @@
                 "display_name": "LogicAnalyzer",
                 "type": "digsim.circuit.components.LogicAnalyzer",
                 "settings": {
-                    "sample_rate": 100
+                    "sample_rate": 20
                 }
             },
             {
