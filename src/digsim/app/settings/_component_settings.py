@@ -28,6 +28,10 @@ from PySide6.QtWidgets import (
 from digsim.circuit.components import IntegratedCircuit
 
 
+class ComponentSettingsException(Exception):
+    """ComponentSettingsException"""
+
+
 class ComponentSettingsBase(QFrame):
     """SettingsBase"""
 
@@ -227,6 +231,9 @@ class ComponentSettingsLabelSelector(ComponentSettingsBase):
         self.setLayout(QVBoxLayout(self))
         self.layout().addWidget(QLabel(self._parameter_dict["description"]))
         label_list = self._parameter_dict["label_list"]
+        if len(label_list) == 0:
+            raise ComponentSettingsException("No available labels to choose from")
+
         self._label_selector = QComboBox(parent)
         for label in label_list:
             self._label_selector.addItem(label, userData=label)
@@ -317,20 +324,17 @@ class ComponentSettingsDialog(QDialog):
         if is_file_path:
             return len(settings) > 0, settings
 
-        dialog = ComponentSettingsDialog(parent, app_model, name, parameters)
-        result = dialog.exec_()
-        if result == QDialog.DialogCode.Rejected:
+        try:
+            dialog = ComponentSettingsDialog(parent, app_model, name, parameters)
+            result = dialog.exec_()
+            if result == QDialog.DialogCode.Rejected:
+                return False, {}
+            return True, dialog.get_settings()
+        except ComponentSettingsException as exc:
+            app_model.sig_error.emit(str(exc))
             return False, {}
-        return True, dialog.get_settings()
 
-    def __init__(self, parent, app_model, name, parameters):
-        super().__init__(parent)
-        self._app_model = app_model
-        self.setLayout(QVBoxLayout(self))
-        self.setWindowTitle(f"Setup {name}")
-        self.setFocusPolicy(Qt.StrongFocus)
-
-        self._settings = {}
+    def _setup_dialog(self, parameters):
         for parameter, parameter_dict in parameters.items():
             if parameter_dict["type"] == "width_pow2":
                 widget = ComponentSettingsSliderWidthPow2(
@@ -374,6 +378,14 @@ class ComponentSettingsDialog(QDialog):
 
             self.layout().addWidget(widget)
 
+    def __init__(self, parent, app_model, name, parameters):
+        super().__init__(parent)
+        self._app_model = app_model
+        self.setLayout(QVBoxLayout(self))
+        self.setWindowTitle(f"Setup {name}")
+        self.setFocusPolicy(Qt.StrongFocus)
+        self._settings = {}
+        self._setup_dialog(parameters)
         QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
         self.buttonBox = QDialogButtonBox(QBtn)
         self.buttonBox.accepted.connect(self.accept)
