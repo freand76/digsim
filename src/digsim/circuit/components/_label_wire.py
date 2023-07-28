@@ -23,6 +23,11 @@ class _LabelWireStorage:
         """Get label list"""
         return list(self._wire_drivers.keys())
 
+    def get_wire_width(self, label):
+        """Get width of wire"""
+        driver_port = self._wire_drivers.get(label)
+        return driver_port.width
+
     def add_driver(self, label, driver_port):
         """Add driver port with label"""
         if label in self._wire_drivers:
@@ -66,10 +71,10 @@ class _LabelWireStorage:
 class LabelWireIn(Component):
     """LabelWireIn component class"""
 
-    def __init__(self, circuit, name=None, label=None):
+    def __init__(self, circuit, name=None, label=None, width=1):
         super().__init__(circuit, name)
         self._label = label
-        self._port_in = PortWire(self, self._label)
+        self._port_in = PortWire(self, self._label, width=width)
         self.add_port(self._port_in)
         self.parameter_set("label", self._label)
         self._label_wires = _LabelWireStorage()
@@ -92,6 +97,13 @@ class LabelWireIn(Component):
                 "default": "WireLabel",
                 "description": "Label name",
             },
+            "width": {
+                "type": int,
+                "min": 1,
+                "max": 32,
+                "default": 1,
+                "description": "Bitwidth of wire",
+            },
         }
 
 
@@ -100,8 +112,10 @@ class LabelWireOut(Component):
 
     def __init__(self, circuit, name=None, label=None):
         super().__init__(circuit, name)
+        self._label_wires = _LabelWireStorage()
+        width = self._label_wires.get_wire_width(label)
         self._label = label
-        self._port_out = PortWire(self, self._label, output=True)
+        self._port_out = PortWire(self, self._label, width=width, output=True)
         self.add_port(self._port_out)
         self.parameter_set("label", self._label)
         self._label_wires = _LabelWireStorage()
