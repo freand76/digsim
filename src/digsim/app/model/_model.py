@@ -23,6 +23,8 @@ class AppModel(QThread):
     """The application model class for a GUI simulated circuit"""
 
     sig_component_notify = Signal(Component)
+    sig_audio_start = Signal(bool)
+    sig_audio_notify = Signal(Component)
     sig_control_notify = Signal()
     sig_sim_time_notify = Signal(float)
     sig_synchronize_gui = Signal()
@@ -120,6 +122,7 @@ class AppModel(QThread):
         sim_tick_ms = 1000 / self._model_settings.get("update_frequency")
         real_time = self._model_settings.get("real_time")
         color_wires = self._model_settings.get("color_wires")
+        self.sig_audio_start.emit(True)
         while self._started:
             next_tick += sim_tick_ms / 1000
 
@@ -150,6 +153,7 @@ class AppModel(QThread):
 
         self._single_step = False
         self.sig_control_notify.emit()
+        self.sig_audio_start.emit(False)
 
     def save_circuit(self, path):
         """Save the circuit with GUI information"""

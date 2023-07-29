@@ -151,8 +151,8 @@ class LabelWireOut(Component):
 
         return {
             "label": {
-                "type": "label_name",
-                "label_list": label_list,
+                "type": list,
+                "items": label_list,
                 "description": "Select label",
             }
         }

@@ -113,6 +113,7 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(
             SelectableComponentWidget("SevenSegment", self, circuit_area, display_name="7-Seg")
         )
+        self.layout().addWidget(SelectableComponentWidget("Buzzer", self, circuit_area))
         self.layout().addWidget(
             SelectableComponentWidget(
                 "LogicAnalyzer", self, circuit_area, display_name="Logic Analyzer"

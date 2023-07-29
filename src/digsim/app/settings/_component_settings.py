@@ -223,26 +223,26 @@ class ComponentSettingsNameSelector(ComponentSettingsBase):
         self._settings[self._parameter] = self._component_selector.itemData(value)
 
 
-class ComponentSettingsLabelSelector(ComponentSettingsBase):
-    """Label Selector"""
+class ComponentSettingsListSelector(ComponentSettingsBase):
+    """List Selector"""
 
     def __init__(self, parent, parameter, parameter_dict, settings):
         super().__init__(parent, parameter, parameter_dict, settings)
         self.setLayout(QVBoxLayout(self))
         self.layout().addWidget(QLabel(self._parameter_dict["description"]))
-        label_list = self._parameter_dict["label_list"]
-        if len(label_list) == 0:
-            raise ComponentSettingsException("No available labels to choose from")
+        item_list = self._parameter_dict["items"]
+        if len(item_list) == 0:
+            raise ComponentSettingsException("No available items to choose from")
 
-        self._label_selector = QComboBox(parent)
-        for label in label_list:
-            self._label_selector.addItem(label, userData=label)
-        self.layout().addWidget(self._label_selector)
-        self._label_selector.currentIndexChanged.connect(self._update)
-        self._update(self._label_selector.currentIndex())
+        self._item_selector = QComboBox(parent)
+        for item in item_list:
+            self._item_selector.addItem(item, userData=item)
+        self.layout().addWidget(self._item_selector)
+        self._item_selector.currentIndexChanged.connect(self._update)
+        self._update(self._item_selector.currentIndex())
 
     def _update(self, value):
-        self._settings[self._parameter] = self._label_selector.itemData(value)
+        self._settings[self._parameter] = self._item_selector.itemData(value)
 
 
 class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
@@ -368,8 +368,8 @@ class ComponentSettingsDialog(QDialog):
                 widget = ComponentSettingsNameSelector(
                     self, parameter, parameter_dict, self._settings
                 )
-            elif parameter_dict["type"] == "label_name":
-                widget = ComponentSettingsLabelSelector(
+            elif parameter_dict["type"] == list:
+                widget = ComponentSettingsListSelector(
                     self, parameter, parameter_dict, self._settings
                 )
             else:

@@ -5,6 +5,7 @@
 
 import digsim.circuit.components
 from digsim.app.gui_objects import ComponentObject
+from digsim.circuit.components import Buzzer
 from digsim.circuit.components.atoms import CallbackComponent
 
 
@@ -44,7 +45,10 @@ class ModelComponents:
         Update the GUI for the components that have changed since the last call
         """
         for comp in self._component_callback_list:
-            self._app_model.sig_component_notify.emit(comp)
+            if isinstance(comp, Buzzer):
+                self._app_model.sig_audio_notify.emit(comp)
+            else:
+                self._app_model.sig_component_notify.emit(comp)
         self._component_callback_list = []
 
     def _component_callback(self, component):
