@@ -132,7 +132,8 @@
                 "display_name": "LabelWireIn",
                 "type": "digsim.circuit.components.LabelWireIn",
                 "settings": {
-                    "label": "SWITCH"
+                    "label": "SWITCH",
+                    "width": 1
                 }
             },
             {
@@ -140,7 +141,8 @@
                 "display_name": "LabelWireIn",
                 "type": "digsim.circuit.components.LabelWireIn",
                 "settings": {
-                    "label": "BUTTON"
+                    "label": "BUTTON",
+                    "width": 1
                 }
             },
             {
@@ -148,7 +150,8 @@
                 "display_name": "LabelWireIn",
                 "type": "digsim.circuit.components.LabelWireIn",
                 "settings": {
-                    "label": "CLOCK"
+                    "label": "CLOCK",
+                    "width": 1
                 }
             },
             {
@@ -156,7 +159,8 @@
                 "display_name": "LabelWireOut",
                 "type": "digsim.circuit.components.LabelWireOut",
                 "settings": {
-                    "label": "CLOCK"
+                    "label": "CLOCK",
+                    "width": 1
                 }
             },
             {
@@ -164,7 +168,8 @@
                 "display_name": "LabelWireOut",
                 "type": "digsim.circuit.components.LabelWireOut",
                 "settings": {
-                    "label": "BUTTON"
+                    "label": "BUTTON",
+                    "width": 1
                 }
             },
             {
@@ -172,7 +177,8 @@
                 "display_name": "LabelWireOut",
                 "type": "digsim.circuit.components.LabelWireOut",
                 "settings": {
-                    "label": "SWITCH"
+                    "label": "SWITCH",
+                    "width": 1
                 }
             },
             {
@@ -181,6 +187,31 @@
                 "type": "digsim.circuit.components.Note",
                 "settings": {
                     "text": "A Logic Analyzer showing a live \nview of the connected signals"
+                }
+            },
+            {
+                "name": "Buzzer",
+                "display_name": "Buzzer",
+                "type": "digsim.circuit.components.Buzzer",
+                "settings": {
+                    "tone": "A"
+                }
+            },
+            {
+                "name": "LabelWireOut_3",
+                "display_name": "LabelWireOut",
+                "type": "digsim.circuit.components.LabelWireOut",
+                "settings": {
+                    "label": "BUTTON",
+                    "width": 1
+                }
+            },
+            {
+                "name": "Note_8",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "A buzzer that will sound when the button is pressed."
                 }
             }
         ],
@@ -250,6 +281,10 @@
                 "dst": "LabelWireOut_1.BUTTON"
             },
             {
+                "src": "LabelWireIn_1.BUTTON",
+                "dst": "LabelWireOut_3.BUTTON"
+            },
+            {
                 "src": "LabelWireIn_2.CLOCK",
                 "dst": "LabelWireOut.CLOCK"
             },
@@ -264,6 +299,10 @@
             {
                 "src": "LabelWireOut_2.SWITCH",
                 "dst": "LogicAnalyzer.C"
+            },
+            {
+                "src": "LabelWireOut_3.BUTTON",
+                "dst": "Buzzer.I"
             }
         ]
     },
@@ -355,6 +394,18 @@
         "Note_7": {
             "x": 1003,
             "y": 235
+        },
+        "Buzzer": {
+            "x": 655,
+            "y": 510
+        },
+        "LabelWireOut_3": {
+            "x": 507,
+            "y": 545
+        },
+        "Note_8": {
+            "x": 501,
+            "y": 609
         }
     },
     "shortcuts": {

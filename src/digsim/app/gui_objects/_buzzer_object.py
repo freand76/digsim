@@ -9,7 +9,7 @@ from struct import pack
 from PySide6.QtCore import QByteArray, QIODevice
 from PySide6.QtMultimedia import QAudioFormat, QAudioSink, QMediaDevices
 
-from ._image_objects import ImageObject
+from ._image_objects import ImageObjectWithActiveRect
 
 
 class _AudioOutput(QIODevice):
@@ -55,7 +55,7 @@ class _AudioOutput(QIODevice):
         return self.audio_buffer.size() + super().bytesAvailable()
 
 
-class BuzzerObject(ImageObject):
+class BuzzerObject(ImageObjectWithActiveRect):
     """The class for Buzzer component placed in the GUI"""
 
     IMAGE_FILENAME = "images/Buzzer.png"

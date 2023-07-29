@@ -31,6 +31,8 @@ class _LabelWireStorage:
     def get_wire_width(self, label):
         """Get width of wire"""
         driver_port = self._wire_drivers.get(label)
+        if driver_port is None:
+            return None
         return driver_port.width
 
     def add_driver(self, label, driver_port):
@@ -82,6 +84,7 @@ class LabelWireIn(Component):
         self._port_in = PortWire(self, self._label, width=width)
         self.add_port(self._port_in)
         self.parameter_set("label", self._label)
+        self.parameter_set("width", width)
         self._label_wires = _LabelWireStorage()
         self._label_wires.add_driver(self._label, self._port_in)
 
@@ -98,12 +101,16 @@ class LabelWireIn(Component):
 
     @classmethod
     def get_parameters(cls):
+        label_wires = _LabelWireStorage()
+        label_list = label_wires.get_labels()
+
         return {
             "label": {
                 "type": str,
                 "single_line": True,
                 "default": "WireLabel",
                 "description": "Label name",
+                "invalid_list": label_list,
             },
             "width": {
                 "type": int,
@@ -118,14 +125,16 @@ class LabelWireIn(Component):
 class LabelWireOut(Component):
     """LabelWireOut component class"""
 
-    def __init__(self, circuit, name=None, label=None):
+    def __init__(self, circuit, name=None, label=None, width=1):
         super().__init__(circuit, name)
         self._label_wires = _LabelWireStorage()
-        width = self._label_wires.get_wire_width(label)
+        label_width = self._label_wires.get_wire_width(label)
+        width = label_width if label_width is not None else width
         self._label = label
         self._port_out = PortWire(self, self._label, width=width, output=True)
         self.add_port(self._port_out)
         self.parameter_set("label", self._label)
+        self.parameter_set("width", width)
         self._label_wires = _LabelWireStorage()
         self._label_wires.add_sink(self._label, self._port_out)
 

@@ -78,17 +78,32 @@ class ComponentSettingSingleLineText(ComponentSettingsBase):
 
     def __init__(self, parent, parameter, parameter_dict, settings):
         super().__init__(parent, parameter, parameter_dict, settings)
+        self._parent = parent
         self.setLayout(QVBoxLayout(self))
         self.layout().addWidget(QLabel(self._parameter_dict["description"]))
+        self._invalid_list = self._parameter_dict.get("invalid_list", [])
         self._line_edit = QLineEdit(self)
-        self._line_edit.setText(self._parameter_dict["default"])
+        default = self._parameter_dict["default"]
+        while default in self._invalid_list:
+            default += "x"
+        self._line_edit.setText(default)
         self._settings[self._parameter] = self._parameter_dict["default"]
         self._line_edit.textChanged.connect(self._update)
         self.layout().addWidget(self._line_edit)
+        self._invalid_text = QLabel()
+        if len(self._invalid_list) > 0:
+            self.layout().addWidget(self._invalid_text)
+        self._update()
 
     def _update(self):
         value = self._line_edit.text()
         self._settings[self._parameter] = value
+        if value in self._invalid_list:
+            self._parent.sig_enable_ok.emit(False)
+            self._invalid_text.setText("Invalid string")
+        else:
+            self._parent.sig_enable_ok.emit(True)
+            self._invalid_text.setText("")
 
 
 class ComponentSettingsSlider(ComponentSettingsBase):
@@ -296,6 +311,7 @@ class ComponentSettingsDialog(QDialog):
     """SettingsDialog"""
 
     sig_value_updated = Signal(str)
+    sig_enable_ok = Signal(bool)
 
     @staticmethod
     def _is_file_path(parent, parameters):
@@ -391,6 +407,10 @@ class ComponentSettingsDialog(QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.layout().addWidget(self.buttonBox)
+        self.sig_enable_ok.connect(self._enable_ok)
+
+    def _enable_ok(self, enable):
+        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
 
     def get_settings(self):
         """Get settings from setting dialog"""
