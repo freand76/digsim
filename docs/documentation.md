@@ -15,7 +15,7 @@
 
 The application is installed with:
 ```
-> python3 -m pip install .[app]
+shell> python3 -m pip install .[app]
 ```
 
 The application is started with:
@@ -92,9 +92,9 @@ Push Button or toggle a Switch. The shortcut can be modified by right-clicking a
   <br/><img alt="HexDigit" src="images/HexDigit.png"/>
 * 7-Segment Display - A 7-Segment is almost the same as a hex digit but each segment can be controlled individually.
   <br/><img alt="7-Segment" src="images/SevenSegment.png"/>
-* Buzzer - An buzzer that can output a single tone
+* Buzzer - A buzzer that can output a single tone
   <br/><img alt="Buzzer" src="../src/digsim/app/gui_objects/images/Buzzer.png"/>
-* Logic Analyzer - An logic analyzer to show signal levels in real-time
+* Logic Analyzer - A logic analyzer to show signal levels in real-time
   <br/><img alt="Logic Analyzer" src="../src/digsim/app/gui_objects/images/Analyzer.png"/>
 
 ### Logic Gates
