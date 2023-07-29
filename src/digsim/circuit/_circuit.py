@@ -125,6 +125,8 @@ class Circuit:
 
     def clear(self):
         """Remove all components"""
+        for _, comp in self._components.items():
+            comp.clear()
         self._components = {}
 
     def vcd(self, filename):

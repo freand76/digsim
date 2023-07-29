@@ -38,6 +38,9 @@ class Component(abc.ABC):
     def default_state(self):
         """Setup default state, for example port outputs"""
 
+    def clear(self):
+        """Remove static state within the component class"""
+
     def parameter_set(self, parameter, value):
         """Set component parameter"""
         self._parameters[parameter] = value

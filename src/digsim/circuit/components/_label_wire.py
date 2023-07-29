@@ -19,6 +19,11 @@ class _LabelWireStorage:
                 cls._instance = super(_LabelWireStorage, cls).__new__(cls)
         return cls._instance
 
+    def clear(self):
+        """Remove all wires"""
+        self._wire_drivers = {}
+        self._wire_sinks = {}
+
     def get_labels(self):
         """Get label list"""
         return list(self._wire_drivers.keys())
@@ -80,6 +85,9 @@ class LabelWireIn(Component):
         self._label_wires = _LabelWireStorage()
         self._label_wires.add_driver(self._label, self._port_in)
 
+    def clear(self):
+        self._label_wires.clear()
+
     def label(self):
         """Return Label"""
         return self._label
@@ -120,6 +128,9 @@ class LabelWireOut(Component):
         self.parameter_set("label", self._label)
         self._label_wires = _LabelWireStorage()
         self._label_wires.add_sink(self._label, self._port_out)
+
+    def clear(self):
+        self._label_wires.clear()
 
     def label(self):
         """Return Label"""
