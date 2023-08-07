@@ -7,8 +7,39 @@ import subprocess
 import tempfile
 
 
+class SynthesisException(Exception):
+    """Exception class for yosys synthesis"""
+
+
 class Synthesis:
     """Helper class for yosys synthesis"""
+
+    @classmethod
+    def list_modules(cls, verilog_files):
+        """List available moduels in verilog files"""
+        if isinstance(verilog_files, str):
+            verilog_files = [verilog_files]
+        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".ys") as stream:
+            stream.write(f"read -sv {' '.join(verilog_files)}\n")
+            stream.write("ls\n")
+            stream.flush()
+
+            with subprocess.Popen(
+                ["yosys", stream.name],
+                stdout=subprocess.PIPE,
+                stdin=None,
+            ) as process:
+                modules = []
+                ls_output_found = False
+                while process.poll() is None:
+                    line = process.stdout.readline().decode("utf-8").rstrip()
+                    if "modules:" in line:
+                        ls_output_found = True
+                    if ls_output_found and "$abstract" in line:
+                        modules.append(line.replace("$abstract\\", "").strip())
+                if process.returncode != 0:
+                    raise SynthesisException("Yosys execution failed...")
+        return modules
 
     def __init__(self, verilog_files, json_output_file, verilog_top_module):
         if isinstance(verilog_files, str):

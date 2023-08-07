@@ -63,7 +63,7 @@ and even if it is slower than many other simulators it is not entirely useless.
 
 **Yosys** must be installed and in your path
 ```
-> python3 -m digsim.synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
+> python3 -m digsim.synth synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
 ```
 
 ## Development ToDo List

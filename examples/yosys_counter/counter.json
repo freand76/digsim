@@ -1,11 +1,11 @@
 {
-  "creator": "Yosys 0.24+1 (git sha1 7ad7b550c, gcc 11.3.0-1ubuntu1~22.04 -fPIC -Os)",
+  "creator": "Yosys 0.32 (git sha1 fbab08acf, gcc 11.4.0-1ubuntu1~22.04 -fPIC -Os)",
   "modules": {
     "counter": {
       "attributes": {
         "hdlname": "\\counter",
         "top": "00000000000000000000000000000001",
-        "src": "examples/yosys_counter/counter.v:1.1-17.10"
+        "src": "./counter.v:1.1-17.10"
       },
       "ports": {
         "clk": {
@@ -138,7 +138,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "examples/yosys_counter/counter.v:7.4-15.9"
+            "src": "./counter.v:7.4-15.9"
           },
           "port_directions": {
             "C": "input",
@@ -161,7 +161,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "examples/yosys_counter/counter.v:7.4-15.9"
+            "src": "./counter.v:7.4-15.9"
           },
           "port_directions": {
             "C": "input",
@@ -184,7 +184,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "examples/yosys_counter/counter.v:7.4-15.9"
+            "src": "./counter.v:7.4-15.9"
           },
           "port_directions": {
             "C": "input",
@@ -207,7 +207,7 @@
           "parameters": {
           },
           "attributes": {
-            "src": "examples/yosys_counter/counter.v:7.4-15.9"
+            "src": "./counter.v:7.4-15.9"
           },
           "port_directions": {
             "C": "input",
@@ -238,20 +238,20 @@
           "attributes": {
           }
         },
-        "$techmap$add$examples/yosys_counter/counter.v:14$2.$auto$alumacc.cc:485:replace_alu$88.X": {
+        "$techmap$add$./counter.v:14$2.$auto$alumacc.cc:485:replace_alu$88.X": {
           "hide_name": 1,
           "bits": [ 9, 6, 7, 8, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ],
           "attributes": {
             "force_downto": "00000000000000000000000000000001",
-            "src": "examples/yosys_counter/counter.v:14.20-14.27|/usr/local/bin/../share/yosys/techmap.v:270.23-270.24"
+            "src": "./counter.v:14.20-14.27|/usr/local/bin/../share/yosys/techmap.v:270.23-270.24"
           }
         },
-        "$techmap$add$examples/yosys_counter/counter.v:14$2.$auto$alumacc.cc:485:replace_alu$88.Y": {
+        "$techmap$add$./counter.v:14$2.$auto$alumacc.cc:485:replace_alu$88.Y": {
           "hide_name": 1,
           "bits": [ 9, 10, 12, 14, 15, "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0" ],
           "attributes": {
             "force_downto": "00000000000000000000000000000001",
-            "src": "examples/yosys_counter/counter.v:14.20-14.27|/usr/local/bin/../share/yosys/techmap.v:270.26-270.27",
+            "src": "./counter.v:14.20-14.27|/usr/local/bin/../share/yosys/techmap.v:270.26-270.27",
             "unused_bits": "4"
           }
         },
@@ -259,28 +259,28 @@
           "hide_name": 0,
           "bits": [ 2 ],
           "attributes": {
-            "src": "examples/yosys_counter/counter.v:3.10-3.13"
+            "src": "./counter.v:3.10-3.13"
           }
         },
         "cnt": {
           "hide_name": 0,
           "bits": [ 5, 6, 7, 8 ],
           "attributes": {
-            "src": "examples/yosys_counter/counter.v:5.21-5.24"
+            "src": "./counter.v:5.21-5.24"
           }
         },
         "reset": {
           "hide_name": 0,
           "bits": [ 3 ],
           "attributes": {
-            "src": "examples/yosys_counter/counter.v:3.15-3.20"
+            "src": "./counter.v:3.15-3.20"
           }
         },
         "up": {
           "hide_name": 0,
           "bits": [ 4 ],
           "attributes": {
-            "src": "examples/yosys_counter/counter.v:3.22-3.24"
+            "src": "./counter.v:3.22-3.24"
           }
         }
       }
