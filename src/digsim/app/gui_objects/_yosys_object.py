@@ -23,5 +23,5 @@ class YosysObject(ImageObject):
         reloadAction.triggered.connect(self._reload)
 
     def _reload(self):
-        self.component.reload_netlist()
+        self.component.reload_file()
         self._app_model.model_reset()

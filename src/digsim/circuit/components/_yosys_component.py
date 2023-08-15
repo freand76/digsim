@@ -77,33 +77,39 @@ class YosysComponent(MultiComponent):
         self._connect_external_ports(netlist_dict, reload_netlist)
         self._add_netnames(netlist_dict)
 
+    def _create_from_dict(self, netlist_dict):
+        self._yosys_name = self._get_component_name(netlist_dict)
+        self.set_name(self._yosys_name)
+        self.set_display_name(self._yosys_name)
+        self._external_interface = self._get_external_interface(netlist_dict)
+        self._setup_from_netlist(netlist_dict)
+
+    def _reload_from_dict(self, netlist_dict):
+        external_interface = self._get_external_interface(netlist_dict)
+        if external_interface != self._external_interface:
+            raise YosysComponentException("Yosys component interface differs")
+        # Disconnect ports
+        self._disconnect_external_ports()
+        # Remove yosys atoms
+        self._gates_comp.remove_all_components()
+        # Remove nets
+        if self._net_comp is not None:
+            self._net_comp.delete_all_ports()
+        # Setup netlist
+        self._setup_from_netlist(netlist_dict, reload_netlist=True)
+
     def _load_netlist(self, filename):
         """Load yosys json netlist file"""
         self._path = filename
         with open(self._path, encoding="utf-8") as json_file:
             netlist_dict = json.load(json_file)
-            self._yosys_name = self._get_component_name(netlist_dict)
-            self.set_name(self._yosys_name)
-            self.set_display_name(self._yosys_name)
-            self._external_interface = self._get_external_interface(netlist_dict)
-            self._setup_from_netlist(netlist_dict)
+            self._create_from_dict(netlist_dict)
 
-    def reload_netlist(self):
+    def reload_file(self):
         """Reload yosys json netlist file"""
         with open(self._path, encoding="utf-8") as json_file:
             netlist_dict = json.load(json_file)
-            external_interface = self._get_external_interface(netlist_dict)
-            if external_interface != self._external_interface:
-                raise YosysComponentException("Yosys component interface differs")
-            # Disconnect ports
-            self._disconnect_external_ports()
-            # Remove yosys atoms
-            self._gates_comp.remove_all_components()
-            # Remove nets
-            if self._net_comp is not None:
-                self._net_comp.delete_all_ports()
-            # Setup netlist
-            self._setup_from_netlist(netlist_dict, reload_netlist=True)
+            self._reload_from_dict(netlist_dict)
 
     def _add_port(self, connection_id, port_instance, driver=False):
         if self._port_connections.get(connection_id) is None:
