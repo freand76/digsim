@@ -10,8 +10,11 @@ from a yosys json netlist.
 # pylint: disable=too-many-instance-attributes
 
 import json
+import os
+import tempfile
 
 import digsim.circuit.components._yosys_atoms
+from digsim.synth import Synthesis
 
 from .atoms import Component, DigsimException, MultiComponent, PortMultiBitWire, PortOutDelta
 
@@ -52,7 +55,7 @@ class YosysComponent(MultiComponent):
             self._net_comp = Component(self._circuit, "nets")
             self.add(self._net_comp)
 
-        self._load_netlist(self._path)
+        self._load_file()
 
     def _setup_base(self):
         self._gates_comp = MultiComponent(self._circuit, "gates")
@@ -98,18 +101,47 @@ class YosysComponent(MultiComponent):
         # Setup netlist
         self._setup_from_netlist(netlist_dict, reload_netlist=True)
 
-    def _load_netlist(self, filename):
-        """Load yosys json netlist file"""
-        self._path = filename
-        with open(self._path, encoding="utf-8") as json_file:
+    def _synth_verilog(self):
+        modules = Synthesis.list_modules(self._path)
+        if len(modules) == 1:
+            toplevel = modules[0]
+        else:
+            raise YosysComponentException("Current only one module per verilog file is supported")
+
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            filename = tmp_file.name
+        synthesis = Synthesis(self._path, filename, toplevel)
+        if not synthesis.execute():
+            raise YosysComponentException("Yosys synthesis error")
+        return filename
+
+    def _load_netlist_dict(self):
+        unlink_file = False
+        if self._path.endswith(".json"):
+            filename = self._path
+        elif self._path.endswith(".v"):
+            filename = self._synth_verilog()
+            unlink_file = True
+        else:
+            raise YosysComponentException(f"Unknown file extension '{self._path}'")
+
+        with open(filename, encoding="utf-8") as json_file:
             netlist_dict = json.load(json_file)
-            self._create_from_dict(netlist_dict)
+
+        if unlink_file:
+            os.unlink(filename)
+
+        return netlist_dict
+
+    def _load_file(self):
+        """Load yosys verilog/json-netlist file"""
+        netlist_dict = self._load_netlist_dict()
+        self._create_from_dict(netlist_dict)
 
     def reload_file(self):
-        """Reload yosys json netlist file"""
-        with open(self._path, encoding="utf-8") as json_file:
-            netlist_dict = json.load(json_file)
-            self._reload_from_dict(netlist_dict)
+        """Reload yosys verilog/json-netlist file"""
+        netlist_dict = self._load_netlist_dict()
+        self._reload_from_dict(netlist_dict)
 
     def _add_port(self, connection_id, port_instance, driver=False):
         if self._port_connections.get(connection_id) is None:
