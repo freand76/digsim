@@ -3,6 +3,7 @@
 
 """Helper module for yosys synthesis"""
 
+import os
 import subprocess
 import tempfile
 
@@ -19,26 +20,30 @@ class Synthesis:
         """List available moduels in verilog files"""
         if isinstance(verilog_files, str):
             verilog_files = [verilog_files]
-        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".ys") as stream:
+
+        script_file = None
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", suffix=".ys", delete=False
+        ) as stream:
+            script_file = stream.name
             stream.write(f"read -sv {' '.join(verilog_files)}\n")
             stream.write("ls\n")
             stream.flush()
 
-            with subprocess.Popen(
-                ["yosys", stream.name],
-                stdout=subprocess.PIPE,
-                stdin=None,
-            ) as process:
-                modules = []
-                ls_output_found = False
-                while process.poll() is None:
-                    line = process.stdout.readline().decode("utf-8").rstrip()
-                    if "modules:" in line:
-                        ls_output_found = True
-                    if ls_output_found and "$abstract" in line:
-                        modules.append(line.replace("$abstract\\", "").strip())
-                if process.returncode != 0:
-                    raise SynthesisException("Yosys execution failed...")
+        with subprocess.Popen(
+            ["yosys", script_file], stdout=subprocess.PIPE, stdin=None
+        ) as process:
+            modules = []
+            ls_output_found = False
+            while process.poll() is None:
+                line = process.stdout.readline().decode("utf-8").rstrip()
+                if "modules:" in line:
+                    ls_output_found = True
+                if ls_output_found and "$abstract" in line:
+                    modules.append(line.replace("$abstract\\", "").strip())
+            if process.returncode != 0:
+                raise SynthesisException("Yosys execution failed...")
+        os.unlink(script_file)
         return modules
 
     def __init__(self, verilog_files, json_output_file, verilog_top_module):
@@ -53,7 +58,11 @@ class Synthesis:
     def execute(self, silent=False):
         """Execute yosys with generated synthesis script"""
         success = False
-        with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".ys") as stream:
+        script_file = None
+        with tempfile.NamedTemporaryFile(
+            mode="w", encoding="utf-8", suffix=".ys", delete=False
+        ) as stream:
+            script_file = stream.name
             stream.write(f"read -sv {' '.join(self._verilog_files)}\n")
             stream.write(f"hierarchy -top {self._verilog_top_module}\n")
             stream.write("proc; flatten\n")
@@ -63,19 +72,18 @@ class Synthesis:
             stream.write(f"write_json {self._json_output_file}\n")
             stream.flush()
 
-            with subprocess.Popen(
-                ["yosys", stream.name],
-                stdout=subprocess.PIPE,
-                stdin=None,
-            ) as process:
-                while process.poll() is None:
-                    line = process.stdout.readline().decode("utf-8").rstrip()
-                    if len(line) == 0:
-                        continue
-                    self._yosys_log.append(line)
-                    if not silent:
-                        print("Yosys: ", line)
-                success = process.returncode == 0
+        with subprocess.Popen(
+            ["yosys", stream.name], stdout=subprocess.PIPE, stdin=None
+        ) as process:
+            while process.poll() is None:
+                line = process.stdout.readline().decode("utf-8").rstrip()
+                if len(line) == 0:
+                    continue
+                self._yosys_log.append(line)
+                if not silent:
+                    print("Yosys: ", line)
+            success = process.returncode == 0
+        os.unlink(script_file)
         return success
 
     def get_log(self):
