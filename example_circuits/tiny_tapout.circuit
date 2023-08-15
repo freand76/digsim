@@ -29,7 +29,7 @@
                 "display_name": "demodesign",
                 "type": "digsim.circuit.components.YosysComponent",
                 "settings": {
-                    "path": "../examples/tiny_tapeout/tinetapeout.json"
+                    "path": "../examples/tiny_tapeout/tinytapeout.json"
                 }
             },
             {
