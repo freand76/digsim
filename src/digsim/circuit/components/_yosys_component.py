@@ -262,7 +262,7 @@ class YosysComponent(MultiComponent):
         return {
             "path": {
                 "type": "path",
-                "fileinfo": "Yosys JSON Netlist (*.json)",
-                "description": "Select yosys json component",
+                "fileinfo": "Yosys JSON Netlist (*.json);;Verilog File (*.v)",
+                "description": "Select verilog file or Yosys json netlist",
             }
         }
