@@ -34,6 +34,8 @@ and even if it is slower than many other simulators it is not entirely useless.
 
 ### Install
 ```
+> git clone https://github.com/freand76/digsim.git
+> cd digsim
 > python3 -m pip install .[app]
 ```
 
@@ -45,7 +47,7 @@ and even if it is slower than many other simulators it is not entirely useless.
 
 ### Start with example circuit
 ```
-> python3 -m digsim.app --load example_circuits/yosys_counter.circuit
+> python3 -m digsim.app --load example_circuits/counter_yosys_netlist.circuit
 ```
 
 ### Run example

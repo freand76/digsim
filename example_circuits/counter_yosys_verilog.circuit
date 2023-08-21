@@ -1,0 +1,420 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "counter",
+                "display_name": "counter",
+                "type": "digsim.circuit.components.YosysComponent",
+                "settings": {
+                    "path": "../examples/yosys_counter/counter.v"
+                }
+            },
+            {
+                "name": "Clock_1",
+                "display_name": "Clock",
+                "type": "digsim.circuit.components.Clock",
+                "settings": {
+                    "frequency": 5
+                }
+            },
+            {
+                "name": "PushButton_2",
+                "display_name": "PushButton",
+                "type": "digsim.circuit.components.PushButton",
+                "settings": {
+                    "inverted": false
+                }
+            },
+            {
+                "name": "HexDigit_4",
+                "display_name": "HexDigit",
+                "type": "digsim.circuit.components.HexDigit",
+                "settings": {
+                    "digits": 1,
+                    "dot": true
+                }
+            },
+            {
+                "name": "OnOffSwitch",
+                "display_name": "OnOffSwitch",
+                "type": "digsim.circuit.components.OnOffSwitch",
+                "settings": {
+                    "start_on": false
+                }
+            },
+            {
+                "name": "Led",
+                "display_name": "Led",
+                "type": "digsim.circuit.components.Led",
+                "settings": {}
+            },
+            {
+                "name": "Note",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "The counter component is a \"Netlist-component\" \ngenerated from verilog with the Yosys synthesis tool."
+                }
+            },
+            {
+                "name": "Note_1",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "Start simulation by pressing the \"Start Simulation\" button above..."
+                }
+            },
+            {
+                "name": "Note_2",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "Enable the counter with this switch\nUse shortcut key 2 to toggle."
+                }
+            },
+            {
+                "name": "Note_3",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "This push-button will reset the counter\nUse shortcut key 1 to push."
+                }
+            },
+            {
+                "name": "Note_4",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "This is a clock generator, \nThe clock frequency can be changed,\n\"right-click\" and select \"Settings\""
+                }
+            },
+            {
+                "name": "Note_5",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "This LED will light up when the clock is High"
+                }
+            },
+            {
+                "name": "Note_6",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "This hex-digit will show the current counter value"
+                }
+            },
+            {
+                "name": "LogicAnalyzer",
+                "display_name": "LogicAnalyzer",
+                "type": "digsim.circuit.components.LogicAnalyzer",
+                "settings": {
+                    "sample_rate": 20
+                }
+            },
+            {
+                "name": "Bus2Wires",
+                "display_name": "Bus2Wires",
+                "type": "digsim.circuit.components.Bus2Wires",
+                "settings": {
+                    "width": 4,
+                    "enable": [
+                        0,
+                        1,
+                        2,
+                        3
+                    ]
+                }
+            },
+            {
+                "name": "LabelWireIn",
+                "display_name": "LabelWireIn",
+                "type": "digsim.circuit.components.LabelWireIn",
+                "settings": {
+                    "label": "SWITCH",
+                    "width": 1
+                }
+            },
+            {
+                "name": "LabelWireIn_1",
+                "display_name": "LabelWireIn",
+                "type": "digsim.circuit.components.LabelWireIn",
+                "settings": {
+                    "label": "BUTTON",
+                    "width": 1
+                }
+            },
+            {
+                "name": "LabelWireIn_2",
+                "display_name": "LabelWireIn",
+                "type": "digsim.circuit.components.LabelWireIn",
+                "settings": {
+                    "label": "CLOCK",
+                    "width": 1
+                }
+            },
+            {
+                "name": "LabelWireOut",
+                "display_name": "LabelWireOut",
+                "type": "digsim.circuit.components.LabelWireOut",
+                "settings": {
+                    "label": "CLOCK",
+                    "width": 1
+                }
+            },
+            {
+                "name": "LabelWireOut_1",
+                "display_name": "LabelWireOut",
+                "type": "digsim.circuit.components.LabelWireOut",
+                "settings": {
+                    "label": "BUTTON",
+                    "width": 1
+                }
+            },
+            {
+                "name": "LabelWireOut_2",
+                "display_name": "LabelWireOut",
+                "type": "digsim.circuit.components.LabelWireOut",
+                "settings": {
+                    "label": "SWITCH",
+                    "width": 1
+                }
+            },
+            {
+                "name": "Note_7",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "A Logic Analyzer showing a live \nview of the connected signals"
+                }
+            },
+            {
+                "name": "Buzzer",
+                "display_name": "Buzzer",
+                "type": "digsim.circuit.components.Buzzer",
+                "settings": {
+                    "tone": "A"
+                }
+            },
+            {
+                "name": "LabelWireOut_3",
+                "display_name": "LabelWireOut",
+                "type": "digsim.circuit.components.LabelWireOut",
+                "settings": {
+                    "label": "BUTTON",
+                    "width": 1
+                }
+            },
+            {
+                "name": "Note_8",
+                "display_name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "settings": {
+                    "text": "A buzzer that will sound when the button is pressed."
+                }
+            }
+        ],
+        "wires": [
+            {
+                "src": "counter.cnt",
+                "dst": "HexDigit_4.val"
+            },
+            {
+                "src": "counter.cnt",
+                "dst": "Bus2Wires.bus"
+            },
+            {
+                "src": "Clock_1.O",
+                "dst": "counter.clk"
+            },
+            {
+                "src": "Clock_1.O",
+                "dst": "Led.I"
+            },
+            {
+                "src": "Clock_1.O",
+                "dst": "LabelWireIn_2.CLOCK"
+            },
+            {
+                "src": "PushButton_2.O",
+                "dst": "counter.reset"
+            },
+            {
+                "src": "PushButton_2.O",
+                "dst": "LabelWireIn_1.BUTTON"
+            },
+            {
+                "src": "OnOffSwitch.O",
+                "dst": "counter.up"
+            },
+            {
+                "src": "OnOffSwitch.O",
+                "dst": "HexDigit_4.dot"
+            },
+            {
+                "src": "OnOffSwitch.O",
+                "dst": "LabelWireIn.SWITCH"
+            },
+            {
+                "src": "Bus2Wires.bus_0",
+                "dst": "LogicAnalyzer.E"
+            },
+            {
+                "src": "Bus2Wires.bus_1",
+                "dst": "LogicAnalyzer.F"
+            },
+            {
+                "src": "Bus2Wires.bus_2",
+                "dst": "LogicAnalyzer.G"
+            },
+            {
+                "src": "Bus2Wires.bus_3",
+                "dst": "LogicAnalyzer.H"
+            },
+            {
+                "src": "LabelWireIn.SWITCH",
+                "dst": "LabelWireOut_2.SWITCH"
+            },
+            {
+                "src": "LabelWireIn_1.BUTTON",
+                "dst": "LabelWireOut_1.BUTTON"
+            },
+            {
+                "src": "LabelWireIn_1.BUTTON",
+                "dst": "LabelWireOut_3.BUTTON"
+            },
+            {
+                "src": "LabelWireIn_2.CLOCK",
+                "dst": "LabelWireOut.CLOCK"
+            },
+            {
+                "src": "LabelWireOut.CLOCK",
+                "dst": "LogicAnalyzer.A"
+            },
+            {
+                "src": "LabelWireOut_1.BUTTON",
+                "dst": "LogicAnalyzer.B"
+            },
+            {
+                "src": "LabelWireOut_2.SWITCH",
+                "dst": "LogicAnalyzer.C"
+            },
+            {
+                "src": "LabelWireOut_3.BUTTON",
+                "dst": "Buzzer.I"
+            }
+        ]
+    },
+    "gui": {
+        "counter": {
+            "x": 595,
+            "y": 285
+        },
+        "Clock_1": {
+            "x": 265,
+            "y": 135
+        },
+        "PushButton_2": {
+            "x": 265,
+            "y": 290
+        },
+        "HexDigit_4": {
+            "x": 895,
+            "y": 415
+        },
+        "OnOffSwitch": {
+            "x": 265,
+            "y": 435
+        },
+        "Led": {
+            "x": 595,
+            "y": 135
+        },
+        "Note": {
+            "x": 511,
+            "y": 395
+        },
+        "Note_1": {
+            "x": 10,
+            "y": 10
+        },
+        "Note_2": {
+            "x": 66,
+            "y": 460
+        },
+        "Note_3": {
+            "x": 53,
+            "y": 312
+        },
+        "Note_4": {
+            "x": 34,
+            "y": 154
+        },
+        "Note_5": {
+            "x": 535,
+            "y": 87
+        },
+        "Note_6": {
+            "x": 809,
+            "y": 513
+        },
+        "LogicAnalyzer": {
+            "x": 965,
+            "y": 21
+        },
+        "Bus2Wires": {
+            "x": 792,
+            "y": 115
+        },
+        "LabelWireIn": {
+            "x": 403,
+            "y": 532
+        },
+        "LabelWireIn_1": {
+            "x": 401,
+            "y": 390
+        },
+        "LabelWireIn_2": {
+            "x": 405,
+            "y": 231
+        },
+        "LabelWireOut": {
+            "x": 825,
+            "y": 28
+        },
+        "LabelWireOut_1": {
+            "x": 818,
+            "y": 57
+        },
+        "LabelWireOut_2": {
+            "x": 819,
+            "y": 88
+        },
+        "Note_7": {
+            "x": 1003,
+            "y": 235
+        },
+        "Buzzer": {
+            "x": 655,
+            "y": 510
+        },
+        "LabelWireOut_3": {
+            "x": 507,
+            "y": 545
+        },
+        "Note_8": {
+            "x": 501,
+            "y": 609
+        }
+    },
+    "shortcuts": {
+        "1": "PushButton_2",
+        "2": "OnOffSwitch"
+    },
+    "settings": {
+        "real_time": true,
+        "color_wires": true,
+        "update_frequency": 20
+    }
+}

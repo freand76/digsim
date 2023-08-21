@@ -15,6 +15,8 @@
 
 The application is installed with:
 ```
+shell> git clone https://github.com/freand76/digsim.git
+shell> cd digsim
 shell> python3 -m pip install .[app]
 ```
 
@@ -25,7 +27,7 @@ shell> python3 -m digsim.app
 
 or with the following line if a stored circuit should be loaded from the start:
 ```
-shell> python3 -m digsim.app --load example_circuits/yosys_counter.circuit
+shell> python3 -m digsim.app --load example_circuits/counter_yosys_netlist.circuit
 ```
 
 ## Circuit Editor
@@ -143,15 +145,18 @@ can be added to the **src/digsim/circuit/components/ic** folder.
 
 ### Yosys Component
 
-Yosys components are components where the functionality is described by a netlist created from verilog with Yosys.
+Yosys components are components where the functionality is described in a verilog file or in a netlist created from verilog with Yosys.
 See chapter about [Yosys Synthesis](#yosys-synthesis).
 
-When adding a Yosys component the application will bring up a file dialog where you can choose a Yosys netlist in json format.
+When adding a Yosys component the application will bring up a file dialog where you can choose a **verilog file** or a **Yosys netlist** in json format.
 
-When the yosys component has been added to the circuit it is possible to reload the netlist by right-clicking on the component and
+If a verilog file is chosen **Yosys** must be installed and in your path.
+Currently there is a limitation that the verilog file must not contain more than one module.
+
+When the yosys component has been added to the circuit it is possible to reload the verilog file or netlist by right-clicking on the component and
 select **Reload** in the context menu.
 
-A test cycle could be like this:
+A test cycle for a yosys netlist could be like this:
  * Create verilog design
  * Do Yosys synthesis
  * Add yosys component to circuit
@@ -159,6 +164,14 @@ A test cycle could be like this:
  * Run simulation to test functionality
  * Update verilog
  * Do Yosys synthesis
+ * Right-click component and select **Reload**
+
+A test cycle for a verilog file could be like this:
+ * Create verilog design
+ * Add yosys component to circuit
+ * Connect component with other components
+ * Run simulation to test functionality
+ * Update verilog
  * Right-click component and select **Reload**
 
 ***Important: The interface, input and output ports in the netlist must not change between load and reload.***
