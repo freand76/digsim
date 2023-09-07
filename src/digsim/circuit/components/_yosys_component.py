@@ -208,7 +208,10 @@ class YosysComponent(MultiComponent):
                 continue
             port_instance = connection_id_dict["src"]
             if port_is_output:
-                port_instance.wire = external_port.get_bit(idx)
+                if port_instance is None:
+                    self._add_port(connection_id, external_port.get_bit(idx), driver=False)
+                else:
+                    port_instance.wire = external_port.get_bit(idx)
                 continue
 
             portlist = connection_id_dict["dst"]
@@ -250,7 +253,7 @@ class YosysComponent(MultiComponent):
         for netname, netname_dict in netnames.items():
             if netname_dict["hide_name"] != 0:
                 continue
-            netname = netname.replace(".", "_")
+            netname = netname.replace(".", "__")
             self._add_netname(netname, netname_dict)
 
     def settings_to_dict(self):
