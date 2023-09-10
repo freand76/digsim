@@ -31,7 +31,7 @@ class StaticLevels(Component):
         self.add_port(PortOutDelta(self, "low"))
         self.add_port(PortOutDelta(self, "high"))
 
-    def init(self):
+    def default_state(self):
         self.low.value = 0
         self.high.value = 1
 
