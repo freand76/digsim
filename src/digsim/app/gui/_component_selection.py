@@ -103,6 +103,9 @@ class ComponentSelection(QWidget):
         self.layout().addWidget(DescriptionText(self, "Input"))
         self.layout().addWidget(SelectableComponentWidget("PushButton", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("OnOffSwitch", self, circuit_area))
+        self.layout().addWidget(
+            SelectableComponentWidget("DipSwitch", self, circuit_area, display_name="DIP switch")
+        )
         self.layout().addWidget(SelectableComponentWidget("Clock", self, circuit_area))
         self.layout().addWidget(SelectableComponentWidget("StaticValue", self, circuit_area))
         self.layout().addWidget(DescriptionText(self, "Output"))

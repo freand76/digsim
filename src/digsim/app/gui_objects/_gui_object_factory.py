@@ -7,6 +7,7 @@ from digsim.circuit.components.atoms import DigsimException
 
 from ._bus_bit_object import BitsBusObject, BusBitsObject
 from ._buzzer_object import BuzzerObject
+from ._dip_switch_object import DipSwitchObject
 from ._gui_note_object import GuiNoteObject
 from ._hexdigit_object import HexDigitObject
 from ._image_objects import (
@@ -40,6 +41,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT = {
     "Bus2Wires": BusBitsObject,
     "Wires2Bus": BitsBusObject,
     "Clock": ImageObjectClock,
+    "DipSwitch": DipSwitchObject,
     "DFF": ImageObjectDFF,
     "HexDigit": HexDigitObject,
     "LabelWireIn": LabelObject,

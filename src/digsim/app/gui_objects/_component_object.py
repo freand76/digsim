@@ -46,6 +46,9 @@ class ComponentObject(GuiObject):
     def update_size(self):
         """update component object size"""
 
+    def mouse_position(self, pos):
+        """update component with mouse position"""
+
     def center(self):
         """Move component with pos as center instead of top-left corner"""
         self._pos = self._pos - QPoint(self._width / 2, self._height / 2)

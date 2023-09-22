@@ -74,6 +74,8 @@ Components can be:
    <br/><img alt="Button" src="../src/digsim/app/gui_objects/images/PB.png"/>
  * On/Off Switch - An on/off switch will change its output when it is toggled
    <br/><img alt="Switch" src="../src/digsim/app/gui_objects/images/Switch_ON.png"/>
+ * DIP Switch - A dip switch will change its output when it is toggled
+   <br/><img alt="DIP-switch" src="../src/digsim/app/gui_objects/images/DIP_SWITCH.png"/>
  * Clock - A clock will change its output with a certain frequency
    <br/><img alt="Clock" src="../src/digsim/app/gui_objects/images/Clock.png"/>
  * Static Value - A static value can be setup to output value on a wire or a bus.

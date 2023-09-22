@@ -185,6 +185,8 @@ class ComponentWidget(QPushButton):
 
     def mouseMoveEvent(self, event):
         """QT event callback function"""
+        self._component_object.mouse_position(event.pos())
+
         if self._app_model.is_running:
             return
 
