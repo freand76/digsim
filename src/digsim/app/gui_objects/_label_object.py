@@ -26,8 +26,8 @@ class LabelObject(ComponentObject):
             xpos = self._width - self.PORT_SIDE - 1
 
         self._port_rects[label] = QRect(
-            xpos,
-            self._height / 2 - self.PORT_SIDE / 2,
+            self.pos.x() + xpos,
+            self.pos.y() + self._height / 2 - self.PORT_SIDE / 2,
             self.PORT_SIDE,
             self.PORT_SIDE,
         )
@@ -93,4 +93,4 @@ class LabelObject(ComponentObject):
             QRect(size.width() / 2 - width / 2, size.height() / 2 - height / 2, width, height),
             name,
         )
-        cls.paint_selectable_component_name(painter, size, name)
+        cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)

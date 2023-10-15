@@ -29,8 +29,7 @@ class ModelComponents:
 
     def init(self):
         """Initialize components objects"""
-        for _, comp in self._component_objects.items():
-            self._app_model.sig_component_notify.emit(comp.component)
+        self._app_model.sig_repaint.emit()
 
     def get_dict(self):
         """Get component objects dict"""
@@ -44,11 +43,12 @@ class ModelComponents:
         """
         Update the GUI for the components that have changed since the last call
         """
+        if len(self._component_callback_list) == 0:
+            return
         for comp in self._component_callback_list:
             if isinstance(comp, Buzzer):
                 self._app_model.sig_audio_notify.emit(comp)
-            else:
-                self._app_model.sig_component_notify.emit(comp)
+        self._app_model.sig_repaint.emit()
         self._component_callback_list = []
 
     def _component_callback(self, component):
@@ -80,7 +80,6 @@ class ModelComponents:
         component = component_class(self._circuit, **settings)
         self._app_model.model_init()
         component_object = self._add_object(component, pos.x(), pos.y())
-        component_object.center()  # Component is plced @ mouse pointer, make it center
         self._app_model.model_changed()
         return component_object
 

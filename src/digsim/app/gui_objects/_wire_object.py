@@ -3,7 +3,7 @@
 
 """ A wire placed in the GUI """
 
-from PySide6.QtCore import QPoint, Qt
+from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtGui import QColor, QPainterPath, QPen
 
 from digsim.circuit.components.atoms import PortConnectionError
@@ -91,6 +91,26 @@ class WireObject(GuiObject):
             self._line_path.append(QPoint(dest.x() - 10, dest.y()))
         self._line_path.append(QPoint(dest.x(), dest.y()))
 
+    def _get_path(self):
+        path = QPainterPath(self._line_path[0])
+        for point in self._line_path[1:]:
+            path.lineTo(point)
+        return path
+
+    def get_rect(self):
+        """Get wire bounding rect"""
+        minX = self._line_path[0].x()
+        maxX = minX
+        minY = self._line_path[0].y()
+        maxY = minY
+        for point in self._line_path[1:]:
+            minX = min(minX, point.x())
+            maxX = max(maxX, point.x())
+            minY = min(minY, point.y())
+            maxY = max(maxY, point.y())
+
+        return QRect(minX, minY, maxX - minX, maxY - minY)
+
     def _paint_wire(self, painter):
         pen = QPen()
         pen.setColor(Qt.darkGray)
@@ -112,13 +132,10 @@ class WireObject(GuiObject):
             pen.setWidth(6)
 
         painter.setPen(pen)
-        path = QPainterPath(self._line_path[0])
-        for point in self._line_path[1:]:
-            path.lineTo(point)
-        painter.drawPath(path)
+        painter.drawPath(self._get_path())
 
     def paint(self, painter):
-        """Paint paced wire"""
+        """Paint placed wire"""
         self._paint_wire(painter)
 
     def paint_new(self, painter, end_pos):
@@ -149,10 +166,10 @@ class WireObject(GuiObject):
         """Update the wire position if the connected components move"""
         if self._src_port is not None:
             src_comp = self._app_model.objects.components.get_object(self._src_port.parent())
-            self._src_point = src_comp.pos + src_comp.get_port_pos(self._src_port.name())
+            self._src_point = src_comp.get_port_pos(self._src_port.name())
         if self._dst_port is not None:
             dst_comp = self._app_model.objects.components.get_object(self._dst_port.parent())
-            self._dst_point = dst_comp.pos + dst_comp.get_port_pos(self._dst_port.name())
+            self._dst_point = dst_comp.get_port_pos(self._dst_port.name())
         if self._src_port is not None and self._dst_port is not None:
             self._create_line(self._src_point, self._dst_point)
 

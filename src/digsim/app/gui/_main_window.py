@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ._circuit_area import CircuitArea, ScrollableCircuitArea
+from ._circuit_area import CircuitArea
 from ._component_selection import ComponentSelection
 from ._top_bar import TopBar
 from ._utils import are_you_sure_destroy_circuit
@@ -46,14 +46,11 @@ class CircuitEditor(QSplitter):
         circuit_area = CircuitArea(app_model, self)
         selection_panel = ComponentSelection(app_model, circuit_area, self)
 
+        self.layout().addWidget(circuit_area)
         self._selection_area.setWidget(selection_panel)
 
         self.layout().addWidget(self._selection_area)
         self.layout().setStretchFactor(self._selection_area, 0)
-
-        scrollable_circuit_area = ScrollableCircuitArea(self, circuit_area)
-        self.layout().addWidget(scrollable_circuit_area)
-        self.layout().setStretchFactor(scrollable_circuit_area, 1)
         circuit_area.setFocus()
 
     def _control_notify(self):
@@ -101,6 +98,8 @@ class MainWindow(QMainWindow):
 
         QShortcut(QKeySequence("Ctrl+Z"), self, self._app_model.objects.undo)
         QShortcut(QKeySequence("Ctrl+Y"), self, self._app_model.objects.redo)
+        QShortcut(QKeySequence("Ctrl++"), self, self._app_model.zoom_in)
+        QShortcut(QKeySequence("Ctrl+-"), self, self._app_model.zoom_out)
         QShortcut(QKeySequence("Del"), self, self._app_model.objects.delete_selected)
 
     def keyPressEvent(self, event):
@@ -114,13 +113,10 @@ class MainWindow(QMainWindow):
             event.accept()
             return
 
-        if event.key() == Qt.Key_Control:
-            self._app_model.objects.multi_select(True)
-            event.accept()
-        elif event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key_Escape:
             if self._app_model.objects.wires.new.ongoing():
                 self._app_model.objects.wires.new.abort()
-                self._app_model.sig_synchronize_gui.emit()
+                self._app_model.sig_repaint.emit()
                 event.accept()
 
     def keyReleaseEvent(self, event):
@@ -131,10 +127,6 @@ class MainWindow(QMainWindow):
             return
         if self._app_model.is_running:
             self._app_model.shortcuts.release(event.key())
-            event.accept()
-            return
-        if event.key() == Qt.Key_Control:
-            self._app_model.objects.multi_select(False)
             event.accept()
 
     def _undo_shortcut(self):

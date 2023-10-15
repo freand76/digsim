@@ -3,11 +3,20 @@
 
 """The circuit area and component widget"""
 
+# pylint: disable=unused-argument
+# pylint: disable=useless-parent-delegation
+
 from functools import partial
 
 from PySide6.QtCore import QPoint, QRect, Qt, QTimer
-from PySide6.QtGui import QAction, QPainter
-from PySide6.QtWidgets import QMenu, QPushButton, QScrollArea, QWidget
+from PySide6.QtGui import QAction, QBrush, QPen, QTransform
+from PySide6.QtWidgets import (
+    QGraphicsItem,
+    QGraphicsRectItem,
+    QGraphicsScene,
+    QGraphicsView,
+    QMenu,
+)
 
 from digsim.app.settings import ComponentSettingsDialog
 from digsim.circuit.components.atoms import PortConnectionError
@@ -83,181 +92,235 @@ class ComponentContextMenu(QMenu):
             self._app_model.objects.components.update_settings(self._component_object, settings)
 
 
-class ComponentWidget(QPushButton):
-    """A component widget, a 'clickable' widget with a custom paintEvent"""
+class WireGraphicsItem(QGraphicsItem):
+    """A wire graphics item"""
 
-    def __init__(self, app_model, component_object, parent):
-        super().__init__(parent, objectName=component_object.component.name())
+    def __init__(self, wire_object):
+        super().__init__()
+        self._wire_object = wire_object
+
+    def paint(self, painter, option, widget=None):
+        """QT function"""
+        self._wire_object.paint(painter)
+
+    def boundingRect(self):
+        """QT function"""
+        return self._wire_object.get_rect()
+
+
+class NewWireGraphicsItem(QGraphicsItem):
+    """A new wire graphics item"""
+
+    def __init__(self, app_model):
+        super().__init__()
         self._app_model = app_model
-        self._app_model.sig_component_notify.connect(self._component_notify)
-        self._component_object = component_object
-        self._move_start_pos = None
-        self._active_port = None
 
-        self.setMouseTracking(True)
-        self.move(self._component_object.pos)
+    def paint(self, painter, option, widget=None):
+        """QT function"""
+        end_pos = None
+        wire_object = self._app_model.objects.wires.new.wire
+        end_pos = self._app_model.objects.wires.new.end_pos
+        if wire_object is None or end_pos is None:
+            return
+        wire_object.paint_new(painter, end_pos)
 
-    def sizeHint(self):
+    def boundingRect(self):
+        """QT function"""
+        wire_object = self._app_model.objects.wires.new.wire
+        end_pos = self._app_model.objects.wires.new.end_pos
+        if wire_object is None or end_pos is None:
+            return QRect(0, 0, 0, 0)
+        start_pos = wire_object.start_pos
+        wire_object = self._app_model.objects.wires.new.wire
+        return QRect(
+            start_pos.x(), start_pos.y(), end_pos.x() - start_pos.x(), end_pos.y() - start_pos.y()
+        )
+
+
+class PortGraphicsItem(QGraphicsRectItem):
+    def __init__(self, app_model, parent, port, rect):
+        super().__init__(rect, parent)
+        self._app_model = app_model
+        self._port = port
+        self.setPen(QPen(Qt.black))
+        self.setBrush(Qt.SolidPattern)
+        self.setBrush(QBrush(Qt.gray))
+        self.setAcceptHoverEvents(True)
+
+    def _repaint(self):
+        """Make scene repaint for component update"""
+        self._app_model.sig_repaint.emit()
+
+    def mousePressEvent(self, event):
         """QT event callback function"""
-        return self._component_object.size
+        if self._app_model.objects.wires.new.ongoing():
+            try:
+                self._app_model.objects.wires.new.end(self._port.parent(), self._port.name())
+            except PortConnectionError as exc:
+                self._app_model.objects.wires.new.abort()
+                self._app_model.sig_error.emit(str(exc))
+                self._repaint()
+        else:
+            self._app_model.objects.wires.new.start(self._port.parent(), self._port.name())
+
+    def hoverEnterEvent(self, _):
+        """QT event callback function"""
+        if self._app_model.is_running:
+            return
+        self.setBrush(QBrush(Qt.red))
+        self.setCursor(Qt.CrossCursor)
+        self._repaint()
+
+    def hoverLeaveEvent(self, _):
+        """QT event callback function"""
+        if self._app_model.is_running:
+            return
+        self.setBrush(QBrush(Qt.gray))
+        self.setCursor(Qt.ArrowCursor)
+        self._repaint()
+
+
+class ComponentGraphicsItem(QGraphicsItem):
+    """A component graphics item, a 'clickable' item with a custom paintEvent"""
+
+    def __init__(self, parent, app_model, component_object):
+        super().__init__()
+        self._parent = parent
+        self._app_model = app_model
+        self._component_object = component_object
+        self._component = self._component_object.component
+        # self.setFlag(QGraphicsItem.ItemIsMovable, True)
+        # self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        # self.setFlag(QGraphicsItem.ItemIsFocusable, True)
+        # self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
+        self.setAcceptHoverEvents(True)
+
+        for portname, port_rect in self._component_object._port_rects.items():
+            port = self._component_object.component.port(portname)
+            PortGraphicsItem(app_model, self, port, port_rect)
 
     @property
     def component(self):
         """Get component from widget"""
         return self._component_object.component
 
-    def _component_notify(self, component):
-        if component == self.component:
-            self.move(self._component_object.pos)
-            self.update()
+    def _repaint(self):
+        """Make scene repaint for component update"""
+        self._app_model.sig_repaint.emit()
 
-    def paintEvent(self, _):
-        """QT event callback function"""
-        painter = QPainter(self)
+    def paint(self, painter, option, widget=None):
+        """QT function"""
         self._component_object.paint_component(painter)
-        self._component_object.paint_ports(painter, self._active_port)
-        painter.end()
+        self._component_object.paint_ports(painter)
 
-    def enterEvent(self, _):
+    def boundingRect(self):
+        """QT function"""
+        return QRect(self._component_object.pos, self._component_object.size)
+
+    def hoverEnterEvent(self, _):
         """QT event callback function"""
         if self._app_model.is_running and self.component.has_action:
             self.setCursor(Qt.PointingHandCursor)
 
-    def leaveEvent(self, _):
+    def hoverLeaveEvent(self, _):
         """QT event callback function"""
         self.setCursor(Qt.ArrowCursor)
-        self._active_port = None
-
-    def _new_wire_end(self):
-        try:
-            self._app_model.objects.wires.new.end(self.component, self._active_port)
-        except PortConnectionError as exc:
-            self._app_model.objects.wires.new.abort()
-            self._app_model.sig_error.emit(str(exc))
-            self.parent().update()
 
     def mousePressEvent(self, event):
         """QT event callback function"""
-        super().mousePressEvent(event)
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
                 self._app_model.model_add_event(self.component.onpress)
-            elif self._app_model.objects.wires.new.ongoing():
-                if self._active_port is not None:
-                    self._new_wire_end()
             else:
                 self._app_model.objects.select(self._component_object)
-                if self._active_port is None:
-                    # Prepare to move
-                    self.setCursor(Qt.ClosedHandCursor)
-                    self._move_start_pos = event.pos()
-                else:
-                    self._app_model.objects.wires.new.start(self.component, self._active_port)
-        elif event.button() == Qt.RightButton:
-            if self._app_model.is_running:
-                return
-            if self._app_model.objects.wires.new.ongoing():
-                self._app_model.objects.wires.new.abort()
-            else:
-                contect_menu = ComponentContextMenu(self, self._app_model, self._component_object)
-                contect_menu.create(self.mapToGlobal(event.pos()))
-        self.update()
+                self.setCursor(Qt.ClosedHandCursor)
+                self._repaint()
 
     def mouseReleaseEvent(self, event):
         """QT event callback function"""
-        super().mouseReleaseEvent(event)
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
                 self._app_model.model_add_event(self.component.onrelease)
-                return
-
-            # Move complete?
-            self.setCursor(Qt.ArrowCursor)
-            has_movement = False
-            if self._move_start_pos is not None:
-                has_movement = self._app_model.objects.move_selected_components(
-                    event.pos() - self._move_start_pos,
-                    finalize=True,
-                )
-                self._move_start_pos = None
-            if not has_movement and not self._app_model.objects.wires.new.ongoing():
-                self._component_object.single_click_action()
-
-    def mouseMoveEvent(self, event):
-        """QT event callback function"""
-        self._component_object.mouse_position(event.pos())
-
-        if self._app_model.is_running:
-            return
-
-        if self._app_model.objects.multi_select_ongoing():
-            return
-
-        active_port = self._component_object.get_port_for_point(event.pos())
-        if active_port != self._active_port:
-            self._active_port = active_port
-            if self._active_port is not None:
-                self.setCursor(Qt.CrossCursor)
             else:
                 self.setCursor(Qt.ArrowCursor)
-            self.update()
+                if not self._app_model.objects.wires.new.ongoing():
+                    self._component_object.single_click_action()
 
+    def contextMenuEvent(self, event):
+        """Create conext menu for component"""
+        if self._app_model.is_running:
+            return
         if self._app_model.objects.wires.new.ongoing():
-            end_pos = event.pos()
-            if self._active_port:
-                end_pos = self._component_object.get_port_pos(self._active_port)
-            self._app_model.objects.wires.new.set_end_pos(self.pos() + end_pos)
-            self.parent().update()
-
-        elif self._move_start_pos is not None:
-            self._app_model.objects.move_selected_components(event.pos() - self._move_start_pos)
-            self.parent().update()
+            self._app_model.objects.wires.new.abort()
+        context_menu = ComponentContextMenu(self._parent, self._app_model, self._component_object)
+        context_menu.create(event.screenPos())
 
 
-class CircuitArea(QWidget):
-    """The circuit area class, this is where the component widgets are placed"""
+class _CircuitAreaScene(QGraphicsScene):
+    """The circuit area graphics scene"""
 
-    def __init__(self, app_model, parent):
-        super().__init__(parent)
-        self.setFixedWidth(5000)
-        self.setFixedHeight(5000)
+    def __init__(self, app_model):
+        super().__init__()
         self._app_model = app_model
+        self._app_model.sig_repaint.connect(self._repaint)
         self._app_model.sig_synchronize_gui.connect(self._synchronize_gui)
-        self._app_model.sig_repaint_wires.connect(self._repaint)
-        self._select_box_start = None
-        self._select_box_rect = None
-        self.setMouseTracking(True)
-        self.setAcceptDrops(True)
-        self._panning_mode = False
-        self._panning_pos = None
-        self._panning_callback = None
-        self._top_left = QPoint(0, 0)
-
-    def set_top_left(self, point):
-        """Set top left position for visible circuit area"""
-        self._top_left = point
-
-    def set_panning_callback(self, callback):
-        """Set callback funktion to handle panning of parent scroll area"""
-        self._panning_callback = callback
-
-    def _abort_wire(self):
-        self._app_model.objects.wires.new.abort()
-        self.update()
 
     def _repaint(self):
-        self.repaint()
+        self.update()
+
+    def remove_all(self):
+        """Remove everything from scene"""
+        self.clear()
+        self.addItem(NewWireGraphicsItem(self._app_model))
+
+    def _synchronize_gui(self):
+        self.remove_all()
+        component_objects = self._app_model.objects.components.get_object_list()
+        wire_objects = self._app_model.objects.wires.get_object_list()
+        for wire_object in wire_objects:
+            self.addItem(WireGraphicsItem(wire_object))
+        for component_object in component_objects:
+            comp = ComponentGraphicsItem(self, self._app_model, component_object)
+            self.addItem(comp)
+
+
+class CircuitArea(QGraphicsView):
+    """The circuit area graphics view"""
+
+    def __init__(self, app_model, parent):
+        super().__init__(parent=parent)
+        self._app_model = app_model
+        self._app_model.sig_zoom_in_gui.connect(self._zoom_in)
+        self._app_model.sig_zoom_out_gui.connect(self._zoom_out)
+        self._scene = _CircuitAreaScene(app_model)
+        self._wheel_zoom_mode = False
+        self.setScene(self._scene)
+        self.setBackgroundBrush(QBrush(Qt.lightGray))
+        self.setAcceptDrops(True)
+        self.setTransformationAnchor(QGraphicsView.NoAnchor)
+
+    def _zoom_in(self):
+        self.scale(1.25, 1.25)
+
+    def _zoom_out(self):
+        self.scale(0.8, 0.8)
+
+    def _repaint(self):
+        """Make scene repaint for component update"""
+        self._app_model.sig_repaint.emit()
 
     def keyPressEvent(self, event):
         """QT event callback function"""
         super().keyPressEvent(event)
         if event.isAutoRepeat():
             return
-        if self._app_model.is_running:
-            return
         if event.key() == Qt.Key_Shift:
             self.setCursor(Qt.OpenHandCursor)
-            self._panning_mode = True
+            self.setDragMode(QGraphicsView.ScrollHandDrag)
+            event.accept()
+        elif event.key() == Qt.Key_Control:
+            self.setCursor(Qt.ArrowCursor)
+            self._wheel_zoom_mode = True
             event.accept()
 
     def keyReleaseEvent(self, event):
@@ -265,92 +328,24 @@ class CircuitArea(QWidget):
         super().keyReleaseEvent(event)
         if event.isAutoRepeat():
             return
-        if self._app_model.is_running:
-            return
         if event.key() == Qt.Key_Shift:
             self.setCursor(Qt.ArrowCursor)
-            self._panning_mode = False
+            self.setDragMode(QGraphicsView.NoDrag)
+            event.accept()
+        elif event.key() == Qt.Key_Control:
+            self.setCursor(Qt.ArrowCursor)
+            self._wheel_zoom_mode = False
             event.accept()
 
-    def paintEvent(self, _):
-        """QT event callback function"""
-        painter = QPainter(self)
-        self._app_model.objects.wires.paint(painter)
-        if self._select_box_rect is not None:
-            painter.setBrush(Qt.Dense7Pattern)
-            painter.drawRect(self._select_box_rect)
-            self._app_model.objects.select_by_rect(self._select_box_rect)
-        painter.end()
-
-    def mousePressEvent(self, event):
-        """QT event callback function"""
-        super().mousePressEvent(event)
-        self.setFocus()
-        if event.button() == Qt.LeftButton:
-            if self._app_model.is_running:
-                return
-            if self._app_model.objects.wires.new.ongoing():
-                return
-            if self._app_model.objects.select_by_position(event.pos()):
-                self.update()
-                return
-            if self._panning_mode:
-                self._panning_pos = event.pos()
-            else:
-                self._select_box_start = event.pos()
-                self.update()
-        elif event.button() == Qt.RightButton:
-            if self._app_model.is_running:
-                return
-            if self._app_model.objects.wires.new.ongoing():
-                self._abort_wire()
-
-    def _end_selection(self):
-        if self._select_box_rect is not None:
-            self._app_model.objects.select_by_rect(self._select_box_rect)
-        self._select_box_start = None
-        self._select_box_rect = None
-
-    def mouseReleaseEvent(self, event):
-        """QT event callback function"""
-        super().mouseReleaseEvent(event)
-        if event.button() == Qt.LeftButton:
-            if self._app_model.is_running:
-                return
-            self._panning_pos = None
-            self._end_selection()
-            self.update()
-
-    def mouseDoubleClickEvent(self, _):
-        """QT event callback function"""
-        if self._app_model.is_running:
-            return
-        if self._app_model.objects.wires.new.ongoing():
-            self._abort_wire()
-
-    def mouseMoveEvent(self, event):
-        """QT event callback function"""
-        if self._app_model.is_running:
-            return
-
-        if self._app_model.objects.wires.new.ongoing():
-            self._app_model.objects.wires.new.set_end_pos(event.pos())
-            self.update()
-            return
-
-        if self._select_box_start is not None:
-            self._select_box_rect = QRect(self._select_box_start, event.pos())
-            self.update()
-            return
-
-        if (
-            self._panning_mode
-            and self._panning_pos is not None
-            and self._panning_callback is not None
-        ):
-            self._panning_callback(self._panning_pos - event.pos())
-
     def dragEnterEvent(self, event):
+        """QT event callback function"""
+        event.accept()
+
+    def dragLeaveEvent(self, event):
+        """QT event callback function"""
+        event.accept()
+
+    def dragMoveEvent(self, event):
         """QT event callback function"""
         event.accept()
 
@@ -360,8 +355,52 @@ class CircuitArea(QWidget):
         event.accept()
         self.setFocus()
 
+        scene_pos = self.mapToScene(event.pos())
+
         component_name = event.mimeData().text()
-        QTimer.singleShot(0, partial(self.add_component, component_name, event.pos()))
+        QTimer.singleShot(0, partial(self.add_component, component_name, scene_pos))
+
+    def enterEvent(self, event):
+        """QT event callback function"""
+        self.setFocus()
+        event.accept()
+
+    def mousePressEvent(self, event):
+        """QT event callback function"""
+        super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        """QT event callback function"""
+        super().mouseReleaseEvent(event)
+
+    def mouseMoveEvent(self, event):
+        """QT event callback function"""
+        super().mouseMoveEvent(event)
+        # Draw unfinished wire
+        if self._app_model.objects.wires.new.ongoing():
+            scene_pos = self.mapToScene(event.pos())
+            self._app_model.objects.wires.new.set_end_pos(scene_pos)
+            self._repaint()
+
+    def wheelEvent(self, event):
+        """QT event callback function"""
+        # Zoom on wheel
+        if not self._wheel_zoom_mode:
+            super().wheelEvent(event)
+            return
+        if event.angleDelta().y() > 0:
+            before = self.mapToScene(event.pos())
+            self._zoom_in()
+            after = self.mapToScene(event.pos())
+            translation = after - before
+            self.translate(translation.x(), translation.y())
+        elif event.angleDelta().y() < 0:
+            before = self.mapToScene(event.pos())
+            self._zoom_out()
+            after = self.mapToScene(event.pos())
+            translation = after - before
+            self.translate(translation.x(), translation.y())
+        event.accept()
 
     def add_component(self, name, position):
         """
@@ -369,7 +408,7 @@ class CircuitArea(QWidget):
         Used be drag'n'drop into Circuit area or double click in SelectableComponentWidget
         """
         if position is None:
-            position = self._top_left + QPoint(100, 100)
+            position = self.mapToScene(0, 0) + QPoint(100, 100)
 
         component_parameters = self._app_model.objects.components.get_object_parameters(name)
         ok, settings = ComponentSettingsDialog.start(
@@ -381,42 +420,4 @@ class CircuitArea(QWidget):
             component_object = self._app_model.objects.components.add_object_by_name(
                 name, position, settings
             )
-            comp = ComponentWidget(self._app_model, component_object, self)
-            comp.show()
             self._app_model.objects.select(component_object)
-
-    def _synchronize_gui(self):
-        children = self.findChildren(ComponentWidget)
-        for child in children:
-            child.deleteLater()
-
-        component_objects = self._app_model.objects.components.get_object_list()
-        for component_object in component_objects:
-            comp = ComponentWidget(self._app_model, component_object, self)
-            comp.show()
-        self._app_model.objects.wires.update()
-        self.update()
-
-
-class ScrollableCircuitArea(QScrollArea):
-    """The scrollable circuit area class, this is where the circuit area widgets is placed"""
-
-    def __init__(self, parent, circuit_area):
-        super().__init__(parent)
-        self._circuit_area = circuit_area
-        self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self.setWidget(circuit_area)
-        self._circuit_area.set_panning_callback(self.panning_callback)
-
-    def scrollContentsBy(self, dx, dy):
-        """QT event callback function"""
-        super().scrollContentsBy(dx, dy)
-        self._circuit_area.set_top_left(
-            QPoint(self.horizontalScrollBar().value(), self.verticalScrollBar().value())
-        )
-
-    def panning_callback(self, delta):
-        """Pan the scroll area by the delta position"""
-        self.horizontalScrollBar().setValue(self.horizontalScrollBar().value() + delta.x())
-        self.verticalScrollBar().setValue(self.verticalScrollBar().value() + delta.y())
