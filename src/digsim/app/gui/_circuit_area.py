@@ -5,13 +5,15 @@
 
 # pylint: disable=unused-argument
 # pylint: disable=useless-parent-delegation
+# pylint: disable=too-few-public-methods
 
 from functools import partial
 
 from PySide6.QtCore import QPoint, QRect, Qt, QTimer
-from PySide6.QtGui import QAction, QBrush, QPen, QTransform
+from PySide6.QtGui import QAction, QBrush, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
+    QGraphicsPathItem,
     QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsView,
@@ -92,20 +94,22 @@ class ComponentContextMenu(QMenu):
             self._app_model.objects.components.update_settings(self._component_object, settings)
 
 
-class WireGraphicsItem(QGraphicsItem):
+class WireGraphicsItem(QGraphicsPathItem):
     """A wire graphics item"""
 
-    def __init__(self, wire_object):
+    def __init__(self, src_port_item, dst_port_item):
         super().__init__()
-        self._wire_object = wire_object
+        self.setPen(QPen(Qt.black))
+        self._src_port_item = src_port_item
+        self._dst_port_item = dst_port_item
+        self.update_wire()
 
-    def paint(self, painter, option, widget=None):
-        """QT function"""
-        self._wire_object.paint(painter)
-
-    def boundingRect(self):
-        """QT function"""
-        return self._wire_object.get_rect()
+    def update_wire(self):
+        """Update the wire path"""
+        path = QPainterPath()
+        path.moveTo(self._src_port_item.position() + self._src_port_item.rect().center())
+        path.lineTo(self._dst_port_item.position() + self._dst_port_item.rect().center())
+        self.setPath(path)
 
 
 class NewWireGraphicsItem(QGraphicsItem):
@@ -138,6 +142,8 @@ class NewWireGraphicsItem(QGraphicsItem):
 
 
 class PortGraphicsItem(QGraphicsRectItem):
+    """A port graphics item"""
+
     def __init__(self, app_model, parent, port, rect):
         super().__init__(rect, parent)
         self._app_model = app_model
@@ -179,43 +185,65 @@ class PortGraphicsItem(QGraphicsRectItem):
         self.setCursor(Qt.ArrowCursor)
         self._repaint()
 
+    def position(self):
+        """return the parent position"""
+        return self.parentItem().pos()
 
-class ComponentGraphicsItem(QGraphicsItem):
+
+class ComponentGraphicsItem(QGraphicsRectItem):
     """A component graphics item, a 'clickable' item with a custom paintEvent"""
 
     def __init__(self, parent, app_model, component_object):
-        super().__init__()
+        super().__init__(QRect(component_object.pos, component_object.size))
         self._parent = parent
         self._app_model = app_model
         self._component_object = component_object
         self._component = self._component_object.component
-        # self.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self._wire_items = []
+        self._port_dict = {}
+        self.setFlag(QGraphicsItem.ItemIsMovable, True)
         # self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         # self.setFlag(QGraphicsItem.ItemIsFocusable, True)
-        # self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setAcceptHoverEvents(True)
-
         for portname, port_rect in self._component_object._port_rects.items():
             port = self._component_object.component.port(portname)
-            PortGraphicsItem(app_model, self, port, port_rect)
+            item = PortGraphicsItem(app_model, self, port, port_rect)
+            self._port_dict[port] = item
 
     @property
     def component(self):
         """Get component from widget"""
         return self._component_object.component
 
+    def sync_from_gui(self):
+        """Get component from widget"""
+        new_pos = self.pos() + self.rect().topLeft()
+        self._component_object.pos = new_pos.toPoint()
+
+    def add_wire(self, wire):
+        """Add wire_item to component"""
+        self._wire_items.append(wire)
+
+    def get_port_item(self, port):
+        """Get port_item from component"""
+        return self._port_dict[port]
+
     def _repaint(self):
         """Make scene repaint for component update"""
         self._app_model.sig_repaint.emit()
+
+    def itemChange(self, change, value):
+        """QT event callback function"""
+        if change == QGraphicsItem.ItemPositionHasChanged:
+            for wire_item in self._wire_items:
+                wire_item.update_wire()
+        return super().itemChange(change, value)
 
     def paint(self, painter, option, widget=None):
         """QT function"""
         self._component_object.paint_component(painter)
         self._component_object.paint_ports(painter)
-
-    def boundingRect(self):
-        """QT function"""
-        return QRect(self._component_object.pos, self._component_object.size)
 
     def hoverEnterEvent(self, _):
         """QT event callback function"""
@@ -226,8 +254,13 @@ class ComponentGraphicsItem(QGraphicsItem):
         """QT event callback function"""
         self.setCursor(Qt.ArrowCursor)
 
+    def mouseMoveEvent(self, event):
+        """QT event callback function"""
+        super().mouseMoveEvent(event)
+
     def mousePressEvent(self, event):
         """QT event callback function"""
+        super().mousePressEvent(event)
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
                 self._app_model.model_add_event(self.component.onpress)
@@ -238,6 +271,7 @@ class ComponentGraphicsItem(QGraphicsItem):
 
     def mouseReleaseEvent(self, event):
         """QT event callback function"""
+        super().mouseReleaseEvent(event)
         if event.button() == Qt.LeftButton:
             if self._app_model.is_running:
                 self._app_model.model_add_event(self.component.onrelease)
@@ -264,6 +298,7 @@ class _CircuitAreaScene(QGraphicsScene):
         self._app_model = app_model
         self._app_model.sig_repaint.connect(self._repaint)
         self._app_model.sig_synchronize_gui.connect(self._synchronize_gui)
+        self._component_items = {}
 
     def _repaint(self):
         self.update()
@@ -274,14 +309,28 @@ class _CircuitAreaScene(QGraphicsScene):
         self.addItem(NewWireGraphicsItem(self._app_model))
 
     def _synchronize_gui(self):
+        for _, item in self._component_items.items():
+            item.sync_from_gui()
+
         self.remove_all()
+        self._component_items = {}
         component_objects = self._app_model.objects.components.get_object_list()
+        for component_object in component_objects:
+            item = ComponentGraphicsItem(self, self._app_model, component_object)
+            self.addItem(item)
+            self._component_items[component_object.component] = item
         wire_objects = self._app_model.objects.wires.get_object_list()
         for wire_object in wire_objects:
-            self.addItem(WireGraphicsItem(wire_object))
-        for component_object in component_objects:
-            comp = ComponentGraphicsItem(self, self._app_model, component_object)
-            self.addItem(comp)
+            src_comp = wire_object.src_port.parent()
+            dst_comp = wire_object.dst_port.parent()
+            src_comp_item = self._component_items[src_comp]
+            dst_comp_item = self._component_items[dst_comp]
+            src_port_item = src_comp_item.get_port_item(wire_object.src_port)
+            dst_port_item = dst_comp_item.get_port_item(wire_object.dst_port)
+            item = WireGraphicsItem(src_port_item, dst_port_item)
+            self.addItem(item)
+            src_comp_item.add_wire(item)
+            dst_comp_item.add_wire(item)
 
 
 class CircuitArea(QGraphicsView):

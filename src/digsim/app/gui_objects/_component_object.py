@@ -244,6 +244,7 @@ class ComponentObject(GuiObject):
     def pos(self, point):
         """Set position"""
         self._pos = point
+        self.update_ports()
 
     def to_dict(self):
         """Return position as dict"""
