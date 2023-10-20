@@ -10,7 +10,7 @@
 from functools import partial
 
 from PySide6.QtCore import QPoint, QRect, Qt, QTimer
-from PySide6.QtGui import QAction, QBrush, QPainterPath, QPen
+from PySide6.QtGui import QAction, QBrush, QColor, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsPathItem,
@@ -97,19 +97,67 @@ class ComponentContextMenu(QMenu):
 class WireGraphicsItem(QGraphicsPathItem):
     """A wire graphics item"""
 
-    def __init__(self, src_port_item, dst_port_item):
+    WIRE_TO_COMPONENT_DIST = 5
+
+    def __init__(self, app_model, src_port, src_port_item, dst_port_item):
         super().__init__()
-        self.setPen(QPen(Qt.black))
+        self._app_model = app_model
+        self._src_port = src_port
         self._src_port_item = src_port_item
         self._dst_port_item = dst_port_item
         self.update_wire()
 
+    def _create_path(self):
+        component_top_y = self._src_port_item.portParentRect().y()
+        component_bottom_y = (
+            self._src_port_item.portParentRect().y()
+            + self._src_port_item.portParentRect().height()
+        )
+        source = self._src_port_item.portPos()
+        dest = self._dst_port_item.portPos()
+
+        path = QPainterPath()
+        path.moveTo(source)
+        if source.x() < dest.x():
+            half_dist_x = (dest.x() - source.x()) / 2
+            path.lineTo(QPoint(source.x() + half_dist_x, source.y()))
+            path.lineTo(QPoint(source.x() + half_dist_x, source.y()))
+            path.lineTo(QPoint(source.x() + half_dist_x, dest.y()))
+            path.lineTo(dest)
+        else:
+            half_dist_y = (dest.y() - source.y()) / 2
+            if dest.y() > source.y():
+                y_mid = max(
+                    component_bottom_y - source.y() + self.WIRE_TO_COMPONENT_DIST, half_dist_y
+                )
+            else:
+                y_mid = min(
+                    component_top_y - source.y() - self.WIRE_TO_COMPONENT_DIST, half_dist_y
+                )
+            path.lineTo(QPoint(source.x() + 10, source.y()))
+            path.lineTo(QPoint(source.x() + 10, source.y() + y_mid))
+            path.lineTo(QPoint(dest.x() - 10, source.y() + y_mid))
+            path.lineTo(QPoint(dest.x() - 10, dest.y()))
+        path.lineTo(dest)
+        return path
+
+    def paint(self, painter, option, widget=None):
+        """QT function"""
+        pen = QPen(Qt.black)
+        if self._src_port.width > 1:
+            pen.setWidth(4)
+        else:
+            pen.setWidth(2)
+        color_wires = self._app_model.settings.get("color_wires")
+        if color_wires and self._src_port.value != 0 and self._src_port.value != "X":
+            max_value = 2**self._src_port.width - 1
+            pen.setColor(QColor(0, 255 * self._src_port.value / max_value, 0))
+        self.setPen(pen)
+        super().paint(painter, option, widget)
+
     def update_wire(self):
         """Update the wire path"""
-        path = QPainterPath()
-        path.moveTo(self._src_port_item.position() + self._src_port_item.rect().center())
-        path.lineTo(self._dst_port_item.position() + self._dst_port_item.rect().center())
-        self.setPath(path)
+        self.setPath(self._create_path())
 
 
 class NewWireGraphicsItem(QGraphicsItem):
@@ -185,9 +233,13 @@ class PortGraphicsItem(QGraphicsRectItem):
         self.setCursor(Qt.ArrowCursor)
         self._repaint()
 
-    def position(self):
+    def portParentRect(self):
         """return the parent position"""
-        return self.parentItem().pos()
+        return self.parentItem().rect().translated(self.parentItem().pos())
+
+    def portPos(self):
+        """return the parent position"""
+        return self.parentItem().pos() + self.rect().center()
 
 
 class ComponentGraphicsItem(QGraphicsRectItem):
@@ -327,7 +379,9 @@ class _CircuitAreaScene(QGraphicsScene):
             dst_comp_item = self._component_items[dst_comp]
             src_port_item = src_comp_item.get_port_item(wire_object.src_port)
             dst_port_item = dst_comp_item.get_port_item(wire_object.dst_port)
-            item = WireGraphicsItem(src_port_item, dst_port_item)
+            item = WireGraphicsItem(
+                self._app_model, wire_object.src_port, src_port_item, dst_port_item
+            )
             self.addItem(item)
             src_comp_item.add_wire(item)
             dst_comp_item.add_wire(item)
