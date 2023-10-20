@@ -73,7 +73,7 @@ class ComponentContextMenu(QMenu):
         return self._menu_action.text() if self._menu_action is not None else ""
 
     def _delete(self):
-        self._app_model.objects.select(self._component_object)
+        self._component_object.select(True)
         self._app_model.objects.delete_selected()
 
     def _raise(self):
@@ -258,7 +258,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         self._port_dict = {}
         self._mouse_press_pos = None
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
-        # self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         # self.setFlag(QGraphicsItem.ItemIsFocusable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setAcceptHoverEvents(True)
@@ -272,6 +272,10 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         """Get component from widget"""
         return self._component_object.component
 
+    def setSelected(self, selected):
+        self._component_object.select(selected)
+        super().setSelected(selected)
+        
     def sync_from_gui(self):
         """Get component from widget"""
         new_pos = self.pos() + self.rect().topLeft()
@@ -289,11 +293,15 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         """Make scene repaint for component update"""
         self._app_model.sig_repaint.emit()
 
+        
     def itemChange(self, change, value):
         """QT event callback function"""
         if change == QGraphicsItem.ItemPositionHasChanged:
             for wire_item in self._wire_items:
                 wire_item.update_wire()
+        elif change == QGraphicsItem.ItemSelectedHasChanged:
+            self._component_object.select(self.isSelected())
+            self._repaint()
         return super().itemChange(change, value)
 
     def paint(self, painter, option, widget=None):
@@ -322,7 +330,6 @@ class ComponentGraphicsItem(QGraphicsRectItem):
                 self._app_model.model_add_event(self.component.onpress)
             else:
                 self._mouse_press_pos = event.screenPos()
-                self._app_model.objects.select(self._component_object)
                 self.setCursor(Qt.ClosedHandCursor)
                 self._repaint()
 
@@ -362,14 +369,58 @@ class _CircuitAreaScene(QGraphicsScene):
         self._app_model.sig_repaint.connect(self._repaint)
         self._app_model.sig_synchronize_gui.connect(self._synchronize_gui)
         self._component_items = {}
+        self._select_start_pos = None
+        self._selection_rect_item = None
 
     def _repaint(self):
         self.update()
+
+    def _selectNone(self):
+        for item in self.items():
+            item.setSelected(False)
+
+    def mousePressEvent(self, event):
+        """QT event callback function"""
+        super().mousePressEvent(event)
+        pos = event.scenePos()
+        items = self.items(pos)
+        if len(items) == 0:
+            self._selectNone()
+            self._select_start_pos = pos 
+        self._repaint()
+
+    def mouseMoveEvent(self, event):
+        """QT event callback function"""
+        super().mouseMoveEvent(event)
+        pos = event.scenePos()
+        if self._select_start_pos is not None:
+            path = QPainterPath()
+            rect = QRect(
+                self._select_start_pos.x(),
+                self._select_start_pos.y(),
+                pos.x() - self._select_start_pos.x(),
+                pos.y() - self._select_start_pos.y()
+            )
+            self._selection_rect_item.setRect(rect)
+            self._selection_rect_item.setVisible(True)
+            path.addRect(rect)
+            self.setSelectionArea(path)
+            self._repaint()
+
+    def mouseReleaseEvent(self, event):
+        """QT event callback function"""
+        super().mouseReleaseEvent(event)
+        self._select_start_pos = None
+        self._selection_rect_item.setVisible(False)
+        self._repaint()
 
     def remove_all(self):
         """Remove everything from scene"""
         self.clear()
         self.addItem(NewWireGraphicsItem(self._app_model))
+        self._selection_rect_item = QGraphicsRectItem()
+        self._selection_rect_item.setBrush(Qt.Dense7Pattern)
+        self.addItem(self._selection_rect_item)
 
     def _synchronize_gui(self):
         for _, item in self._component_items.items():
@@ -482,7 +533,7 @@ class CircuitArea(QGraphicsView):
     def mousePressEvent(self, event):
         """QT event callback function"""
         super().mousePressEvent(event)
-
+        
     def mouseReleaseEvent(self, event):
         """QT event callback function"""
         super().mouseReleaseEvent(event)
@@ -534,4 +585,4 @@ class CircuitArea(QGraphicsView):
             component_object = self._app_model.objects.components.add_object_by_name(
                 name, position, settings
             )
-            self._app_model.objects.select(component_object)
+            component_object.select(True)
