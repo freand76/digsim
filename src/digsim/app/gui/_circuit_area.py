@@ -253,6 +253,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         self._component = self._component_object.component
         self._wire_items = []
         self._port_dict = {}
+        self._mouse_press_pos = None
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         # self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         # self.setFlag(QGraphicsItem.ItemIsFocusable, True)
@@ -317,6 +318,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
             if self._app_model.is_running:
                 self._app_model.model_add_event(self.component.onpress)
             else:
+                self._mouse_press_pos = event.screenPos()
                 self._app_model.objects.select(self._component_object)
                 self.setCursor(Qt.ClosedHandCursor)
                 self._repaint()
@@ -329,8 +331,14 @@ class ComponentGraphicsItem(QGraphicsRectItem):
                 self._app_model.model_add_event(self.component.onrelease)
             else:
                 self.setCursor(Qt.ArrowCursor)
-                if not self._app_model.objects.wires.new.ongoing():
-                    self._component_object.single_click_action()
+                if event.screenPos() != self._mouse_press_pos:
+                    # Move completed, push_undo_state and syncronize gui
+                    self._app_model.objects.push_undo_state()
+                    self._app_model.sig_synchronize_gui.emit()
+                else:
+                    if not self._app_model.objects.wires.new.ongoing():
+                        self._component_object.single_click_action()
+        self._mouse_press_pos = None
 
     def contextMenuEvent(self, event):
         """Create conext menu for component"""

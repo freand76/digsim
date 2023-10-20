@@ -1,3 +1,5 @@
+
+
 class oldCircuitArea(QWidget):
     """The circuit area class, this is where the component widgets are placed"""
 
