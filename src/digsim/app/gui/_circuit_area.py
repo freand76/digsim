@@ -108,14 +108,11 @@ class WireGraphicsItem(QGraphicsPathItem):
         self.setZValue(-1)
         self.update_wire()
 
-    def _create_path(self):
-        component_top_y = self._src_port_item.portParentRect().y()
-        component_bottom_y = (
-            self._src_port_item.portParentRect().y()
-            + self._src_port_item.portParentRect().height()
-        )
-        source = self._src_port_item.portPos()
-        dest = self._dst_port_item.portPos()
+    @classmethod
+    def create_path(cls, source, dest, rect):
+        """Create a wire path"""
+        component_top_y = rect.y()
+        component_bottom_y = rect.y() + rect.height()
 
         path = QPainterPath()
         path.moveTo(source)
@@ -124,17 +121,14 @@ class WireGraphicsItem(QGraphicsPathItem):
             path.lineTo(QPoint(source.x() + half_dist_x, source.y()))
             path.lineTo(QPoint(source.x() + half_dist_x, source.y()))
             path.lineTo(QPoint(source.x() + half_dist_x, dest.y()))
-            path.lineTo(dest)
         else:
             half_dist_y = (dest.y() - source.y()) / 2
-            if dest.y() > source.y():
+            if dest.y() < source.y():
                 y_mid = max(
-                    component_bottom_y - source.y() + self.WIRE_TO_COMPONENT_DIST, half_dist_y
+                    component_bottom_y - source.y() + cls.WIRE_TO_COMPONENT_DIST, half_dist_y
                 )
             else:
-                y_mid = min(
-                    component_top_y - source.y() - self.WIRE_TO_COMPONENT_DIST, half_dist_y
-                )
+                y_mid = min(component_top_y - source.y() - cls.WIRE_TO_COMPONENT_DIST, half_dist_y)
             path.lineTo(QPoint(source.x() + 10, source.y()))
             path.lineTo(QPoint(source.x() + 10, source.y() + y_mid))
             path.lineTo(QPoint(dest.x() - 10, source.y() + y_mid))
@@ -158,10 +152,13 @@ class WireGraphicsItem(QGraphicsPathItem):
 
     def update_wire(self):
         """Update the wire path"""
-        self.setPath(self._create_path())
+        source = self._src_port_item.portPos()
+        dest = self._dst_port_item.portPos()
+        rect = self._src_port_item.portParentRect()
+        self.setPath(self.create_path(source, dest, rect))
 
 
-class NewWireGraphicsItem(QGraphicsItem):
+class NewWireGraphicsItem(QGraphicsPathItem):
     """A new wire graphics item"""
 
     def __init__(self, app_model):
@@ -173,21 +170,26 @@ class NewWireGraphicsItem(QGraphicsItem):
         end_pos = None
         wire_object = self._app_model.objects.wires.new.wire
         end_pos = self._app_model.objects.wires.new.end_pos
+        pen = QPen(Qt.darkGray)
         if wire_object is None or end_pos is None:
             return
-        wire_object.paint_new(painter, end_pos)
-
-    def boundingRect(self):
-        """QT function"""
-        wire_object = self._app_model.objects.wires.new.wire
-        end_pos = self._app_model.objects.wires.new.end_pos
-        if wire_object is None or end_pos is None:
-            return QRect(0, 0, 0, 0)
-        start_pos = wire_object.start_pos
-        wire_object = self._app_model.objects.wires.new.wire
-        return QRect(
-            start_pos.x(), start_pos.y(), end_pos.x() - start_pos.x(), end_pos.y() - start_pos.y()
-        )
+        start_port = wire_object.dst_port if wire_object.src_port is None else wire_object.src_port
+        if start_port.width > 1:
+            pen.setWidth(4)
+        else:
+            pen.setWidth(2)
+        component_object = self._app_model.objects.components.get_object(start_port.parent())
+        if wire_object.src_port is not None:
+            path = WireGraphicsItem.create_path(
+                wire_object.start_pos, end_pos, component_object.get_rect()
+            )
+        else:
+            path = WireGraphicsItem.create_path(
+                end_pos, wire_object.start_pos, component_object.get_rect()
+            )
+        self.setPath(path)
+        self.setPen(pen)
+        super().paint(painter, option, widget)
 
 
 class PortGraphicsItem(QGraphicsRectItem):
