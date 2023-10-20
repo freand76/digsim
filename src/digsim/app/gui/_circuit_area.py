@@ -105,6 +105,7 @@ class WireGraphicsItem(QGraphicsPathItem):
         self._src_port = src_port
         self._src_port_item = src_port_item
         self._dst_port_item = dst_port_item
+        self.setZValue(-1)
         self.update_wire()
 
     def _create_path(self):
