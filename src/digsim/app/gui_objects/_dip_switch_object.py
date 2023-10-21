@@ -38,7 +38,7 @@ class DipSwitchObject(ImageObject):
                     self.DIP_SWITCH_HEIGHT,
                 )
             )
-        
+
     def mouse_position(self, pos):
         """update component according to on mouse move"""
         select = None

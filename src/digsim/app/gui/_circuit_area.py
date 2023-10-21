@@ -421,7 +421,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
                 else:
                     if not self._app_model.objects.wires.new.ongoing():
                         self._component_object.single_click_action()
-        # self._mouse_press_pos = None
+        self._mouse_press_pos = None
 
     def contextMenuEvent(self, event):
         """Create conext menu for component"""
@@ -449,7 +449,8 @@ class _CircuitAreaScene(QGraphicsScene):
     def _repaint(self):
         self.update()
 
-    def _selectNone(self):
+    def select_none(self):
+        """Select no items"""
         for item in self.items():
             item.setSelected(False)
 
@@ -459,7 +460,7 @@ class _CircuitAreaScene(QGraphicsScene):
         pos = event.scenePos()
         items = self.items(pos)
         if len(items) == 0:
-            self._selectNone()
+            self.select_none()
             self._select_start_pos = pos
         self._repaint()
 
@@ -659,7 +660,4 @@ class CircuitArea(QGraphicsView):
         if settings.get("name") is not None:
             name = settings["name"]
         if ok:
-            component_object = self._app_model.objects.components.add_object_by_name(
-                name, position, settings
-            )
-            component_object.select(True)
+            self._app_model.objects.components.add_object_by_name(name, position, settings)
