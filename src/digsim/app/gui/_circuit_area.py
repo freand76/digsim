@@ -363,9 +363,10 @@ class ComponentGraphicsItem(QGraphicsRectItem):
 class _CircuitAreaScene(QGraphicsScene):
     """The circuit area graphics scene"""
 
-    def __init__(self, app_model):
+    def __init__(self, app_model, view):
         super().__init__()
         self._app_model = app_model
+        self._view = view
         self._app_model.sig_repaint.connect(self._repaint)
         self._app_model.sig_synchronize_gui.connect(self._synchronize_gui)
         self._component_items = {}
@@ -430,7 +431,7 @@ class _CircuitAreaScene(QGraphicsScene):
         self._component_items = {}
         component_objects = self._app_model.objects.components.get_object_list()
         for component_object in component_objects:
-            item = ComponentGraphicsItem(self, self._app_model, component_object)
+            item = ComponentGraphicsItem(self._view, self._app_model, component_object)
             self.addItem(item)
             self._component_items[component_object.component] = item
         wire_objects = self._app_model.objects.wires.get_object_list()
@@ -457,7 +458,7 @@ class CircuitArea(QGraphicsView):
         self._app_model = app_model
         self._app_model.sig_zoom_in_gui.connect(self._zoom_in)
         self._app_model.sig_zoom_out_gui.connect(self._zoom_out)
-        self._scene = _CircuitAreaScene(app_model)
+        self._scene = _CircuitAreaScene(app_model, self)
         self._wheel_zoom_mode = False
         self.setScene(self._scene)
         self.setBackgroundBrush(QBrush(Qt.lightGray))
