@@ -39,6 +39,31 @@ class ModelComponents:
         """Return True if there are component objects in the model"""
         return len(self._component_objects) == 0
 
+    def bring_to_front(self, component_object):
+        """Make the component object the highest in the stack"""
+        max_zlevel = None
+        for _, comp_object in self._component_objects.items():
+            max_zlevel = (
+                comp_object.zlevel if max_zlevel is None else (max(max_zlevel, comp_object.zlevel))
+            )
+        component_object.zlevel = max_zlevel + 1
+        self._app_model.model_changed()
+
+    def send_to_back(self, component_object):
+        """Make the component object the lowest in the stack"""
+        min_zlevel = None
+        for _, comp_object in self._component_objects.items():
+            min_zlevel = (
+                comp_object.zlevel if min_zlevel is None else (min(min_zlevel, comp_object.zlevel))
+            )
+        if min_zlevel == 0:
+            for _, comp_object in self._component_objects.items():
+                comp_object.zlevel = comp_object.zlevel + 1
+            component_object.zlevel = 0
+        else:
+            component_object.zlevel = min_zlevel - 1
+        self._app_model.model_changed()
+
     def update_callback_objects(self):
         """
         Update the GUI for the components that have changed since the last call
@@ -124,7 +149,9 @@ class ModelComponents:
             component_dict = gui_dict.get(comp.name(), {})
             x = component_dict.get("x", 100)
             y = component_dict.get("y", 100)
-            self._add_object(comp, x, y)
+            z = component_dict.get("z", 0)
+            component_object = self._add_object(comp, x, y)
+            component_object.zlevel = z
 
     def get_circuit_dict(self):
         """Create model components dict"""

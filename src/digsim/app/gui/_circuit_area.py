@@ -77,10 +77,10 @@ class ComponentContextMenu(QMenu):
         self._app_model.objects.delete_selected()
 
     def _raise(self):
-        self._parent.raise_()
+        self._app_model.objects.components.bring_to_front(self._component_object)
 
     def _lower(self):
-        self._parent.lower()
+        self._app_model.objects.components.send_to_back(self._component_object)
 
     def _settings(self):
         """Start the settings dialog for reconfiguration"""
@@ -105,8 +105,7 @@ class WireGraphicsItem(QGraphicsPathItem):
         self._wire_object = wire_object
         self._src_port_item = src_port_item
         self._dst_port_item = dst_port_item
-        self.setZValue(-1)
-        self.update_wire()
+        self.update_wire(0)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
 
@@ -179,11 +178,12 @@ class WireGraphicsItem(QGraphicsPathItem):
         painter.drawPath(self.path())
         # super().paint(painter, option, widget)
 
-    def update_wire(self):
+    def update_wire(self, zvalue):
         """Update the wire path"""
         source = self._src_port_item.portPos()
         dest = self._dst_port_item.portPos()
         rect = self._src_port_item.portParentRect()
+        self.setZValue(zvalue)
         self.setPath(self.create_path(source, dest, rect))
 
 
@@ -210,13 +210,9 @@ class NewWireGraphicsItem(QGraphicsPathItem):
         component_object = self._app_model.objects.components.get_object(start_port.parent())
         start_pos = component_object.get_port_pos(start_port.name())
         if wire_object.src_port is not None:
-            path = WireGraphicsItem.create_path(
-                start_pos, end_pos, component_object.get_rect()
-            )
+            path = WireGraphicsItem.create_path(start_pos, end_pos, component_object.get_rect())
         else:
-            path = WireGraphicsItem.create_path(
-                end_pos, start_pos, component_object.get_rect()
-            )
+            path = WireGraphicsItem.create_path(end_pos, start_pos, component_object.get_rect())
         self.setPath(path)
         self.setPen(pen)
         super().paint(painter, option, widget)
@@ -328,7 +324,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         """QT event callback function"""
         if change == QGraphicsItem.ItemPositionHasChanged:
             for wire_item in self._wire_items:
-                wire_item.update_wire()
+                wire_item.update_wire(self.zValue())
         elif change == QGraphicsItem.ItemSelectedHasChanged:
             self._app_model.sig_control_notify.emit()
             self._component_object.select(self.isSelected())
@@ -337,6 +333,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
 
     def paint(self, painter, option, widget=None):
         """QT function"""
+        self.setZValue(self._component_object.zlevel)
         self._component_object.paint_component(painter)
         self._component_object.paint_ports(painter)
 
@@ -450,6 +447,7 @@ class _CircuitAreaScene(QGraphicsScene):
         self.clear()
         self.addItem(NewWireGraphicsItem(self._app_model))
         self._selection_rect_item = QGraphicsRectItem()
+        self._selection_rect_item.setPen(Qt.DashLine)
         self._selection_rect_item.setBrush(Qt.Dense7Pattern)
         self.addItem(self._selection_rect_item)
 

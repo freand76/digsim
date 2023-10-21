@@ -35,6 +35,7 @@ class ComponentObject(GuiObject):
         self._width = self.DEFAULT_WIDTH
         self._port_rects = {}
         self._port_display_name = {}
+        self._zlevel = 0
         self.update_ports()
 
     def add_context_menu_action(self, menu, parent):
@@ -240,6 +241,16 @@ class ComponentObject(GuiObject):
         self._pos = point
         self.update_ports()
 
+    @property
+    def zlevel(self):
+        """Get zlevel"""
+        return self._zlevel
+
+    @zlevel.setter
+    def zlevel(self, level):
+        """Set zlevel"""
+        self._zlevel = level
+
     def to_dict(self):
         """Return position as dict"""
-        return {"x": self._pos.x(), "y": self._pos.y()}
+        return {"x": self._pos.x(), "y": self._pos.y(), "z": self._zlevel}

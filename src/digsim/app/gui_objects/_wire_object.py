@@ -40,7 +40,7 @@ class WireObject(GuiObject):
 
         if connect:
             self._connect()
-                
+
     def _connect(self):
         if self._src_port is not None and self._dst_port is not None:
             self._src_port.wire = self._dst_port

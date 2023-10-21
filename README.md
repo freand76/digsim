@@ -73,5 +73,3 @@ and even if it is slower than many other simulators it is not entirely useless.
 ### Model
    * Add unittest of all components
    * Add unittest of ports 
-### GUI
-   * Handle stacked components (Bring to front/Send to back)
