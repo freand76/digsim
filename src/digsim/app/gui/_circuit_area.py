@@ -116,13 +116,11 @@ class WireGraphicsItem(QGraphicsPathItem):
     def setSelected(self, selected):
         """Qt function"""
         self._wire_object.select(selected)
-        self._app_model.sig_control_notify.emit()
         super().setSelected(selected)
 
     def itemChange(self, change, value):
         """QT event callback function"""
         if change == QGraphicsItem.ItemSelectedHasChanged:
-            self._app_model.sig_control_notify.emit()
             self._wire_object.select(self.isSelected())
             self._repaint()
         return super().itemChange(change, value)
@@ -316,7 +314,6 @@ class ComponentGraphicsItem(QGraphicsRectItem):
 
     def setSelected(self, selected):
         """Qt function"""
-        self._app_model.sig_control_notify.emit()
         self._component_object.select(selected)
         super().setSelected(selected)
 
@@ -326,7 +323,6 @@ class ComponentGraphicsItem(QGraphicsRectItem):
             for wire_item in self._wire_items:
                 wire_item.update_wire(self.zValue())
         elif change == QGraphicsItem.ItemSelectedHasChanged:
-            self._app_model.sig_control_notify.emit()
             self._component_object.select(self.isSelected())
             self._repaint()
         return super().itemChange(change, value)

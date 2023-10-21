@@ -106,6 +106,7 @@ class AppModel(QThread):
 
     def model_changed(self):
         """Set changed to True, for example when gui has moved component"""
+        self.objects.push_undo_state()
         self._changed = True
         self.sig_control_notify.emit()
         self.sig_synchronize_gui.emit()
