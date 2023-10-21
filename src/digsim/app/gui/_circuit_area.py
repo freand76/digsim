@@ -10,7 +10,7 @@
 from functools import partial
 
 from PySide6.QtCore import QPoint, QRect, Qt, QTimer
-from PySide6.QtGui import QAction, QBrush, QColor, QPainterPath, QPen
+from PySide6.QtGui import QAction, QBrush, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsPathItem,
@@ -99,14 +99,32 @@ class WireGraphicsItem(QGraphicsPathItem):
 
     WIRE_TO_COMPONENT_DIST = 5
 
-    def __init__(self, app_model, src_port, src_port_item, dst_port_item):
+    def __init__(self, app_model, wire_object, src_port_item, dst_port_item):
         super().__init__()
         self._app_model = app_model
-        self._src_port = src_port
+        self._wire_object = wire_object
         self._src_port_item = src_port_item
         self._dst_port_item = dst_port_item
         self.setZValue(-1)
         self.update_wire()
+        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
+
+    def _repaint(self):
+        """Make scene repaint for component update"""
+        self._app_model.sig_repaint.emit()
+
+    def setSelected(self, selected):
+        """Qt function"""
+        self._wire_object.select(selected)
+        super().setSelected(selected)
+
+    def itemChange(self, change, value):
+        """QT event callback function"""
+        if change == QGraphicsItem.ItemSelectedHasChanged:
+            self._wire_object.select(self.isSelected())
+            self._repaint()
+        return super().itemChange(change, value)
 
     @classmethod
     def create_path(cls, source, dest, rect):
@@ -139,16 +157,25 @@ class WireGraphicsItem(QGraphicsPathItem):
     def paint(self, painter, option, widget=None):
         """QT function"""
         pen = QPen(Qt.black)
-        if self._src_port.width > 1:
+        bus_width = self._wire_object.src_port.width
+        if bus_width > 1:
             pen.setWidth(4)
         else:
             pen.setWidth(2)
-        color_wires = self._app_model.settings.get("color_wires")
-        if color_wires and self._src_port.value != 0 and self._src_port.value != "X":
-            max_value = 2**self._src_port.width - 1
-            pen.setColor(QColor(0, 255 * self._src_port.value / max_value, 0))
-        self.setPen(pen)
-        super().paint(painter, option, widget)
+        if self._app_model.is_running or not self.isSelected():
+            pen.setColor(Qt.darkGray)
+            port_value = self._wire_object.src_port.value
+            color_wires = self._app_model.settings.get("color_wires")
+            if color_wires and port_value != 0 and port_value != "X":
+                max_value = 2**bus_width - 1
+                color = pen.color()
+                green = color.green()
+                full_range = 255 - green
+                color.setGreen(green + (full_range * port_value / max_value))
+                pen.setColor(color)
+        painter.setPen(pen)
+        painter.drawPath(self.path())
+        # super().paint(painter, option, widget)
 
     def update_wire(self):
         """Update the wire path"""
@@ -259,7 +286,6 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         self._mouse_press_pos = None
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        # self.setFlag(QGraphicsItem.ItemIsFocusable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setAcceptHoverEvents(True)
         for portname, port_rect in self._component_object._port_rects.items():
@@ -273,9 +299,10 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         return self._component_object.component
 
     def setSelected(self, selected):
+        """Qt function"""
         self._component_object.select(selected)
         super().setSelected(selected)
-        
+
     def sync_from_gui(self):
         """Get component from widget"""
         new_pos = self.pos() + self.rect().topLeft()
@@ -293,7 +320,6 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         """Make scene repaint for component update"""
         self._app_model.sig_repaint.emit()
 
-        
     def itemChange(self, change, value):
         """QT event callback function"""
         if change == QGraphicsItem.ItemPositionHasChanged:
@@ -387,7 +413,7 @@ class _CircuitAreaScene(QGraphicsScene):
         items = self.items(pos)
         if len(items) == 0:
             self._selectNone()
-            self._select_start_pos = pos 
+            self._select_start_pos = pos
         self._repaint()
 
     def mouseMoveEvent(self, event):
@@ -400,7 +426,7 @@ class _CircuitAreaScene(QGraphicsScene):
                 self._select_start_pos.x(),
                 self._select_start_pos.y(),
                 pos.x() - self._select_start_pos.x(),
-                pos.y() - self._select_start_pos.y()
+                pos.y() - self._select_start_pos.y(),
             )
             self._selection_rect_item.setRect(rect)
             self._selection_rect_item.setVisible(True)
@@ -442,9 +468,7 @@ class _CircuitAreaScene(QGraphicsScene):
             dst_comp_item = self._component_items[dst_comp]
             src_port_item = src_comp_item.get_port_item(wire_object.src_port)
             dst_port_item = dst_comp_item.get_port_item(wire_object.dst_port)
-            item = WireGraphicsItem(
-                self._app_model, wire_object.src_port, src_port_item, dst_port_item
-            )
+            item = WireGraphicsItem(self._app_model, wire_object, src_port_item, dst_port_item)
             self.addItem(item)
             src_comp_item.add_wire(item)
             dst_comp_item.add_wire(item)
@@ -534,7 +558,7 @@ class CircuitArea(QGraphicsView):
     def mousePressEvent(self, event):
         """QT event callback function"""
         super().mousePressEvent(event)
-        
+
     def mouseReleaseEvent(self, event):
         """QT event callback function"""
         super().mouseReleaseEvent(event)
