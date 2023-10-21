@@ -93,6 +93,62 @@ class ComponentContextMenu(QMenu):
         if ok:
             self._app_model.objects.components.update_settings(self._component_object, settings)
 
+class WirePartGraphicsItem(QGraphicsRectItem):
+
+    CLOSE_TO_WIRE_MARGIN = 10
+
+    def __init__(self, app_model, wire_object, parent, src, dst, zvalue):
+        x_low, x_high  = (src.x(), dst.x()) if src.x() < dst.x() else (dst.x(), src.x())
+        y_low, y_high  = (src.y(), dst.y()) if src.y() < dst.y() else (dst.y(), src.y())
+        rect = QRect(x_low - self.CLOSE_TO_WIRE_MARGIN,
+                     y_low - self.CLOSE_TO_WIRE_MARGIN,
+                     x_high - x_low + 2*self.CLOSE_TO_WIRE_MARGIN,
+                     y_high - y_low + 2*self.CLOSE_TO_WIRE_MARGIN)
+        self._app_model = app_model
+        self._wire_object = wire_object 
+        self._parent = parent
+        self._start = QPoint(x_low, y_low)
+        self._end = QPoint(x_high, y_high)
+        self._zvalue = zvalue
+        self._selected = False
+        super().__init__(rect, parent)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+
+    def wire_selected(self, selected):
+        self._selected = selected
+        if self._selected:
+            self._parent.setZValue(self._app_model.objects.components.get_top_zlevel() + 1)
+        else:
+            self._parent.setZValue(self._zvalue)
+ 
+    def itemChange(self, change, value):
+        """QT event callback function"""
+        if change == QGraphicsItem.ItemSelectedHasChanged:
+            self._parent.select(self.isSelected())
+        return super().itemChange(change, value)
+
+    def paint(self, painter, option, widget=None):
+        """QT function"""
+        pen = QPen(Qt.black)
+        bus_width = self._wire_object.src_port.width
+        if bus_width > 1:
+            pen.setWidth(4)
+        else:
+            pen.setWidth(2)
+        if self._app_model.is_running or not self._selected:
+            pen.setColor(Qt.darkGray)
+            port_value = self._wire_object.src_port.value
+            color_wires = self._app_model.settings.get("color_wires")
+            if color_wires and port_value != 0 and port_value != "X":
+                max_value = 2**bus_width - 1
+                color = pen.color()
+                green = color.green()
+                full_range = 255 - green
+                color.setGreen(green + (full_range * port_value / max_value))
+                pen.setColor(color)
+        painter.setPen(pen)
+        painter.drawLine(self._start, self._end)
+
 
 class WireGraphicsItem(QGraphicsPathItem):
     """A wire graphics item"""
@@ -105,39 +161,31 @@ class WireGraphicsItem(QGraphicsPathItem):
         self._wire_object = wire_object
         self._src_port_item = src_port_item
         self._dst_port_item = dst_port_item
+        self._part_items = []
         self.update_wire(0)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
 
     def _repaint(self):
         """Make scene repaint for component update"""
         self._app_model.sig_repaint.emit()
 
-    def setSelected(self, selected):
-        """Qt function"""
+    def select(self, selected):
+        for item in self._part_items:
+            item.wire_selected(selected)
         self._wire_object.select(selected)
-        super().setSelected(selected)
-
-    def itemChange(self, change, value):
-        """QT event callback function"""
-        if change == QGraphicsItem.ItemSelectedHasChanged:
-            self._wire_object.select(self.isSelected())
-            self._repaint()
-        return super().itemChange(change, value)
 
     @classmethod
-    def create_path(cls, source, dest, rect):
+    def create_points(cls, source, dest, rect):
         """Create a wire path"""
+        points = []
         component_top_y = rect.y()
         component_bottom_y = rect.y() + rect.height()
 
-        path = QPainterPath()
-        path.moveTo(source)
+        points.append(source)
         if source.x() < dest.x():
             half_dist_x = (dest.x() - source.x()) / 2
-            path.lineTo(QPoint(source.x() + half_dist_x, source.y()))
-            path.lineTo(QPoint(source.x() + half_dist_x, source.y()))
-            path.lineTo(QPoint(source.x() + half_dist_x, dest.y()))
+            points.append(QPoint(source.x() + half_dist_x, source.y()))
+            points.append(QPoint(source.x() + half_dist_x, source.y()))
+            points.append(QPoint(source.x() + half_dist_x, dest.y()))
         else:
             half_dist_y = (dest.y() - source.y()) / 2
             if dest.y() < source.y():
@@ -146,44 +194,41 @@ class WireGraphicsItem(QGraphicsPathItem):
                 )
             else:
                 y_mid = min(component_top_y - source.y() - cls.WIRE_TO_COMPONENT_DIST, half_dist_y)
-            path.lineTo(QPoint(source.x() + 10, source.y()))
-            path.lineTo(QPoint(source.x() + 10, source.y() + y_mid))
-            path.lineTo(QPoint(dest.x() - 10, source.y() + y_mid))
-            path.lineTo(QPoint(dest.x() - 10, dest.y()))
-        path.lineTo(dest)
-        return path
+            points.append(QPoint(source.x() + 10, source.y()))
+            points.append(QPoint(source.x() + 10, source.y() + y_mid))
+            points.append(QPoint(dest.x() - 10, source.y() + y_mid))
+            points.append(QPoint(dest.x() - 10, dest.y()))
+        points.append(dest)
+        return points
 
-    def paint(self, painter, option, widget=None):
-        """QT function"""
-        pen = QPen(Qt.black)
-        bus_width = self._wire_object.src_port.width
-        if bus_width > 1:
-            pen.setWidth(4)
-        else:
-            pen.setWidth(2)
-        if self._app_model.is_running or not self.isSelected():
-            pen.setColor(Qt.darkGray)
-            port_value = self._wire_object.src_port.value
-            color_wires = self._app_model.settings.get("color_wires")
-            if color_wires and port_value != 0 and port_value != "X":
-                max_value = 2**bus_width - 1
-                color = pen.color()
-                green = color.green()
-                full_range = 255 - green
-                color.setGreen(green + (full_range * port_value / max_value))
-                pen.setColor(color)
-        painter.setPen(pen)
-        painter.drawPath(self.path())
-        # super().paint(painter, option, widget)
+    @classmethod
+    def create_path(cls, source, dest, rect):
+        """Create a wire path"""
+        component_top_y = rect.y()
+        component_bottom_y = rect.y() + rect.height()
+
+        path = QPainterPath()
+        points = cls.create_points(source, dest, rect)
+        path.moveTo(points[0])
+        for point in points[1:]:
+            path.lineTo(point)
+        return path
 
     def update_wire(self, zvalue):
         """Update the wire path"""
         source = self._src_port_item.portPos()
         dest = self._dst_port_item.portPos()
         rect = self._src_port_item.portParentRect()
-        self.setZValue(zvalue)
-        self.setPath(self.create_path(source, dest, rect))
+        #self.setPath(self.create_path(source, dest, rect))
+        for item in self.childItems():
+            item.setParentItem(None)
 
+        points = self.create_points(source, dest, rect)
+        self._part_items = []
+        for idx, point1 in enumerate(points[0:-1]):
+            point2 = points[idx + 1]
+            item = WirePartGraphicsItem(self._app_model, self._wire_object, self, point1, point2, zvalue)
+            self._part_items.append(item)
 
 class NewWireGraphicsItem(QGraphicsPathItem):
     """A new wire graphics item"""
@@ -367,7 +412,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
                 self.setCursor(Qt.ArrowCursor)
                 if event.screenPos() != self._mouse_press_pos:
                     # Move completed, set model to changed
-                    self._app_model.model_changed()
+                    self._app_model.objects.components.component_moved()
                 else:
                     if not self._app_model.objects.wires.new.ongoing():
                         self._component_object.single_click_action()
