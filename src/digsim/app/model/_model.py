@@ -104,13 +104,11 @@ class AppModel(QThread):
         if not self._started:
             self.model_init()
 
-    def model_changed(self, update_control=True, update_components=True):
+    def model_changed(self):
         """Set changed to True, for example when gui has moved component"""
         self._changed = True
-        if update_control:
-            self.sig_control_notify.emit()
-        if update_components:
-            self.sig_synchronize_gui.emit()
+        self.sig_control_notify.emit()
+        self.sig_synchronize_gui.emit()
 
     def model_add_event(self, func):
         """Add medel events (functions) from the GUI"""

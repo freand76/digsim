@@ -79,7 +79,6 @@ class ModelWires:
         """Add wire object between source and destination port"""
         wire = WireObject(self._app_model, src_port, dst_port, connect)
         self.add_wire(wire)
-        # self._app_model.sig_component_notify.emit(dst_port.parent())
 
     def add_wire(self, wire):
         """Add wire object"""
@@ -103,17 +102,6 @@ class ModelWires:
         if wire_object.key in self._wire_objects:
             del self._wire_objects[wire_object.key]
         self._app_model.model_changed()
-
-    def select(self, pos, multi_select):
-        """Select wire from position"""
-        wire_selected = False
-        for _, wire in self._wire_objects.items():
-            if wire.is_close(pos):
-                wire.select(True)
-                wire_selected = True
-            elif not multi_select:
-                wire.select(False)
-        return wire_selected
 
     def create_circuit_wires(self):
         """Create model wires from circuit"""

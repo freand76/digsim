@@ -40,7 +40,7 @@ class WireObject(GuiObject):
 
         if connect:
             self._connect()
-
+                
     def _connect(self):
         if self._src_port is not None and self._dst_port is not None:
             self._src_port.wire = self._dst_port
@@ -58,7 +58,6 @@ class WireObject(GuiObject):
         else:
             raise PortConnectionError("Cannot connect to power of same type")
         self._connect()
-        self.update()
 
     def has_port(self, port):
         """Return True if port is alredy a part of this wire?"""
@@ -78,10 +77,3 @@ class WireObject(GuiObject):
     def dst_port(self):
         """Get the destination port of the placed wire"""
         return self._dst_port
-
-    @property
-    def start_pos(self):
-        """Get the start point for the unfinished placed wire"""
-        if self._src_point is not None:
-            return self._src_point
-        return self._dst_point

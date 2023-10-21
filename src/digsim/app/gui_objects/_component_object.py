@@ -203,8 +203,7 @@ class ComponentObject(GuiObject):
 
     def get_port_pos(self, portname):
         """Get component pos"""
-        rect = self._port_rects[portname]
-        return QPoint(rect.x(), rect.y()) + QPoint(self.PORT_SIDE / 2, self.PORT_SIDE / 2)
+        return self._port_rects[portname].center()
 
     def get_port_for_point(self, point):
         """Get component port from a point"""

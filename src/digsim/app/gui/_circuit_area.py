@@ -208,13 +208,14 @@ class NewWireGraphicsItem(QGraphicsPathItem):
         else:
             pen.setWidth(2)
         component_object = self._app_model.objects.components.get_object(start_port.parent())
+        start_pos = component_object.get_port_pos(start_port.name())
         if wire_object.src_port is not None:
             path = WireGraphicsItem.create_path(
-                wire_object.start_pos, end_pos, component_object.get_rect()
+                start_pos, end_pos, component_object.get_rect()
             )
         else:
             path = WireGraphicsItem.create_path(
-                end_pos, wire_object.start_pos, component_object.get_rect()
+                end_pos, start_pos, component_object.get_rect()
             )
         self.setPath(path)
         self.setPen(pen)
@@ -372,9 +373,8 @@ class ComponentGraphicsItem(QGraphicsRectItem):
             else:
                 self.setCursor(Qt.ArrowCursor)
                 if event.screenPos() != self._mouse_press_pos:
-                    # Move completed, push_undo_state and syncronize gui
-                    self._app_model.objects.push_undo_state()
-                    self._app_model.sig_synchronize_gui.emit()
+                    # Move completed, set model to changed
+                    self._app_model.model_changed()
                 else:
                     if not self._app_model.objects.wires.new.ongoing():
                         self._component_object.single_click_action()
