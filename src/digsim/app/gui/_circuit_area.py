@@ -392,9 +392,10 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         """QT event callback function"""
         self.setCursor(Qt.ArrowCursor)
 
-    def mouseMoveEvent(self, event):
+    def hoverMoveEvent(self, event):
         """QT event callback function"""
-        super().mouseMoveEvent(event)
+        self._component_object.mouse_position(event.scenePos())
+        super().hoverMoveEvent(event)
 
     def mousePressEvent(self, event):
         """QT event callback function"""

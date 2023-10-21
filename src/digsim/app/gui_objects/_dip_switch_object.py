@@ -24,6 +24,11 @@ class DipSwitchObject(ImageObject):
         super().__init__(app_model, component, xpos, ypos)
         self._height = self.component.bits() * self.DIP_SWITCH_HEIGHT + 2 * self.BORDER_TO_PORT
         self._rects = []
+        self.update_ports()
+
+    def update_ports(self):
+        super().update_ports()
+        self._rects = []
         for idx in range(0, self.component.bits()):
             self._rects.append(
                 QRect(
@@ -33,8 +38,7 @@ class DipSwitchObject(ImageObject):
                     self.DIP_SWITCH_HEIGHT,
                 )
             )
-        self.update_ports()
-
+        
     def mouse_position(self, pos):
         """update component according to on mouse move"""
         select = None
