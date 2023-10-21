@@ -43,18 +43,23 @@ class CircuitEditor(QSplitter):
         self._selection_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self._selection_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        circuit_area = CircuitArea(app_model, self)
-        selection_panel = ComponentSelection(app_model, circuit_area, self)
+        self._circuit_area = CircuitArea(app_model, self)
+        selection_panel = ComponentSelection(app_model, self._circuit_area, self)
 
-        self.layout().addWidget(circuit_area)
+        self.layout().addWidget(self._circuit_area)
         self._selection_area.setWidget(selection_panel)
 
         self.layout().addWidget(self._selection_area)
         self.layout().setStretchFactor(self._selection_area, 0)
-        circuit_area.setFocus()
+        self._circuit_area.setFocus()
 
     def _control_notify(self):
         self._selection_area.setEnabled(not self._app_model.is_running)
+
+    @property
+    def circuit_area(self):
+        """Get the circuit area"""
+        return self._circuit_area
 
 
 class CentralWidget(QWidget):
@@ -70,13 +75,13 @@ class CentralWidget(QWidget):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
 
-        top_bar = TopBar(app_model, self)
+        circuit_editor = CircuitEditor(app_model, self)
+        top_bar = TopBar(app_model, circuit_editor, self)
         self.layout().addWidget(top_bar)
         self.layout().setStretchFactor(top_bar, 0)
 
-        working_area = CircuitEditor(app_model, self)
-        self.layout().addWidget(working_area)
-        self.layout().setStretchFactor(working_area, 1)
+        self.layout().addWidget(circuit_editor)
+        self.layout().setStretchFactor(circuit_editor, 1)
 
 
 class MainWindow(QMainWindow):

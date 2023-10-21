@@ -117,11 +117,13 @@ class WireGraphicsItem(QGraphicsPathItem):
     def setSelected(self, selected):
         """Qt function"""
         self._wire_object.select(selected)
+        self._app_model.sig_control_notify.emit()
         super().setSelected(selected)
 
     def itemChange(self, change, value):
         """QT event callback function"""
         if change == QGraphicsItem.ItemSelectedHasChanged:
+            self._app_model.sig_control_notify.emit()
             self._wire_object.select(self.isSelected())
             self._repaint()
         return super().itemChange(change, value)
@@ -298,11 +300,6 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         """Get component from widget"""
         return self._component_object.component
 
-    def setSelected(self, selected):
-        """Qt function"""
-        self._component_object.select(selected)
-        super().setSelected(selected)
-
     def sync_from_gui(self):
         """Get component from widget"""
         new_pos = self.pos() + self.rect().topLeft()
@@ -320,12 +317,19 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         """Make scene repaint for component update"""
         self._app_model.sig_repaint.emit()
 
+    def setSelected(self, selected):
+        """Qt function"""
+        self._app_model.sig_control_notify.emit()
+        self._component_object.select(selected)
+        super().setSelected(selected)
+
     def itemChange(self, change, value):
         """QT event callback function"""
         if change == QGraphicsItem.ItemPositionHasChanged:
             for wire_item in self._wire_items:
                 wire_item.update_wire()
         elif change == QGraphicsItem.ItemSelectedHasChanged:
+            self._app_model.sig_control_notify.emit()
             self._component_object.select(self.isSelected())
             self._repaint()
         return super().itemChange(change, value)
@@ -488,6 +492,10 @@ class CircuitArea(QGraphicsView):
         self.setBackgroundBrush(QBrush(Qt.lightGray))
         self.setAcceptDrops(True)
         self.setTransformationAnchor(QGraphicsView.NoAnchor)
+    
+    def has_selection(self):
+        """Return true if items are selected"""
+        return len(self._scene.selectedItems()) > 0
 
     def _zoom_in(self):
         self.scale(1.25, 1.25)
