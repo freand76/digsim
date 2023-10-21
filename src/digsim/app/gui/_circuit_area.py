@@ -492,7 +492,7 @@ class CircuitArea(QGraphicsView):
         self.setBackgroundBrush(QBrush(Qt.lightGray))
         self.setAcceptDrops(True)
         self.setTransformationAnchor(QGraphicsView.NoAnchor)
-    
+
     def has_selection(self):
         """Return true if items are selected"""
         return len(self._scene.selectedItems()) > 0

@@ -89,14 +89,6 @@ class ModelObjects:
         self._app_model.sig_control_notify.emit()
         return object_selected
 
-    def select_by_rect(self, rect):
-        """Select object be rectangle"""
-        self.select(None)
-        for obj in self.get_list():
-            if obj.in_rect(rect):
-                obj.select(True)
-        self._app_model.sig_control_notify.emit()
-
     def move_selected_components(self, delta_pos, finalize=False):
         """Move selected objects"""
         if finalize:
