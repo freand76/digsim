@@ -35,6 +35,7 @@ class ComponentObject(GuiObject):
         self._width = self.DEFAULT_WIDTH
         self._port_rects = {}
         self._port_display_name = {}
+        self._zlevel = 0
         self.update_ports()
 
     def add_context_menu_action(self, menu, parent):
@@ -48,10 +49,6 @@ class ComponentObject(GuiObject):
 
     def mouse_position(self, pos):
         """update component with mouse position"""
-
-    def center(self):
-        """Move component with pos as center instead of top-left corner"""
-        self._pos = self._pos - QPoint(self._width / 2, self._height / 2)
 
     def move_delta(self, delta_pos, finalize=False):
         """Move component object a delta position"""
@@ -69,9 +66,9 @@ class ComponentObject(GuiObject):
 
         return moved
 
-    def update(self):
+    def repaint(self):
         """Update GUI for this component object"""
-        self._app_model.sig_component_notify.emit(self.component)
+        self._app_model.sig_repaint.emit()
 
     def update_ports(self):
         """Update port positions for the placed component"""
@@ -143,7 +140,7 @@ class ComponentObject(GuiObject):
         """
 
     @classmethod
-    def paint_selectable_component_name(cls, painter, size, name):
+    def paint_selectable_component_name(cls, painter, point, size, name):
         """Paint the name for the selectable component"""
         font = QFont("Arial", 8)
         fm = QFontMetrics(font)
@@ -152,8 +149,8 @@ class ComponentObject(GuiObject):
         painter.setFont(font)
         painter.setPen(Qt.black)
         painter.drawText(
-            size.width() / 2 - str_pixels_w / 2,
-            size.height() - str_pixels_h,
+            point.x() + size.width() / 2 - str_pixels_w / 2,
+            point.y() + size.height() - str_pixels_h,
             name,
         )
 
@@ -161,25 +158,19 @@ class ComponentObject(GuiObject):
         """Get the X position left of the input port"""
         return 1.5 * self.PORT_SIDE
 
-    def paint_ports(self, painter, active_port):
+    def paint_ports(self, painter):
         """Paint component ports"""
         painter.setPen(Qt.black)
-        painter.setBrush(Qt.SolidPattern)
         font = QFont("Arial", 8)
         painter.setFont(font)
         fm = QFontMetrics(font)
         for portname, rect in self._port_rects.items():
-            if portname == active_port:
-                painter.setBrush(Qt.red)
-            else:
-                painter.setBrush(Qt.gray)
-            painter.drawRect(rect)
             port_str, str_pixels_w, str_pixels_h = self.get_port_display_name_metrics(portname)
             str_pixels_w = fm.horizontalAdvance(port_str)
             str_pixels_h = fm.height()
             text_y = rect.y() + str_pixels_h - self.PORT_SIDE / 2
-            if rect.x() == 0:
-                text_pos = QPoint(self.inport_x_pos(), text_y)
+            if rect.x() == self.pos.x():
+                text_pos = QPoint(rect.x() + self.inport_x_pos(), text_y)
             else:
                 text_pos = QPoint(rect.x() - str_pixels_w - self.PORT_SIDE / 2, text_y)
             painter.drawText(text_pos, port_str)
@@ -187,8 +178,8 @@ class ComponentObject(GuiObject):
     def _add_port_rects(self, ports, xpos):
         if len(ports) == 1:
             self._port_rects[ports[0].name()] = QRect(
-                xpos,
-                self._height / 2 - self.PORT_SIDE / 2,
+                self.pos.x() + xpos,
+                self.pos.y() + self._height / 2 - self.PORT_SIDE / 2,
                 self.PORT_SIDE,
                 self.PORT_SIDE,
             )
@@ -196,8 +187,8 @@ class ComponentObject(GuiObject):
             port_distance = (self._height - 2 * self.BORDER_TO_PORT) / (len(ports) - 1)
             for idx, port in enumerate(ports):
                 self._port_rects[port.name()] = QRect(
-                    xpos,
-                    self.BORDER_TO_PORT + idx * port_distance - self.PORT_SIDE / 2,
+                    self.pos.x() + xpos,
+                    self.pos.y() + self.BORDER_TO_PORT + idx * port_distance - self.PORT_SIDE / 2,
                     self.PORT_SIDE,
                     self.PORT_SIDE,
                 )
@@ -205,16 +196,15 @@ class ComponentObject(GuiObject):
     def get_rect(self):
         """Get component rect"""
         return QRect(
-            self.RECT_TO_BORDER,
-            self.RECT_TO_BORDER,
+            self.pos.x() + self.RECT_TO_BORDER,
+            self.pos.y() + self.RECT_TO_BORDER,
             self._width - 2 * self.RECT_TO_BORDER,
             self._height - 2 * self.RECT_TO_BORDER,
         )
 
     def get_port_pos(self, portname):
         """Get component pos"""
-        rect = self._port_rects[portname]
-        return QPoint(rect.x(), rect.y()) + QPoint(self.PORT_SIDE / 2, self.PORT_SIDE / 2)
+        return self._port_rects[portname].center()
 
     def get_port_for_point(self, point):
         """Get component port from a point"""
@@ -245,16 +235,22 @@ class ComponentObject(GuiObject):
         """Get size"""
         return QSize(self._width, self._height)
 
-    def in_rect(self, rect):
-        top_left = self.pos
-        bottom_right = QPoint(self.pos.x() + self.size.width(), self.pos.y() + self.size.height())
-        return self.point_in_rect(top_left, rect) and self.point_in_rect(bottom_right, rect)
-
     @pos.setter
     def pos(self, point):
         """Set position"""
         self._pos = point
+        self.update_ports()
+
+    @property
+    def zlevel(self):
+        """Get zlevel"""
+        return self._zlevel
+
+    @zlevel.setter
+    def zlevel(self, level):
+        """Set zlevel"""
+        self._zlevel = level
 
     def to_dict(self):
         """Return position as dict"""
-        return {"x": self._pos.x(), "y": self._pos.y()}
+        return {"x": self._pos.x(), "y": self._pos.y(), "z": self._zlevel}

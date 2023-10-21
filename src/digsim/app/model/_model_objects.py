@@ -20,7 +20,6 @@ class ModelObjects:
         self._circuit = Circuit(name="DigSimCircuit")
         self._model_components = ModelComponents(app_model, self._circuit)
         self._model_wires = ModelWires(app_model, self._circuit)
-        self._multi_select = False
         self._undo_stack = []
         self._redo_stack = []
 
@@ -38,10 +37,6 @@ class ModelObjects:
     def wires(self):
         """return the model components"""
         return self._model_wires
-
-    def multi_select_ongoing(self):
-        """return True if multi select is ongoing"""
-        return self._multi_select
 
     def init(self):
         """Initialize objects"""
@@ -67,57 +62,6 @@ class ModelObjects:
                 objects.append(obj)
         return objects
 
-    def multi_select(self, multi_select):
-        """Enable/Disable multiple select of objects"""
-        self._multi_select = multi_select
-
-    def select(self, model_object=None):
-        """Select model object"""
-        if model_object is not None and model_object.selected:
-            return
-        for comp in self.get_list():
-            if comp == model_object:
-                comp.select(True)
-            elif not self._multi_select:
-                comp.select(False)
-        self._app_model.sig_control_notify.emit()
-
-    def select_by_position(self, pos):
-        """Select object from position"""
-        self.select(None)
-        object_selected = self._model_wires.select(pos, self._multi_select)
-        self._app_model.sig_control_notify.emit()
-        return object_selected
-
-    def select_by_rect(self, rect):
-        """Select object be rectangle"""
-        self.select(None)
-        for obj in self.get_list():
-            if obj.in_rect(rect):
-                obj.select(True)
-        self._app_model.sig_control_notify.emit()
-
-    def move_selected_components(self, delta_pos, finalize=False):
-        """Move selected objects"""
-        if finalize:
-            self.push_undo_state()
-        selected_objects = self.get_selected()
-        has_movement = False
-        for obj in selected_objects:
-            if ModelComponents.is_component_object(obj):
-                if obj.move_delta(delta_pos, finalize=finalize):
-                    has_movement = True
-                obj.update()
-                self._model_wires.update()
-        if finalize:
-            if has_movement:
-                self._app_model.model_changed()
-            else:
-                # No movement, drop undo state
-                self.drop_undo_state()
-            self._app_model.sig_synchronize_gui.emit()
-        return has_movement
-
     def _delete(self, selected_objects):
         for obj in selected_objects:
             if ModelComponents.is_component_object(obj):
@@ -134,10 +78,6 @@ class ModelObjects:
         selected_objects = self._app_model.objects.get_selected()
         if len(selected_objects) > 0:
             self._delete(selected_objects)
-
-    def has_selection(self):
-        """Return True if anything is selected"""
-        return len(self.get_selected()) > 0
 
     def circuit_to_dict(self, circuit_folder):
         """Convert circuit and objects to dict"""

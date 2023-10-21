@@ -24,16 +24,20 @@ class DipSwitchObject(ImageObject):
         super().__init__(app_model, component, xpos, ypos)
         self._height = self.component.bits() * self.DIP_SWITCH_HEIGHT + 2 * self.BORDER_TO_PORT
         self._rects = []
+        self.update_ports()
+
+    def update_ports(self):
+        super().update_ports()
+        self._rects = []
         for idx in range(0, self.component.bits()):
             self._rects.append(
                 QRect(
-                    self.get_rect().width() / 2 - 0.8 * self.DIP_SWITCH_WIDTH,
-                    self.BORDER_TO_PORT + idx * self.DIP_SWITCH_HEIGHT,
+                    self.pos.x() + self.get_rect().width() / 2 - 0.8 * self.DIP_SWITCH_WIDTH,
+                    self.pos.y() + self.BORDER_TO_PORT + idx * self.DIP_SWITCH_HEIGHT,
                     self.DIP_SWITCH_WIDTH,
                     self.DIP_SWITCH_HEIGHT,
                 )
             )
-        self.update_ports()
 
     def mouse_position(self, pos):
         """update component according to on mouse move"""
@@ -44,6 +48,10 @@ class DipSwitchObject(ImageObject):
                     select = idx
                     break
         self.component.select(select)
+
+    def single_click_action(self):
+        self.component.toggle()
+        self.repaint()
 
     def _paint_dip_switch(self, painter):
         pen = QPen()

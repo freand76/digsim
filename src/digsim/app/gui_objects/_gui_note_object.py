@@ -3,7 +3,7 @@
 
 """ A GUI note object """
 
-from PySide6.QtCore import QRect, Qt
+from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPen
 
 from ._component_object import ComponentObject
@@ -54,7 +54,9 @@ class GuiNoteObject(ComponentObject):
         painter.setFont(self._font)
         for idx, line in enumerate(lines):
             painter.drawText(
-                2 * self.NOTE_BORDER, 2 * self.NOTE_BORDER + (idx + 1) * fm.height(), line
+                self.pos.x() + 2 * self.NOTE_BORDER,
+                self.pos.y() + 2 * self.NOTE_BORDER + (idx + 1) * fm.height(),
+                line,
             )
 
     @classmethod
@@ -76,4 +78,4 @@ class GuiNoteObject(ComponentObject):
         fm = QFontMetrics(font)
         painter.setFont(font)
         painter.drawText(2 * cls.NOTE_BORDER, 2 * cls.NOTE_BORDER + fm.height(), "abc..")
-        cls.paint_selectable_component_name(painter, size, name)
+        cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)

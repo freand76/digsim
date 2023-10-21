@@ -56,13 +56,16 @@ class SevenSegmentObject(ComponentObject):
         _, str_pixels_w, _ = self.get_port_display_name_metrics("dot")
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
         self._width = self.digit_left + self.DIGIT_WIDTH + self.DIGIT_RECT_TO_DIGIT_MARGIN
+        self.update_ports()
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
         digit_ypos = self._height / 2 - self.DIGIT_HEIGHT / 2
-        self.paint_digit_rect(painter, self.digit_left, digit_ypos)
+        self.paint_digit_rect(painter, self.pos.x() + self.digit_left, self.pos.y() + digit_ypos)
         active_segments = self.component.segments()
-        self.draw_digit(painter, self.digit_left, digit_ypos, active_segments)
+        self.draw_digit(
+            painter, self.pos.x() + self.digit_left, self.pos.y() + digit_ypos, active_segments
+        )
 
     @classmethod
     def paint_selectable_component(cls, painter, size, name):
@@ -74,7 +77,7 @@ class SevenSegmentObject(ComponentObject):
         xpos = size.width() / 2 - cls.DIGIT_WIDTH / 2
         cls.paint_digit_rect(painter, xpos, 0)
         cls.draw_digit(painter, xpos, 0, segments)
-        cls.paint_selectable_component_name(painter, size, name)
+        cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)
 
     @classmethod
     def paint_digit_rect(cls, painter, xpos, ypos, digits=1):

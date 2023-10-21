@@ -30,7 +30,7 @@ class BusBitsObject(ComponentObject):
         self.update_ports()
 
     @classmethod
-    def _paint_bus_bit(cls, painter, size, border, wire_length, bit_wires_y):
+    def _paint_bus_bit(cls, painter, pos, size, border, wire_length, bit_wires_y):
         center_pos = QPoint(size.width() / 2, size.height() / 2)
         center_pos += border
         pen = QPen()
@@ -39,18 +39,23 @@ class BusBitsObject(ComponentObject):
         painter.setPen(pen)
         line_height = size.height() - cls.BORDER_TO_PORT
         painter.drawLine(
-            center_pos.x(),
-            center_pos.y() - line_height / 2,
-            center_pos.x(),
-            center_pos.y() + line_height / 2,
+            pos.x() + center_pos.x(),
+            pos.y() + center_pos.y() - line_height / 2,
+            pos.x() + center_pos.x(),
+            pos.y() + center_pos.y() + line_height / 2,
         )
         painter.drawLine(
-            center_pos.x() - wire_length, center_pos.y(), center_pos.x(), center_pos.y()
+            pos.x() + center_pos.x() - wire_length,
+            pos.y() + center_pos.y(),
+            pos.x() + center_pos.x(),
+            pos.y() + center_pos.y(),
         )
         pen.setWidth(2)
         painter.setPen(pen)
         for wire_y in bit_wires_y:
-            painter.drawLine(center_pos.x() + wire_length, wire_y, center_pos.x(), wire_y)
+            painter.drawLine(
+                pos.x() + center_pos.x() + wire_length, wire_y, pos.x() + center_pos.x(), wire_y
+            )
 
     def _portlist(self):
         return self.component.outports()
@@ -62,7 +67,7 @@ class BusBitsObject(ComponentObject):
             bit_wires_y.append(self.get_port_pos(port.name()).y())
         border = QPoint(self.RECT_TO_BORDER, self.RECT_TO_BORDER)
         self._paint_bus_bit(
-            painter, self.get_rect(), border, self.WIRE_LENGTH_COMPONENT, bit_wires_y
+            painter, self.pos, self.get_rect(), border, self.WIRE_LENGTH_COMPONENT, bit_wires_y
         )
 
     @classmethod
@@ -74,9 +79,15 @@ class BusBitsObject(ComponentObject):
             size.width() / 2 + 1 * size.width() / 12,
             size.width() / 2 + 3 * size.width() / 12,
         ]
-        border = QPoint(0, 0)
-        cls._paint_bus_bit(painter, image_size, border, cls.WIRE_LENGTH_SELECTABLE, bit_wires_y)
-        cls.paint_selectable_component_name(painter, size, name)
+        cls._paint_bus_bit(
+            painter,
+            QPoint(0, 0),
+            image_size,
+            QPoint(0, 0),
+            cls.WIRE_LENGTH_SELECTABLE,
+            bit_wires_y,
+        )
+        cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)
 
 
 class BitsBusObject(BusBitsObject):

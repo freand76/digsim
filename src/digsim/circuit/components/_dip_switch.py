@@ -3,7 +3,7 @@
 
 """ A Dip-switch component """
 
-from .atoms import CallbackComponent, PortOutDelta
+from .atoms import CallbackComponent, PortOutImmediate
 
 
 class DipSwitch(CallbackComponent):
@@ -17,11 +17,11 @@ class DipSwitch(CallbackComponent):
         self.parameter_set("bus", bus)
         self._select = None
         if self._bus:
-            portout = PortOutDelta(self, "O", delay_ns=0, width=self.NOF_BITS)
+            portout = PortOutImmediate(self, "O", width=self.NOF_BITS)
             self.add_port(portout)
         else:
             for index in range(0, self.NOF_BITS):
-                portout = PortOutDelta(self, f"{index}", delay_ns=0)
+                portout = PortOutImmediate(self, f"{index}")
                 self.add_port(portout)
 
     def bits(self):

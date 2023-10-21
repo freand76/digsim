@@ -29,8 +29,7 @@ class ModelComponents:
 
     def init(self):
         """Initialize components objects"""
-        for _, comp in self._component_objects.items():
-            self._app_model.sig_component_notify.emit(comp.component)
+        self._app_model.sig_repaint.emit()
 
     def get_dict(self):
         """Get component objects dict"""
@@ -40,15 +39,51 @@ class ModelComponents:
         """Return True if there are component objects in the model"""
         return len(self._component_objects) == 0
 
+    def get_top_zlevel(self):
+        """Get thehighest z level in the model"""
+        max_zlevel = None
+        for _, comp_object in self._component_objects.items():
+            max_zlevel = (
+                comp_object.zlevel if max_zlevel is None else (max(max_zlevel, comp_object.zlevel))
+            )
+        return max_zlevel
+
+    def component_moved(self):
+        """Call when component has moved to update state"""
+        self._app_model.objects.push_undo_state()
+        self._app_model.model_changed()
+
+    def bring_to_front(self, component_object):
+        """Make the component object the highest in the stack"""
+        max_zlevel = self.get_top_zlevel()
+        component_object.zlevel = max_zlevel + 1
+        self._app_model.model_changed()
+
+    def send_to_back(self, component_object):
+        """Make the component object the lowest in the stack"""
+        min_zlevel = None
+        for _, comp_object in self._component_objects.items():
+            min_zlevel = (
+                comp_object.zlevel if min_zlevel is None else (min(min_zlevel, comp_object.zlevel))
+            )
+        if min_zlevel == 0:
+            for _, comp_object in self._component_objects.items():
+                comp_object.zlevel = comp_object.zlevel + 1
+            component_object.zlevel = 0
+        else:
+            component_object.zlevel = min_zlevel - 1
+        self._app_model.model_changed()
+
     def update_callback_objects(self):
         """
         Update the GUI for the components that have changed since the last call
         """
+        if len(self._component_callback_list) == 0:
+            return
         for comp in self._component_callback_list:
             if isinstance(comp, Buzzer):
                 self._app_model.sig_audio_notify.emit(comp)
-            else:
-                self._app_model.sig_component_notify.emit(comp)
+        self._app_model.sig_repaint.emit()
         self._component_callback_list = []
 
     def _component_callback(self, component):
@@ -80,7 +115,6 @@ class ModelComponents:
         component = component_class(self._circuit, **settings)
         self._app_model.model_init()
         component_object = self._add_object(component, pos.x(), pos.y())
-        component_object.center()  # Component is plced @ mouse pointer, make it center
         self._app_model.model_changed()
         return component_object
 
@@ -125,7 +159,9 @@ class ModelComponents:
             component_dict = gui_dict.get(comp.name(), {})
             x = component_dict.get("x", 100)
             y = component_dict.get("y", 100)
-            self._add_object(comp, x, y)
+            z = component_dict.get("z", 0)
+            component_object = self._add_object(comp, x, y)
+            component_object.zlevel = z
 
     def get_circuit_dict(self):
         """Create model components dict"""

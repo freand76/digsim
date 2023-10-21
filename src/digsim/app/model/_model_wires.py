@@ -14,6 +14,16 @@ class NewWire:
         self._wire = None
         self._end_pos = None
 
+    @property
+    def wire(self):
+        """Get unfinished new wire object"""
+        return self._wire
+
+    @property
+    def end_pos(self):
+        """Get end point for unfinished new wire object"""
+        return self._end_pos
+
     def start(self, component, portname):
         """Start new wire object"""
         if component.port(portname).can_add_wire():
@@ -36,11 +46,6 @@ class NewWire:
     def set_end_pos(self, pos):
         """Update end point for unfinished new wire object"""
         self._end_pos = pos
-
-    def paint(self, painter):
-        """Paint new wire (if available)"""
-        if self._wire is not None and self._end_pos is not None:
-            self._wire.paint_new(painter, self._end_pos)
 
     def ongoing(self):
         """Return True if an unfinished new wire object is active"""
@@ -74,7 +79,6 @@ class ModelWires:
         """Add wire object between source and destination port"""
         wire = WireObject(self._app_model, src_port, dst_port, connect)
         self.add_wire(wire)
-        self._app_model.sig_component_notify.emit(dst_port.parent())
 
     def add_wire(self, wire):
         """Add wire object"""
@@ -98,23 +102,6 @@ class ModelWires:
         if wire_object.key in self._wire_objects:
             del self._wire_objects[wire_object.key]
         self._app_model.model_changed()
-
-    def select(self, pos, multi_select):
-        """Select wire from position"""
-        wire_selected = False
-        for _, wire in self._wire_objects.items():
-            if wire.is_close(pos):
-                wire.select(True)
-                wire_selected = True
-            elif not multi_select:
-                wire.select(False)
-        return wire_selected
-
-    def paint(self, painter):
-        """Paint wire objects"""
-        for _, wire in self._wire_objects.items():
-            wire.paint(painter)
-        self._new_wire.paint(painter)
 
     def create_circuit_wires(self):
         """Create model wires from circuit"""

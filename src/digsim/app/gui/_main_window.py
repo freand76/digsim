@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ._circuit_area import CircuitArea, ScrollableCircuitArea
+from ._circuit_area import CircuitArea
 from ._component_selection import ComponentSelection
 from ._top_bar import TopBar
 from ._utils import are_you_sure_destroy_circuit
@@ -43,21 +43,23 @@ class CircuitEditor(QSplitter):
         self._selection_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
         self._selection_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
-        circuit_area = CircuitArea(app_model, self)
-        selection_panel = ComponentSelection(app_model, circuit_area, self)
+        self._circuit_area = CircuitArea(app_model, self)
+        selection_panel = ComponentSelection(app_model, self._circuit_area, self)
 
+        self.layout().addWidget(self._circuit_area)
         self._selection_area.setWidget(selection_panel)
 
         self.layout().addWidget(self._selection_area)
         self.layout().setStretchFactor(self._selection_area, 0)
-
-        scrollable_circuit_area = ScrollableCircuitArea(self, circuit_area)
-        self.layout().addWidget(scrollable_circuit_area)
-        self.layout().setStretchFactor(scrollable_circuit_area, 1)
-        circuit_area.setFocus()
+        self._circuit_area.setFocus()
 
     def _control_notify(self):
         self._selection_area.setEnabled(not self._app_model.is_running)
+
+    @property
+    def circuit_area(self):
+        """Get the circuit area"""
+        return self._circuit_area
 
 
 class CentralWidget(QWidget):
@@ -73,13 +75,13 @@ class CentralWidget(QWidget):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
 
-        top_bar = TopBar(app_model, self)
+        circuit_editor = CircuitEditor(app_model, self)
+        top_bar = TopBar(app_model, circuit_editor, self)
         self.layout().addWidget(top_bar)
         self.layout().setStretchFactor(top_bar, 0)
 
-        working_area = CircuitEditor(app_model, self)
-        self.layout().addWidget(working_area)
-        self.layout().setStretchFactor(working_area, 1)
+        self.layout().addWidget(circuit_editor)
+        self.layout().setStretchFactor(circuit_editor, 1)
 
 
 class MainWindow(QMainWindow):
@@ -101,6 +103,8 @@ class MainWindow(QMainWindow):
 
         QShortcut(QKeySequence("Ctrl+Z"), self, self._app_model.objects.undo)
         QShortcut(QKeySequence("Ctrl+Y"), self, self._app_model.objects.redo)
+        QShortcut(QKeySequence("Ctrl++"), self, self._app_model.zoom_in)
+        QShortcut(QKeySequence("Ctrl+-"), self, self._app_model.zoom_out)
         QShortcut(QKeySequence("Del"), self, self._app_model.objects.delete_selected)
 
     def keyPressEvent(self, event):
@@ -114,13 +118,10 @@ class MainWindow(QMainWindow):
             event.accept()
             return
 
-        if event.key() == Qt.Key_Control:
-            self._app_model.objects.multi_select(True)
-            event.accept()
-        elif event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key_Escape:
             if self._app_model.objects.wires.new.ongoing():
                 self._app_model.objects.wires.new.abort()
-                self._app_model.sig_synchronize_gui.emit()
+                self._app_model.sig_repaint.emit()
                 event.accept()
 
     def keyReleaseEvent(self, event):
@@ -131,10 +132,6 @@ class MainWindow(QMainWindow):
             return
         if self._app_model.is_running:
             self._app_model.shortcuts.release(event.key())
-            event.accept()
-            return
-        if event.key() == Qt.Key_Control:
-            self._app_model.objects.multi_select(False)
             event.accept()
 
     def _undo_shortcut(self):

@@ -230,12 +230,22 @@ class LoadSaveWidget(QFrame):
     The widget with load/save buttons in the top bar
     """
 
-    def __init__(self, app_model, parent):
+    def __init__(self, app_model, circuit_editor, parent):
         super().__init__(parent)
         self._app_model = app_model
+        self._circuit_editor = circuit_editor
         self.setLayout(QHBoxLayout(self))
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(5)
+        self._zoom_in_button = QPushButton("", self)
+        self._zoom_in_button.setIcon(qta.icon("msc.zoom-in"))
+        self._zoom_in_button.clicked.connect(self._app_model.zoom_in)
+        self._zoom_out_button = QPushButton("", self)
+        self._zoom_out_button.setIcon(qta.icon("msc.zoom-out"))
+        self._zoom_out_button.clicked.connect(self._app_model.zoom_out)
+        self._zoom_out_button.setToolTip("Zoom out")
+        self.layout().addWidget(self._zoom_in_button)
+        self.layout().addWidget(self._zoom_out_button)
         self._delete_button = QPushButton("", self)
         self._delete_button.setIcon(qta.icon("mdi.delete-forever"))
         self._delete_button.clicked.connect(self._app_model.objects.delete_selected)
@@ -311,7 +321,7 @@ class LoadSaveWidget(QFrame):
             self._load_button.setEnabled(True)
             self._save_button.setEnabled(self._app_model.is_changed)
             self._clear_button.setEnabled(not self._app_model.objects.components.is_empty())
-            self._delete_button.setEnabled(self._app_model.objects.has_selection())
+            self._delete_button.setEnabled(self._circuit_editor.circuit_area.has_selection())
             self._undo_button.setEnabled(self._app_model.objects.can_undo())
             self._redo_button.setEnabled(self._app_model.objects.can_redo())
             self._settings_button.setEnabled(True)
@@ -322,11 +332,11 @@ class TopBar(QFrame):
     The top widget with the control and status widgets
     """
 
-    def __init__(self, app_model, parent):
+    def __init__(self, app_model, circuit_editor, parent):
         super().__init__(parent)
         self.setLayout(QHBoxLayout(self))
         self.layout().addWidget(SimControlWidget(app_model, self))
         self.layout().addWidget(SimTimeWidget(app_model, self))
         self.layout().addStretch(1)
         self.layout().addWidget(VcdControlWidget(app_model, self))
-        self.layout().addWidget(LoadSaveWidget(app_model, self))
+        self.layout().addWidget(LoadSaveWidget(app_model, circuit_editor, self))

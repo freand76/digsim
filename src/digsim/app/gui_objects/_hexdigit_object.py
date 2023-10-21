@@ -18,18 +18,22 @@ class HexDigitObject(SevenSegmentObject):
         self._width = (
             self.digit_left + self.digits * self.DIGIT_WIDTH + self.DIGIT_RECT_TO_DIGIT_MARGIN
         )
+        self.update_ports()
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
         self.paint_digit_rect(
-            painter, self.digit_left, self.RECT_TO_DIGIT_RECT_MARGIN, self.digits
+            painter,
+            self.pos.x() + self.digit_left,
+            self.pos.y() + self.RECT_TO_DIGIT_RECT_MARGIN,
+            self.digits,
         )
         for digit_id in range(self.digits):
             active_segments = self.component.segments(digit_id)
             self.draw_digit(
                 painter,
-                self.digit_left + self.DIGIT_WIDTH * digit_id,
-                self.digit_top,
+                self.pos.x() + self.digit_left + self.DIGIT_WIDTH * digit_id,
+                self.pos.y() + self.digit_top,
                 active_segments,
             )
 

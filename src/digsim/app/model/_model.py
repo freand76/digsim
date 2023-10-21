@@ -22,15 +22,16 @@ from ._model_shortcuts import ModelShortcuts
 class AppModel(QThread):
     """The application model class for a GUI simulated circuit"""
 
-    sig_component_notify = Signal(Component)
     sig_audio_start = Signal(bool)
     sig_audio_notify = Signal(Component)
     sig_control_notify = Signal()
     sig_sim_time_notify = Signal(float)
     sig_synchronize_gui = Signal()
-    sig_repaint_wires = Signal()
+    sig_repaint = Signal()
     sig_error = Signal(str)
     sig_warning_log = Signal(str, str)
+    sig_zoom_in_gui = Signal()
+    sig_zoom_out_gui = Signal()
 
     def __init__(self):
         super().__init__()
@@ -103,13 +104,11 @@ class AppModel(QThread):
         if not self._started:
             self.model_init()
 
-    def model_changed(self, update_control=True, update_components=True):
+    def model_changed(self):
         """Set changed to True, for example when gui has moved component"""
         self._changed = True
-        if update_control:
-            self.sig_control_notify.emit()
-        if update_components:
-            self.sig_synchronize_gui.emit()
+        self.sig_control_notify.emit()
+        self.sig_synchronize_gui.emit()
 
     def model_add_event(self, func):
         """Add medel events (functions) from the GUI"""
@@ -121,7 +120,6 @@ class AppModel(QThread):
         next_tick = start_time
         sim_tick_ms = 1000 / self._model_settings.get("update_frequency")
         real_time = self._model_settings.get("real_time")
-        color_wires = self._model_settings.get("color_wires")
         self.sig_audio_start.emit(True)
         while self._started:
             next_tick += sim_tick_ms / 1000
@@ -148,8 +146,6 @@ class AppModel(QThread):
             time.sleep(sleep_time)
 
             self.sig_sim_time_notify.emit(self.objects.circuit.time_ns / 1000000000)
-            if color_wires:
-                self.sig_repaint_wires.emit()
 
         self._single_step = False
         self.sig_control_notify.emit()
@@ -194,3 +190,11 @@ class AppModel(QThread):
         self._model_clear()
         self.sig_synchronize_gui.emit()
         self.sig_control_notify.emit()
+
+    def zoom_in(self):
+        """Send zoom in signal to GUI"""
+        self.sig_zoom_in_gui.emit()
+
+    def zoom_out(self):
+        """Send zoom out signal to GUI"""
+        self.sig_zoom_out_gui.emit()

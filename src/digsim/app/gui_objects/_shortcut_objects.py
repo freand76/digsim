@@ -52,8 +52,8 @@ class ButtonObject(ImageObject):
             painter.setPen(pen)
             painter.setBrush(Qt.NoBrush)
             painter.drawEllipse(
-                self._width / 2 - self.BUTTON_RADIUS,
-                self._height / 2 - self.BUTTON_RADIUS,
+                self.pos.x() + self._width / 2 - self.BUTTON_RADIUS,
+                self.pos.y() + self._height / 2 - self.BUTTON_RADIUS,
                 self.BUTTON_RADIUS * 2,
                 self.BUTTON_RADIUS * 2,
             )
@@ -82,4 +82,4 @@ class OnOffSwitchObject(ImageObjectWithActiveRect):
 
     def _toggle(self):
         self.component.toggle()
-        self.update()
+        self.repaint()
