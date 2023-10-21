@@ -40,6 +40,7 @@ class ModelComponents:
         return len(self._component_objects) == 0
 
     def get_top_zlevel(self):
+        """Get thehighest z level in the model"""
         max_zlevel = None
         for _, comp_object in self._component_objects.items():
             max_zlevel = (
@@ -48,15 +49,16 @@ class ModelComponents:
         return max_zlevel
 
     def component_moved(self):
+        """Call when component has moved to update state"""
         self._app_model.objects.push_undo_state()
         self._app_model.model_changed()
-                
+
     def bring_to_front(self, component_object):
         """Make the component object the highest in the stack"""
         max_zlevel = self.get_top_zlevel()
         component_object.zlevel = max_zlevel + 1
         self._app_model.model_changed()
-        
+
     def send_to_back(self, component_object):
         """Make the component object the lowest in the stack"""
         min_zlevel = None

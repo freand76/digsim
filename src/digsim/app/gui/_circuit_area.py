@@ -9,7 +9,7 @@
 
 from functools import partial
 
-from PySide6.QtCore import QPoint, QRect, Qt, QTimer
+from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import QAction, QBrush, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
@@ -93,34 +93,36 @@ class ComponentContextMenu(QMenu):
         if ok:
             self._app_model.objects.components.update_settings(self._component_object, settings)
 
+
 class WirePartGraphicsItem(QGraphicsRectItem):
+
+    """A part of a wire graphcis item"""
 
     CLOSE_TO_WIRE_MARGIN = 10
 
-    def __init__(self, app_model, wire_object, parent, src, dst, zvalue):
-        x_low, x_high  = (src.x(), dst.x()) if src.x() < dst.x() else (dst.x(), src.x())
-        y_low, y_high  = (src.y(), dst.y()) if src.y() < dst.y() else (dst.y(), src.y())
-        rect = QRect(x_low - self.CLOSE_TO_WIRE_MARGIN,
-                     y_low - self.CLOSE_TO_WIRE_MARGIN,
-                     x_high - x_low + 2*self.CLOSE_TO_WIRE_MARGIN,
-                     y_high - y_low + 2*self.CLOSE_TO_WIRE_MARGIN)
+    def __init__(self, app_model, wire_object, parent, point_pair):
+        src, dst = point_pair
+        x_low, x_high = (src.x(), dst.x()) if src.x() < dst.x() else (dst.x(), src.x())
+        y_low, y_high = (src.y(), dst.y()) if src.y() < dst.y() else (dst.y(), src.y())
+        rect = QRectF(
+            x_low - self.CLOSE_TO_WIRE_MARGIN,
+            y_low - self.CLOSE_TO_WIRE_MARGIN,
+            x_high - x_low + 2 * self.CLOSE_TO_WIRE_MARGIN,
+            y_high - y_low + 2 * self.CLOSE_TO_WIRE_MARGIN,
+        )
         self._app_model = app_model
-        self._wire_object = wire_object 
+        self._wire_object = wire_object
         self._parent = parent
-        self._start = QPoint(x_low, y_low)
-        self._end = QPoint(x_high, y_high)
-        self._zvalue = zvalue
+        self._start = QPointF(x_low, y_low)
+        self._end = QPointF(x_high, y_high)
         self._selected = False
         super().__init__(rect, parent)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
 
     def wire_selected(self, selected):
+        """Set Wire Selected"""
         self._selected = selected
-        if self._selected:
-            self._parent.setZValue(self._app_model.objects.components.get_top_zlevel() + 1)
-        else:
-            self._parent.setZValue(self._zvalue)
- 
+
     def itemChange(self, change, value):
         """QT event callback function"""
         if change == QGraphicsItem.ItemSelectedHasChanged:
@@ -162,15 +164,17 @@ class WireGraphicsItem(QGraphicsPathItem):
         self._src_port_item = src_port_item
         self._dst_port_item = dst_port_item
         self._part_items = []
-        self.update_wire(0)
-
-    def _repaint(self):
-        """Make scene repaint for component update"""
-        self._app_model.sig_repaint.emit()
+        self.setZValue(-1)
+        self.update_wire()
 
     def select(self, selected):
+        """Select all parts of the wiregrapgicsitem"""
         for item in self._part_items:
             item.wire_selected(selected)
+        if selected:
+            self.setZValue(self._app_model.objects.components.get_top_zlevel() + 1)
+        else:
+            self.setZValue(-1)
         self._wire_object.select(selected)
 
     @classmethod
@@ -183,9 +187,8 @@ class WireGraphicsItem(QGraphicsPathItem):
         points.append(source)
         if source.x() < dest.x():
             half_dist_x = (dest.x() - source.x()) / 2
-            points.append(QPoint(source.x() + half_dist_x, source.y()))
-            points.append(QPoint(source.x() + half_dist_x, source.y()))
-            points.append(QPoint(source.x() + half_dist_x, dest.y()))
+            points.append(QPointF(source.x() + half_dist_x, source.y()))
+            points.append(QPointF(source.x() + half_dist_x, dest.y()))
         else:
             half_dist_y = (dest.y() - source.y()) / 2
             if dest.y() < source.y():
@@ -194,19 +197,16 @@ class WireGraphicsItem(QGraphicsPathItem):
                 )
             else:
                 y_mid = min(component_top_y - source.y() - cls.WIRE_TO_COMPONENT_DIST, half_dist_y)
-            points.append(QPoint(source.x() + 10, source.y()))
-            points.append(QPoint(source.x() + 10, source.y() + y_mid))
-            points.append(QPoint(dest.x() - 10, source.y() + y_mid))
-            points.append(QPoint(dest.x() - 10, dest.y()))
+            points.append(QPointF(source.x() + 10, source.y()))
+            points.append(QPointF(source.x() + 10, source.y() + y_mid))
+            points.append(QPointF(dest.x() - 10, source.y() + y_mid))
+            points.append(QPointF(dest.x() - 10, dest.y()))
         points.append(dest)
         return points
 
     @classmethod
     def create_path(cls, source, dest, rect):
         """Create a wire path"""
-        component_top_y = rect.y()
-        component_bottom_y = rect.y() + rect.height()
-
         path = QPainterPath()
         points = cls.create_points(source, dest, rect)
         path.moveTo(points[0])
@@ -214,21 +214,18 @@ class WireGraphicsItem(QGraphicsPathItem):
             path.lineTo(point)
         return path
 
-    def update_wire(self, zvalue):
+    def update_wire(self):
         """Update the wire path"""
         source = self._src_port_item.portPos()
         dest = self._dst_port_item.portPos()
         rect = self._src_port_item.portParentRect()
-        #self.setPath(self.create_path(source, dest, rect))
-        for item in self.childItems():
-            item.setParentItem(None)
-
         points = self.create_points(source, dest, rect)
         self._part_items = []
-        for idx, point1 in enumerate(points[0:-1]):
-            point2 = points[idx + 1]
-            item = WirePartGraphicsItem(self._app_model, self._wire_object, self, point1, point2, zvalue)
+        for idx, p1 in enumerate(points[0:-1]):
+            p2 = points[idx + 1]
+            item = WirePartGraphicsItem(self._app_model, self._wire_object, self, (p1, p2))
             self._part_items.append(item)
+
 
 class NewWireGraphicsItem(QGraphicsPathItem):
     """A new wire graphics item"""
@@ -364,9 +361,17 @@ class ComponentGraphicsItem(QGraphicsRectItem):
 
     def itemChange(self, change, value):
         """QT event callback function"""
-        if change == QGraphicsItem.ItemPositionHasChanged:
-            for wire_item in self._wire_items:
-                wire_item.update_wire(self.zValue())
+        if change == QGraphicsItem.ItemPositionChange:
+            if self._app_model.is_running:
+                value = QPoint(0, 0)
+        elif change == QGraphicsItem.ItemPositionHasChanged:
+            pass
+            # CRASH here if all waires are updated for sevral components
+            # for wire_item in self._wire_items:
+            #    wire_item.update_wire()
+        elif change == QGraphicsItem.ItemSelectedChange:
+            if self._app_model.is_running:
+                value = 0
         elif change == QGraphicsItem.ItemSelectedHasChanged:
             self._component_object.select(self.isSelected())
             self._repaint()
@@ -400,7 +405,6 @@ class ComponentGraphicsItem(QGraphicsRectItem):
             else:
                 self._mouse_press_pos = event.screenPos()
                 self.setCursor(Qt.ClosedHandCursor)
-                self._repaint()
 
     def mouseReleaseEvent(self, event):
         """QT event callback function"""
@@ -416,7 +420,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
                 else:
                     if not self._app_model.objects.wires.new.ongoing():
                         self._component_object.single_click_action()
-        self._mouse_press_pos = None
+        # self._mouse_press_pos = None
 
     def contextMenuEvent(self, event):
         """Create conext menu for component"""
