@@ -52,8 +52,8 @@ class ButtonObject(ImageObject):
             painter.setPen(pen)
             painter.setBrush(Qt.NoBrush)
             painter.drawEllipse(
-                self.object_pos.x() + self._width / 2 - self.BUTTON_RADIUS,
-                self.object_pos.y() + self._height / 2 - self.BUTTON_RADIUS,
+                self.object_pos.x() + self.width / 2 - self.BUTTON_RADIUS,
+                self.object_pos.y() + self.height / 2 - self.BUTTON_RADIUS,
                 self.BUTTON_RADIUS * 2,
                 self.BUTTON_RADIUS * 2,
             )

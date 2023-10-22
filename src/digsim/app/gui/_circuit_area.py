@@ -10,14 +10,13 @@
 from functools import partial
 
 from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, Qt, QTimer
-from PySide6.QtGui import QAction, QBrush, QPainterPath, QPen
+from PySide6.QtGui import QBrush, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsPathItem,
     QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsView,
-    QMenu,
 )
 
 from digsim.app.settings import ComponentSettingsDialog
@@ -201,6 +200,7 @@ class _CircuitAreaScene(QGraphicsScene):
         self._wire_items = []
         self._select_start_pos = None
         self._selection_rect_item = None
+        self._synchronize_gui()
 
     def _repaint(self):
         self.update()
@@ -294,13 +294,12 @@ class _CircuitAreaScene(QGraphicsScene):
 
     def _synchronize_gui(self):
         self.remove_all()
-        self._wire_items = {}
+        self._wire_items = []
         self._component_items = {}
         component_objects = self._app_model.objects.components.get_object_list()
         for component_object in component_objects:
             self.add_scene_component(component_object)
         self._update_wires()
-
 
 class CircuitArea(QGraphicsView):
     """The circuit area graphics view"""

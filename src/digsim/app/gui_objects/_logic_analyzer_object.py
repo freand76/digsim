@@ -19,9 +19,7 @@ class LogicAnalyzerObject(ImageObject):
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
-        self._width = (
-            self.SIGNAL_NAME_WIDTH + self.ANALYZER_DISPLAY_WIDTH + 2 * self.RECT_TO_BORDER
-        )
+        self.width = self.SIGNAL_NAME_WIDTH + self.ANALYZER_DISPLAY_WIDTH + 2 * self.RECT_TO_BORDER
         self.update_ports()
 
     def paint_component(self, painter):
@@ -34,7 +32,7 @@ class LogicAnalyzerObject(ImageObject):
                 self.object_pos.x() + self.SIGNAL_NAME_WIDTH,
                 self.object_pos.y() + 2 * self.RECT_TO_BORDER,
                 self.ANALYZER_DISPLAY_WIDTH,
-                self._height - 4 * self.RECT_TO_BORDER,
+                self.height - 4 * self.RECT_TO_BORDER,
             ),
             5,
             5,

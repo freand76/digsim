@@ -16,21 +16,22 @@ class LabelObject(ComponentObject):
         super().__init__(app_model, component, xpos, ypos)
         label = component.label()
         _, label_w, label_h = self.get_port_display_name_metrics(label)
-        self._width = 2 * self.RECT_TO_BORDER + 2 * self.PORT_SIDE + label_w
-        self._height = 2 * self.RECT_TO_BORDER + self.PORT_SIDE + label_h
+        self.width = 2 * self.RECT_TO_BORDER + 2 * self.PORT_SIDE + label_w
+        self.height = 2 * self.RECT_TO_BORDER + self.PORT_SIDE + label_h
         self._input = len(self._component.inports()) > 0
 
         if self._input:
             xpos = 0
         else:
-            xpos = self._width - self.PORT_SIDE - 1
-
-        self._port_rects[label] = QRect(
+            xpos = self.width - self.PORT_SIDE - 1
+        rect = QRect(
             self.object_pos.x() + xpos,
-            self.object_pos.y() + self._height / 2 - self.PORT_SIDE / 2,
+            self.object_pos.y() + self.height / 2 - self.PORT_SIDE / 2,
             self.PORT_SIDE,
             self.PORT_SIDE,
         )
+        port = self.component.port(label)
+        self.set_port_rect(port, rect)
 
     @classmethod
     def _paint_label(cls, painter, comp_rect, name, selected=False):

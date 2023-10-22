@@ -22,7 +22,7 @@ class DipSwitchObject(ImageObject):
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
-        self._height = self.component.bits() * self.DIP_SWITCH_HEIGHT + 2 * self.BORDER_TO_PORT
+        self.height = self.component.bits() * self.DIP_SWITCH_HEIGHT + 2 * self.BORDER_TO_PORT
         self._rects = []
         self.update_ports()
 

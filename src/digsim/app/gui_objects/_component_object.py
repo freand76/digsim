@@ -3,6 +3,7 @@
 
 """ A component placed in the GUI """
 
+# pylint: disable=unused-argument
 # pylint: disable=too-many-public-methods
 # pylint: disable=too-many-instance-attributes
 
@@ -10,77 +11,9 @@ import abc
 
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPen
-from PySide6.QtWidgets import QMenu
 
+from ._component_context_menu import ComponentContextMenu
 from ._component_item import ComponentGraphicsItem
-
-class ComponentContextMenu(QMenu):
-    """The component contextmenu class"""
-
-    def __init__(self, parent, app_model, component_object):
-        super().__init__(parent)
-        self._app_model = app_model
-        self._component_object = component_object
-        self._component = self._component_object.component
-        self._reconfigurable_parameters = None
-        # Title
-        titleAction = QAction(self._component.display_name(), self)
-        titleAction.setEnabled(False)
-        self.addAction(titleAction)
-        self.addSeparator()
-        # Settings
-        self._add_settings()
-        self._component_object.add_context_menu_action(self, parent)
-        self.addSeparator()
-        # Bring to front / Send to back
-        raiseAction = QAction("Bring to front", self)
-        self.addAction(raiseAction)
-        raiseAction.triggered.connect(self._raise)
-        lowerAction = QAction("Send to back", self)
-        self.addAction(lowerAction)
-        lowerAction.triggered.connect(self._lower)
-        self.addSeparator()
-        # Delete
-        deleteAction = QAction("Delete", self)
-        self.addAction(deleteAction)
-        deleteAction.triggered.connect(self._delete)
-        self._menu_action = None
-
-    def _add_settings(self):
-        self._reconfigurable_parameters = self._component.get_reconfigurable_parameters()
-        if len(self._reconfigurable_parameters) > 0:
-            settingsAction = QAction("Settings", self)
-            self.addAction(settingsAction)
-            settingsAction.triggered.connect(self._settings)
-
-    def create(self, position):
-        """Create context menu for component"""
-        self._menu_action = self.exec_(position)
-
-    def get_action(self):
-        """Get context menu action"""
-        return self._menu_action.text() if self._menu_action is not None else ""
-
-    def _delete(self):
-        self._component_object.select(True)
-        self._app_model.objects.delete_selected()
-
-    def _raise(self):
-        self._app_model.objects.components.bring_to_front(self._component_object)
-
-    def _lower(self):
-        self._app_model.objects.components.send_to_back(self._component_object)
-
-    def _settings(self):
-        """Start the settings dialog for reconfiguration"""
-        ok, settings = ComponentSettingsDialog.start(
-            self._parent,
-            self._app_model,
-            self._component.name(),
-            self._reconfigurable_parameters,
-        )
-        if ok:
-            self._app_model.objects.components.update_settings(self._component_object, settings)
 
 
 class ComponentObject(ComponentGraphicsItem):
@@ -95,29 +28,26 @@ class ComponentObject(ComponentGraphicsItem):
     MIN_PORT_TO_PORT_DISTANCE = 20
 
     def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(
+            app_model,
+            QRect(xpos, ypos, self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT),
+        )
         self._app_model = app_model
         self._component = component
-        self._object_pos = QPoint(xpos, ypos)
-        self._selected = False
-        self._height = self.DEFAULT_HEIGHT
-        self._width = self.DEFAULT_WIDTH
-        self._port_rects = {}
         self._port_display_name = {}
+        for port in self._component.ports:
+            if port.width == 1:
+                self._port_display_name[port.name()] = port.name()
+            else:
+                self._port_display_name[port.name()] = f"{port.name()}[{port.width-1}:0]"
+        for port in self._component.ports:
+            self.create_port_item(port)
         self.update_ports()
-        super().__init__(app_model,
-                         QRect(self.object_pos, self.size),
-                         self._port_rects,
-                         self,
-                         )
-        
-    def select(self, selected=True):
-        """Set the selected variable for the current object"""
-        self._selected = selected
 
     @property
     def selected(self):
         """Get the selected variable for the current object"""
-        return self._selected
+        return self.isSelected()
 
     def add_context_menu_action(self, menu, parent):
         """Add component specific context menu items"""
@@ -138,16 +68,9 @@ class ComponentObject(ComponentGraphicsItem):
                 + 2 * self.BORDER_TO_PORT
                 + 2 * self.RECT_TO_BORDER
             )
-            self._height = max(self._height, min_height)
-        self._port_rects = {}
-        self._port_display_name = {}
-        self._add_port_rects(self._component.inports(), 0)
-        self._add_port_rects(self._component.outports(), self._width - self.PORT_SIDE - 1)
-        for port in self._component.ports:
-            if port.width == 1:
-                self._port_display_name[port.name()] = port.name()
-            else:
-                self._port_display_name[port.name()] = f"{port.name()}[{port.width-1}:0]"
+            self.height = max(self.height, min_height)
+        self._set_port_rects(self._component.inports(), 0)
+        self._set_port_rects(self._component.outports(), self.width - self.PORT_SIDE - 1)
 
     def get_port_display_name_metrics(self, portname):
         """Get the port display name (including bits if available"""
@@ -157,7 +80,7 @@ class ComponentObject(ComponentGraphicsItem):
         str_pixels_w = fm.horizontalAdvance(display_name_str)
         str_pixels_h = fm.height()
         return display_name_str, str_pixels_w, str_pixels_h
-    
+
     def paint(self, painter, option, widget=None):
         """QT function"""
         self.paint_component(painter)
@@ -228,62 +151,54 @@ class ComponentObject(ComponentGraphicsItem):
         font = QFont("Arial", 8)
         painter.setFont(font)
         fm = QFontMetrics(font)
-        for portname, rect in self._port_rects.items():
-            port_str, str_pixels_w, str_pixels_h = self.get_port_display_name_metrics(portname)
+        for port in self._component.ports:
+            rect = self.get_port_rect(port)
+            port_str, str_pixels_w, str_pixels_h = self.get_port_display_name_metrics(port.name())
             str_pixels_w = fm.horizontalAdvance(port_str)
             str_pixels_h = fm.height()
             text_y = rect.y() + str_pixels_h - self.PORT_SIDE / 2
-            if rect.x() == self._object_pos.x():
+            if rect.x() == self.object_pos.x():
                 text_pos = QPoint(rect.x() + self.inport_x_pos(), text_y)
             else:
                 text_pos = QPoint(rect.x() - str_pixels_w - self.PORT_SIDE / 2, text_y)
             painter.drawText(text_pos, port_str)
 
-    def _add_port_rects(self, ports, xpos):
+    def _set_port_rects(self, ports, xpos):
         if len(ports) == 1:
-            self._port_rects[ports[0].name()] = QRect(
-                self._object_pos.x() + xpos,
-                self._object_pos.y() + self._height / 2 - self.PORT_SIDE / 2,
+            rect = QRect(
+                self.object_pos.x() + xpos,
+                self.object_pos.y() + self.height / 2 - self.PORT_SIDE / 2,
                 self.PORT_SIDE,
                 self.PORT_SIDE,
             )
+            self.set_port_rect(ports[0], rect)
         elif len(ports) > 1:
-            port_distance = (self._height - 2 * self.BORDER_TO_PORT) / (len(ports) - 1)
+            port_distance = (self.height - 2 * self.BORDER_TO_PORT) / (len(ports) - 1)
             for idx, port in enumerate(ports):
-                self._port_rects[port.name()] = QRect(
-                    self._object_pos.x() + xpos,
-                    self._object_pos.y()
+                rect = QRect(
+                    self.object_pos.x() + xpos,
+                    self.object_pos.y()
                     + self.BORDER_TO_PORT
                     + idx * port_distance
                     - self.PORT_SIDE / 2,
                     self.PORT_SIDE,
                     self.PORT_SIDE,
                 )
+                self.set_port_rect(port, rect)
 
     def get_rect(self):
         """Get component rect"""
         return QRect(
-            self._object_pos.x() + self.RECT_TO_BORDER,
-            self._object_pos.y() + self.RECT_TO_BORDER,
-            self._width - 2 * self.RECT_TO_BORDER,
-            self._height - 2 * self.RECT_TO_BORDER,
+            self.rect().x() + self.RECT_TO_BORDER,
+            self.rect().y() + self.RECT_TO_BORDER,
+            self.rect().width() - 2 * self.RECT_TO_BORDER,
+            self.rect().height() - 2 * self.RECT_TO_BORDER,
         )
 
     def get_port_pos(self, portname):
-        """Get component pos"""
-        return self._port_rects[portname].center()
-
-    def get_port_for_point(self, point):
-        """Get component port from a point"""
-        for portname, rect in self._port_rects.items():
-            if (
-                point.x() > rect.x() - self.PORT_CLICK_BOX_SIDE / 2
-                and point.x() < rect.x() + rect.width() + self.PORT_CLICK_BOX_SIDE / 2
-                and point.y() > rect.y() - self.PORT_CLICK_BOX_SIDE / 2
-                and point.y() < rect.y() + rect.height() + self.PORT_CLICK_BOX_SIDE / 2
-            ):
-                return portname
-        return None
+        """Get component port pos"""
+        port = self.component.port(portname)
+        return self.get_port_rect(port).center()
 
     @property
     def component(self):
@@ -293,18 +208,32 @@ class ComponentObject(ComponentGraphicsItem):
     @property
     def size(self):
         """Get size"""
-        return QSize(self._width, self._height)
+        return QSize(self.width, self.height)
 
     @property
     def object_pos(self):
         """Get position"""
-        return self._object_pos
+        return self.rect().topLeft()
 
-    @object_pos.setter
-    def object_pos(self, point):
-        """Set position"""
-        self._object_pos = point
-        self.update_ports()
+    @property
+    def width(self):
+        """Get width"""
+        return self.rect().width()
+
+    @width.setter
+    def width(self, width):
+        """Set width"""
+        self.setRect(self.rect().x(), self.rect().y(), width, self.rect().height())
+
+    @property
+    def height(self):
+        """Get height"""
+        return self.rect().height()
+
+    @height.setter
+    def height(self, height):
+        """Set height"""
+        self.setRect(self.rect().x(), self.rect().y(), self.rect().width(), height)
 
     @property
     def zlevel(self):
@@ -318,7 +247,7 @@ class ComponentObject(ComponentGraphicsItem):
 
     def to_dict(self):
         """Return position as dict"""
-        return {"x": self._object_pos.x(), "y": self._object_pos.y(), "z": self.zlevel}
+        return {"x": self.save_pos.x(), "y": self.save_pos.y(), "z": self.zlevel}
 
     def create_context_menu(self, parent, screen_position):
         context_menu = ComponentContextMenu(parent, self._app_model, self)

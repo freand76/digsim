@@ -31,8 +31,8 @@ class GuiNoteObject(ComponentObject):
         for line in lines:
             str_pixels_w = fm.horizontalAdvance(line)
             width = max(width, str_pixels_w)
-        self._width = width + 2 * self.RECT_TO_BORDER + 4 * self.NOTE_BORDER
-        self._height = max(
+        self.width = width + 2 * self.RECT_TO_BORDER + 4 * self.NOTE_BORDER
+        self.height = max(
             self.NOTE_MINIMUM_HEIGHT,
             2 * self.RECT_TO_BORDER + 4 * self.NOTE_BORDER + len(lines) * fm.height(),
         )

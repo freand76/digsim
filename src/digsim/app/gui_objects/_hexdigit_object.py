@@ -15,7 +15,7 @@ class HexDigitObject(SevenSegmentObject):
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
         self.digit_top = self.RECT_TO_DIGIT_RECT_MARGIN
         self.digits = self.component.get_digits()
-        self._width = (
+        self.width = (
             self.digit_left + self.digits * self.DIGIT_WIDTH + self.DIGIT_RECT_TO_DIGIT_MARGIN
         )
         self.update_ports()

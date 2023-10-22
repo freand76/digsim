@@ -55,12 +55,12 @@ class SevenSegmentObject(ComponentObject):
         """Setup the size of the component"""
         _, str_pixels_w, _ = self.get_port_display_name_metrics("dot")
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
-        self._width = self.digit_left + self.DIGIT_WIDTH + self.DIGIT_RECT_TO_DIGIT_MARGIN
+        self.width = self.digit_left + self.DIGIT_WIDTH + self.DIGIT_RECT_TO_DIGIT_MARGIN
         self.update_ports()
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
-        digit_ypos = self._height / 2 - self.DIGIT_HEIGHT / 2
+        digit_ypos = self.height / 2 - self.DIGIT_HEIGHT / 2
         self.paint_digit_rect(
             painter, self.object_pos.x() + self.digit_left, self.object_pos.y() + digit_ypos
         )

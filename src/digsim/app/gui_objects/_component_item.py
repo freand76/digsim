@@ -4,21 +4,20 @@
 """ A component graphics item """
 
 # pylint: disable=unused-argument
+# pylint: disable=useless-parent-delegation
 
 from PySide6.QtCore import QPoint, QRect, Qt
-from PySide6.QtGui import QAction, QBrush, QPen
+from PySide6.QtGui import QBrush, QPen
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsRectItem
 
-from digsim.app.settings import ComponentSettingsDialog
 from digsim.circuit.components.atoms import PortConnectionError
-
 
 
 class PortGraphicsItem(QGraphicsRectItem):
     """A port graphics item"""
 
-    def __init__(self, app_model, parent, port, rect):
-        super().__init__(rect, parent)
+    def __init__(self, app_model, parent, port):
+        super().__init__(QRect(0, 0, 0, 0), parent)
         self._app_model = app_model
         self._port = port
         self.setPen(QPen(Qt.black))
@@ -70,11 +69,10 @@ class PortGraphicsItem(QGraphicsRectItem):
 class ComponentGraphicsItem(QGraphicsRectItem):
     """A component graphics item, a 'clickable' item with a custom paintEvent"""
 
-    def __init__(self, app_model, rect, port_rect_dict, component_object):
+    def __init__(self, app_model, rect):
         super().__init__(rect)
         self._parent = None
         self._app_model = app_model
-        self._component_object = component_object
         self._wire_items = []
         self._port_dict = {}
         self._mouse_press_pos = None
@@ -82,21 +80,32 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setAcceptHoverEvents(True)
-        for portname, port_rect in port_rect_dict.items():
-            port = self._component_object.component.port(portname)
-            item = PortGraphicsItem(app_model, self, port, port_rect)
-            self._port_dict[port] = item
+        self._save_pos = self.rect().topLeft()
+
+    def create_port_item(self, port):
+        """Create port graphics item"""
+        item = PortGraphicsItem(self._app_model, self, port)
+        self._port_dict[port] = item
+
+    def set_port_rect(self, port, rect):
+        """Set port rect"""
+        self._port_dict[port].setRect(rect)
+
+    def get_port_rect(self, port):
+        """Get port rect"""
+        return self._port_dict[port].rect()
 
     def mouse_position(self, pos):
         """update component with mouse position"""
-    
+
     def single_click_action(self):
         """Handle singleclick events"""
 
     def create_context_menu(self, parent, screen_position):
         """Create context menu"""
-    
+
     def set_parent_view(self, parent):
+        """Set the parent"""
         self._parent = parent
 
     def clear_wires(self):
@@ -168,6 +177,8 @@ class ComponentGraphicsItem(QGraphicsRectItem):
                 if event.screenPos() != self._mouse_press_pos:
                     # Move completed, set model to changed
                     self._app_model.objects.components.component_moved()
+                    position = self.rect().topLeft() + self.pos()
+                    self._save_pos = position.toPoint()
                 else:
                     if not self._app_model.objects.new_wire.ongoing():
                         self.single_click_action()
@@ -180,4 +191,9 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         if self._app_model.objects.new_wire.ongoing():
             self._app_model.objects.new_wire.abort()
         self.create_context_menu(self._parent, event.screenPos())
+
+    @property
+    def save_pos(self):
+        return self._save_pos
+
         
