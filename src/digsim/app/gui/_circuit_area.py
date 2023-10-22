@@ -9,7 +9,7 @@
 
 from functools import partial
 
-from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, Qt, QTimer
+from PySide6.QtCore import QMutex, QPoint, QPointF, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import QBrush, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
@@ -197,6 +197,8 @@ class NewWireGraphicsItem(QGraphicsPathItem):
 class _CircuitAreaScene(QGraphicsScene):
     """The circuit area graphics scene"""
 
+    sceneMutex = QMutex()
+
     def __init__(self, app_model, view):
         super().__init__()
         self._app_model = app_model
@@ -281,6 +283,7 @@ class _CircuitAreaScene(QGraphicsScene):
             self._app_model.model_changed()
 
     def _update_wires(self):
+        self.sceneMutex.lock()
         for item in self._wire_items:
             self.removeItem(item)
 
@@ -303,6 +306,7 @@ class _CircuitAreaScene(QGraphicsScene):
                     src_comp_item.add_wire(item)
                     dst_comp_item.add_wire(item)
                     self._wire_items.append(item)
+        self.sceneMutex.unlock()
 
     def add_scene_component(self, component_object, update_wires=False):
         """Add component to scene"""
