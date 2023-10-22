@@ -21,77 +21,6 @@ from PySide6.QtWidgets import (
 )
 
 from digsim.app.settings import ComponentSettingsDialog
-from digsim.circuit.components.atoms import PortConnectionError
-
-
-class ComponentContextMenu(QMenu):
-    """The component contextmenu class"""
-
-    def __init__(self, parent, app_model, component_object):
-        super().__init__(parent)
-        self._parent = parent
-        self._app_model = app_model
-        self._component_object = component_object
-        self._component = self._component_object.component
-        self._reconfigurable_parameters = None
-        # Title
-        titleAction = QAction(self._component.display_name(), self)
-        titleAction.setEnabled(False)
-        self.addAction(titleAction)
-        self.addSeparator()
-        # Settings
-        self._add_settings()
-        self._component_object.add_context_menu_action(self, parent)
-        self.addSeparator()
-        # Bring to front / Send to back
-        raiseAction = QAction("Bring to front", self)
-        self.addAction(raiseAction)
-        raiseAction.triggered.connect(self._raise)
-        lowerAction = QAction("Send to back", self)
-        self.addAction(lowerAction)
-        lowerAction.triggered.connect(self._lower)
-        self.addSeparator()
-        # Delete
-        deleteAction = QAction("Delete", self)
-        self.addAction(deleteAction)
-        deleteAction.triggered.connect(self._delete)
-        self._menu_action = None
-
-    def _add_settings(self):
-        self._reconfigurable_parameters = self._component.get_reconfigurable_parameters()
-        if len(self._reconfigurable_parameters) > 0:
-            settingsAction = QAction("Settings", self)
-            self.addAction(settingsAction)
-            settingsAction.triggered.connect(self._settings)
-
-    def create(self, position):
-        """Create context menu for component"""
-        self._menu_action = self.exec_(position)
-
-    def get_action(self):
-        """Get context menu action"""
-        return self._menu_action.text() if self._menu_action is not None else ""
-
-    def _delete(self):
-        self._component_object.select(True)
-        self._app_model.objects.delete_selected()
-
-    def _raise(self):
-        self._app_model.objects.components.bring_to_front(self._component_object)
-
-    def _lower(self):
-        self._app_model.objects.components.send_to_back(self._component_object)
-
-    def _settings(self):
-        """Start the settings dialog for reconfiguration"""
-        ok, settings = ComponentSettingsDialog.start(
-            self._parent,
-            self._app_model,
-            self._component.name(),
-            self._reconfigurable_parameters,
-        )
-        if ok:
-            self._app_model.objects.components.update_settings(self._component_object, settings)
 
 
 class WirePartGraphicsItem(QGraphicsRectItem):
@@ -257,182 +186,6 @@ class NewWireGraphicsItem(QGraphicsPathItem):
         super().paint(painter, option, widget)
 
 
-class PortGraphicsItem(QGraphicsRectItem):
-    """A port graphics item"""
-
-    def __init__(self, app_model, parent, port, rect):
-        super().__init__(rect, parent)
-        self._app_model = app_model
-        self._port = port
-        self.setPen(QPen(Qt.black))
-        self.setBrush(Qt.SolidPattern)
-        self.setBrush(QBrush(Qt.gray))
-        self.setAcceptHoverEvents(True)
-
-    def _repaint(self):
-        """Make scene repaint for component update"""
-        self._app_model.sig_repaint.emit()
-
-    def mousePressEvent(self, event):
-        """QT event callback function"""
-        if self._app_model.objects.new_wire.ongoing():
-            try:
-                self._app_model.objects.new_wire.end(self._port.parent(), self._port.name())
-            except PortConnectionError as exc:
-                self._app_model.objects.new_wire.abort()
-                self._app_model.sig_error.emit(str(exc))
-                self._repaint()
-        else:
-            self._app_model.objects.new_wire.start(self._port.parent(), self._port.name())
-
-    def hoverEnterEvent(self, _):
-        """QT event callback function"""
-        if self._app_model.is_running:
-            return
-        self.setBrush(QBrush(Qt.red))
-        self.setCursor(Qt.CrossCursor)
-        self._repaint()
-
-    def hoverLeaveEvent(self, _):
-        """QT event callback function"""
-        if self._app_model.is_running:
-            return
-        self.setBrush(QBrush(Qt.gray))
-        self.setCursor(Qt.ArrowCursor)
-        self._repaint()
-
-    def portParentRect(self):
-        """return the parent position"""
-        return self.parentItem().rect().translated(self.parentItem().pos())
-
-    def portPos(self):
-        """return the parent position"""
-        return self.parentItem().pos() + self.rect().center()
-
-
-class ComponentGraphicsItem(QGraphicsRectItem):
-    """A component graphics item, a 'clickable' item with a custom paintEvent"""
-
-    def __init__(self, parent, app_model, component_object):
-        super().__init__(QRect(component_object.object_pos, component_object.size))
-        self._parent = parent
-        self._app_model = app_model
-        self._component_object = component_object
-        self._component = self._component_object.component
-        self._wire_items = []
-        self._port_dict = {}
-        self._mouse_press_pos = None
-        self.setFlag(QGraphicsItem.ItemIsMovable, True)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
-        self.setAcceptHoverEvents(True)
-        for portname, port_rect in self._component_object._port_rects.items():
-            port = self._component_object.component.port(portname)
-            item = PortGraphicsItem(app_model, self, port, port_rect)
-            self._port_dict[port] = item
-
-    @property
-    def component(self):
-        """Get component from widget"""
-        return self._component_object.component
-
-    def sync_from_gui(self):
-        """Get component from widget"""
-        new_pos = self.pos() + self.rect().topLeft()
-        self._component_object.object_pos = new_pos.toPoint()
-
-    def clear_wires(self):
-        """Add wire_item to component"""
-        self._wire_items = []
-
-    def add_wire(self, wire):
-        """Add wire_item to component"""
-        self._wire_items.append(wire)
-
-    def get_port_item(self, port):
-        """Get port_item from component"""
-        return self._port_dict[port]
-
-    def _repaint(self):
-        """Make scene repaint for component update"""
-        self._app_model.sig_repaint.emit()
-
-    def setSelected(self, selected):
-        """Qt function"""
-        self._component_object.select(selected)
-        super().setSelected(selected)
-
-    def itemChange(self, change, value):
-        """QT event callback function"""
-        if change == QGraphicsItem.ItemPositionChange:
-            if self._app_model.is_running:
-                value = QPoint(0, 0)
-        elif change == QGraphicsItem.ItemPositionHasChanged:
-            self._app_model.sig_update_wires.emit()
-        elif change == QGraphicsItem.ItemSelectedChange:
-            if self._app_model.is_running:
-                value = 0
-        elif change == QGraphicsItem.ItemSelectedHasChanged:
-            self._component_object.select(self.isSelected())
-            self._repaint()
-        return super().itemChange(change, value)
-
-    def paint(self, painter, option, widget=None):
-        """QT function"""
-        self.setZValue(self._component_object.zlevel)
-        self._component_object.paint_component(painter)
-        self._component_object.paint_ports(painter)
-
-    def hoverEnterEvent(self, _):
-        """QT event callback function"""
-        if self._app_model.is_running and self.component.has_action:
-            self.setCursor(Qt.PointingHandCursor)
-
-    def hoverLeaveEvent(self, _):
-        """QT event callback function"""
-        self.setCursor(Qt.ArrowCursor)
-
-    def hoverMoveEvent(self, event):
-        """QT event callback function"""
-        self._component_object.mouse_position(event.scenePos())
-        super().hoverMoveEvent(event)
-
-    def mousePressEvent(self, event):
-        """QT event callback function"""
-        super().mousePressEvent(event)
-        if event.button() == Qt.LeftButton:
-            if self._app_model.is_running:
-                self._app_model.model_add_event(self.component.onpress)
-            else:
-                self._mouse_press_pos = event.screenPos()
-                self.setCursor(Qt.ClosedHandCursor)
-
-    def mouseReleaseEvent(self, event):
-        """QT event callback function"""
-        super().mouseReleaseEvent(event)
-        if event.button() == Qt.LeftButton:
-            if self._app_model.is_running:
-                self._app_model.model_add_event(self.component.onrelease)
-            else:
-                self.setCursor(Qt.ArrowCursor)
-                if event.screenPos() != self._mouse_press_pos:
-                    # Move completed, set model to changed
-                    self._app_model.objects.components.component_moved()
-                else:
-                    if not self._app_model.objects.new_wire.ongoing():
-                        self._component_object.single_click_action()
-        self._mouse_press_pos = None
-
-    def contextMenuEvent(self, event):
-        """Create conext menu for component"""
-        if self._app_model.is_running:
-            return
-        if self._app_model.objects.new_wire.ongoing():
-            self._app_model.objects.new_wire.abort()
-        context_menu = ComponentContextMenu(self._parent, self._app_model, self._component_object)
-        context_menu.create(event.screenPos())
-
-
 class _CircuitAreaScene(QGraphicsScene):
     """The circuit area graphics scene"""
 
@@ -514,8 +267,7 @@ class _CircuitAreaScene(QGraphicsScene):
         self._wire_items = []
         component_objects = self._app_model.objects.components.get_object_list()
         for component_object in component_objects:
-            component_item = self._component_items[component_object.component]
-            component_item.clear_wires()
+            component_object.clear_wires()
             for src_port in component_object.component.outports():
                 for dst_port in src_port.get_wires():
                     src_comp = component_object.component
@@ -534,16 +286,13 @@ class _CircuitAreaScene(QGraphicsScene):
 
     def add_scene_component(self, component_object, update_wires=False):
         """Add component to scene"""
-        item = ComponentGraphicsItem(self._view, self._app_model, component_object)
-        self.addItem(item)
-        self._component_items[component_object.component] = item
+        self.addItem(component_object)
+        component_object.set_parent_view(self._view)
+        self._component_items[component_object.component] = component_object
         if update_wires:
             self._update_wires()
 
     def _synchronize_gui(self):
-        for _, item in self._component_items.items():
-            item.sync_from_gui()
-
         self.remove_all()
         self._wire_items = {}
         self._component_items = {}
