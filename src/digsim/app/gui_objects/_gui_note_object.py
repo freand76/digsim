@@ -54,8 +54,8 @@ class GuiNoteObject(ComponentObject):
         painter.setFont(self._font)
         for idx, line in enumerate(lines):
             painter.drawText(
-                self.pos.x() + 2 * self.NOTE_BORDER,
-                self.pos.y() + 2 * self.NOTE_BORDER + (idx + 1) * fm.height(),
+                self.object_pos.x() + 2 * self.NOTE_BORDER,
+                self.object_pos.y() + 2 * self.NOTE_BORDER + (idx + 1) * fm.height(),
                 line,
             )
 

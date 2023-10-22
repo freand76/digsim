@@ -32,8 +32,10 @@ class DipSwitchObject(ImageObject):
         for idx in range(0, self.component.bits()):
             self._rects.append(
                 QRect(
-                    self.pos.x() + self.get_rect().width() / 2 - 0.8 * self.DIP_SWITCH_WIDTH,
-                    self.pos.y() + self.BORDER_TO_PORT + idx * self.DIP_SWITCH_HEIGHT,
+                    self.object_pos.x()
+                    + self.get_rect().width() / 2
+                    - 0.8 * self.DIP_SWITCH_WIDTH,
+                    self.object_pos.y() + self.BORDER_TO_PORT + idx * self.DIP_SWITCH_HEIGHT,
                     self.DIP_SWITCH_WIDTH,
                     self.DIP_SWITCH_HEIGHT,
                 )

@@ -45,10 +45,12 @@ class ImageObject(ComponentObject):
         self._get_pixmaps()
         xpos = self.size.width() / 2 - self._pixmap.width() / 2
         ypos = self.size.height() / 2 - self._pixmap.height() / 2
-        self.paint_pixmap(painter, self.pos.x() + xpos, self.pos.y() + ypos, self.component.active)
+        self.paint_pixmap(
+            painter, self.object_pos.x() + xpos, self.object_pos.y() + ypos, self.component.active
+        )
         if self._show_name:
             self.paint_selectable_component_name(
-                painter, self.pos, self.size, self.component.display_name()
+                painter, self.object_pos, self.size, self.component.display_name()
             )
 
     @classmethod
@@ -193,8 +195,8 @@ class ImageObjectWithActiveRect(ImageObject):
     def paint_component(self, painter):
         super().paint_component(painter)
         if self.component.active:
-            xpos = self.pos.x() + self.size.width() / 2 - self._pixmap.width() / 2
-            ypos = self.pos.y() + self.size.height() / 2 - self._pixmap.height() / 2
+            xpos = self.object_pos.x() + self.size.width() / 2 - self._pixmap.width() / 2
+            ypos = self.object_pos.y() + self.size.height() / 2 - self._pixmap.height() / 2
             pen = QPen()
             pen.setWidth(4)
             pen.setColor(Qt.green)

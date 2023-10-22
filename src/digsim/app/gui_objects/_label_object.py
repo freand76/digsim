@@ -26,8 +26,8 @@ class LabelObject(ComponentObject):
             xpos = self._width - self.PORT_SIDE - 1
 
         self._port_rects[label] = QRect(
-            self.pos.x() + xpos,
-            self.pos.y() + self._height / 2 - self.PORT_SIDE / 2,
+            self.object_pos.x() + xpos,
+            self.object_pos.y() + self._height / 2 - self.PORT_SIDE / 2,
             self.PORT_SIDE,
             self.PORT_SIDE,
         )

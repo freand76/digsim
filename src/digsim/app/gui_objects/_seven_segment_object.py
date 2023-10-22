@@ -61,10 +61,15 @@ class SevenSegmentObject(ComponentObject):
     def paint_component(self, painter):
         self.paint_component_base(painter)
         digit_ypos = self._height / 2 - self.DIGIT_HEIGHT / 2
-        self.paint_digit_rect(painter, self.pos.x() + self.digit_left, self.pos.y() + digit_ypos)
+        self.paint_digit_rect(
+            painter, self.object_pos.x() + self.digit_left, self.object_pos.y() + digit_ypos
+        )
         active_segments = self.component.segments()
         self.draw_digit(
-            painter, self.pos.x() + self.digit_left, self.pos.y() + digit_ypos, active_segments
+            painter,
+            self.object_pos.x() + self.digit_left,
+            self.object_pos.y() + digit_ypos,
+            active_segments,
         )
 
     @classmethod

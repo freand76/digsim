@@ -24,16 +24,16 @@ class HexDigitObject(SevenSegmentObject):
         self.paint_component_base(painter)
         self.paint_digit_rect(
             painter,
-            self.pos.x() + self.digit_left,
-            self.pos.y() + self.RECT_TO_DIGIT_RECT_MARGIN,
+            self.object_pos.x() + self.digit_left,
+            self.object_pos.y() + self.RECT_TO_DIGIT_RECT_MARGIN,
             self.digits,
         )
         for digit_id in range(self.digits):
             active_segments = self.component.segments(digit_id)
             self.draw_digit(
                 painter,
-                self.pos.x() + self.digit_left + self.DIGIT_WIDTH * digit_id,
-                self.pos.y() + self.digit_top,
+                self.object_pos.x() + self.digit_left + self.DIGIT_WIDTH * digit_id,
+                self.object_pos.y() + self.digit_top,
                 active_segments,
             )
 

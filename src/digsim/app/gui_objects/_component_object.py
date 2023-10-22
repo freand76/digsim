@@ -29,7 +29,7 @@ class ComponentObject(GuiObject):
         super().__init__()
         self._app_model = app_model
         self._component = component
-        self._pos = QPoint(xpos, ypos)
+        self._object_pos = QPoint(xpos, ypos)
         self._temp_pos = None
         self._height = self.DEFAULT_HEIGHT
         self._width = self.DEFAULT_WIDTH
@@ -49,22 +49,6 @@ class ComponentObject(GuiObject):
 
     def mouse_position(self, pos):
         """update component with mouse position"""
-
-    def move_delta(self, delta_pos, finalize=False):
-        """Move component object a delta position"""
-        if self._temp_pos is None:
-            # First Movement
-            self._temp_pos = self._pos + delta_pos
-        else:
-            self._temp_pos = self._temp_pos + delta_pos
-
-        moved = False
-        if finalize:
-            moved = self._temp_pos != self._pos
-            self._pos = self._temp_pos
-            self._temp_pos = None
-
-        return moved
 
     def repaint(self):
         """Update GUI for this component object"""
@@ -169,7 +153,7 @@ class ComponentObject(GuiObject):
             str_pixels_w = fm.horizontalAdvance(port_str)
             str_pixels_h = fm.height()
             text_y = rect.y() + str_pixels_h - self.PORT_SIDE / 2
-            if rect.x() == self.pos.x():
+            if rect.x() == self._object_pos.x():
                 text_pos = QPoint(rect.x() + self.inport_x_pos(), text_y)
             else:
                 text_pos = QPoint(rect.x() - str_pixels_w - self.PORT_SIDE / 2, text_y)
@@ -178,8 +162,8 @@ class ComponentObject(GuiObject):
     def _add_port_rects(self, ports, xpos):
         if len(ports) == 1:
             self._port_rects[ports[0].name()] = QRect(
-                self.pos.x() + xpos,
-                self.pos.y() + self._height / 2 - self.PORT_SIDE / 2,
+                self._object_pos.x() + xpos,
+                self._object_pos.y() + self._height / 2 - self.PORT_SIDE / 2,
                 self.PORT_SIDE,
                 self.PORT_SIDE,
             )
@@ -187,8 +171,11 @@ class ComponentObject(GuiObject):
             port_distance = (self._height - 2 * self.BORDER_TO_PORT) / (len(ports) - 1)
             for idx, port in enumerate(ports):
                 self._port_rects[port.name()] = QRect(
-                    self.pos.x() + xpos,
-                    self.pos.y() + self.BORDER_TO_PORT + idx * port_distance - self.PORT_SIDE / 2,
+                    self._object_pos.x() + xpos,
+                    self._object_pos.y()
+                    + self.BORDER_TO_PORT
+                    + idx * port_distance
+                    - self.PORT_SIDE / 2,
                     self.PORT_SIDE,
                     self.PORT_SIDE,
                 )
@@ -196,8 +183,8 @@ class ComponentObject(GuiObject):
     def get_rect(self):
         """Get component rect"""
         return QRect(
-            self.pos.x() + self.RECT_TO_BORDER,
-            self.pos.y() + self.RECT_TO_BORDER,
+            self._object_pos.x() + self.RECT_TO_BORDER,
+            self._object_pos.y() + self.RECT_TO_BORDER,
             self._width - 2 * self.RECT_TO_BORDER,
             self._height - 2 * self.RECT_TO_BORDER,
         )
@@ -224,21 +211,21 @@ class ComponentObject(GuiObject):
         return self._component
 
     @property
-    def pos(self):
-        """Get position"""
-        if self._temp_pos is not None:
-            return self._temp_pos
-        return self._pos
-
-    @property
     def size(self):
         """Get size"""
         return QSize(self._width, self._height)
 
-    @pos.setter
-    def pos(self, point):
+    @property
+    def object_pos(self):
+        """Get position"""
+        if self._temp_pos is not None:
+            return self._temp_pos
+        return self._object_pos
+
+    @object_pos.setter
+    def object_pos(self, point):
         """Set position"""
-        self._pos = point
+        self._object_pos = point
         self.update_ports()
 
     @property
@@ -253,4 +240,4 @@ class ComponentObject(GuiObject):
 
     def to_dict(self):
         """Return position as dict"""
-        return {"x": self._pos.x(), "y": self._pos.y(), "z": self._zlevel}
+        return {"x": self._object_pos.x(), "y": self._object_pos.y(), "z": self._zlevel}

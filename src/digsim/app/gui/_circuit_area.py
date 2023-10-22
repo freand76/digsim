@@ -314,7 +314,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
     """A component graphics item, a 'clickable' item with a custom paintEvent"""
 
     def __init__(self, parent, app_model, component_object):
-        super().__init__(QRect(component_object.pos, component_object.size))
+        super().__init__(QRect(component_object.object_pos, component_object.size))
         self._parent = parent
         self._app_model = app_model
         self._component_object = component_object
@@ -339,7 +339,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
     def sync_from_gui(self):
         """Get component from widget"""
         new_pos = self.pos() + self.rect().topLeft()
-        self._component_object.pos = new_pos.toPoint()
+        self._component_object.object_pos = new_pos.toPoint()
 
     def clear_wires(self):
         """Add wire_item to component"""

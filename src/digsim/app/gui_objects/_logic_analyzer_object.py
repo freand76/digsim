@@ -31,8 +31,8 @@ class LogicAnalyzerObject(ImageObject):
         painter.setBrush(Qt.black)
         painter.drawRoundedRect(
             QRect(
-                self.pos.x() + self.SIGNAL_NAME_WIDTH,
-                self.pos.y() + 2 * self.RECT_TO_BORDER,
+                self.object_pos.x() + self.SIGNAL_NAME_WIDTH,
+                self.object_pos.y() + 2 * self.RECT_TO_BORDER,
                 self.ANALYZER_DISPLAY_WIDTH,
                 self._height - 4 * self.RECT_TO_BORDER,
             ),
@@ -49,7 +49,10 @@ class LogicAnalyzerObject(ImageObject):
             signal_data = signal_data_dict[portname]
             port_pos = self.get_port_pos(portname)
             path = QPainterPath(
-                QPoint(self.pos.x() + self.SIGNAL_NAME_WIDTH, port_pos.y() - signal_data[0] * 10)
+                QPoint(
+                    self.object_pos.x() + self.SIGNAL_NAME_WIDTH,
+                    port_pos.y() - signal_data[0] * 10,
+                )
             )
             last_level = signal_data[0]
             for idx, level in enumerate(signal_data[1:]):
@@ -57,20 +60,20 @@ class LogicAnalyzerObject(ImageObject):
                     continue
                 path.lineTo(
                     QPoint(
-                        self.pos.x() + self.SIGNAL_NAME_WIDTH + (idx + 1) * 2,
+                        self.object_pos.x() + self.SIGNAL_NAME_WIDTH + (idx + 1) * 2,
                         port_pos.y() - last_level * 10,
                     )
                 )
                 path.lineTo(
                     QPoint(
-                        self.pos.x() + self.SIGNAL_NAME_WIDTH + (idx + 1) * 2,
+                        self.object_pos.x() + self.SIGNAL_NAME_WIDTH + (idx + 1) * 2,
                         port_pos.y() - level * 10,
                     )
                 )
                 last_level = level
             path.lineTo(
                 QPoint(
-                    self.pos.x() + self.SIGNAL_NAME_WIDTH + len(signal_data) * 2,
+                    self.object_pos.x() + self.SIGNAL_NAME_WIDTH + len(signal_data) * 2,
                     port_pos.y() - last_level * 10,
                 )
             )
