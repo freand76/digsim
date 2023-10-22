@@ -31,6 +31,7 @@ class AppModel(QThread):
     sig_repaint = Signal()
     sig_update_wires = Signal()
     sig_delete_component = Signal(ComponentObject)
+    sig_delete_wires = Signal()
     sig_error = Signal(str)
     sig_warning_log = Signal(str, str)
     sig_zoom_in_gui = Signal()

@@ -194,6 +194,5 @@ class ComponentGraphicsItem(QGraphicsRectItem):
 
     @property
     def save_pos(self):
+        """Return the save position (will be updated after component move)"""
         return self._save_pos
-
-        

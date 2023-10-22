@@ -85,16 +85,20 @@ class WireGraphicsItem(QGraphicsPathItem):
 
     WIRE_TO_COMPONENT_DIST = 5
 
-    def __init__(self, app_model, src_port, src_port_item, dst_port_item):
+    def __init__(self, app_model, connection, src_port_item, dst_port_item):
         super().__init__()
         self._app_model = app_model
-        self._src_port = src_port
+        self._src_port, self._dst_port = connection
         self._src_port_item = src_port_item
         self._dst_port_item = dst_port_item
         self._part_items = []
         self.setZValue(-1)
         self.update_wire()
         self._selected = False
+
+    def disconnect(self):
+        """Disconnect (delete) the wire"""
+        self._src_port.disconnect(self._dst_port)
 
     def select(self, selected):
         """Select all parts of the wiregrapgicsitem"""
@@ -104,6 +108,11 @@ class WireGraphicsItem(QGraphicsPathItem):
             self.setZValue(self._app_model.objects.components.get_top_zlevel() + 1)
         else:
             self.setZValue(-1)
+        self._selected = selected
+
+    def is_selected(self):
+        """Is the wire selected"""
+        return self._selected
 
     @classmethod
     def create_points(cls, source, dest, rect):
@@ -196,6 +205,7 @@ class _CircuitAreaScene(QGraphicsScene):
         self._app_model.sig_synchronize_gui.connect(self._synchronize_gui)
         self._app_model.sig_update_wires.connect(self._update_wires)
         self._app_model.sig_delete_component.connect(self._delete_component)
+        self._app_model.sig_delete_wires.connect(self._delete_wires)
         self._component_items = {}
         self._wire_items = []
         self._select_start_pos = None
@@ -260,6 +270,16 @@ class _CircuitAreaScene(QGraphicsScene):
         del self._component_items[component_object.component]
         self._update_wires()
 
+    def _delete_wires(self):
+        change = False
+        for item in self._wire_items:
+            if item.is_selected():
+                item.disconnect()
+                change = True
+        if change:
+            self._update_wires()
+            self._app_model.model_changed()
+
     def _update_wires(self):
         for item in self._wire_items:
             self.removeItem(item)
@@ -277,7 +297,7 @@ class _CircuitAreaScene(QGraphicsScene):
                     src_port_item = src_comp_item.get_port_item(src_port)
                     dst_port_item = dst_comp_item.get_port_item(dst_port)
                     item = WireGraphicsItem(
-                        self._app_model, src_port, src_port_item, dst_port_item
+                        self._app_model, (src_port, dst_port), src_port_item, dst_port_item
                     )
                     self.addItem(item)
                     src_comp_item.add_wire(item)
@@ -300,6 +320,7 @@ class _CircuitAreaScene(QGraphicsScene):
         for component_object in component_objects:
             self.add_scene_component(component_object)
         self._update_wires()
+
 
 class CircuitArea(QGraphicsView):
     """The circuit area graphics view"""

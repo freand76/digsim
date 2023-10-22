@@ -44,6 +44,7 @@ class DipSwitchObject(ImageObject):
     def mouse_position(self, pos):
         """update component according to on mouse move"""
         select = None
+        pos = pos - self.pos()
         for idx, rect in enumerate(self._rects):
             if pos.x() > rect.x() and pos.x() < (rect.x() + rect.width()):
                 if pos.y() > rect.y() and pos.y() < (rect.y() + rect.height()):

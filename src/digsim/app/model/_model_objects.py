@@ -64,7 +64,6 @@ class ModelObjects:
         for obj in selected_objects:
             if ModelComponents.is_component_object(obj):
                 self._model_components.delete(obj)
-        self._app_model.model_changed()
 
     def delete_selected(self):
         """Delete selected object(s)"""
@@ -72,6 +71,8 @@ class ModelObjects:
         selected_objects = self._app_model.objects.get_selected()
         if len(selected_objects) > 0:
             self._delete(selected_objects)
+            self._app_model.model_changed()
+        self._app_model.sig_delete_wires.emit()
 
     def circuit_to_dict(self, circuit_folder):
         """Convert circuit and objects to dict"""
