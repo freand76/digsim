@@ -11,10 +11,8 @@ import abc
 from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPen
 
-from ._gui_object import GuiObject
 
-
-class ComponentObject(GuiObject):
+class ComponentObject:
     """The base class for a component placed in the GUI"""
 
     DEFAULT_WIDTH = 120
@@ -30,13 +28,22 @@ class ComponentObject(GuiObject):
         self._app_model = app_model
         self._component = component
         self._object_pos = QPoint(xpos, ypos)
-        self._temp_pos = None
+        self._selected = False
         self._height = self.DEFAULT_HEIGHT
         self._width = self.DEFAULT_WIDTH
         self._port_rects = {}
         self._port_display_name = {}
         self._zlevel = 0
         self.update_ports()
+
+    def select(self, selected=True):
+        """Set the selected variable for the current object"""
+        self._selected = selected
+
+    @property
+    def selected(self):
+        """Get the selected variable for the current object"""
+        return self._selected
 
     def add_context_menu_action(self, menu, parent):
         """Add component specific context menu items"""
@@ -218,8 +225,6 @@ class ComponentObject(GuiObject):
     @property
     def object_pos(self):
         """Get position"""
-        if self._temp_pos is not None:
-            return self._temp_pos
         return self._object_pos
 
     @object_pos.setter
