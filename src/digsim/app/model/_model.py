@@ -12,6 +12,7 @@ import time
 
 from PySide6.QtCore import QThread, Signal
 
+from digsim.app.gui_objects import ComponentObject
 from digsim.circuit.components.atoms import Component
 
 from ._model_objects import ModelObjects
@@ -28,6 +29,8 @@ class AppModel(QThread):
     sig_sim_time_notify = Signal(float)
     sig_synchronize_gui = Signal()
     sig_repaint = Signal()
+    sig_update_wires = Signal()
+    sig_delete_component = Signal(ComponentObject)
     sig_error = Signal(str)
     sig_warning_log = Signal(str, str)
     sig_zoom_in_gui = Signal()
@@ -108,7 +111,6 @@ class AppModel(QThread):
         """Set changed to True, for example when gui has moved component"""
         self._changed = True
         self.sig_control_notify.emit()
-        self.sig_synchronize_gui.emit()
 
     def model_add_event(self, func):
         """Add medel events (functions) from the GUI"""

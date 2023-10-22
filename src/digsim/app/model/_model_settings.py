@@ -19,7 +19,7 @@ class ModelSettings:
         self._app_model.model_changed()
         # Settings can change the component sizes
         self._app_model.objects.components.update_sizes()
-        self._app_model.sig_synchronize_gui.emit()
+        self._app_model.sig_repaint.emit()
 
     def get_all(self):
         """Return settings dict"""

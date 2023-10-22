@@ -342,6 +342,10 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         new_pos = self.pos() + self.rect().topLeft()
         self._component_object.pos = new_pos.toPoint()
 
+    def clear_wires(self):
+        """Add wire_item to component"""
+        self._wire_items = []
+
     def add_wire(self, wire):
         """Add wire_item to component"""
         self._wire_items.append(wire)
@@ -365,10 +369,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
             if self._app_model.is_running:
                 value = QPoint(0, 0)
         elif change == QGraphicsItem.ItemPositionHasChanged:
-            pass
-            # CRASH here if all waires are updated for sevral components
-            # for wire_item in self._wire_items:
-            #    wire_item.update_wire()
+            self._app_model.sig_update_wires.emit()
         elif change == QGraphicsItem.ItemSelectedChange:
             if self._app_model.is_running:
                 value = 0
@@ -442,7 +443,10 @@ class _CircuitAreaScene(QGraphicsScene):
         self._view = view
         self._app_model.sig_repaint.connect(self._repaint)
         self._app_model.sig_synchronize_gui.connect(self._synchronize_gui)
+        self._app_model.sig_update_wires.connect(self._update_wires)
+        self._app_model.sig_delete_component.connect(self._delete_component)
         self._component_items = {}
+        self._wire_items = []
         self._select_start_pos = None
         self._selection_rect_item = None
 
@@ -498,18 +502,20 @@ class _CircuitAreaScene(QGraphicsScene):
         self._selection_rect_item.setBrush(Qt.Dense7Pattern)
         self.addItem(self._selection_rect_item)
 
-    def _synchronize_gui(self):
-        for _, item in self._component_items.items():
-            item.sync_from_gui()
+    def _delete_component(self, component_object):
+        comp_item = self._component_items[component_object.component]
+        self.removeItem(comp_item)
+        del self._component_items[component_object.component]
+        self._update_wires()
 
-        self.remove_all()
-        self._component_items = {}
-        component_objects = self._app_model.objects.components.get_object_list()
-        for component_object in component_objects:
-            item = ComponentGraphicsItem(self._view, self._app_model, component_object)
-            self.addItem(item)
-            self._component_items[component_object.component] = item
+    def _update_wires(self):
+        for item in self._wire_items:
+            self.removeItem(item)
+
+        self._wire_items = []
         wire_objects = self._app_model.objects.wires.get_object_list()
+        for _, component_item in self._component_items.items():
+            component_item.clear_wires()
         for wire_object in wire_objects:
             src_comp = wire_object.src_port.parent()
             dst_comp = wire_object.dst_port.parent()
@@ -521,6 +527,20 @@ class _CircuitAreaScene(QGraphicsScene):
             self.addItem(item)
             src_comp_item.add_wire(item)
             dst_comp_item.add_wire(item)
+            self._wire_items.append(item)
+
+    def _synchronize_gui(self):
+        for _, item in self._component_items.items():
+            item.sync_from_gui()
+
+        self.remove_all()
+        self._component_items = {}
+        component_objects = self._app_model.objects.components.get_object_list()
+        for component_object in component_objects:
+            item = ComponentGraphicsItem(self._view, self._app_model, component_object)
+            self.addItem(item)
+            self._component_items[component_object.component] = item
+        self._update_wires()
 
 
 class CircuitArea(QGraphicsView):

@@ -70,7 +70,6 @@ class ModelObjects:
             if ModelWires.is_wire_object(obj):
                 self._model_wires.delete(obj)
         self._app_model.model_changed()
-        self._app_model.sig_synchronize_gui.emit()
 
     def delete_selected(self):
         """Delete selected object(s)"""

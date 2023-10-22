@@ -136,7 +136,7 @@ class ModelComponents:
         self._app_model.model_changed()
         # Settings can change the component size
         component_object.update_size()
-        self._app_model.sig_synchronize_gui.emit()
+        self._app_model.sig_repaint.emit()
 
     def update_sizes(self):
         """Update all component sizes"""
@@ -151,6 +151,7 @@ class ModelComponents:
                     self._app_model.objects.wires.delete(wire)
         del self._component_objects[component_object.component]
         self._circuit.delete_component(component_object.component)
+        self._app_model.sig_delete_component.emit(component_object)
 
     def create_from_dict(self, circuit_dict):
         """Create model components from circuit_dict"""
