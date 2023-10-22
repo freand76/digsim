@@ -145,10 +145,6 @@ class ModelComponents:
 
     def delete(self, component_object):
         """Delete a component object in the model"""
-        for port in component_object.component.ports:
-            for wire in self._app_model.objects.wires.get_object_list():
-                if wire.has_port(port):
-                    self._app_model.objects.wires.delete(wire)
         del self._component_objects[component_object.component]
         self._circuit.delete_component(component_object.component)
         self._app_model.sig_delete_component.emit(component_object)

@@ -119,8 +119,8 @@ class MainWindow(QMainWindow):
             return
 
         if event.key() == Qt.Key_Escape:
-            if self._app_model.objects.wires.new.ongoing():
-                self._app_model.objects.wires.new.abort()
+            if self._app_model.objects.new_wire.ongoing():
+                self._app_model.objects.new_wire.abort()
                 self._app_model.sig_repaint.emit()
                 event.accept()
 

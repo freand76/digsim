@@ -9,7 +9,7 @@ from digsim.circuit import Circuit
 from digsim.circuit.components.atoms import DigsimException
 
 from ._model_components import ModelComponents
-from ._model_wires import ModelWires
+from ._model_new_wire import NewWire
 
 
 class ModelObjects:
@@ -19,9 +19,9 @@ class ModelObjects:
         self._app_model = app_model
         self._circuit = Circuit(name="DigSimCircuit")
         self._model_components = ModelComponents(app_model, self._circuit)
-        self._model_wires = ModelWires(app_model, self._circuit)
         self._undo_stack = []
         self._redo_stack = []
+        self._new_wire = NewWire(self._app_model)
 
     @property
     def circuit(self):
@@ -34,9 +34,9 @@ class ModelObjects:
         return self._model_components
 
     @property
-    def wires(self):
+    def new_wire(self):
         """return the model components"""
-        return self._model_wires
+        return self._new_wire
 
     def init(self):
         """Initialize objects"""
@@ -45,13 +45,11 @@ class ModelObjects:
     def clear(self):
         """Clear components and wires"""
         self._model_components.clear()
-        self._model_wires.clear()
         self._circuit.clear()
 
     def get_list(self):
         """Get list of all model objects"""
         model_objects = self._model_components.get_object_list()
-        model_objects.extend(self._model_wires.get_object_list())
         return model_objects
 
     def get_selected(self):
@@ -66,9 +64,6 @@ class ModelObjects:
         for obj in selected_objects:
             if ModelComponents.is_component_object(obj):
                 self._model_components.delete(obj)
-        for obj in selected_objects:
-            if ModelWires.is_wire_object(obj):
-                self._model_wires.delete(obj)
         self._app_model.model_changed()
 
     def delete_selected(self):
@@ -98,8 +93,6 @@ class ModelObjects:
 
         # Create GUI components
         self.components.create_from_dict(circuit_dict)
-        # Create GUI wires
-        self.wires.create_circuit_wires()
 
         return exception_str_list
 

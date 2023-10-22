@@ -100,7 +100,7 @@ class WirePartGraphicsItem(QGraphicsRectItem):
 
     CLOSE_TO_WIRE_MARGIN = 10
 
-    def __init__(self, app_model, wire_object, parent, point_pair):
+    def __init__(self, app_model, src_port, parent, point_pair):
         src, dst = point_pair
         x_low, x_high = (src.x(), dst.x()) if src.x() < dst.x() else (dst.x(), src.x())
         y_low, y_high = (src.y(), dst.y()) if src.y() < dst.y() else (dst.y(), src.y())
@@ -111,7 +111,7 @@ class WirePartGraphicsItem(QGraphicsRectItem):
             y_high - y_low + 2 * self.CLOSE_TO_WIRE_MARGIN,
         )
         self._app_model = app_model
-        self._wire_object = wire_object
+        self._src_port = src_port
         self._parent = parent
         self._start = QPointF(x_low, y_low)
         self._end = QPointF(x_high, y_high)
@@ -132,14 +132,14 @@ class WirePartGraphicsItem(QGraphicsRectItem):
     def paint(self, painter, option, widget=None):
         """QT function"""
         pen = QPen(Qt.black)
-        bus_width = self._wire_object.src_port.width
+        bus_width = self._src_port.width
         if bus_width > 1:
             pen.setWidth(4)
         else:
             pen.setWidth(2)
         if self._app_model.is_running or not self._selected:
             pen.setColor(Qt.darkGray)
-            port_value = self._wire_object.src_port.value
+            port_value = self._src_port.value
             color_wires = self._app_model.settings.get("color_wires")
             if color_wires and port_value != 0 and port_value != "X":
                 max_value = 2**bus_width - 1
@@ -157,15 +157,16 @@ class WireGraphicsItem(QGraphicsPathItem):
 
     WIRE_TO_COMPONENT_DIST = 5
 
-    def __init__(self, app_model, wire_object, src_port_item, dst_port_item):
+    def __init__(self, app_model, src_port, src_port_item, dst_port_item):
         super().__init__()
         self._app_model = app_model
-        self._wire_object = wire_object
+        self._src_port = src_port
         self._src_port_item = src_port_item
         self._dst_port_item = dst_port_item
         self._part_items = []
         self.setZValue(-1)
         self.update_wire()
+        self._selected = False
 
     def select(self, selected):
         """Select all parts of the wiregrapgicsitem"""
@@ -175,7 +176,6 @@ class WireGraphicsItem(QGraphicsPathItem):
             self.setZValue(self._app_model.objects.components.get_top_zlevel() + 1)
         else:
             self.setZValue(-1)
-        self._wire_object.select(selected)
 
     @classmethod
     def create_points(cls, source, dest, rect):
@@ -223,7 +223,7 @@ class WireGraphicsItem(QGraphicsPathItem):
         self._part_items = []
         for idx, p1 in enumerate(points[0:-1]):
             p2 = points[idx + 1]
-            item = WirePartGraphicsItem(self._app_model, self._wire_object, self, (p1, p2))
+            item = WirePartGraphicsItem(self._app_model, self._src_port, self, (p1, p2))
             self._part_items.append(item)
 
 
@@ -237,19 +237,18 @@ class NewWireGraphicsItem(QGraphicsPathItem):
     def paint(self, painter, option, widget=None):
         """QT function"""
         end_pos = None
-        wire_object = self._app_model.objects.wires.new.wire
-        end_pos = self._app_model.objects.wires.new.end_pos
+        start_port = self._app_model.objects.new_wire.start_port()
+        end_pos = self._app_model.objects.new_wire.end_pos()
         pen = QPen(Qt.darkGray)
-        if wire_object is None or end_pos is None:
+        if start_port is None or end_pos is None:
             return
-        start_port = wire_object.dst_port if wire_object.src_port is None else wire_object.src_port
         if start_port.width > 1:
             pen.setWidth(4)
         else:
             pen.setWidth(2)
         component_object = self._app_model.objects.components.get_object(start_port.parent())
         start_pos = component_object.get_port_pos(start_port.name())
-        if wire_object.src_port is not None:
+        if start_port.is_output():
             path = WireGraphicsItem.create_path(start_pos, end_pos, component_object.get_rect())
         else:
             path = WireGraphicsItem.create_path(end_pos, start_pos, component_object.get_rect())
@@ -276,15 +275,15 @@ class PortGraphicsItem(QGraphicsRectItem):
 
     def mousePressEvent(self, event):
         """QT event callback function"""
-        if self._app_model.objects.wires.new.ongoing():
+        if self._app_model.objects.new_wire.ongoing():
             try:
-                self._app_model.objects.wires.new.end(self._port.parent(), self._port.name())
+                self._app_model.objects.new_wire.end(self._port.parent(), self._port.name())
             except PortConnectionError as exc:
-                self._app_model.objects.wires.new.abort()
+                self._app_model.objects.new_wire.abort()
                 self._app_model.sig_error.emit(str(exc))
                 self._repaint()
         else:
-            self._app_model.objects.wires.new.start(self._port.parent(), self._port.name())
+            self._app_model.objects.new_wire.start(self._port.parent(), self._port.name())
 
     def hoverEnterEvent(self, _):
         """QT event callback function"""
@@ -420,7 +419,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
                     # Move completed, set model to changed
                     self._app_model.objects.components.component_moved()
                 else:
-                    if not self._app_model.objects.wires.new.ongoing():
+                    if not self._app_model.objects.new_wire.ongoing():
                         self._component_object.single_click_action()
         self._mouse_press_pos = None
 
@@ -428,8 +427,8 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         """Create conext menu for component"""
         if self._app_model.is_running:
             return
-        if self._app_model.objects.wires.new.ongoing():
-            self._app_model.objects.wires.new.abort()
+        if self._app_model.objects.new_wire.ongoing():
+            self._app_model.objects.new_wire.abort()
         context_menu = ComponentContextMenu(self._parent, self._app_model, self._component_object)
         context_menu.create(event.screenPos())
 
@@ -513,33 +512,44 @@ class _CircuitAreaScene(QGraphicsScene):
             self.removeItem(item)
 
         self._wire_items = []
-        wire_objects = self._app_model.objects.wires.get_object_list()
-        for _, component_item in self._component_items.items():
+        component_objects = self._app_model.objects.components.get_object_list()
+        for component_object in component_objects:
+            component_item = self._component_items[component_object.component]
             component_item.clear_wires()
-        for wire_object in wire_objects:
-            src_comp = wire_object.src_port.parent()
-            dst_comp = wire_object.dst_port.parent()
-            src_comp_item = self._component_items[src_comp]
-            dst_comp_item = self._component_items[dst_comp]
-            src_port_item = src_comp_item.get_port_item(wire_object.src_port)
-            dst_port_item = dst_comp_item.get_port_item(wire_object.dst_port)
-            item = WireGraphicsItem(self._app_model, wire_object, src_port_item, dst_port_item)
-            self.addItem(item)
-            src_comp_item.add_wire(item)
-            dst_comp_item.add_wire(item)
-            self._wire_items.append(item)
+            for src_port in component_object.component.outports():
+                for dst_port in src_port.get_wires():
+                    src_comp = component_object.component
+                    dst_comp = dst_port.parent()
+                    src_comp_item = self._component_items[src_comp]
+                    dst_comp_item = self._component_items[dst_comp]
+                    src_port_item = src_comp_item.get_port_item(src_port)
+                    dst_port_item = dst_comp_item.get_port_item(dst_port)
+                    item = WireGraphicsItem(
+                        self._app_model, src_port, src_port_item, dst_port_item
+                    )
+                    self.addItem(item)
+                    src_comp_item.add_wire(item)
+                    dst_comp_item.add_wire(item)
+                    self._wire_items.append(item)
+
+    def add_scene_component(self, component_object, update_wires=False):
+        """Add component to scene"""
+        item = ComponentGraphicsItem(self._view, self._app_model, component_object)
+        self.addItem(item)
+        self._component_items[component_object.component] = item
+        if update_wires:
+            self._update_wires()
 
     def _synchronize_gui(self):
         for _, item in self._component_items.items():
             item.sync_from_gui()
 
         self.remove_all()
+        self._wire_items = {}
         self._component_items = {}
         component_objects = self._app_model.objects.components.get_object_list()
         for component_object in component_objects:
-            item = ComponentGraphicsItem(self._view, self._app_model, component_object)
-            self.addItem(item)
-            self._component_items[component_object.component] = item
+            self.add_scene_component(component_object)
         self._update_wires()
 
 
@@ -640,9 +650,9 @@ class CircuitArea(QGraphicsView):
         """QT event callback function"""
         super().mouseMoveEvent(event)
         # Draw unfinished wire
-        if self._app_model.objects.wires.new.ongoing():
+        if self._app_model.objects.new_wire.ongoing():
             scene_pos = self.mapToScene(event.pos())
-            self._app_model.objects.wires.new.set_end_pos(scene_pos)
+            self._app_model.objects.new_wire.set_end_pos(scene_pos)
             self._repaint()
 
     def wheelEvent(self, event):
@@ -680,4 +690,7 @@ class CircuitArea(QGraphicsView):
         if settings.get("name") is not None:
             name = settings["name"]
         if ok:
-            self._app_model.objects.components.add_object_by_name(name, position, settings)
+            component_object = self._app_model.objects.components.add_object_by_name(
+                name, position, settings
+            )
+            self._scene.add_scene_component(component_object, True)

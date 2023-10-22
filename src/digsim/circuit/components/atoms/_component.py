@@ -155,7 +155,7 @@ class Component(abc.ABC):
 
         for dst_port in self.inports():
             if dst_port.has_driver():
-                dst_port.driver.disconnect(dst_port)
+                dst_port.get_driver().disconnect(dst_port)
 
     def add_event(self, port, value, delay_ns):
         """Add delta cycle event"""
