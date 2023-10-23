@@ -81,6 +81,13 @@ class ComponentGraphicsItem(QGraphicsRectItem):
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setAcceptHoverEvents(True)
         self._save_pos = self.rect().topLeft()
+        self._moved = False
+
+    def has_moved(self):
+        """True if the component has moved since last call"""
+        moved = self._moved
+        self._moved = False
+        return moved
 
     def create_port_item(self, port):
         """Create port graphics item"""
@@ -134,7 +141,7 @@ class ComponentGraphicsItem(QGraphicsRectItem):
             if self._app_model.is_running:
                 value = QPoint(0, 0)
         elif change == QGraphicsItem.ItemPositionHasChanged:
-            self._app_model.sig_update_wires.emit()
+            self._moved = True
         elif change == QGraphicsItem.ItemSelectedChange:
             if self._app_model.is_running:
                 value = 0

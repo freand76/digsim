@@ -9,7 +9,7 @@
 
 from functools import partial
 
-from PySide6.QtCore import QMutex, QPoint, QPointF, QRect, QRectF, Qt, QTimer
+from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import QBrush, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
@@ -197,8 +197,6 @@ class NewWireGraphicsItem(QGraphicsPathItem):
 class _CircuitAreaScene(QGraphicsScene):
     """The circuit area graphics scene"""
 
-    sceneMutex = QMutex()
-
     def __init__(self, app_model, view):
         super().__init__()
         self._app_model = app_model
@@ -250,6 +248,14 @@ class _CircuitAreaScene(QGraphicsScene):
             self.setSelectionArea(path)
             self._repaint()
 
+        # Make sure to loop through complete list to clear has_moved()
+        has_moved_component = False
+        for _, component_object in self._component_items.items():
+            if component_object.has_moved():
+                has_moved_component = True
+        if has_moved_component:
+            self._app_model.sig_update_wires.emit()
+
     def mouseReleaseEvent(self, event):
         """QT event callback function"""
         super().mouseReleaseEvent(event)
@@ -283,7 +289,6 @@ class _CircuitAreaScene(QGraphicsScene):
             self._app_model.model_changed()
 
     def _update_wires(self):
-        self.sceneMutex.lock()
         for item in self._wire_items:
             self.removeItem(item)
 
@@ -306,7 +311,6 @@ class _CircuitAreaScene(QGraphicsScene):
                     src_comp_item.add_wire(item)
                     dst_comp_item.add_wire(item)
                     self._wire_items.append(item)
-        self.sceneMutex.unlock()
 
     def add_scene_component(self, component_object, update_wires=False):
         """Add component to scene"""
