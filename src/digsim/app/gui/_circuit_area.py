@@ -214,18 +214,12 @@ class _CircuitAreaScene(QGraphicsScene):
     def _repaint(self):
         self.update()
 
-    def select_none(self):
-        """Select no items"""
-        for item in self.items():
-            item.setSelected(False)
-
     def mousePressEvent(self, event):
         """QT event callback function"""
         super().mousePressEvent(event)
         pos = event.scenePos()
         items = self.items(pos)
         if len(items) == 0:
-            self.select_none()
             self._select_start_pos = pos
         self._repaint()
 
@@ -261,15 +255,6 @@ class _CircuitAreaScene(QGraphicsScene):
         self._select_start_pos = None
         self._selection_rect_item.setVisible(False)
         self._repaint()
-
-    def remove_all(self):
-        """Remove everything from scene"""
-        self.clear()
-        self.addItem(NewWireGraphicsItem(self._app_model))
-        self._selection_rect_item = QGraphicsRectItem()
-        self._selection_rect_item.setPen(Qt.DashLine)
-        self._selection_rect_item.setBrush(Qt.Dense7Pattern)
-        self.addItem(self._selection_rect_item)
 
     def _delete_component(self, component_object):
         self.removeItem(component_object)
@@ -316,10 +301,20 @@ class _CircuitAreaScene(QGraphicsScene):
             self._update_wires()
 
     def _synchronize_gui(self):
-        self.remove_all()
+        """Remove everything from scene"""
+        self.clear()
         self._wire_items = []
+        # Add new wire item
+        self.addItem(NewWireGraphicsItem(self._app_model))
+        # Add selection rect
+        self._selection_rect_item = QGraphicsRectItem()
+        self._selection_rect_item.setPen(Qt.DashLine)
+        self._selection_rect_item.setBrush(Qt.Dense7Pattern)
+        self.addItem(self._selection_rect_item)
+        # Add component
         for component_object in self._app_model.objects.components.get_object_list():
             self.add_scene_component(component_object)
+        # Update (add) wires
         self._update_wires()
 
 
