@@ -112,7 +112,7 @@ class ImageObjectDFF(ImageObject):
 
     def setup_size(self):
         self._get_pixmaps()
-        _, str_pixels_w, _ = self.get_port_display_name_metrics("D")
+        str_pixels_w, _ = self.get_port_display_name_metrics("D")
         self.width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._pixmap.width()
 
 
@@ -135,7 +135,7 @@ class ImageObjectMUX(ImageObject):
 
     def setup_size(self):
         self._get_pixmaps()
-        _, str_pixels_w, _ = self.get_port_display_name_metrics("A")
+        str_pixels_w, _ = self.get_port_display_name_metrics("A")
         self.width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._pixmap.width()
 
 

@@ -11,7 +11,7 @@ class HexDigitObject(SevenSegmentObject):
 
     def setup_size(self):
         """Setup the size of the component"""
-        _, str_pixels_w, _ = self.get_port_display_name_metrics("val")
+        str_pixels_w, _ = self.get_port_display_name_metrics("val")
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
         self.digit_top = self.RECT_TO_DIGIT_RECT_MARGIN
         self.digits = self.component.get_digits()

@@ -15,7 +15,7 @@ class LabelObject(ComponentObject):
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
         label = component.label()
-        _, label_w, label_h = self.get_port_display_name_metrics(label)
+        label_w, label_h = self.get_port_display_name_metrics(label)
         self.width = 2 * self.RECT_TO_BORDER + 2 * self.PORT_SIDE + label_w
         self.height = 2 * self.RECT_TO_BORDER + self.PORT_SIDE + label_h
         self._input = len(self._component.inports()) > 0
