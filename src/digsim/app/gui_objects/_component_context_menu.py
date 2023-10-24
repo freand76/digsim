@@ -14,6 +14,7 @@ class ComponentContextMenu(QMenu):
 
     def __init__(self, parent, app_model, component_object):
         super().__init__(parent)
+        self._parent = parent
         self._app_model = app_model
         self._component_object = component_object
         self._component = self._component_object.component

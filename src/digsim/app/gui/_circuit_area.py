@@ -293,7 +293,7 @@ class _CircuitAreaScene(QGraphicsScene):
     def add_scene_component(self, component_object, update_wires=False):
         """Add component to scene"""
         self.addItem(component_object)
-        component_object.set_parent_view(self._view)
+        component_object.set_parent_widget(self._view)
         if update_wires:
             self._update_wires()
 

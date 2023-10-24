@@ -34,7 +34,7 @@ class ComponentObject(QGraphicsRectItem):
 
         # Class variables
         self._port_dict = {}
-        self._parent = None
+        self._parent_widget = None
         self._mouse_press_pos = None
         self._moved = False
         self._save_pos = self.rect().topLeft()
@@ -110,7 +110,7 @@ class ComponentObject(QGraphicsRectItem):
             return
         if self._app_model.objects.new_wire.ongoing():
             self._app_model.objects.new_wire.abort()
-        context_menu = ComponentContextMenu(self._parent, self._app_model, self)
+        context_menu = ComponentContextMenu(self._parent_widget, self._app_model, self)
         context_menu.create(event.screenPos())
 
     def paint(self, painter, option, widget=None):
@@ -185,9 +185,9 @@ class ComponentObject(QGraphicsRectItem):
                 )
                 self.get_port_item(port).setRect(rect)
 
-    def set_parent_view(self, parent):
+    def set_parent_widget(self, parent):
         """Set the parent"""
-        self._parent = parent
+        self._parent_widget = parent
 
     def _repaint(self):
         """Make scene repaint for component update"""
