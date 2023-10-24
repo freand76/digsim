@@ -277,7 +277,6 @@ class _CircuitAreaScene(QGraphicsScene):
         self._wire_items = []
         component_objects = self._app_model.objects.components.get_object_list()
         for src_comp_item in component_objects:
-            src_comp_item.clear_wires()
             for src_port in src_comp_item.component.outports():
                 for dst_port in src_port.get_wires():
                     dst_comp_item = self._app_model.objects.components.get_object(
@@ -289,8 +288,6 @@ class _CircuitAreaScene(QGraphicsScene):
                         self._app_model, (src_port, dst_port), src_port_item, dst_port_item
                     )
                     self.addItem(item)
-                    src_comp_item.add_wire(item)
-                    dst_comp_item.add_wire(item)
                     self._wire_items.append(item)
 
     def add_scene_component(self, component_object, update_wires=False):

@@ -33,7 +33,6 @@ class ComponentObject(QGraphicsRectItem):
         self._component = component
 
         # Class variables
-        self._wire_items = []
         self._port_dict = {}
         self._parent = None
         self._mouse_press_pos = None
@@ -189,14 +188,6 @@ class ComponentObject(QGraphicsRectItem):
     def set_parent_view(self, parent):
         """Set the parent"""
         self._parent = parent
-
-    def clear_wires(self):
-        """Add wire_item to component"""
-        self._wire_items = []
-
-    def add_wire(self, wire):
-        """Add wire_item to component"""
-        self._wire_items.append(wire)
 
     def _repaint(self):
         """Make scene repaint for component update"""
