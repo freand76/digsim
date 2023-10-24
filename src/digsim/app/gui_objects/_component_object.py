@@ -171,7 +171,7 @@ class ComponentObject(QGraphicsRectItem):
                 self.PORT_SIDE,
                 self.PORT_SIDE,
             )
-            self._port_dict[ports[0]]["item"].setRect(rect)
+            self.get_port_item(ports[0]).setRect(rect)
         elif len(ports) > 1:
             port_distance = (self.height - 2 * self.BORDER_TO_PORT) / (len(ports) - 1)
             for idx, port in enumerate(ports):
@@ -184,7 +184,7 @@ class ComponentObject(QGraphicsRectItem):
                     self.PORT_SIDE,
                     self.PORT_SIDE,
                 )
-                self._port_dict[port]["item"].setRect(rect)
+                self.get_port_item(port).setRect(rect)
 
     def set_parent_view(self, parent):
         """Set the parent"""
@@ -284,7 +284,7 @@ class ComponentObject(QGraphicsRectItem):
         font = QFont("Arial", 8)
         painter.setFont(font)
         for port in self._component.ports:
-            rect = self._port_dict[port]["item"].rect()
+            rect = self.get_port_item(port).rect()
             port_str = self._port_dict[port]["name"]
             str_pixels_w, str_pixels_h = self.get_port_display_name_metrics(port_str)
             text_y = rect.y() + str_pixels_h - self.PORT_SIDE / 2
@@ -306,7 +306,7 @@ class ComponentObject(QGraphicsRectItem):
     def get_port_pos(self, portname):
         """Get component port pos"""
         port = self.component.port(portname)
-        return self._port_dict[port]["item"].rect().center()
+        return self.get_port_item(port).rect().center()
 
     def mouse_position(self, pos):
         """Component function: called for mouse position update"""

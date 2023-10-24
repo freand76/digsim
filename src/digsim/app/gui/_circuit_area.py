@@ -206,7 +206,6 @@ class _CircuitAreaScene(QGraphicsScene):
         self._app_model.sig_update_wires.connect(self._update_wires)
         self._app_model.sig_delete_component.connect(self._delete_component)
         self._app_model.sig_delete_wires.connect(self._delete_wires)
-        self._component_items = {}
         self._wire_items = []
         self._select_start_pos = None
         self._selection_rect_item = None
@@ -250,7 +249,7 @@ class _CircuitAreaScene(QGraphicsScene):
 
         # Make sure to loop through complete list to clear has_moved()
         has_moved_component = False
-        for _, component_object in self._component_items.items():
+        for component_object in self._app_model.objects.components.get_object_list():
             if component_object.has_moved():
                 has_moved_component = True
         if has_moved_component:
@@ -273,9 +272,7 @@ class _CircuitAreaScene(QGraphicsScene):
         self.addItem(self._selection_rect_item)
 
     def _delete_component(self, component_object):
-        comp_item = self._component_items[component_object.component]
-        self.removeItem(comp_item)
-        del self._component_items[component_object.component]
+        self.removeItem(component_object)
         self._update_wires()
 
     def _delete_wires(self):
@@ -294,14 +291,13 @@ class _CircuitAreaScene(QGraphicsScene):
 
         self._wire_items = []
         component_objects = self._app_model.objects.components.get_object_list()
-        for component_object in component_objects:
-            component_object.clear_wires()
-            for src_port in component_object.component.outports():
+        for src_comp_item in component_objects:
+            src_comp_item.clear_wires()
+            for src_port in src_comp_item.component.outports():
                 for dst_port in src_port.get_wires():
-                    src_comp = component_object.component
-                    dst_comp = dst_port.parent()
-                    src_comp_item = self._component_items[src_comp]
-                    dst_comp_item = self._component_items[dst_comp]
+                    dst_comp_item = self._app_model.objects.components.get_object(
+                        dst_port.parent()
+                    )
                     src_port_item = src_comp_item.get_port_item(src_port)
                     dst_port_item = dst_comp_item.get_port_item(dst_port)
                     item = WireGraphicsItem(
@@ -316,16 +312,13 @@ class _CircuitAreaScene(QGraphicsScene):
         """Add component to scene"""
         self.addItem(component_object)
         component_object.set_parent_view(self._view)
-        self._component_items[component_object.component] = component_object
         if update_wires:
             self._update_wires()
 
     def _synchronize_gui(self):
         self.remove_all()
         self._wire_items = []
-        self._component_items = {}
-        component_objects = self._app_model.objects.components.get_object_list()
-        for component_object in component_objects:
+        for component_object in self._app_model.objects.components.get_object_list():
             self.add_scene_component(component_object)
         self._update_wires()
 
