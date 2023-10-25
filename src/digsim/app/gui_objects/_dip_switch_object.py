@@ -18,7 +18,7 @@ class DipSwitchObject(ImageObject):
 
     IMAGE_FILENAME = "images/DIP_SWITCH.png"
     DIP_SWITCH_WIDTH = 40
-    DIP_SWITCH_HEIGHT = ComponentObject.MIN_PORT_TO_PORT_DISTANCE - 2
+    DIP_SWITCH_HEIGHT = ComponentObject.DEFAULT_PORT_TO_PORT_DISTANCE - 2
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)

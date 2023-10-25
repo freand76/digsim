@@ -6,6 +6,7 @@
 # pylint: disable=unused-argument
 # pylint: disable=too-many-public-methods
 # pylint: disable=too-many-instance-attributes
+# pylint: disable=too-many-arguments
 
 import abc
 
@@ -25,13 +26,15 @@ class ComponentObject(QGraphicsRectItem):
     RECT_TO_BORDER = 5
     BORDER_TO_PORT = 30
     PORT_SIDE = 8
-    MIN_PORT_TO_PORT_DISTANCE = 20
+    DEFAULT_PORT_TO_PORT_DISTANCE = 20
 
-    def __init__(self, app_model, component, xpos, ypos):
+    def __init__(
+        self, app_model, component, xpos, ypos, port_distance=DEFAULT_PORT_TO_PORT_DISTANCE
+    ):
         super().__init__(QRect(xpos, ypos, self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT))
         self._app_model = app_model
         self._component = component
-
+        self._port_distance = port_distance
         # Class variables
         self._port_dict = {}
         self._parent_widget = None
@@ -146,7 +149,7 @@ class ComponentObject(QGraphicsRectItem):
         max_ports = max(len(self._component.inports()), len(self._component.outports()))
         if max_ports > 1:
             min_height = (
-                (max_ports - 1) * self.MIN_PORT_TO_PORT_DISTANCE
+                (max_ports - 1) * self._port_distance
                 + 2 * self.BORDER_TO_PORT
                 + 2 * self.RECT_TO_BORDER
             )
@@ -172,13 +175,13 @@ class ComponentObject(QGraphicsRectItem):
             )
             self.get_port_item(ports[0]).setRect(rect)
         elif len(ports) > 1:
-            port_distance = (self.height - 2 * self.BORDER_TO_PORT) / (len(ports) - 1)
+            top_to_port = (self.height - self._port_distance * (len(ports) - 1)) / 2
             for idx, port in enumerate(ports):
                 rect = QRect(
                     self.object_pos.x() + xpos,
                     self.object_pos.y()
-                    + self.BORDER_TO_PORT
-                    + idx * port_distance
+                    + top_to_port
+                    + idx * self._port_distance
                     - self.PORT_SIDE / 2,
                     self.PORT_SIDE,
                     self.PORT_SIDE,
@@ -202,9 +205,8 @@ class ComponentObject(QGraphicsRectItem):
         """Update GUI for this component object"""
         self._app_model.sig_repaint.emit()
 
-    def get_port_display_name_metrics(self, port_str):
+    def get_string_metrics(self, port_str, font=QFont("Arial", 8)):
         """Get the port display name (including bits if available)"""
-        font = QFont("Arial", 8)
         fm = QFontMetrics(font)
         str_pixels_w = fm.horizontalAdvance(port_str)
         str_pixels_h = fm.height()
@@ -277,7 +279,7 @@ class ComponentObject(QGraphicsRectItem):
         for port in self._component.ports:
             rect = self.get_port_item(port).rect()
             port_str = self._port_dict[port]["name"]
-            str_pixels_w, str_pixels_h = self.get_port_display_name_metrics(port_str)
+            str_pixels_w, str_pixels_h = self.get_string_metrics(port_str, font)
             text_y = rect.y() + str_pixels_h - self.PORT_SIDE / 2
             if rect.x() == self.object_pos.x():
                 text_pos = QPoint(rect.x() + self.inport_x_pos(), text_y)

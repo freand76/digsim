@@ -8,7 +8,7 @@
 import os
 
 from PySide6.QtCore import QPoint, Qt
-from PySide6.QtGui import QFont, QFontMetrics, QPen, QPixmap
+from PySide6.QtGui import QFont, QPen, QPixmap
 
 from ._component_object import ComponentObject
 
@@ -112,7 +112,7 @@ class ImageObjectDFF(ImageObject):
 
     def setup_size(self):
         self._get_pixmaps()
-        str_pixels_w, _ = self.get_port_display_name_metrics("D")
+        str_pixels_w, _ = self.get_string_metrics("D")
         self.width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._pixmap.width()
 
 
@@ -135,7 +135,7 @@ class ImageObjectMUX(ImageObject):
 
     def setup_size(self):
         self._get_pixmaps()
-        str_pixels_w, _ = self.get_port_display_name_metrics("A")
+        str_pixels_w, _ = self.get_string_metrics("A")
         self.width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._pixmap.width()
 
 
@@ -154,10 +154,8 @@ class ImageObjectStaticValue(ImageObject):
         else:
             self.paint_component_base(painter)
             font = QFont("Arial", 16)
-            fm = QFontMetrics(font)
             value_str = f"{self.component.parameter_get('value')}"
-            str_w = fm.horizontalAdvance(value_str)
-            str_h = fm.height()
+            str_w, str_h = self.get_string_metrics(value_str, font=font)
             painter.setFont(font)
             painter.drawText(
                 self.get_rect().x() + self.get_rect().width() / 2 - str_w / 2,

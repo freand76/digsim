@@ -20,7 +20,7 @@ class BusBitsObject(ComponentObject):
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
-        bus_w, _ = self.get_port_display_name_metrics("bus")
+        bus_w, _ = self.get_string_metrics("bus")
         self.width = (
             2 * self.RECT_TO_BORDER
             + 2 * self.inport_x_pos()
