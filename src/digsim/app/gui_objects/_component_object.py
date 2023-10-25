@@ -28,11 +28,13 @@ class ComponentObject(QGraphicsRectItem):
     PORT_SIDE = 8
     DEFAULT_PORT_TO_PORT_DISTANCE = 20
 
-    def __init__(self, app_model, component, xpos, ypos):
+    def __init__(
+        self, app_model, component, xpos, ypos, port_distance=DEFAULT_PORT_TO_PORT_DISTANCE
+    ):
         super().__init__(QRect(xpos, ypos, self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT))
         self._app_model = app_model
         self._component = component
-        self._port_distance = self.DEFAULT_PORT_TO_PORT_DISTANCE
+        self._port_distance = port_distance
         # Class variables
         self._port_dict = {}
         self._parent_widget = None
@@ -284,10 +286,6 @@ class ComponentObject(QGraphicsRectItem):
             else:
                 text_pos = QPoint(rect.x() - str_pixels_w - self.PORT_SIDE / 2, text_y)
             painter.drawText(text_pos, port_str)
-
-    def set_port_distance(self, port_distance):
-        """Set port distance"""
-        self._port_distance = port_distance
 
     def get_rect(self):
         """Get component rect, excluding border where ports are"""

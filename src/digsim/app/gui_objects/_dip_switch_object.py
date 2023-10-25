@@ -20,8 +20,7 @@ class DipSwitchObject(ImageObject):
     DIP_SWITCH_HEIGHT = 10
 
     def __init__(self, app_model, component, xpos, ypos):
-        super().__init__(app_model, component, xpos, ypos)
-        self.set_port_distance(self.DIP_SWITCH_HEIGHT)
+        super().__init__(app_model, component, xpos, ypos, port_distance=self.DIP_SWITCH_HEIGHT)
         self.width = 2.8 * self.DIP_SWITCH_WIDTH
         self.height = self.component.bits() * self.DIP_SWITCH_HEIGHT
         self._rects = []

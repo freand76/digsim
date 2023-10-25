@@ -21,8 +21,16 @@ class ImageObject(ComponentObject):
     _pixmap = None
     _pixmap_active = None
 
-    def __init__(self, app_model, component, xpos, ypos, show_name=True):
-        super().__init__(app_model, component, xpos, ypos)
+    def __init__(
+        self,
+        app_model,
+        component,
+        xpos,
+        ypos,
+        show_name=True,
+        port_distance=ComponentObject.DEFAULT_PORT_TO_PORT_DISTANCE,
+    ):
+        super().__init__(app_model, component, xpos, ypos, port_distance=port_distance)
         self._show_name = show_name
         self.setup_size()
         self.update_ports()
