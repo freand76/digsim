@@ -3,10 +3,9 @@
 
 """ A hexdigit component placed in the GUI """
 
-from PySide6.QtCore import QRect, Qt
-from PySide6.QtGui import QPen
+from PySide6.QtCore import QPoint, QRect, Qt
+from PySide6.QtGui import QFont, QPen
 
-from ._component_object import ComponentObject
 from ._image_objects import ImageObject
 
 
@@ -17,12 +16,14 @@ class DipSwitchObject(ImageObject):
     """The class for a bus/bit component placed in the GUI"""
 
     IMAGE_FILENAME = "images/DIP_SWITCH.png"
-    DIP_SWITCH_WIDTH = 40
-    DIP_SWITCH_HEIGHT = ComponentObject.DEFAULT_PORT_TO_PORT_DISTANCE - 2
+    DIP_SWITCH_WIDTH = 20
+    DIP_SWITCH_HEIGHT = 10
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
-        self.height = self.component.bits() * self.DIP_SWITCH_HEIGHT + 2 * self.BORDER_TO_PORT
+        self.set_port_distance(self.DIP_SWITCH_HEIGHT)
+        self.width = 2.8 * self.DIP_SWITCH_WIDTH
+        self.height = self.component.bits() * self.DIP_SWITCH_HEIGHT
         self._rects = []
         self.update_ports()
 
@@ -32,9 +33,7 @@ class DipSwitchObject(ImageObject):
         for idx in range(0, self.component.bits()):
             self._rects.append(
                 QRect(
-                    self.object_pos.x()
-                    + self.get_rect().width() / 2
-                    - 0.8 * self.DIP_SWITCH_WIDTH,
+                    self.object_pos.x() + self.get_rect().width() / 3 + 5,
                     self.object_pos.y() + self.BORDER_TO_PORT + idx * self.DIP_SWITCH_HEIGHT,
                     self.DIP_SWITCH_WIDTH,
                     self.DIP_SWITCH_HEIGHT,
@@ -51,6 +50,7 @@ class DipSwitchObject(ImageObject):
                     select = idx
                     break
         self.component.select(select)
+        self.repaint()
 
     def single_click_action(self):
         self.component.toggle()
@@ -61,25 +61,46 @@ class DipSwitchObject(ImageObject):
         pen.setColor(Qt.black)
         pen.setWidth(1)
         painter.setPen(pen)
+        select_id = self.component.selected()
         for idx, rect in enumerate(self._rects):
-            painter.setBrush(Qt.gray)
+            painter.setBrush(Qt.darkGray)
             painter.drawRect(rect)
-            painter.setBrush(Qt.white)
+            if select_id == idx:
+                painter.setBrush(Qt.green)
+            else:
+                painter.setBrush(Qt.white)
             if self.component.is_set(idx):
                 painter.drawRect(
-                    rect.x() + rect.width() / 2 + 2,
-                    rect.y() + 2,
-                    rect.width() / 2 - 4,
-                    rect.height() - 4,
+                    rect.x() + rect.width() / 2 + 1,
+                    rect.y() + 1,
+                    rect.width() / 2 - 2,
+                    rect.height() - 2,
                 )
             else:
                 painter.drawRect(
-                    rect.x() + 2, rect.y() + 2, rect.width() / 2 - 4, rect.height() - 4
+                    rect.x() + 1, rect.y() + 1, rect.width() / 2 - 2, rect.height() - 2
                 )
+        font = QFont("Arial", 8)
+        painter.setFont(font)
+        painter.setPen(Qt.white)
+        for idx, rect in enumerate(self._rects):
+            port_str = f"{idx + 1}"
+            str_pixels_w, _ = self.get_string_metrics(port_str, font)
+            painter.drawText(
+                QPoint(rect.x() - str_pixels_w - 4, rect.y() + rect.height() - 1), port_str
+            )
+
+        _, str_h = self.get_string_metrics("ON", font)
+        painter.drawText(
+            self.get_rect().x() + self.get_rect().width() / 2,
+            self.get_rect().y() + self.BORDER_TO_PORT - str_h,
+            "ON",
+        )
 
     def _portlist(self):
         return self.component.outports()
 
-    def paint_component(self, painter):
-        self.paint_component_base(painter)
+    def paint(self, painter, option, widget=None):
+        """QT function"""
+        self.paint_component_base(painter, color=Qt.red)
         self._paint_dip_switch(painter)

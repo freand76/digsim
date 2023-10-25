@@ -36,7 +36,7 @@ class NewWire:
         elif self._start_port.is_input() and end_port.is_output():
             end_port.wire = self._start_port
         else:
-            raise PortConnectionError("Cannot connect to power of same type")
+            raise PortConnectionError("Cannot connect to port of same type")
         self._app_model.sig_update_wires.emit()
         self._app_model.model_changed()
         self._start_port = None

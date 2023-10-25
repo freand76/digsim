@@ -24,17 +24,15 @@ class ComponentObject(QGraphicsRectItem):
     DEFAULT_WIDTH = 120
     DEFAULT_HEIGHT = 100
     RECT_TO_BORDER = 5
-    BORDER_TO_PORT = 30
+    BORDER_TO_PORT = 25
     PORT_SIDE = 8
     DEFAULT_PORT_TO_PORT_DISTANCE = 20
 
-    def __init__(
-        self, app_model, component, xpos, ypos, port_distance=DEFAULT_PORT_TO_PORT_DISTANCE
-    ):
+    def __init__(self, app_model, component, xpos, ypos):
         super().__init__(QRect(xpos, ypos, self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT))
         self._app_model = app_model
         self._component = component
-        self._port_distance = port_distance
+        self._port_distance = self.DEFAULT_PORT_TO_PORT_DISTANCE
         # Class variables
         self._port_dict = {}
         self._parent_widget = None
@@ -119,7 +117,7 @@ class ComponentObject(QGraphicsRectItem):
     def paint(self, painter, option, widget=None):
         """QT function"""
         self.paint_component(painter)
-        self.paint_ports(painter)
+        self.paint_portnames(painter)
 
     @property
     def component(self):
@@ -226,7 +224,7 @@ class ComponentObject(QGraphicsRectItem):
             display_name_str,
         )
 
-    def paint_component_base(self, painter):
+    def paint_component_base(self, painter, color=Qt.gray):
         """Paint component base rect"""
         comp_rect = self.get_rect()
         pen = QPen()
@@ -237,7 +235,7 @@ class ComponentObject(QGraphicsRectItem):
         pen.setColor(Qt.black)
         painter.setPen(pen)
         painter.setBrush(Qt.SolidPattern)
-        painter.setBrush(Qt.gray)
+        painter.setBrush(color)
         painter.drawRoundedRect(comp_rect, 5, 5)
 
     @abc.abstractmethod
@@ -271,9 +269,9 @@ class ComponentObject(QGraphicsRectItem):
         """Get the X position left of the input port"""
         return 1.5 * self.PORT_SIDE
 
-    def paint_ports(self, painter):
+    def paint_portnames(self, painter, color=Qt.black):
         """Paint component ports"""
-        painter.setPen(Qt.black)
+        painter.setPen(color)
         font = QFont("Arial", 8)
         painter.setFont(font)
         for port in self._component.ports:
@@ -286,6 +284,10 @@ class ComponentObject(QGraphicsRectItem):
             else:
                 text_pos = QPoint(rect.x() - str_pixels_w - self.PORT_SIDE / 2, text_y)
             painter.drawText(text_pos, port_str)
+
+    def set_port_distance(self, port_distance):
+        """Set port distance"""
+        self._port_distance = port_distance
 
     def get_rect(self):
         """Get component rect, excluding border where ports are"""
