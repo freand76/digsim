@@ -12,9 +12,9 @@ from ._component_object import ComponentObject
 class GuiNoteObject(ComponentObject):
     """The class for a note placed in the GUI"""
 
-    NOTE_BORDER = 5
+    NOTE_BORDER = 10
     NOTE_MINIMUM_WIDTH = 50
-    NOTE_MINIMUM_HEIGHT = 50
+    NOTE_MINIMUM_HEIGHT = 20
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
@@ -31,10 +31,10 @@ class GuiNoteObject(ComponentObject):
         for line in lines:
             str_pixels_w = fm.horizontalAdvance(line)
             width = max(width, str_pixels_w)
-        self.width = width + 2 * self.RECT_TO_BORDER + 4 * self.NOTE_BORDER
+        self.width = width + 2 * self.NOTE_BORDER
         self.height = max(
             self.NOTE_MINIMUM_HEIGHT,
-            2 * self.RECT_TO_BORDER + 4 * self.NOTE_BORDER + len(lines) * fm.height(),
+            2 * self.NOTE_BORDER + len(lines) * fm.height(),
         )
 
     def paint_component(self, painter):
@@ -50,12 +50,12 @@ class GuiNoteObject(ComponentObject):
         painter.setPen(pen)
         painter.setBrush(Qt.SolidPattern)
         painter.setBrush(Qt.yellow)
-        painter.drawRect(self.get_rect())
+        painter.drawRect(self.rect())
         painter.setFont(self._font)
         for idx, line in enumerate(lines):
             painter.drawText(
-                self.object_pos.x() + 2 * self.NOTE_BORDER,
-                self.object_pos.y() + 2 * self.NOTE_BORDER + (idx + 1) * fm.height(),
+                self.object_pos.x() + self.NOTE_BORDER,
+                self.object_pos.y() + self.NOTE_BORDER + (idx + 1) * fm.height(),
                 line,
             )
 

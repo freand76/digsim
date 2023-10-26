@@ -69,7 +69,7 @@ class BusBitsObject(ComponentObject):
         self._paint_bus_bit(
             painter,
             self.object_pos,
-            self.get_rect(),
+            self.rect(),
             border,
             self.WIRE_LENGTH_COMPONENT,
             bit_wires_y,

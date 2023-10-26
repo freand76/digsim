@@ -3,11 +3,15 @@
 
 """ A hexdigit component placed in the GUI """
 
+from ._component_object import ComponentObject
 from ._seven_segment_object import SevenSegmentObject
 
 
 class HexDigitObject(SevenSegmentObject):
     """The class for a hexdigit component placed in the GUI"""
+
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos, port_distance=ComponentObject.DEFAULT_PORT_TO_PORT_DISTANCE)
 
     def setup_size(self):
         """Setup the size of the component"""

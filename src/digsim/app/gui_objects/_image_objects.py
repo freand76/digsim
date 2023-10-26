@@ -166,8 +166,8 @@ class ImageObjectStaticValue(ImageObject):
             str_w, str_h = self.get_string_metrics(value_str, font=font)
             painter.setFont(font)
             painter.drawText(
-                self.get_rect().x() + self.get_rect().width() / 2 - str_w / 2,
-                self.get_rect().y() + str_h,
+                self.rect().x() + self.rect().width() / 2 - str_w / 2,
+                self.rect().y() + str_h,
                 value_str,
             )
 

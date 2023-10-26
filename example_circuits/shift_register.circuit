@@ -7,9 +7,9 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "width": 1,
                     "async_reset": false,
-                    "clock_enable": false,
-                    "width": 1
+                    "clock_enable": false
                 }
             },
             {
@@ -17,9 +17,9 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "width": 1,
                     "async_reset": false,
-                    "clock_enable": false,
-                    "width": 1
+                    "clock_enable": false
                 }
             },
             {
@@ -27,9 +27,9 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "width": 1,
                     "async_reset": false,
-                    "clock_enable": false,
-                    "width": 1
+                    "clock_enable": false
                 }
             },
             {
@@ -37,9 +37,9 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "width": 1,
                     "async_reset": false,
-                    "clock_enable": false,
-                    "width": 1
+                    "clock_enable": false
                 }
             },
             {
@@ -47,9 +47,9 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "width": 1,
                     "async_reset": false,
-                    "clock_enable": false,
-                    "width": 1
+                    "clock_enable": false
                 }
             },
             {
@@ -57,9 +57,9 @@
                 "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
                 "settings": {
+                    "width": 1,
                     "async_reset": false,
-                    "clock_enable": false,
-                    "width": 1
+                    "clock_enable": false
                 }
             },
             {
@@ -193,59 +193,79 @@
     "gui": {
         "DFF": {
             "x": 250,
-            "y": 20
+            "y": 20,
+            "z": 0.0
         },
         "DFF_1": {
             "x": 250,
-            "y": 130
+            "y": 130,
+            "z": 0.0
         },
         "DFF_2": {
             "x": 250,
-            "y": 240
+            "y": 240,
+            "z": 0.0
         },
         "DFF_3": {
             "x": 250,
-            "y": 350
+            "y": 350,
+            "z": 0.0
         },
         "DFF_4": {
             "x": 250,
-            "y": 460
+            "y": 460,
+            "z": 0.0
         },
         "DFF_5": {
             "x": 250,
-            "y": 570
+            "y": 570,
+            "z": 0.0
         },
         "PushButton": {
             "x": 20,
-            "y": 20
+            "y": 10,
+            "z": 0.0
         },
         "Clock": {
             "x": 20,
-            "y": 200
+            "y": 200,
+            "z": 0.0
         },
         "Led": {
             "x": 600,
-            "y": 20
+            "y": 20,
+            "z": 0.0
         },
         "Led_1": {
             "x": 600,
-            "y": 130
+            "y": 130,
+            "z": 0.0
         },
         "Led_2": {
             "x": 600,
-            "y": 240
+            "y": 240,
+            "z": 0.0
         },
         "Led_3": {
             "x": 600,
-            "y": 350
+            "y": 350,
+            "z": 0.0
         },
         "Led_4": {
             "x": 600,
-            "y": 460
+            "y": 460,
+            "z": 0.0
         },
         "Led_5": {
             "x": 600,
-            "y": 570
+            "y": 570,
+            "z": 0.0
         }
+    },
+    "shortcuts": {},
+    "settings": {
+        "real_time": true,
+        "color_wires": true,
+        "update_frequency": 20
     }
 }

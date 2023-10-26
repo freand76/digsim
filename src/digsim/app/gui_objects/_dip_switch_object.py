@@ -32,7 +32,7 @@ class DipSwitchObject(ImageObject):
         for idx in range(0, self.component.bits()):
             self._rects.append(
                 QRect(
-                    self.object_pos.x() + self.get_rect().width() / 3 + 5,
+                    self.object_pos.x() + self.rect().width() / 3 + 5,
                     self.object_pos.y() + self.BORDER_TO_PORT + idx * self.DIP_SWITCH_HEIGHT,
                     self.DIP_SWITCH_WIDTH,
                     self.DIP_SWITCH_HEIGHT,
@@ -91,8 +91,8 @@ class DipSwitchObject(ImageObject):
 
         _, str_h = self.get_string_metrics("ON", font)
         painter.drawText(
-            self.get_rect().x() + self.get_rect().width() / 2,
-            self.get_rect().y() + self.BORDER_TO_PORT - str_h,
+            self.rect().x() + self.rect().width() / 2,
+            self.rect().y() + self.BORDER_TO_PORT - str_h,
             "ON",
         )
 

@@ -151,11 +151,10 @@ class ComponentObject(QGraphicsRectItem):
             min_height = (
                 (max_ports - 1) * self._port_distance
                 + 2 * self.BORDER_TO_PORT
-                + 2 * self.RECT_TO_BORDER
             )
             self.height = max(self.height, min_height)
-        self._set_port_rects(self._component.inports(), 0)
-        self._set_port_rects(self._component.outports(), self.width - self.PORT_SIDE - 1)
+        self._set_port_rects(self._component.inports(), -self.RECT_TO_BORDER)
+        self._set_port_rects(self._component.outports(), self.RECT_TO_BORDER + self.width - self.PORT_SIDE - 1)
 
     def get_port_item(self, port):
         """Get port item"""
@@ -221,14 +220,14 @@ class ComponentObject(QGraphicsRectItem):
         str_pixels_w = fm.horizontalAdvance(display_name_str)
         str_pixels_h = fm.height()
         painter.drawText(
-            self.get_rect().x() + self.get_rect().width() / 2 - str_pixels_w / 2,
-            self.get_rect().y() + str_pixels_h,
+            self.rect().x() + self.rect().width() / 2 - str_pixels_w / 2,
+            self.rect().y() + str_pixels_h,
             display_name_str,
         )
 
     def paint_component_base(self, painter, color=Qt.gray):
         """Paint component base rect"""
-        comp_rect = self.get_rect()
+        comp_rect = self.rect()
         pen = QPen()
         if self.selected:
             pen.setWidth(4)
@@ -281,20 +280,11 @@ class ComponentObject(QGraphicsRectItem):
             port_str = self._port_dict[port]["name"]
             str_pixels_w, str_pixels_h = self.get_string_metrics(port_str, font)
             text_y = rect.y() + str_pixels_h - self.PORT_SIDE / 2
-            if rect.x() == self.object_pos.x():
+            if rect.x() < self.object_pos.x():
                 text_pos = QPoint(rect.x() + self.inport_x_pos(), text_y)
             else:
                 text_pos = QPoint(rect.x() - str_pixels_w - self.PORT_SIDE / 2, text_y)
             painter.drawText(text_pos, port_str)
-
-    def get_rect(self):
-        """Get component rect, excluding border where ports are"""
-        return QRect(
-            self.rect().x() + self.RECT_TO_BORDER,
-            self.rect().y() + self.RECT_TO_BORDER,
-            self.rect().width() - 2 * self.RECT_TO_BORDER,
-            self.rect().height() - 2 * self.RECT_TO_BORDER,
-        )
 
     def get_port_pos(self, portname):
         """Get component port pos"""
@@ -355,4 +345,4 @@ class ComponentObject(QGraphicsRectItem):
 
     def to_dict(self):
         """Return position as dict"""
-        return {"x": self._save_pos.x(), "y": self._save_pos.y(), "z": self.zlevel}
+        return {"x": int(self._save_pos.x()), "y": int(self._save_pos.y()), "z": self.zlevel}

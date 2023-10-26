@@ -16,12 +16,12 @@ class LabelObject(ComponentObject):
         super().__init__(app_model, component, xpos, ypos)
         label = component.label()
         label_w, label_h = self.get_string_metrics(label)
-        self.width = 2 * self.RECT_TO_BORDER + 2 * self.PORT_SIDE + label_w
-        self.height = 2 * self.RECT_TO_BORDER + self.PORT_SIDE + label_h
+        self.width = 2*self.PORT_SIDE + label_w
+        self.height = self.PORT_SIDE + label_h
         self._input = len(self._component.inports()) > 0
 
         if self._input:
-            xpos = 0
+            xpos = -ComponentObject.RECT_TO_BORDER
         else:
             xpos = self.width - self.PORT_SIDE - 1
         rect = QRect(
@@ -79,11 +79,10 @@ class LabelObject(ComponentObject):
         painter.drawPolygon(points)
 
     def paint_component(self, painter):
-        comp_rect = self.get_rect()
         if self._input:
-            self._paint_label(painter, comp_rect, "sink", self.selected)
+            self._paint_label(painter, self.rect(), "sink", self.selected)
         else:
-            self._paint_label(painter, comp_rect, "source", self.selected)
+            self._paint_label(painter, self.rect(), "source", self.selected)
 
     @classmethod
     def paint_selectable_component(cls, painter, size, name):
