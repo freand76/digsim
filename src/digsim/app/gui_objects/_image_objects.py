@@ -79,37 +79,45 @@ class ImageObject(ComponentObject):
         painter.drawPixmap(QPoint(xpos, ypos), pixmap)
 
 
-class ImageObjectAND(ImageObject):
+class GateImageObject(ImageObject):
+    """The base class for gate components placed in the GUI"""
+
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos)
+        self.paint_port_names(False)
+
+
+class ImageObjectAND(GateImageObject):
     """The class for a AND image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/AND.png"
 
 
-class ImageObjectOR(ImageObject):
+class ImageObjectOR(GateImageObject):
     """The class for a OR image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/OR.png"
 
 
-class ImageObjectNAND(ImageObject):
+class ImageObjectNAND(GateImageObject):
     """The class for a NAND image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/NAND.png"
 
 
-class ImageObjectNOR(ImageObject):
+class ImageObjectNOR(GateImageObject):
     """The class for a NOR image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/NOR.png"
 
 
-class ImageObjectNOT(ImageObject):
+class ImageObjectNOT(GateImageObject):
     """The class for a NOR image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/NOT.png"
 
 
-class ImageObjectXOR(ImageObject):
+class ImageObjectXOR(GateImageObject):
     """The class for a XOR image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/XOR.png"
@@ -146,7 +154,10 @@ class ImageObjectMUX(ImageObject):
 
     def setup_size(self):
         self._get_pixmaps()
-        str_pixels_w, _ = self.get_string_metrics("A")
+        if self.component.port("A").width == 1:
+            str_pixels_w, _ = self.get_string_metrics("A")
+        else:
+            str_pixels_w, _ = self.get_string_metrics("A[31:0]")
         self.width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._pixmap.width()
 
 

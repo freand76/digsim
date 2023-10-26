@@ -184,7 +184,7 @@ class NewWireGraphicsItem(QGraphicsPathItem):
         else:
             pen.setWidth(2)
         component_object = self._app_model.objects.components.get_object(start_port.parent())
-        start_pos = component_object.get_port_pos(start_port.name())
+        start_pos = component_object.get_port_pos(start_port.name()) + component_object.pos()
         if start_port.is_output():
             path = WireGraphicsItem.create_path(start_pos, end_pos, component_object.rect())
         else:

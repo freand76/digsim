@@ -41,15 +41,6 @@
                 }
             },
             {
-                "name": "StaticValue",
-                "display_name": "StaticValue",
-                "type": "digsim.circuit.components.StaticValue",
-                "settings": {
-                    "width": 1,
-                    "value": 1
-                }
-            },
-            {
                 "name": "Led",
                 "display_name": "Led",
                 "type": "digsim.circuit.components.Led",
@@ -61,6 +52,38 @@
                 "type": "digsim.circuit.components.PushButton",
                 "settings": {
                     "inverted": false
+                }
+            },
+            {
+                "name": "DipSwitch",
+                "display_name": "DipSwitch",
+                "type": "digsim.circuit.components.DipSwitch",
+                "settings": {
+                    "bits": 4
+                }
+            },
+            {
+                "name": "Wires2Bus",
+                "display_name": "Wires2Bus",
+                "type": "digsim.circuit.components.Wires2Bus",
+                "settings": {
+                    "width": 4
+                }
+            },
+            {
+                "name": "PushButton_1",
+                "display_name": "PushButton",
+                "type": "digsim.circuit.components.PushButton",
+                "settings": {
+                    "inverted": true
+                }
+            },
+            {
+                "name": "PushButton_2",
+                "display_name": "PushButton",
+                "type": "digsim.circuit.components.PushButton",
+                "settings": {
+                    "inverted": true
                 }
             }
         ],
@@ -114,16 +137,36 @@
                 "dst": "ttl_74162.ENT"
             },
             {
-                "src": "StaticValue.O",
+                "src": "PushButton.O",
+                "dst": "ic7448.lt"
+            },
+            {
+                "src": "DipSwitch.0",
+                "dst": "Wires2Bus.bus_0"
+            },
+            {
+                "src": "DipSwitch.1",
+                "dst": "Wires2Bus.bus_1"
+            },
+            {
+                "src": "DipSwitch.2",
+                "dst": "Wires2Bus.bus_2"
+            },
+            {
+                "src": "DipSwitch.3",
+                "dst": "Wires2Bus.bus_3"
+            },
+            {
+                "src": "Wires2Bus.bus",
+                "dst": "ttl_74162.D"
+            },
+            {
+                "src": "PushButton_1.O",
                 "dst": "ttl_74162.Clear_bar"
             },
             {
-                "src": "StaticValue.O",
+                "src": "PushButton_2.O",
                 "dst": "ttl_74162.Load_bar"
-            },
-            {
-                "src": "PushButton.O",
-                "dst": "ic7448.lt"
             }
         ]
     },
@@ -144,28 +187,43 @@
             "z": 0.0
         },
         "Clock": {
-            "x": 70,
-            "y": 366,
+            "x": 132,
+            "y": 381,
             "z": 0.0
         },
         "OnOffSwitch": {
-            "x": 68,
-            "y": 241,
-            "z": 0.0
-        },
-        "StaticValue": {
-            "x": 67,
-            "y": 107,
+            "x": 76,
+            "y": 231,
             "z": 0.0
         },
         "Led": {
-            "x": 925,
-            "y": 187,
+            "x": 735,
+            "y": 232,
             "z": 0.0
         },
         "PushButton": {
             "x": 318,
             "y": 426,
+            "z": 0.0
+        },
+        "DipSwitch": {
+            "x": -114,
+            "y": 326,
+            "z": 0.0
+        },
+        "Wires2Bus": {
+            "x": -33,
+            "y": 326,
+            "z": 0.0
+        },
+        "PushButton_1": {
+            "x": 74,
+            "y": 110,
+            "z": 0.0
+        },
+        "PushButton_2": {
+            "x": -38,
+            "y": 172,
             "z": 0.0
         }
     },
