@@ -22,7 +22,7 @@ class BusBitsObject(ComponentObject):
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos, port_distance=self.PORT_DISTANCE)
         bus_w, _ = self.get_string_metrics("bus[31:0]")
-        self.width = +2 * self.inport_x_pos() + 2 * bus_w + abs(2 * self.WIRE_LENGTH_COMPONENT)
+        self.width = 2 * self.inport_x_pos() + 2 * bus_w + abs(2 * self.WIRE_LENGTH_COMPONENT)
         self.update_ports()
 
     @classmethod
