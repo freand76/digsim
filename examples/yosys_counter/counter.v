@@ -1,17 +1,17 @@
-module counter(clk, reset, up, long_counter);
+module counter(clk, reset, up, cnt);
 
    input clk, reset, up;
 
-   output reg [3:0] long_counter;
+   output reg [3:0] cnt;
 
    always @(posedge clk or posedge reset)
      begin
-        long_counter <= long_counter;
+        cnt <= cnt;
         if (reset)
-          long_counter <= 0;
+          cnt <= 0;
         else
           if (up)
-            long_counter <= long_counter + 1;
+            cnt <= cnt + 1;
      end
 
 endmodule
