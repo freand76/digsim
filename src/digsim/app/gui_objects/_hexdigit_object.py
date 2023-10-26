@@ -11,7 +11,13 @@ class HexDigitObject(SevenSegmentObject):
     """The class for a hexdigit component placed in the GUI"""
 
     def __init__(self, app_model, component, xpos, ypos):
-        super().__init__(app_model, component, xpos, ypos, port_distance=ComponentObject.DEFAULT_PORT_TO_PORT_DISTANCE)
+        super().__init__(
+            app_model,
+            component,
+            xpos,
+            ypos,
+            port_distance=ComponentObject.DEFAULT_PORT_TO_PORT_DISTANCE,
+        )
 
     def setup_size(self):
         """Setup the size of the component"""
@@ -20,8 +26,9 @@ class HexDigitObject(SevenSegmentObject):
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
         self.digit_top = self.RECT_TO_DIGIT_RECT_MARGIN
         self.width = (
-            self.digit_left + self.digits * self.DIGIT_WIDTH + self.DIGIT_RECT_TO_DIGIT_MARGIN
+            self.digit_left + self.digits * self.DIGIT_WIDTH + self.RECT_TO_DIGIT_RECT_MARGIN
         )
+        self.height = 2 * self.RECT_TO_DIGIT_RECT_MARGIN + self.DIGIT_HEIGHT
         self.update_ports()
 
     def paint_component(self, painter):

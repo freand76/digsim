@@ -42,7 +42,7 @@ class PortGraphicsItem(QGraphicsRectItem):
         """QT event callback function"""
         if self._app_model.is_running:
             return
-        self.setBrush(QBrush(Qt.red))
+        self.setBrush(QBrush(Qt.black))
         self.setCursor(Qt.CrossCursor)
         self._repaint()
 

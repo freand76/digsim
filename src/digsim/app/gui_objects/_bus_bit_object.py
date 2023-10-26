@@ -21,18 +21,12 @@ class BusBitsObject(ComponentObject):
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
         bus_w, _ = self.get_string_metrics("bus[31:0]")
-        self.width = (
-            2 * self.RECT_TO_BORDER
-            + 2 * self.inport_x_pos()
-            + 2 * bus_w
-            + abs(2 * self.WIRE_LENGTH_COMPONENT)
-        )
+        self.width = +2 * self.inport_x_pos() + 2 * bus_w + abs(2 * self.WIRE_LENGTH_COMPONENT)
         self.update_ports()
 
     @classmethod
-    def _paint_bus_bit(cls, painter, pos, size, border, wire_length, bit_wires_y):
+    def _paint_bus_bit(cls, painter, pos, size, wire_length, bit_wires_y):
         center_pos = QPoint(size.width() / 2, size.height() / 2)
-        center_pos += border
         pen = QPen()
         pen.setWidth(4)
         pen.setColor(Qt.black)
@@ -65,12 +59,10 @@ class BusBitsObject(ComponentObject):
         bit_wires_y = []
         for port in self._portlist():
             bit_wires_y.append(self.get_port_pos(port.name()).y())
-        border = QPoint(self.RECT_TO_BORDER, self.RECT_TO_BORDER)
         self._paint_bus_bit(
             painter,
             self.object_pos,
             self.rect(),
-            border,
             self.WIRE_LENGTH_COMPONENT,
             bit_wires_y,
         )
@@ -88,7 +80,6 @@ class BusBitsObject(ComponentObject):
             painter,
             QPoint(0, 0),
             image_size,
-            QPoint(0, 0),
             cls.WIRE_LENGTH_SELECTABLE,
             bit_wires_y,
         )

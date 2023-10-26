@@ -40,8 +40,9 @@ class ButtonObject(ImageObject):
     BUTTON_RADIUS = 35
 
     def __init__(self, app_model, component, xpos, ypos):
-        super().__init__(app_model, component, xpos, ypos, show_name=False)
-        self._parent = None
+        super().__init__(app_model, component, xpos, ypos)
+        self.show_name(False)
+        self.paint_port_names(False)
 
     def paint_component(self, painter):
         super().paint_component(painter)
@@ -67,9 +68,6 @@ class OnOffSwitchObject(ImageObjectWithActiveRect):
 
     IMAGE_FILENAME = "images/Switch_OFF.png"
     ACTIVE_IMAGE_FILENAME = "images/Switch_ON.png"
-
-    def __init__(self, app_model, component, xpos, ypos):
-        super().__init__(app_model, component, xpos, ypos, show_name=False)
 
     def single_click_action(self):
         self._toggle()

@@ -16,7 +16,7 @@ class LabelObject(ComponentObject):
         super().__init__(app_model, component, xpos, ypos)
         label = component.label()
         label_w, label_h = self.get_string_metrics(label)
-        self.width = 2*self.PORT_SIDE + label_w
+        self.width = 2 * self.PORT_SIDE + label_w
         self.height = self.PORT_SIDE + label_h
         self._input = len(self._component.inports()) > 0
 

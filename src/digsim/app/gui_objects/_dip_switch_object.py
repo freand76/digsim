@@ -21,7 +21,7 @@ class DipSwitchObject(ImageObject):
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos, port_distance=self.DIP_SWITCH_HEIGHT)
-        self.width = 2.8 * self.DIP_SWITCH_WIDTH
+        self.width = 2.5 * self.DIP_SWITCH_WIDTH
         self.height = self.component.bits() * self.DIP_SWITCH_HEIGHT
         self._rects = []
         self.update_ports()
@@ -30,10 +30,11 @@ class DipSwitchObject(ImageObject):
         super().update_ports()
         self._rects = []
         for idx in range(0, self.component.bits()):
+            port_pos = self.get_port_pos(f"{idx}")
             self._rects.append(
                 QRect(
-                    self.object_pos.x() + self.rect().width() / 3 + 5,
-                    self.object_pos.y() + self.BORDER_TO_PORT + idx * self.DIP_SWITCH_HEIGHT,
+                    self.object_pos.x() + self.rect().width() / 2 - self.DIP_SWITCH_WIDTH / 2,
+                    port_pos.y() - self.DIP_SWITCH_HEIGHT / 2,
                     self.DIP_SWITCH_WIDTH,
                     self.DIP_SWITCH_HEIGHT,
                 )

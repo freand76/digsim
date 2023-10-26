@@ -27,13 +27,16 @@ class ImageObject(ComponentObject):
         component,
         xpos,
         ypos,
-        show_name=True,
         port_distance=ComponentObject.DEFAULT_PORT_TO_PORT_DISTANCE,
     ):
         super().__init__(app_model, component, xpos, ypos, port_distance=port_distance)
-        self._show_name = show_name
+        self._show_name = True
         self.setup_size()
         self.update_ports()
+
+    def show_name(self, enable):
+        """Enable/Disable name on image component"""
+        self._show_name = enable
 
     def setup_size(self):
         """Change size of component"""
@@ -154,7 +157,8 @@ class ImageObjectStaticValue(ImageObject):
     ACTIVE_IMAGE_FILENAME = "images/ONE.png"
 
     def __init__(self, app_model, component, xpos, ypos):
-        super().__init__(app_model, component, xpos, ypos, show_name=False)
+        super().__init__(app_model, component, xpos, ypos)
+        self.show_name(False)
 
     def paint_component(self, painter):
         if self.component.O.width == 1:
@@ -179,7 +183,9 @@ class ImageObjectLed(ImageObject):
     ACTIVE_IMAGE_FILENAME = "images/LED_ON.png"
 
     def __init__(self, app_model, component, xpos, ypos):
-        super().__init__(app_model, component, xpos, ypos, show_name=False)
+        super().__init__(app_model, component, xpos, ypos)
+        self.show_name(False)
+        self.paint_port_names(False)
 
 
 class ImageObjectIC(ImageObject):
@@ -198,6 +204,11 @@ class ImageObjectWithActiveRect(ImageObject):
     When active the image will have a green border painted around it.
     """
 
+    def __init__(self, app_model, component, xpos, ypos):
+        super().__init__(app_model, component, xpos, ypos)
+        self.show_name(False)
+        self.paint_port_names(False)
+
     def paint_component(self, painter):
         super().paint_component(painter)
         if self.component.active:
@@ -215,6 +226,3 @@ class ImageObjectClock(ImageObjectWithActiveRect):
     """The class for a Clock image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/Clock.png"
-
-    def __init__(self, app_model, component, xpos, ypos):
-        super().__init__(app_model, component, xpos, ypos, show_name=False)

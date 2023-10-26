@@ -3,6 +3,8 @@
 
 """ A 7-segment component placed in the GUI """
 
+# pylint: disable=too-many-arguments
+
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QPainterPath
 
@@ -42,7 +44,7 @@ class SevenSegmentObject(ComponentObject):
     }
 
     PORT_TO_RECT_MARGIN = 5
-    RECT_TO_DIGIT_RECT_MARGIN = 10
+    RECT_TO_DIGIT_RECT_MARGIN = 5
     DIGIT_RECT_TO_DIGIT_MARGIN = 10
     DIGIT_WIDTH = 54
     DIGIT_HEIGHT = 80
@@ -55,7 +57,7 @@ class SevenSegmentObject(ComponentObject):
         """Setup the size of the component"""
         str_pixels_w, _ = self.get_string_metrics("dot")
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
-        self.width = self.digit_left + self.DIGIT_WIDTH + self.DIGIT_RECT_TO_DIGIT_MARGIN
+        self.width = self.digit_left + self.DIGIT_WIDTH + self.RECT_TO_DIGIT_RECT_MARGIN
         self.update_ports()
 
     def paint_component(self, painter):

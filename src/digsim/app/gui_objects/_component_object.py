@@ -21,8 +21,8 @@ from ._component_port_item import PortGraphicsItem
 class ComponentObject(QGraphicsRectItem):
     """A component graphics item, a 'clickable' item with a custom paintEvent"""
 
-    DEFAULT_WIDTH = 120
-    DEFAULT_HEIGHT = 100
+    DEFAULT_WIDTH = 80
+    DEFAULT_HEIGHT = 80
     RECT_TO_BORDER = 5
     BORDER_TO_PORT = 25
     PORT_SIDE = 8
@@ -40,6 +40,7 @@ class ComponentObject(QGraphicsRectItem):
         self._parent_widget = None
         self._mouse_press_pos = None
         self._moved = False
+        self._paint_port_names = True
         self._save_pos = self.rect().topLeft()
 
         # Create ports
@@ -119,12 +120,17 @@ class ComponentObject(QGraphicsRectItem):
     def paint(self, painter, option, widget=None):
         """QT function"""
         self.paint_component(painter)
-        self.paint_portnames(painter)
+        if self._paint_port_names:
+            self.paint_portnames(painter)
 
     @property
     def component(self):
         """Get component"""
         return self._component
+
+    def paint_port_names(self, enable):
+        """Enable/Disable paint port names"""
+        self._paint_port_names = enable
 
     def has_moved(self):
         """True if the component has moved since last call"""
@@ -146,15 +152,31 @@ class ComponentObject(QGraphicsRectItem):
 
     def update_ports(self):
         """Update port positions for the placed component"""
+
+        # Make sure all ports are fit in the hieght of the component
         max_ports = max(len(self._component.inports()), len(self._component.outports()))
         if max_ports > 1:
-            min_height = (
-                (max_ports - 1) * self._port_distance
-                + 2 * self.BORDER_TO_PORT
-            )
+            min_height = (max_ports - 1) * self._port_distance + 2 * self.BORDER_TO_PORT
             self.height = max(self.height, min_height)
+
+        # Make sure port names fit in the width of the component
+        max_inport_name = ""
+        max_outport_name = ""
+        for port in self.component.ports:
+            port_name = self._port_dict[port]["name"]
+            if port.is_input() and len(port_name) > len(max_inport_name):
+                max_inport_name = port_name
+            elif not port.is_input() and len(port_name) > len(max_outport_name):
+                max_outport_name = port_name
+        max_port_names = f"{max_inport_name} {max_outport_name}"
+        max_port_names_w, _ = self.get_string_metrics(max_port_names)
+        self.width = max(2 * self.inport_x_pos() + max_port_names_w, self.width)
+
+        # Create port rects
         self._set_port_rects(self._component.inports(), -self.RECT_TO_BORDER)
-        self._set_port_rects(self._component.outports(), self.RECT_TO_BORDER + self.width - self.PORT_SIDE - 1)
+        self._set_port_rects(
+            self._component.outports(), self.RECT_TO_BORDER + self.width - self.PORT_SIDE - 1
+        )
 
     def get_port_item(self, port):
         """Get port item"""

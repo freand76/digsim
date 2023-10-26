@@ -62,7 +62,7 @@ class BuzzerObject(ImageObjectWithActiveRect):
     DATA_SAMPLE_RATE_HZ = 44100
 
     def __init__(self, app_model, component, xpos, ypos):
-        super().__init__(app_model, component, xpos, ypos, show_name=False)
+        super().__init__(app_model, component, xpos, ypos)
         self.audio_sink = None
         self._app_model.sig_audio_start.connect(self._audio_start)
         self._app_model.sig_audio_notify.connect(self._audio_notify)
