@@ -35,6 +35,10 @@ class ComponentObject(QGraphicsRectItem):
         self._app_model = app_model
         self._component = component
         self._port_distance = port_distance
+
+        # Signals
+        self._app_model.sig_control_notify.connect(self._control_notify)
+
         # Class variables
         self._port_dict = {}
         self._parent_widget = None
@@ -52,18 +56,23 @@ class ComponentObject(QGraphicsRectItem):
         self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setAcceptHoverEvents(True)
 
+    def _control_notify(self):
+        if self._app_model.is_running:
+            self.setFlag(QGraphicsItem.ItemIsMovable, False)
+            self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, False)
+        else:
+            self.setFlag(QGraphicsItem.ItemIsMovable, True)
+            self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
+
     def itemChange(self, change, value):
         """QT event callback function"""
-        if change == QGraphicsItem.ItemPositionChange:
-            if self._app_model.is_running:
-                value = QPoint(0, 0)
-        elif change == QGraphicsItem.ItemPositionHasChanged:
+        if change == QGraphicsItem.ItemPositionHasChanged:
             self._moved = True
         elif change == QGraphicsItem.ItemSelectedChange:
             if self._app_model.is_running:
                 value = 0
         elif change == QGraphicsItem.ItemSelectedHasChanged:
-            self._repaint()
+            self.repaint()
         return super().itemChange(change, value)
 
     def hoverEnterEvent(self, _):
@@ -212,10 +221,6 @@ class ComponentObject(QGraphicsRectItem):
     def set_parent_widget(self, parent):
         """Set the parent"""
         self._parent_widget = parent
-
-    def _repaint(self):
-        """Make scene repaint for component update"""
-        self._app_model.sig_repaint.emit()
 
     @property
     def selected(self):
