@@ -329,6 +329,7 @@ class CircuitArea(QGraphicsView):
         self.setBackgroundBrush(QBrush(Qt.lightGray))
         self.setAcceptDrops(True)
         self.setTransformationAnchor(QGraphicsView.NoAnchor)
+        self._mouse_pos = QPoint(0, 0)
 
     def has_selection(self):
         """Return true if items are selected"""
@@ -411,6 +412,7 @@ class CircuitArea(QGraphicsView):
     def mouseMoveEvent(self, event):
         """QT event callback function"""
         super().mouseMoveEvent(event)
+        self._mouse_pos = event.pos()
         # Draw unfinished wire
         if self._app_model.objects.new_wire.ongoing():
             scene_pos = self.mapToScene(event.pos())
@@ -424,15 +426,15 @@ class CircuitArea(QGraphicsView):
             super().wheelEvent(event)
             return
         if event.angleDelta().y() > 0:
-            before = self.mapToScene(event.pos())
+            before = self.mapToScene(self._mouse_pos)
             self._zoom_in()
-            after = self.mapToScene(event.pos())
+            after = self.mapToScene(self._mouse_pos)
             translation = after - before
             self.translate(translation.x(), translation.y())
         elif event.angleDelta().y() < 0:
-            before = self.mapToScene(event.pos())
+            before = self.mapToScene(self._mouse_pos)
             self._zoom_out()
-            after = self.mapToScene(event.pos())
+            after = self.mapToScene(self._mouse_pos)
             translation = after - before
             self.translate(translation.x(), translation.y())
         event.accept()
