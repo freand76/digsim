@@ -13,15 +13,15 @@
 
 ## Introduction
 
-DigSim is a python based framework for digital circuit simulation. 
+DigSim is a python based framework for digital circuit simulation.
 The main purpose of the software is to, in an educational way, play around with digital logic (simple gates and verilog designs).
 
 When working with block design in Verilog/VHDL the simulation tools are normally fed with test stimuli (a very non-interactive way of working...)
 A block design can be synthesized and tested on an FPGA (where there are possibilities for interactivity if buttons and LED/Hex digits are available),
-but that often has a great cost in time (and sometimes money) leading to long turnaround time. 
+but that often has a great cost in time (and sometimes money) leading to long turnaround time.
 
-I started developing DigSim to make it easy to implement and visualize the functionality of simple verlog modules. 
-During development I tried to synthesize larger verilog designs, such as the classic [6502 CPU](https://en.wikipedia.org/wiki/MOS_Technology_6502), 
+I started developing DigSim to make it easy to implement and visualize the functionality of simple verlog modules.
+During development I tried to synthesize larger verilog designs, such as the classic [6502 CPU](https://en.wikipedia.org/wiki/MOS_Technology_6502),
 and even if it is slower than many other simulators it is not entirely useless.
 
 ### Features
@@ -43,6 +43,20 @@ and even if it is slower than many other simulators it is not entirely useless.
 
 ```
 > python3 -m digsim.app
+```
+
+**Note: Ubuntu**
+
+If your Ubuntu installation gives the folloing error message:
+
+*qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.*
+*This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.*
+
+*Available platform plugins are: vnc, wayland, wayland-egl, eglfs, offscreen, xcb, minimal, linuxfb, vkkhrdisplay, minimalegl.*
+
+Then the following package must be installed:
+```
+> apt install libxcb-cursor0
 ```
 
 ### Start with example circuit
@@ -72,4 +86,4 @@ and even if it is slower than many other simulators it is not entirely useless.
 
 ### Model
    * Add unittest of all components
-   * Add unittest of ports 
+   * Add unittest of ports
