@@ -59,23 +59,26 @@ class WirePartGraphicsItem(QGraphicsRectItem):
 
     def paint(self, painter, option, widget=None):
         """QT function"""
-        pen = QPen(Qt.black)
+        pen = QPen(Qt.darkGray)
         bus_width = self._src_port.width
         if bus_width > 1:
             pen.setWidth(4)
         else:
             pen.setWidth(2)
-        if self._app_model.is_running or not self._selected:
-            pen.setColor(Qt.darkGray)
-            port_value = self._src_port.value
-            color_wires = self._app_model.settings.get("color_wires")
-            if color_wires and port_value != 0 and port_value != "X":
-                max_value = 2**bus_width - 1
-                color = pen.color()
-                green = color.green()
-                full_range = 255 - green
-                color.setGreen(green + (full_range * port_value / max_value))
-                pen.setColor(color)
+        if not self._app_model.is_running and self._selected:
+            pen.setColor(Qt.black)
+        else:
+            if self._app_model.settings.get("color_wires"):
+                port_value = self._src_port.value
+                if port_value == "X":
+                    pen.setColor(Qt.red)
+                elif port_value != 0:
+                    max_value = 2**bus_width - 1
+                    color = pen.color()
+                    green = color.green()
+                    full_range = 255 - green
+                    color.setGreen(green + (full_range * port_value / max_value))
+                    pen.setColor(color)
         painter.setPen(pen)
         painter.drawLine(self._start, self._end)
 
