@@ -118,8 +118,6 @@ class WireGraphicsItem(QGraphicsPathItem):
     def create_points(cls, source, dest, rect):
         """Create a wire path"""
         points = []
-        component_top_y = rect.y()
-        component_bottom_y = rect.y() + rect.height()
 
         points.append(source)
         if source.x() < dest.x():
@@ -127,16 +125,17 @@ class WireGraphicsItem(QGraphicsPathItem):
             points.append(QPointF(source.x() + half_dist_x, source.y()))
             points.append(QPointF(source.x() + half_dist_x, dest.y()))
         else:
-            half_dist_y = (dest.y() - source.y()) / 2
+            half_dist_y = dest.y() - (dest.y() - source.y()) / 2
             if dest.y() < source.y():
-                y_mid = max(
-                    component_bottom_y - source.y() + cls.WIRE_TO_COMPONENT_DIST, half_dist_y
-                )
+                comp_top = rect.y() - cls.WIRE_TO_COMPONENT_DIST
+                y_mid = min(comp_top, half_dist_y)
             else:
-                y_mid = min(component_top_y - source.y() - cls.WIRE_TO_COMPONENT_DIST, half_dist_y)
+                comp_bottom = rect.y() + rect.height() + cls.WIRE_TO_COMPONENT_DIST
+                y_mid = max(comp_bottom, half_dist_y)
+
             points.append(QPointF(source.x() + 10, source.y()))
-            points.append(QPointF(source.x() + 10, source.y() + y_mid))
-            points.append(QPointF(dest.x() - 10, source.y() + y_mid))
+            points.append(QPointF(source.x() + 10, y_mid))
+            points.append(QPointF(dest.x() - 10, y_mid))
             points.append(QPointF(dest.x() - 10, dest.y()))
         points.append(dest)
         return points
