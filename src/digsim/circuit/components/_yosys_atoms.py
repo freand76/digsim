@@ -1343,3 +1343,16 @@ class _DLATCHSR_PPN_(_DLATCHSR_):
 
 class _DLATCHSR_PPP_(_DLATCHSR_):
     """module _DLATCHSR_PPP_ (E, S, R, D, Q)"""
+
+
+class _StaticLevel_(Component):
+    """Yosys component for static logic levels"""
+
+    def __init__(self, circuit, name):
+        super().__init__(circuit, name)
+        self.add_port(PortOutDelta(self, "L"))
+        self.add_port(PortOutDelta(self, "H"))
+
+    def default_state(self):
+        self.L.value = 0
+        self.H.value = 1
