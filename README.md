@@ -82,6 +82,10 @@ Then the following package must be installed:
 > python3 -m digsim.synth synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
 ```
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=freand76/digsim&type=Date)](https://star-history.com/#freand76/digsim&Date)
+
 ## Development ToDo List
 
 ### Model
