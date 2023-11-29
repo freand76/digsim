@@ -1,32 +1,3 @@
-[project]
-name = "digsim"
-version = "0.0.0.dev0"
-license = {file = "LICENSE.md"}
-
-description = "Interactive Digital Logic Simulator"
-authors = [{name = "Fredrik Andersson"}]
-maintainers = [
-    {name = "Fredrik Andersson", email="unknown@mail.com"},
-]
-requires-python = ">=3.8"
-readme = "README.md"
-classifiers = [
-    'Development Status :: 4 - Beta',
-    'License :: OSI Approved :: BSD License',
-    'Programming Language :: Python',
-    'Programming Language :: Python :: 3',
-    'Programming Language :: Python :: 3.8',
-    'Programming Language :: Python :: 3.9',
-    'Programming Language :: Python :: 3.10',
-    'Programming Language :: Python :: 3.11',
-    'Programming Language :: Python :: 3.12',
-    'Programming Language :: Python :: 3 :: Only',
-    'Topic :: Scientific/Engineering',
-    'Operating System :: Microsoft :: Windows',
-    'Operating System :: POSIX',
-    'Operating System :: Unix',
-]
-
 [tool.black]
 line-length = 99
 
