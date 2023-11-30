@@ -1,3 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "digsim-logic-simulator"
+description = "Interactive Digital Logic Simulator"
+version = "0.0.1"
+authors = [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
+maintainers =  [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
+readme = "README.md"
+license = { file = "LICENSE.md" }
+urls = { homepage = "https://github.com/freand76/digsim" }
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Topic :: Software Development :: Build Tools",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
+requires-python = ">=3.8"
+dependencies = [ "pyvcd==0.3.0" ]
+
+[project.optional-dependencies]
+"app" = ["pyside6>=6.6.0", "qtawesome"]
+
+keywords = ["educational", "simulation", "digital"]
+
 [tool.black]
 line-length = 99
 
