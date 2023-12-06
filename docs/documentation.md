@@ -17,7 +17,7 @@ The application is installed with:
 ```
 shell> git clone https://github.com/freand76/digsim.git
 shell> cd digsim
-shell> python3 -m pip install .[app]
+shell> python3 -m pip install .
 ```
 
 The application is started with:

@@ -3,15 +3,8 @@
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Ffreand76%2Fdigsim%2Fmain%2Fpyproject.toml)
 
 <p align="center">
-  <img alt="The DigSim Application" src="docs/images/screenshot_digsim_app.png" width=85%>
+  <img alt="The DigSim Application" src="https://raw.githubusercontent.com/freand76/digsim/af1bf95eb16d1af19f26159a4c1e1b88565703d7/docs/images/screenshot_digsim_app.png" width=85%>
 </p>
-
-* **Table of contents**
-  * [Introduction](#introduction)
-  * [Quickstart](#quickstart)
-  * [Yosys Helper Tool](#yosys-synthesis-helper-tool)
-  * [Documentation](docs/documentation.md)
-  * [Borrowed verilog](verilog/SOURCES.md)
 
 ## Introduction
 
@@ -38,7 +31,7 @@ and even if it is slower than many other simulators it is not entirely useless.
 ```
 > git clone https://github.com/freand76/digsim.git
 > cd digsim
-> python3 -m pip install .[app]
+> python3 -m pip install .
 ```
 
 ### Start Interactive GUI
@@ -87,9 +80,3 @@ Then the following package must be installed:
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=freand76/digsim&type=Date)](https://star-history.com/#freand76/digsim&Date)
-
-## Development ToDo List
-
-### Model
-   * Add unittest of all components
-   * Add unittest of ports

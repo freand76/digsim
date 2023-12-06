@@ -13,8 +13,7 @@ license = { file = "LICENSE.md" }
 urls = { homepage = "https://github.com/freand76/digsim" }
 
 classifiers = [
-  "Development Status :: 4 - Beta",
-  "Topic :: Software Development :: Build Tools",
+  "Development Status :: 5 - Production/Stable",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
@@ -25,10 +24,11 @@ classifiers = [
 ]
 
 requires-python = ">=3.8"
-dependencies = [ "pyvcd==0.3.0" ]
-
-[project.optional-dependencies]
-"app" = ["pyside6>=6.6.0", "qtawesome"]
+dependencies = [
+  "pyvcd>=0.3.0",
+  "pyside6>=6.6.0",
+  "qtawesome",
+]
 
 keywords = ["educational", "simulation", "digital"]
 
