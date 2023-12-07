@@ -1,5 +1,5 @@
 SCRIPT_DIR=$(dirname $0)
-VENV_DIR=$SCRIPT_DIR/digsim_venv
+VENV_DIR=$SCRIPT_DIR/.venv/digsim_app
 
 if [ ! -f $VENV_DIR/digsim_installed ]; then
     echo "Creating virtual environment"
