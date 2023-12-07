@@ -14,10 +14,10 @@ def reformat(session):
 @nox.session
 def lint(session):
     session.install(
-        "typing-extensions==4.4.0",
-        "pylint==2.15.9",
-        "flake8-pyproject==1.2.2",
-        "flake8==6.0.0",
+        "typing-extensions==4.8.0",
+        "pylint==3.0.2",
+        "flake8-pyproject==1.2.3",
+        "flake8==6.1.0",
     )
     session.run(
         "python",

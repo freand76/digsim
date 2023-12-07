@@ -69,3 +69,8 @@ ignored-modules = """
 [tool.flake8]
 ignore = ['W503']
 max-line-length = 99
+exclude = """
+    build,
+    .venv,
+    .nox,
+"""

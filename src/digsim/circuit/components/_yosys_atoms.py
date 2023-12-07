@@ -39,7 +39,7 @@ class ClassNameParameterComponent(Component):
             return 0
         if level in ["P", "1"]:
             return 1
-        raise Exception(f"Unknown value ä{level}'")
+        raise ValueError(f"Unknown value ä{level}'")
 
 
 class _BUF_(Component):
