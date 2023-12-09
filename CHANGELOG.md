@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.1.0
  * Fix bug when detecting number of modules with yosys 0.9
  * Improve error handling for yosys component
  * Remove settings from pushbutton and switch
