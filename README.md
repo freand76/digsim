@@ -27,7 +27,12 @@ and even if it is slower than many other simulators it is not entirely useless.
 
 ## Quickstart
 
-### Install
+### Install from PyPi
+```
+pip3 install digsim-logic-simulator
+```
+
+### Install from GitHub
 ```
 > git clone https://github.com/freand76/digsim.git
 > cd digsim
@@ -54,12 +59,12 @@ Then the following package must be installed:
 > apt install libxcb-cursor0
 ```
 
-### Start with example circuit
+### Start with example circuit (example circuits are available in the github repository)
 ```
 > python3 -m digsim.app --load example_circuits/counter_yosys_netlist.circuit
 ```
 
-### Run example
+### Run example (examples are available in the github repository)
 ```
 > python3 examples/example_sr.py
 ```
@@ -76,6 +81,10 @@ Then the following package must be installed:
 ```
 > python3 -m digsim.synth synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
 ```
+
+## Documentation
+
+[Documentation](https://github.com/freand76/digsim/blob/main/docs/documentation.md) on GitHub
 
 ## Star History
 
