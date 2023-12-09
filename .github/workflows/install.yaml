@@ -22,4 +22,4 @@ jobs:
         pip install .[app]
     - name: Run example
       run: |
-        python examples/yosys_counter/example_yosys_counter_json_netlist.py
+        python examples/yosys_counter/example_yosys_counter_netlist.py
