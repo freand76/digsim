@@ -8,22 +8,24 @@ The verilog file describes a fibonacci sequence generator
 The example will generate a gtkwave file, 'fibonacci.vcd'.
 """
 
-import os
 import sys
+from pathlib import Path
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import YosysComponent
 from digsim.synth import Synthesis
 
 
+example_path = Path(__file__).parent
+
 # Do verilog synthesis with Yosys (with helper python class)
 # Input file fibonacci.v will generate fibonacci.json
 
-input_verilog_file = f"{os.path.dirname(__file__)}/fibonacci.v"
-yosys_output_file = f"{os.path.dirname(__file__)}/fibonacci.json"
+input_verilog_path = str(example_path / "fibonacci.v")
+yosys_json_output_path = str(example_path / "fibonacci.json")
 
-print(f"Start synthesis of '{input_verilog_file}'")
-synthesis = Synthesis(input_verilog_file, yosys_output_file, "fibonacci")
+print(f"Start synthesis of '{input_verilog_path}'")
+synthesis = Synthesis(input_verilog_path, yosys_json_output_path, "fibonacci")
 if not synthesis.execute(silent=True):
     # print log and exit if error occurs
     print("\n======== Yosys Log ========")
@@ -31,6 +33,7 @@ if not synthesis.execute(silent=True):
     for line in log:
         print(f"YOSYS {line}")
     print("======== Yosys Log ========\n")
+    print("Synthesis with error!")
     sys.exit(1)
 print("Synthesis done!")
 
@@ -40,10 +43,7 @@ circuit = Circuit(vcd="fibonacci.vcd")
 
 # Create Yosys component (fibonacci) component in circuit
 
-synth_component = YosysComponent(circuit, path=yosys_output_file)
-synth_component1 = YosysComponent(circuit, path=yosys_output_file)
-synth_component2 = YosysComponent(circuit, path=yosys_output_file)
-
+synth_component = YosysComponent(circuit, path=yosys_json_output_path)
 
 # Initialize circuit
 circuit.init()

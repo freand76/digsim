@@ -7,6 +7,8 @@ The example will generate a json circuit file 'pulse_circuit.json'
 and a gtkwave file, 'pulse.vcd'.
 """
 
+from pathlib import Path
+
 from digsim.circuit import Circuit
 from digsim.circuit.components import AND, NOT, Led, PushButton
 
@@ -22,6 +24,8 @@ def led_callback(comp):
     else:
         print(f"{time_ns:9}:LED: '{name}' is OFF")
 
+
+example_path = Path(__file__).parent
 
 circuit = Circuit(name="example_pulse", vcd="pulse.vcd")
 B = PushButton(circuit, "Button")
@@ -48,10 +52,10 @@ B.release()
 circuit.run(ms=10)
 
 circuit.vcd_close()
-circuit.to_json_file("pulse_circuit.json")
+circuit.to_json_file(str(example_path / "pulse_circuit.json"))
 
 circuit2 = Circuit()
-circuit2.from_json_file("pulse_circuit.json")
+circuit2.from_json_file(str(example_path / "pulse_circuit.json"))
 led = circuit2.get_component("D")
 led.set_callback(led_callback)
 button = circuit2.get_component("Button")

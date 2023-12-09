@@ -7,14 +7,16 @@ The yosys netlist is a 4 bit counter created from a verilog file.
 The example will generate a gtkwave file, 'counter.vcd'.
 """
 
-import os
+from pathlib import Path
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import VDD, PushButton, YosysComponent
 
 
+example_path = Path(__file__).parent
+
 circuit = Circuit()
-yosys_counter = YosysComponent(circuit, path=f"{os.path.dirname(__file__)}/counter.json")
+yosys_counter = YosysComponent(circuit, path=str(example_path / "counter.json"))
 
 clk = PushButton(circuit, "clk")
 reset = PushButton(circuit, "reset")

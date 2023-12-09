@@ -1,0 +1,73 @@
+{
+    "circuit": {
+        "name": "example_pulse",
+        "components": [
+            {
+                "name": "Button",
+                "display_name": "PushButton",
+                "type": "digsim.circuit.components.PushButton",
+                "settings": {
+                    "inverted": false
+                }
+            },
+            {
+                "name": "not1",
+                "display_name": "NOT",
+                "type": "digsim.circuit.components.NOT",
+                "settings": {}
+            },
+            {
+                "name": "not2",
+                "display_name": "NOT",
+                "type": "digsim.circuit.components.NOT",
+                "settings": {}
+            },
+            {
+                "name": "not3",
+                "display_name": "NOT",
+                "type": "digsim.circuit.components.NOT",
+                "settings": {}
+            },
+            {
+                "name": "AND",
+                "display_name": "AND",
+                "type": "digsim.circuit.components.AND",
+                "settings": {
+                    "ports": 2
+                }
+            },
+            {
+                "name": "D",
+                "display_name": "Led",
+                "type": "digsim.circuit.components.Led",
+                "settings": {}
+            }
+        ],
+        "wires": [
+            {
+                "src": "Button.O",
+                "dst": "not1.A"
+            },
+            {
+                "src": "Button.O",
+                "dst": "AND.A"
+            },
+            {
+                "src": "not1.Y",
+                "dst": "not2.A"
+            },
+            {
+                "src": "not2.Y",
+                "dst": "not3.A"
+            },
+            {
+                "src": "not3.Y",
+                "dst": "AND.B"
+            },
+            {
+                "src": "AND.Y",
+                "dst": "D.I"
+            }
+        ]
+    }
+}

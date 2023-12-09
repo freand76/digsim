@@ -12,7 +12,7 @@ the MemStdOut component.
 The example will generate a gtkwave file, '6502.vcd'.
 """
 
-import os
+from pathlib import Path
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import (
@@ -25,16 +25,16 @@ from digsim.circuit.components import (
 )
 
 
+example_path = Path(__file__).parent
+
 test_circuit = Circuit(vcd="6502.vcd")
 rst = PushButton(test_circuit, "RST")
 clk = Clock(test_circuit, frequency=1000000, name="CLK")
 irq = StaticValue(test_circuit, "IRQ", value=0)
 rdy = StaticValue(test_circuit, "RDY", value=1)
 
-yosys_6502 = YosysComponent(test_circuit, path=f"{os.path.dirname(__file__)}/6502.json")
-mem = Mem64kByte(
-    test_circuit, rom_filename=f"{os.path.dirname(__file__)}/code.bin", rom_address=0xF800
-)
+yosys_6502 = YosysComponent(test_circuit, path=str(example_path / "6502.json"))
+mem = Mem64kByte(test_circuit, rom_filename=str(example_path / "code.bin"), rom_address=0xF800)
 output = MemStdOut(test_circuit, address=0x8000)
 
 clk.wire = mem.clk

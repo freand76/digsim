@@ -6,7 +6,7 @@ Example that will load a previously stored circuit from a json file.
 The example will generate a gtkwave file, 'circuit.vcd'.
 """
 
-import os
+from pathlib import Path
 
 from digsim import Circuit
 
@@ -22,8 +22,10 @@ def led_callback(comp):
         print(f"{time_ns:9}:LED: '{name}' is OFF")
 
 
+example_path = Path(__file__).parent
+
 circuit = Circuit(vcd="circuit.vcd")
-circuit.from_json_file(f"{os.path.dirname(__file__)}/example_circuit.json")
+circuit.from_json_file(str(example_path / "example_circuit.json"))
 circuit.init()
 led1 = circuit.get_component("and_led")
 led2 = circuit.get_component("not_led")
@@ -37,20 +39,13 @@ button2 = circuit.get_component("button2")
 circuit.run_until(ms=5)
 print("------------ 10")
 button1.push()
-while circuit.process_single_event():
-    pass
 circuit.run_until(ms=10)
 print("------------ 00")
 button1.release()
-while circuit.process_single_event():
-    pass
 circuit.run_until(ms=15)
 print("------------ 10")
 button1.push()
-while circuit.process_single_event():
-    pass
 circuit.run_until(ms=20)
 print("------------ 11")
 button2.push()
-while circuit.process_single_event():
-    pass
+circuit.run_until(ms=25)

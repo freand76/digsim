@@ -6,14 +6,16 @@ Example with a component created from a verilog file (counter.v)
 The example will generate a gtkwave file, 'counter.vcd'.
 """
 
-import os
+from pathlib import Path
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import VDD, PushButton, YosysComponent
 
 
+example_path = Path(__file__).parent
+
 circuit = Circuit()
-yosys_counter = YosysComponent(circuit, path=f"{os.path.dirname(__file__)}/counter.v")
+yosys_counter = YosysComponent(circuit, path=str(example_path / "counter.v"))
 
 clk = PushButton(circuit, "clk")
 reset = PushButton(circuit, "reset")
