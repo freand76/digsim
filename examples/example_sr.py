@@ -23,12 +23,12 @@ def led_callback(comp):
 
 
 circuit = Circuit(vcd="sr.vcd")
-BS = PushButton(circuit, "S-Button", inverted=True)
-BR = PushButton(circuit, "R-Button", inverted=True)
+BS = PushButton(circuit, "S-Button")
+BR = PushButton(circuit, "R-Button")
 SR = SR(circuit)
 D1 = Led(circuit, "D1", callback=led_callback)
-BS.O.wire = SR.nS
-BR.O.wire = SR.nR
+BS.O.wire = SR.S
+BR.O.wire = SR.R
 SR.Q.wire = D1.I
 circuit.init()
 circuit.run(ms=10)
@@ -43,6 +43,13 @@ BS.push()
 circuit.run(ms=10)
 BS.release()
 circuit.run(ms=10)
-
+print("Set (again)")
 BS.push()
+circuit.run(ms=10)
+BS.release()
+print("Reset")
+BR.push()
+circuit.run(ms=10)
+BR.release()
+
 circuit.vcd_close()

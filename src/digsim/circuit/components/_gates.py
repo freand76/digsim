@@ -231,18 +231,18 @@ class SR(MultiComponent):
 
     def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
-        _nands = NAND(circuit)
-        _nandr = NAND(circuit)
+        _nands = NOR(circuit)
+        _nandr = NOR(circuit)
         self.add(_nands)
         self.add(_nandr)
         _nands.Y.wire = _nandr.A
         _nandr.Y.wire = _nands.B
-        self.add_port(PortWire(self, "nS"))
-        self.add_port(PortWire(self, "nR"))
+        self.add_port(PortWire(self, "S"))
+        self.add_port(PortWire(self, "R"))
         self.add_port(PortWire(self, "Q"))
         self.add_port(PortWire(self, "nQ"))
 
-        self.nS.wire = _nands.A
-        self.nR.wire = _nandr.B
-        _nands.Y.wire = self.Q
-        _nandr.Y.wire = self.nQ
+        self.S.wire = _nands.A
+        self.R.wire = _nandr.B
+        _nands.Y.wire = self.nQ
+        _nandr.Y.wire = self.Q

@@ -3,6 +3,7 @@
 ## vx.x.x
  * Fix bug when detecting number of modules with yosys 0.9
  * Improve error handling for yosys component
+ * Remove settings from pushbutton and switch
 
 ## v0.0.1 - First Release
  * Simulation of a digital circuit using a python

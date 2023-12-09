@@ -6,9 +6,7 @@
                 "name": "Button",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {
-                    "inverted": false
-                }
+                "settings": {}
             },
             {
                 "name": "not1",

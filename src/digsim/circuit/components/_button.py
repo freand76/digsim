@@ -3,6 +3,8 @@
 
 """ A PushButton component """
 
+import logging
+
 from .atoms import CallbackComponent, PortOutImmediate
 
 
@@ -14,24 +16,19 @@ class PushButton(CallbackComponent):
         portout = PortOutImmediate(self, "O")
         self.add_port(portout)
         portout.update_parent(True)
-        self.parameter_set("inverted", inverted)
+        if inverted:
+            logging.warning("Setting 'inverted' has been removed")
 
     def default_state(self):
         self.release()
 
     def push(self):
         """Push pushbutton"""
-        if self.parameter_get("inverted"):
-            self.O.value = 0
-        else:
-            self.O.value = 1
+        self.O.value = 1
 
     def release(self):
         """Release pushbutton"""
-        if self.parameter_get("inverted"):
-            self.O.value = 1
-        else:
-            self.O.value = 0
+        self.O.value = 0
 
     def reconfigure(self):
         self.release()
@@ -49,14 +46,3 @@ class PushButton(CallbackComponent):
 
     def onrelease(self):
         self.release()
-
-    @classmethod
-    def get_parameters(cls):
-        return {
-            "inverted": {
-                "type": bool,
-                "default": False,
-                "description": "Button output is inverted",
-                "reconfigurable": True,
-            },
-        }

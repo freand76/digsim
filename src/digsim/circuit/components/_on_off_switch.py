@@ -3,6 +3,8 @@
 
 """ An On/Off Switch  component """
 
+import logging
+
 from .atoms import CallbackComponent, PortOutDelta
 
 
@@ -14,17 +16,18 @@ class OnOffSwitch(CallbackComponent):
         portout = PortOutDelta(self, "O", delay_ns=0)
         self.add_port(portout)
         portout.update_parent(True)
-        self.parameter_set("start_on", start_on)
-        self._on = start_on
+        self._on = False
+        if start_on:
+            logging.warning("Setting 'start_on' has been removed")
 
-    def _set(self, set_on):
-        if set_on:
-            self.turn_on()
-        else:
-            self.turn_off()
+    def _set(self, state):
+        self._on = state
+        self.O.value = 1 if state else 0
 
     def default_state(self):
-        self._set(self.parameter_get("start_on"))
+        self._set(False)
+
+        self.turn_off()
 
     def turn_on(self):
         """Turn on the switch"""
@@ -33,8 +36,7 @@ class OnOffSwitch(CallbackComponent):
 
     def turn_off(self):
         """Turn off the switch"""
-        self.O.value = 0
-        self._on = False
+        self._set(False)
 
     def toggle(self):
         """Toggle the switch"""
@@ -50,14 +52,3 @@ class OnOffSwitch(CallbackComponent):
     @property
     def active(self):
         return self._on
-
-    @classmethod
-    def get_parameters(cls):
-        return {
-            "start_on": {
-                "type": bool,
-                "default": False,
-                "description": "Switch on after reset",
-                "reconfigurable": True,
-            },
-        }

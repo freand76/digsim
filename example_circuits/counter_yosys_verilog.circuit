@@ -22,9 +22,7 @@
                 "name": "PushButton_2",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {
-                    "inverted": false
-                }
+                "settings": {}
             },
             {
                 "name": "HexDigit_4",
@@ -39,9 +37,7 @@
                 "name": "OnOffSwitch",
                 "display_name": "OnOffSwitch",
                 "type": "digsim.circuit.components.OnOffSwitch",
-                "settings": {
-                    "start_on": false
-                }
+                "settings": {}
             },
             {
                 "name": "Led",

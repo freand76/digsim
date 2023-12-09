@@ -36,9 +36,7 @@
                 "name": "OnOffSwitch",
                 "display_name": "OnOffSwitch",
                 "type": "digsim.circuit.components.OnOffSwitch",
-                "settings": {
-                    "start_on": false
-                }
+                "settings": {}
             },
             {
                 "name": "Led",
@@ -50,9 +48,7 @@
                 "name": "PushButton",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {
-                    "inverted": false
-                }
+                "settings": {}
             },
             {
                 "name": "DipSwitch",
@@ -74,17 +70,25 @@
                 "name": "PushButton_1",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {
-                    "inverted": true
-                }
+                "settings": {}
             },
             {
                 "name": "PushButton_2",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {
-                    "inverted": true
-                }
+                "settings": {}
+            },
+            {
+                "name": "NOT",
+                "display_name": "NOT",
+                "type": "digsim.circuit.components.NOT",
+                "settings": {}
+            },
+            {
+                "name": "NOT_1",
+                "display_name": "NOT",
+                "type": "digsim.circuit.components.NOT",
+                "settings": {}
             }
         ],
         "wires": [
@@ -162,11 +166,19 @@
             },
             {
                 "src": "PushButton_1.O",
-                "dst": "ttl_74162.Clear_bar"
+                "dst": "NOT_1.A"
             },
             {
                 "src": "PushButton_2.O",
+                "dst": "NOT.A"
+            },
+            {
+                "src": "NOT.Y",
                 "dst": "ttl_74162.Load_bar"
+            },
+            {
+                "src": "NOT_1.Y",
+                "dst": "ttl_74162.Clear_bar"
             }
         ]
     },
@@ -198,7 +210,7 @@
         },
         "Led": {
             "x": 735,
-            "y": 232,
+            "y": 231,
             "z": 0.0
         },
         "PushButton": {
@@ -217,13 +229,23 @@
             "z": 0.0
         },
         "PushButton_1": {
-            "x": 74,
-            "y": 110,
+            "x": -13,
+            "y": 41,
             "z": 0.0
         },
         "PushButton_2": {
-            "x": -38,
-            "y": 172,
+            "x": -13,
+            "y": 142,
+            "z": 0.0
+        },
+        "NOT": {
+            "x": 172,
+            "y": 142,
+            "z": 0.0
+        },
+        "NOT_1": {
+            "x": 194,
+            "y": 41,
             "z": 0.0
         }
     },

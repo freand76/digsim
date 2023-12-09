@@ -6,41 +6,31 @@
                 "name": "PushButton",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {
-                    "inverted": false
-                }
+                "settings": {}
             },
             {
                 "name": "PushButton_1",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {
-                    "inverted": false
-                }
+                "settings": {}
             },
             {
                 "name": "PushButton_2",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {
-                    "inverted": false
-                }
+                "settings": {}
             },
             {
                 "name": "PushButton_3",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {
-                    "inverted": false
-                }
+                "settings": {}
             },
             {
                 "name": "PushButton_4",
                 "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
-                "settings": {
-                    "inverted": false
-                }
+                "settings": {}
             },
             {
                 "name": "Buzzer_2",
