@@ -3,4 +3,4 @@
 
 """ All classes within digsim.synth namespace """
 
-from ._synthesis import Synthesis  # noqa: F401
+from ._synthesis import Synthesis, SynthesisException  # noqa: F401

@@ -171,8 +171,8 @@ class YosysComponent(MultiComponent):
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
             filename = tmp_file.name
         synthesis = Synthesis(self._path, filename, toplevel)
-        if not synthesis.execute():
-            raise YosysComponentException("Yosys synthesis error")
+        if not synthesis.execute(silent=True):
+            raise YosysComponentException(f"Yosys synthesis error {self._path}")
         return filename
 
     def _load_netlist_dict(self):

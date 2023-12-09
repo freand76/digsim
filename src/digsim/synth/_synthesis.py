@@ -7,8 +7,10 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from digsim.circuit.components.atoms import DigsimException
 
-class SynthesisException(Exception):
+
+class SynthesisException(DigsimException):
     """Exception class for yosys synthesis"""
 
 
@@ -52,7 +54,12 @@ class Synthesis:
             success = process.returncode == 0
         Path(script_file).unlink()
         if not success:
-            raise SynthesisException("Yosys execution failed...")
+            files_str = ""
+            for verilog_file in verilog_files:
+                if len(files_str) > 0:
+                    files_str += ", "
+                files_str += Path(verilog_file).name
+            raise SynthesisException(f"Yosys error for {files_str}")
         return modules
 
     def __init__(self, verilog_files, json_output_file, verilog_top_module):
