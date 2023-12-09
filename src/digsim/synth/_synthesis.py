@@ -35,11 +35,18 @@ class Synthesis:
         ) as process:
             modules = []
             ls_output_found = False
+            modules_done = False
             while process.poll() is None:
                 line = process.stdout.readline().decode("utf-8").rstrip()
+                if modules_done:
+                    continue
                 if "modules:" in line:
                     ls_output_found = True
-                if ls_output_found and "$abstract" in line:
+                    continue
+                if ls_output_found:
+                    if len(line) == 0:
+                        modules_done = True
+                        continue
                     modules.append(line.replace("$abstract\\", "").strip())
             if process.returncode != 0:
                 raise SynthesisException("Yosys execution failed...")
