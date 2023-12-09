@@ -4,8 +4,8 @@
 """ The main class module of the digsim.app namespace """
 
 import argparse
-import os
 import sys
+from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QPainter, QPixmap
@@ -17,7 +17,8 @@ from digsim.app.model import AppModel
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    image_path = f"{os.path.dirname(__file__)}/images/app_icon.png"
+    main_path = Path(__file__).parent
+    image_path = main_path / "images/app_icon.png"
     image_pixmap = QPixmap(image_path)
     size = max(image_pixmap.size().height(), image_pixmap.size().width())
     icon_pixmap = QPixmap(size, size)

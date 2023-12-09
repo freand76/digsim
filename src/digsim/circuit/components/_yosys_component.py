@@ -10,8 +10,8 @@ from a yosys json netlist.
 # pylint: disable=too-many-instance-attributes
 
 import json
-import os
 import tempfile
+from pathlib import Path
 
 import digsim.circuit.components._yosys_atoms
 from digsim.synth import Synthesis
@@ -190,7 +190,7 @@ class YosysComponent(MultiComponent):
             netlist_dict = json.load(json_file)
 
         if unlink_file:
-            os.unlink(filename)
+            Path(filename).unlink()
 
         yosys_netlist = YosysNetlist()
         yosys_netlist.from_dict(netlist_dict)

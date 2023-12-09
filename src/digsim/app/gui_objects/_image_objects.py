@@ -5,7 +5,7 @@
 
 # pylint: disable=too-many-arguments
 
-import os
+from pathlib import Path
 
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QFont, QPen, QPixmap
@@ -45,11 +45,9 @@ class ImageObject(ComponentObject):
     def _get_pixmaps(cls):
         """Load the pixmap at first use"""
         if cls.ACTIVE_IMAGE_FILENAME is not None and cls._pixmap_active is None:
-            cls._pixmap_active = QPixmap(
-                f"{os.path.dirname(__file__)}/{cls.ACTIVE_IMAGE_FILENAME}"
-            )
+            cls._pixmap_active = QPixmap(Path(__file__).parent / cls.ACTIVE_IMAGE_FILENAME)
         if cls.IMAGE_FILENAME is not None and cls._pixmap is None:
-            cls._pixmap = QPixmap(f"{os.path.dirname(__file__)}/{cls.IMAGE_FILENAME}")
+            cls._pixmap = QPixmap(Path(__file__).parent / cls.IMAGE_FILENAME)
 
     def paint_component(self, painter):
         self.paint_component_base(painter)

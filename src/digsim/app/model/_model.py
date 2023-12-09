@@ -6,9 +6,9 @@
 # pylint: disable=too-many-instance-attributes
 
 import json
-import os
 import queue
 import time
+from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal
 
@@ -156,7 +156,7 @@ class AppModel(QThread):
 
     def save_circuit(self, path):
         """Save the circuit with GUI information"""
-        circuit_folder = os.path.dirname(path)
+        circuit_folder = str(Path(path).parent)
         circuit_dict = self.objects.circuit_to_dict(circuit_folder)
         shortcuts_dict = self.shortcuts.to_dict()
         circuit_dict.update(shortcuts_dict)
@@ -173,7 +173,7 @@ class AppModel(QThread):
         self._model_clear()
         with open(path, mode="r", encoding="utf-8") as json_file:
             circuit_dict = json.load(json_file)
-        circuit_folder = os.path.dirname(path)
+        circuit_folder = str(Path(path).parent)
         if len(circuit_folder) == 0:
             circuit_folder = "."
         exception_str_list = self.objects.dict_to_circuit(circuit_dict, circuit_folder)

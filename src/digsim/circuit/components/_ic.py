@@ -4,7 +4,7 @@
 """
 Module for creating a yosys component in the ic folder
 """
-import os
+from pathlib import Path
 
 from ._yosys_component import YosysComponent
 
@@ -20,7 +20,7 @@ class IntegratedCircuit(YosysComponent):
     @classmethod
     def folder(cls):
         """Get predefined IC folder"""
-        return f"{os.path.dirname(__file__)}/ic"
+        return str(Path(__file__).parent / "ic")
 
     def settings_to_dict(self):
         return {"ic_name": self.parameter_get("ic_name")}

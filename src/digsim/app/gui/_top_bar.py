@@ -6,7 +6,7 @@
 # pylint: disable=too-few-public-methods
 # pylint: disable=too-many-instance-attributes
 
-import os
+from pathlib import Path
 
 import qtawesome as qta
 
@@ -182,7 +182,7 @@ class VcdControlWidget(QFrame):
 
     def _start_vcd(self, filename):
         self._vcd_filename = filename
-        display_filename = os.path.basename(self._vcd_filename)
+        display_filename = Path(self._vcd_filename).name
         self._filename_widget.set_filename(display_filename)
         self._enable_buttons(True)
         # Close old vcd (if any)

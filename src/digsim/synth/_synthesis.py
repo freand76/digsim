@@ -3,9 +3,9 @@
 
 """Helper module for yosys synthesis"""
 
-import os
 import subprocess
 import tempfile
+from pathlib import Path
 
 
 class SynthesisException(Exception):
@@ -30,6 +30,7 @@ class Synthesis:
             stream.write("ls\n")
             stream.flush()
 
+        success = False
         with subprocess.Popen(
             ["yosys", script_file], stdout=subprocess.PIPE, stdin=None
         ) as process:
@@ -48,9 +49,10 @@ class Synthesis:
                         modules_done = True
                         continue
                     modules.append(line.replace("$abstract\\", "").strip())
-            if process.returncode != 0:
-                raise SynthesisException("Yosys execution failed...")
-        os.unlink(script_file)
+            success = process.returncode == 0
+        Path(script_file).unlink()
+        if not success:
+            raise SynthesisException("Yosys execution failed...")
         return modules
 
     def __init__(self, verilog_files, json_output_file, verilog_top_module):
@@ -90,7 +92,7 @@ class Synthesis:
                 if not silent:
                     print("Yosys: ", line)
             success = process.returncode == 0
-        os.unlink(script_file)
+        Path(script_file).unlink()
         return success
 
     def get_log(self):
