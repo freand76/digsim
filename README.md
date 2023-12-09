@@ -1,6 +1,8 @@
 # DigSim - Interactive Digital Logic Simulator
 
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Ffreand76%2Fdigsim%2Fmain%2Fpyproject.toml)
+![PyPI - Version](https://img.shields.io/pypi/v/digsim-logic-simulator)
+![PyPI - Downloads](https://img.shields.io/pypi/dm/digsim-logic-simulator)
 
 <p align="center">
   <img alt="The DigSim Application" src="https://raw.githubusercontent.com/freand76/digsim/af1bf95eb16d1af19f26159a4c1e1b88565703d7/docs/images/screenshot_digsim_app.png" width=85%>
