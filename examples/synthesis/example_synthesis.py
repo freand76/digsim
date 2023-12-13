@@ -13,7 +13,7 @@ from pathlib import Path
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import YosysComponent
-from digsim.synth import Synthesis
+from digsim.synth import Synthesis, SynthesisException
 
 
 example_path = Path(__file__).parent
@@ -25,8 +25,10 @@ input_verilog_path = str(example_path / "fibonacci.v")
 yosys_json_output_path = str(example_path / "fibonacci.json")
 
 print(f"Start synthesis of '{input_verilog_path}'")
-synthesis = Synthesis(input_verilog_path, yosys_json_output_path, "fibonacci")
-if not synthesis.execute(silent=True):
+synthesis = Synthesis(input_verilog_path, "fibonacci")
+try:
+    synthesis.synth_to_json_file(yosys_json_output_path, silent=True)
+except SynthesisException:
     # print log and exit if error occurs
     print("\n======== Yosys Log ========")
     log = synthesis.get_log()

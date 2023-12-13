@@ -152,7 +152,6 @@ See chapter about [Yosys Synthesis](#yosys-synthesis).
 
 When adding a Yosys component the application will bring up a file dialog where you can choose a **verilog file** or a **Yosys netlist** in json format.
 
-If a verilog file is chosen **Yosys** must be installed and in your path.
 Currently there is a limitation that the verilog file must not contain more than one module.
 
 When the yosys component has been added to the circuit it is possible to reload the verilog file or netlist by right-clicking on the component and
@@ -176,7 +175,7 @@ A test cycle for a verilog file could be like this:
  * Update verilog
  * Right-click component and select **Reload**
 
-***Important: The interface, input and output ports in the netlist must not change between load and reload.***
+***Importants: The interface, input and output ports in the netlist must not change between load and reload.***
 
 ### Notes
  * Notes with (or without) informative text can be added to the circuit.
@@ -212,21 +211,15 @@ The VCD File that later can be loaded into [GTKWave](https://gtkwave.sourceforge
 [Yosys](https://github.com/YosysHQ/yosys) is an open-source verilog synthesis tool.
 It can be used to create a [netlist](https://en.wikipedia.org/wiki/Netlist), a list of gates and of they are connected, from [verilog](https://en.wikipedia.org/wiki/Verilog).
 
-Yosys can be installed with your favorite packet manager, such as aptitude in Ubuntu.
-```
-shell> apt install yosys
-```
-If you want the latest and greatest version it can be fetched from [github](https://github.com/YosysHQ/yosys).
-
 More information and documentation can be found [here](https://yosyshq.net/yosys/documentation.html).
 
-When Yosys is installed it can be started, verilog can be loaded and the synthesis process can begin.
+DigSim uses a portable WebAssembly version of Yosys, [YoWASP](https://github.com/YoWASP/yosys).
 
 ### Synthesis with command line interface
 
  * Start application
 ```
-shell> yosys
+shell> yowasp-yosys
 ```
 
 * Execute synthesis script
@@ -246,7 +239,7 @@ yosys> write_json <netlist_file.json>
 ### Synthesis with script
 
 ```
-shell> yosys <synthesis_scriptfile.ys>
+shell> yowasp-yosys <synthesis_scriptfile.ys>
 ```
 
 ### Synthesis with python helper

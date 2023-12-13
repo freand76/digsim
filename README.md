@@ -79,7 +79,6 @@ Then the following package must be installed:
 
 ## Yosys synthesis helper tool
 
-**Yosys** must be installed and in your path
 ```
 > python3 -m digsim.synth synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
 ```
