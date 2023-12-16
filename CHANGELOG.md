@@ -2,6 +2,7 @@
 
 ## vx.x.x
  - Use relative path in examples (for windows / yosys)
+ - Use alternative pexpect spawn function in windows
 
 ## v0.2.0
  - Use yowasp-yoysys for synthesis

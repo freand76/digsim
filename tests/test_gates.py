@@ -194,8 +194,8 @@ def test_sr():
     circuit = Circuit()
     _sr = SR(circuit)
 
-    _sr.nS.value = 1
-    _sr.nR.value = 1
+    _sr.S.value = 0
+    _sr.R.value = 0
     assert _sr.Q.value == "X"
     assert _sr.nQ.value == "X"
     circuit.run(ms=1)
@@ -203,27 +203,27 @@ def test_sr():
     assert _sr.nQ.value == "X"
 
     # Set
-    _sr.nS.value = 0
-    _sr.nR.value = 1
+    _sr.S.value = 1
+    _sr.R.value = 0
     circuit.run(ms=1)
     assert _sr.Q.value == 1
     assert _sr.nQ.value == 0
 
-    _sr.nS.value = 1
-    _sr.nR.value = 1
+    _sr.S.value = 0
+    _sr.R.value = 0
     circuit.run(ms=1)
     assert _sr.Q.value == 1
     assert _sr.nQ.value == 0
 
     # Reset
-    _sr.nS.value = 1
-    _sr.nR.value = 0
+    _sr.S.value = 0
+    _sr.R.value = 1
     circuit.run(ms=1)
     assert _sr.Q.value == 0
     assert _sr.nQ.value == 1
 
-    _sr.nS.value = 1
-    _sr.nR.value = 1
+    _sr.S.value = 0
+    _sr.R.value = 0
     circuit.run(ms=1)
     assert _sr.Q.value == 0
     assert _sr.nQ.value == 1
