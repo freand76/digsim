@@ -6,3 +6,5 @@ build/
 *.o
 *.map
 examples/synthesis/fibonacci.json
+examples/load_save/pulse_circuit.json
+

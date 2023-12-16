@@ -5,6 +5,7 @@
 
 # pylint: disable=redefined-outer-name
 
+import os
 from pathlib import Path
 
 import pytest
@@ -14,7 +15,9 @@ from digsim.synth import Synthesis, SynthesisException
 @pytest.fixture
 def verilog_path():
     """Fixture: get path to verilog modules"""
-    return Path(__file__).parent.relative_to(Path.cwd()) / "verilog"
+    # Get the relative path to example folder
+    test_path = os.path.relpath(os.path.abspath(__file__), os.getcwd())
+    return Path(test_path).parent / "verilog"
 
 
 def test_yosys_list_modules_single_files(verilog_path):

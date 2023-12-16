@@ -8,21 +8,22 @@ The verilog file describes a fibonacci sequence generator
 The example will generate a gtkwave file, 'fibonacci.vcd'.
 """
 
+import os
 import sys
-from pathlib import Path
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import YosysComponent
 from digsim.synth import Synthesis, SynthesisException
 
 
-example_path = Path(__file__).parent.relative_to(Path.cwd())
+# Get the relative path to example folder
+example_path = os.path.relpath(os.path.dirname(os.path.abspath(__file__)), os.getcwd())
 
 # Do verilog synthesis with Yosys (with helper python class)
 # Input file fibonacci.v will generate fibonacci.json
 
-input_verilog_path = str(example_path / "fibonacci.v")
-yosys_json_output_path = str(example_path / "fibonacci.json")
+input_verilog_path = f"{example_path}/fibonacci.v"
+yosys_json_output_path = f"{example_path}/fibonacci.json"
 
 print(f"Start synthesis of '{input_verilog_path}'")
 synthesis = Synthesis(input_verilog_path, "fibonacci")

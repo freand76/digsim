@@ -6,7 +6,7 @@ Example that will load a previously stored circuit from a json file.
 The example will generate a gtkwave file, 'circuit.vcd'.
 """
 
-from pathlib import Path
+import os
 
 from digsim import Circuit
 
@@ -22,10 +22,11 @@ def led_callback(comp):
         print(f"{time_ns:9}:LED: '{name}' is OFF")
 
 
-example_path = Path(__file__).parent.relative_to(Path.cwd())
+# Get the relative path to example folder
+example_path = os.path.relpath(os.path.dirname(os.path.abspath(__file__)), os.getcwd())
 
 circuit = Circuit(vcd="circuit.vcd")
-circuit.from_json_file(str(example_path / "example_circuit.json"))
+circuit.from_json_file(f"{example_path}/example_circuit.json")
 circuit.init()
 led1 = circuit.get_component("and_led")
 led2 = circuit.get_component("not_led")
