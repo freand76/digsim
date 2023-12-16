@@ -5,8 +5,10 @@
 
 import json
 import shutil
+import sys
 
 import pexpect
+import pexpect.popen_spawn
 from digsim.circuit.components.atoms import DigsimException
 
 
@@ -16,13 +18,6 @@ class SynthesisException(DigsimException):
 
 class Synthesis:
     """Helper class for yosys synthesis"""
-
-    @classmethod
-    def _yosys_exe(cls):
-        _yosys_exe = shutil.which("yowasp-yosys")
-        if _yosys_exe is None:
-            raise SynthesisException("Yosys executable not found")
-        return _yosys_exe
 
     @classmethod
     def _pexpect_wait_for_prompt(cls, pexp):
@@ -41,12 +36,24 @@ class Synthesis:
         return before_lines
 
     @classmethod
+    def _pexpect_spawn_yosys(cls):
+        yosys_exe = shutil.which("yowasp-yosys")
+
+        if yosys_exe is None:
+            raise SynthesisException("Yosys executable not found")
+
+        if sys.platform == "win32":
+            return pexpect.popen_spawn.PopenSpawn(yosys_exe)
+
+        return pexpect.spawn(yosys_exe)
+
+    @classmethod
     def list_modules(cls, verilog_files):
         """List available modules in verilog files"""
         if isinstance(verilog_files, str):
             verilog_files = [verilog_files]
 
-        pexp = pexpect.spawn(cls._yosys_exe())
+        pexp = cls._pexpect_spawn_yosys()
         cls._pexpect_wait_for_prompt(pexp)
         pexp.sendline(f"read -sv {' '.join(verilog_files)}")
         cls._pexpect_wait_for_prompt(pexp)
@@ -81,7 +88,7 @@ class Synthesis:
         script += "proc; opt; techmap; opt; "
         script += f"synth -top {self._verilog_top_module}; "
 
-        pexp = pexpect.spawn(self._yosys_exe())
+        pexp = self._pexpect_spawn_yosys()
         self._pexpect_wait_for_prompt(pexp)
         pexp.sendline(script)
         yosys_log = self._pexpect_wait_for_prompt(pexp)
