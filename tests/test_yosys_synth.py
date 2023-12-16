@@ -8,7 +8,7 @@
 from pathlib import Path
 
 import pytest
-from digsim.synth import Synthesis
+from digsim.synth import Synthesis, SynthesisException
 
 
 @pytest.fixture
@@ -45,6 +45,13 @@ def test_yosys_list_multiple_modules_single_file(verilog_path):
     assert "multi_module_three" in modules
 
 
+def test_yosys_list_module_with_error(verilog_path):
+    """test list modules in single file (with multiple modules)"""
+
+    with pytest.raises(SynthesisException):
+        Synthesis.list_modules([str(verilog_path / "moule_with_error.v")])
+
+
 def test_yosys_synth_single_file_single_module(verilog_path):
     """test synth single file (with single module)"""
     synthesis = Synthesis(str(verilog_path / "one_module.v"), "module_one")
@@ -64,3 +71,12 @@ def test_yosys_synth_single_file_multi_modules(verilog_path):
     netlist_dict = synthesis.synth_to_dict()
     assert "modules" in netlist_dict
     assert "multi_module_two" in netlist_dict["modules"]
+
+
+def test_yosys_synth_module_with_error(verilog_path):
+    """test list modules in single file (with multiple modules)"""
+
+    synthesis = Synthesis(str(verilog_path / "moule_with_error.v"), "error_module")
+
+    with pytest.raises(SynthesisException):
+        synthesis.synth_to_dict()
