@@ -19,7 +19,10 @@ jobs:
         python -m pip install --upgrade pip
     - name: Install
       run: |
-        pip install .[app]
-    - name: Run example
+        pip install .
+    - name: Run netlist example
       run: |
         python examples/yosys_counter/example_yosys_counter_netlist.py
+    - name: Run verilog example
+      run: |
+        python examples/yosys_counter/example_yosys_counter_verilog.py
