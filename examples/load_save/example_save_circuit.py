@@ -25,7 +25,7 @@ def led_callback(comp):
         print(f"{time_ns:9}:LED: '{name}' is OFF")
 
 
-example_path = Path(__file__).parent
+example_path = Path(__file__).parent.relative_to(Path.cwd())
 
 circuit = Circuit(name="example_pulse", vcd="pulse.vcd")
 B = PushButton(circuit, "Button")

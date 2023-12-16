@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Use relative path in examples (for windows / yosys)
 
 ## v0.2.0
  - Use yowasp-yoysys for synthesis

@@ -14,7 +14,7 @@ from digsim.synth import Synthesis, SynthesisException
 @pytest.fixture
 def verilog_path():
     """Fixture: get path to verilog modules"""
-    return Path(__file__).parent / "verilog"
+    return Path(__file__).parent.relative_to(Path.cwd()) / "verilog"
 
 
 def test_yosys_list_modules_single_files(verilog_path):

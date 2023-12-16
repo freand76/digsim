@@ -16,7 +16,7 @@ from digsim.circuit.components import YosysComponent
 from digsim.synth import Synthesis, SynthesisException
 
 
-example_path = Path(__file__).parent
+example_path = Path(__file__).parent.relative_to(Path.cwd())
 
 # Do verilog synthesis with Yosys (with helper python class)
 # Input file fibonacci.v will generate fibonacci.json

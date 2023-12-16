@@ -22,7 +22,7 @@ def led_callback(comp):
         print(f"{time_ns:9}:LED: '{name}' is OFF")
 
 
-example_path = Path(__file__).parent
+example_path = Path(__file__).parent.relative_to(Path.cwd())
 
 circuit = Circuit(vcd="circuit.vcd")
 circuit.from_json_file(str(example_path / "example_circuit.json"))

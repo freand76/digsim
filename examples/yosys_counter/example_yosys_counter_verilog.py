@@ -12,7 +12,7 @@ from digsim.circuit import Circuit
 from digsim.circuit.components import VDD, PushButton, YosysComponent
 
 
-example_path = Path(__file__).parent
+example_path = Path(__file__).parent.relative_to(Path.cwd())
 
 circuit = Circuit()
 yosys_counter = YosysComponent(circuit, path=str(example_path / "counter.v"))

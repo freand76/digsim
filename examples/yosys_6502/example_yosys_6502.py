@@ -25,7 +25,7 @@ from digsim.circuit.components import (
 )
 
 
-example_path = Path(__file__).parent
+example_path = Path(__file__).parent.relative_to(Path.cwd())
 
 test_circuit = Circuit(vcd="6502.vcd")
 rst = PushButton(test_circuit, "RST")
