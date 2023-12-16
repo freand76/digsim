@@ -43,3 +43,24 @@ def test_yosys_list_multiple_modules_single_file(verilog_path):
     assert "multi_module_one" in modules
     assert "multi_module_two" in modules
     assert "multi_module_three" in modules
+
+
+def test_yosys_synth_single_file_single_module(verilog_path):
+    """test synth single file (with single module)"""
+    synthesis = Synthesis(str(verilog_path / "one_module.v"), "module_one")
+    netlist_dict = synthesis.synth_to_dict()
+    assert "modules" in netlist_dict
+    assert "module_one" in netlist_dict["modules"]
+
+
+def test_yosys_synth_single_file_multi_modules(verilog_path):
+    """test synth single file (with multiple modules)"""
+    synthesis = Synthesis(str(verilog_path / "multiple_modules.v"), "multi_module_one")
+    netlist_dict = synthesis.synth_to_dict()
+    assert "modules" in netlist_dict
+    assert "multi_module_one" in netlist_dict["modules"]
+
+    synthesis = Synthesis(str(verilog_path / "multiple_modules.v"), "multi_module_two")
+    netlist_dict = synthesis.synth_to_dict()
+    assert "modules" in netlist_dict
+    assert "multi_module_two" in netlist_dict["modules"]
