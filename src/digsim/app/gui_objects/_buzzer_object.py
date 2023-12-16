@@ -66,7 +66,7 @@ class BuzzerObject(ImageObjectWithActiveRect):
         self.audio_sink = None
         self._app_model.sig_audio_start.connect(self._audio_start)
         self._app_model.sig_audio_notify.connect(self._audio_notify)
-
+        self.device = None
         devices = QMediaDevices.audioOutputs()
         if len(devices) == 0:
             return
@@ -89,6 +89,8 @@ class BuzzerObject(ImageObjectWithActiveRect):
             self._play(component.active)
 
     def _play(self, active):
+        if self.device is None:
+            return
         if active:
             self.audio_sink = QAudioSink(self.device, self.audio_format)
             self.audio_sink.setVolume(0.1)
