@@ -2,6 +2,9 @@
 
 ## vx.x.x
 
+## v0.3.1
+ - Fix path in examples to work with github action
+
 ## v0.3.0
  - Use relative path in examples (for windows / yosys)
  - Use alternative pexpect spawn function in windows
