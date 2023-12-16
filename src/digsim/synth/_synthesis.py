@@ -3,10 +3,10 @@
 
 """Helper module for yosys synthesis"""
 
-import subprocess
-import tempfile
-from pathlib import Path
+import json
+import shutil
 
+import pexpect
 from digsim.circuit.components.atoms import DigsimException
 
 
@@ -18,89 +18,98 @@ class Synthesis:
     """Helper class for yosys synthesis"""
 
     @classmethod
+    def _yosys_exe(cls):
+        _yosys_exe = shutil.which("yowasp-yosys")
+        if _yosys_exe is None:
+            raise SynthesisException("Yosys executable not found")
+        return _yosys_exe
+
+    @classmethod
+    def _pexpect_wait_for_prompt(cls, pexp):
+        index = pexp.expect(["yosys>", pexpect.EOF])
+        before_lines = pexp.before.decode("utf8").replace("\r", "").split("\n")
+        if index == 0:
+            pass
+        elif index == 1:
+            # Unexpected EOF means ERROR
+            errorline = "ERROR"
+            for line in before_lines:
+                if "ERROR" in line:
+                    errorline = line
+                    break
+            raise SynthesisException(errorline)
+        return before_lines
+
+    @classmethod
     def list_modules(cls, verilog_files):
-        """List available moduels in verilog files"""
+        """List available modules in verilog files"""
         if isinstance(verilog_files, str):
             verilog_files = [verilog_files]
 
-        script_file = None
-        with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", suffix=".ys", delete=False
-        ) as stream:
-            script_file = stream.name
-            stream.write(f"read -sv {' '.join(verilog_files)}\n")
-            stream.write("ls\n")
-            stream.flush()
+        pexp = pexpect.spawn(cls._yosys_exe())
+        cls._pexpect_wait_for_prompt(pexp)
+        pexp.sendline(f"read -sv {' '.join(verilog_files)}")
+        cls._pexpect_wait_for_prompt(pexp)
+        pexp.sendline("ls")
+        pexp.expect("\n")
+        ls_response = cls._pexpect_wait_for_prompt(pexp)
+        pexp.sendline("exit")
 
-        success = False
-        with subprocess.Popen(
-            ["yosys", script_file], stdout=subprocess.PIPE, stdin=None
-        ) as process:
-            modules = []
-            ls_output_found = False
-            modules_done = False
-            while process.poll() is None:
-                line = process.stdout.readline().decode("utf-8").rstrip()
-                if modules_done:
-                    continue
-                if "modules:" in line:
-                    ls_output_found = True
-                    continue
-                if ls_output_found:
-                    if len(line) == 0:
-                        modules_done = True
-                        continue
-                    modules.append(line.replace("$abstract\\", "").strip())
-            success = process.returncode == 0
-        Path(script_file).unlink()
-        if not success:
-            files_str = ""
-            for verilog_file in verilog_files:
-                if len(files_str) > 0:
-                    files_str += ", "
-                files_str += Path(verilog_file).name
-            raise SynthesisException(f"Yosys error for {files_str}")
+        modules = []
+        for line in ls_response:
+            if len(line) == 0:
+                continue
+            if "modules:" in line:
+                continue
+            modules.append(line.replace("$abstract\\", "").strip())
         return modules
 
-    def __init__(self, verilog_files, json_output_file, verilog_top_module):
+    def __init__(self, verilog_files, verilog_top_module):
         if isinstance(verilog_files, str):
             self._verilog_files = [verilog_files]
         else:
             self._verilog_files = verilog_files
-        self._json_output_file = json_output_file
         self._verilog_top_module = verilog_top_module
         self._yosys_log = []
 
-    def execute(self, silent=False):
+    def synth_to_json(self, silent=False):
         """Execute yosys with generated synthesis script"""
-        success = False
-        script_file = None
-        with tempfile.NamedTemporaryFile(
-            mode="w", encoding="utf-8", suffix=".ys", delete=False
-        ) as stream:
-            script_file = stream.name
-            stream.write(f"read -sv {' '.join(self._verilog_files)}\n")
-            stream.write(f"hierarchy -top {self._verilog_top_module}\n")
-            stream.write("proc; flatten\n")
-            stream.write("memory_dff\n")
-            stream.write("proc; opt; techmap; opt\n")
-            stream.write(f"synth -top {self._verilog_top_module}\n")
-            stream.write(f"write_json {self._json_output_file}\n")
-            stream.flush()
+        script = f"read -sv {' '.join(self._verilog_files)}; "
+        script += f"hierarchy -top {self._verilog_top_module}; "
+        script += "proc; flatten; "
+        script += "memory_dff; "
+        script += "proc; opt; techmap; opt; "
+        script += f"synth -top {self._verilog_top_module}; "
 
-        with subprocess.Popen(
-            ["yosys", stream.name], stdout=subprocess.PIPE, stdin=None
-        ) as process:
-            while process.poll() is None:
-                line = process.stdout.readline().decode("utf-8").rstrip()
-                if len(line) == 0:
-                    continue
-                self._yosys_log.append(line)
-                if not silent:
-                    print("Yosys: ", line)
-            success = process.returncode == 0
-        Path(script_file).unlink()
-        return success
+        pexp = pexpect.spawn(self._yosys_exe())
+        self._pexpect_wait_for_prompt(pexp)
+        pexp.sendline(script)
+        yosys_log = self._pexpect_wait_for_prompt(pexp)
+        for line in yosys_log:
+            self._yosys_log.append(line)
+            if silent:
+                continue
+            print("Yosys:", line)
+        pexp.sendline("write_json")
+        pexp.expect("Executing JSON backend.")
+        json_lines = self._pexpect_wait_for_prompt(pexp)
+        pexp.sendline("exit")
+
+        return "\n".join(json_lines)
+
+    def synth_to_dict(self, silent=False):
+        """Execute yosys with generated synthesis script and return python dict"""
+        yosys_json = self.synth_to_json(silent)
+        netlist_dict = json.loads(yosys_json)
+        return netlist_dict
+
+    def synth_to_json_file(self, filename, silent=False):
+        """Execute yosys with generated synthesis script and write to file"""
+        yosys_json = self.synth_to_json(silent)
+        if yosys_json is None:
+            raise SynthesisException("Yosys synthesis failed")
+        with open(filename, mode="w", encoding="utf-8") as json_file:
+            json_file.write(yosys_json)
 
     def get_log(self):
         """Get the yosys output"""

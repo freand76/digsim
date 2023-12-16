@@ -27,7 +27,9 @@ requires-python = ">=3.8"
 dependencies = [
   "pyvcd>=0.3.0",
   "pyside6>=6.6.0",
+  "pexpect==4.8.0",
   "qtawesome",
+  "yowasp-yosys==0.36.0.8.post620",
 ]
 
 keywords = ["educational", "simulation", "digital"]
@@ -61,6 +63,7 @@ disable = """
     duplicate-code,
 """
 ignored-modules = """
+   pexpect,
    pytest,
    PySide6,
    qtawesome

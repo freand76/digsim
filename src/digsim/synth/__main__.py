@@ -7,7 +7,7 @@ import argparse
 import sys
 import time
 
-from . import Synthesis
+from . import Synthesis, SynthesisException
 
 
 def _synth_modules(args):
@@ -16,29 +16,33 @@ def _synth_modules(args):
         print(f" - Reading {infile}")
     print(f"Generating {args.output_file}...")
     start_time = time.monotonic()
-    synthesis = Synthesis(args.input_files, args.output_file, args.top)
-    return_value = synthesis.execute(silent=args.silent)
-    if return_value:
+    synthesis = Synthesis(args.input_files, args.top)
+    try:
+        synthesis.synth_to_json_file(args.output_file, silent=args.silent)
         print(f"Synthesis complete in {time.monotonic() - start_time:.2f}s")
-    else:
-        print("ERROR: Synthesis failed!")
+    except SynthesisException as exc:
+        print(f"ERROR: {str(exc)}")
         return -1
     return 0
 
 
 def _list_modules(args):
-    modules = Synthesis.list_modules(args.input_files)
-    print("Modules:")
-    print("========")
-    for idx, module in enumerate(modules):
-        print(f"{idx}: {module}")
-    print("========")
+    try:
+        modules = Synthesis.list_modules(args.input_files)
+        print("Modules:")
+        print("========")
+        for idx, module in enumerate(modules):
+            print(f"{idx}: {module}")
+        print("========")
+    except SynthesisException as exc:
+        print(f"ERROR: {str(exc)}")
+        return -1
     return 0
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("Yosys synthesizer helper")
-    subparser = parser.add_subparsers()
+    subparser = parser.add_subparsers(required=True)
     synth_parser = subparser.add_parser("synth")
     synth_parser.add_argument(
         "--input-files", "-i", type=str, nargs="*", required=True, help="The verilog input files"

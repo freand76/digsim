@@ -10,8 +10,6 @@ from a yosys json netlist.
 # pylint: disable=too-many-instance-attributes
 
 import json
-import tempfile
-from pathlib import Path
 
 import digsim.circuit.components._yosys_atoms
 from digsim.synth import Synthesis
@@ -168,29 +166,18 @@ class YosysComponent(MultiComponent):
         else:
             raise YosysComponentException("Current only one module per verilog file is supported")
 
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-            filename = tmp_file.name
-        synthesis = Synthesis(self._path, filename, toplevel)
-        if not synthesis.execute(silent=True):
-            raise YosysComponentException(f"Yosys synthesis error {self._path}")
-        return filename
+        synthesis = Synthesis(self._path, toplevel)
+        return synthesis.synth_to_dict(silent=True)
 
     def _load_netlist_dict(self):
         """Load yosys netlist dict"""
-        unlink_file = False
         if self._path.endswith(".json"):
-            filename = self._path
+            with open(self._path, encoding="utf-8") as json_file:
+                netlist_dict = json.load(json_file)
         elif self._path.endswith(".v"):
-            filename = self._synth_verilog()
-            unlink_file = True
+            netlist_dict = self._synth_verilog()
         else:
             raise YosysComponentException(f"Unknown file extension '{self._path}'")
-
-        with open(filename, encoding="utf-8") as json_file:
-            netlist_dict = json.load(json_file)
-
-        if unlink_file:
-            Path(filename).unlink()
 
         yosys_netlist = YosysNetlist()
         yosys_netlist.from_dict(netlist_dict)
