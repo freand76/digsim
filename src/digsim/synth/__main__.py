@@ -27,12 +27,16 @@ def _synth_modules(args):
 
 
 def _list_modules(args):
-    modules = Synthesis.list_modules(args.input_files)
-    print("Modules:")
-    print("========")
-    for idx, module in enumerate(modules):
-        print(f"{idx}: {module}")
-    print("========")
+    try:
+        modules = Synthesis.list_modules(args.input_files)
+        print("Modules:")
+        print("========")
+        for idx, module in enumerate(modules):
+            print(f"{idx}: {module}")
+        print("========")
+    except SynthesisException as exc:
+        print(f"ERROR: {str(exc)}")
+        return -1
     return 0
 
 

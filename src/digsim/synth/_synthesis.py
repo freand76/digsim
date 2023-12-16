@@ -25,19 +25,34 @@ class Synthesis:
         return _yosys_exe
 
     @classmethod
+    def _pexpect_wait_for_prompt(cls, pexp):
+        index = pexp.expect(["yosys>", pexpect.EOF])
+        before_lines = pexp.before.decode("utf8").replace("\r", "").split("\n")
+        if index == 0:
+            pass
+        elif index == 1:
+            # Unexpected EOF means ERROR
+            errorline = "ERROR"
+            for line in before_lines:
+                if "ERROR" in line:
+                    errorline = line
+                    break
+            raise SynthesisException(errorline)
+        return before_lines
+
+    @classmethod
     def list_modules(cls, verilog_files):
         """List available modules in verilog files"""
         if isinstance(verilog_files, str):
             verilog_files = [verilog_files]
 
         pexp = pexpect.spawn(cls._yosys_exe())
-        pexp.expect("yosys>")
+        cls._pexpect_wait_for_prompt(pexp)
         pexp.sendline(f"read -sv {' '.join(verilog_files)}")
-        pexp.expect("yosys>")
+        cls._pexpect_wait_for_prompt(pexp)
         pexp.sendline("ls")
         pexp.expect("\n")
-        pexp.expect("yosys>")
-        ls_response = pexp.before.decode("utf-8").replace("\r", "").split("\n")
+        ls_response = cls._pexpect_wait_for_prompt(pexp)
         pexp.sendline("exit")
 
         modules = []
@@ -67,23 +82,20 @@ class Synthesis:
         script += f"synth -top {self._verilog_top_module}; "
 
         pexp = pexpect.spawn(self._yosys_exe())
-        pexp.expect("yosys>")
+        self._pexpect_wait_for_prompt(pexp)
         pexp.sendline(script)
-        yosys_log = pexp.before.decode("utf-8").replace("\r", "").split("\n")
+        yosys_log = self._pexpect_wait_for_prompt(pexp)
         for line in yosys_log:
             self._yosys_log.append(line)
             if silent:
                 continue
             print("Yosys:", line)
-
-        pexp.expect("yosys>")
         pexp.sendline("write_json")
         pexp.expect("Executing JSON backend.")
-        pexp.expect("yosys>")
-        yosys_json = pexp.before.decode("utf-8")
+        json_lines = self._pexpect_wait_for_prompt(pexp)
         pexp.sendline("exit")
 
-        return yosys_json
+        return "\n".join(json_lines)
 
     def synth_to_dict(self, silent=False):
         """Execute yosys with generated synthesis script and return python dict"""
