@@ -1,7 +1,9 @@
 # CHANGELOG
 
 ## vx.x.x
- - Use yowasp-yoysys fir synthesis
+
+## v0.2.0
+ - Use yowasp-yoysys for synthesis
 
 ## v0.1.0
  * Fix bug when detecting number of modules with yosys 0.9
