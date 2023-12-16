@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.3.0
  - Use relative path in examples (for windows / yosys)
  - Use alternative pexpect spawn function in windows
 
