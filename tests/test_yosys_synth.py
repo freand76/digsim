@@ -52,7 +52,7 @@ def test_yosys_list_module_with_error(verilog_path):
     """test list modules in single file (with multiple modules)"""
 
     with pytest.raises(SynthesisException):
-        Synthesis.list_modules([str(verilog_path / "moule_with_error.v")])
+        Synthesis.list_modules([str(verilog_path / "module_with_error.v")])
 
 
 def test_yosys_synth_single_file_single_module(verilog_path):
@@ -79,7 +79,7 @@ def test_yosys_synth_single_file_multi_modules(verilog_path):
 def test_yosys_synth_module_with_error(verilog_path):
     """test list modules in single file (with multiple modules)"""
 
-    synthesis = Synthesis(str(verilog_path / "moule_with_error.v"), "error_module")
+    synthesis = Synthesis(str(verilog_path / "module_with_error.v"), "error_module")
 
     with pytest.raises(SynthesisException):
         synthesis.synth_to_dict()

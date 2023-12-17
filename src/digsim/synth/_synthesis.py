@@ -33,11 +33,18 @@ class Synthesis:
                     errorline = line
                     break
             raise SynthesisException(errorline)
-        return before_lines
+
+        # Remove escape sequence in output
+        out_lines = []
+        for line in before_lines:
+            if line.startswith("\x1b"):
+                continue
+            out_lines.append(line)
+        return out_lines
 
     @classmethod
     def _pexpect_spawn_yosys(cls):
-        yosys_exe = shutil.which("yowasp-yosys")
+        yosys_exe = shutil.which("yosys") or shutil.which("yowasp-yosys")
 
         if yosys_exe is None:
             raise SynthesisException("Yosys executable not found")

@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Make it possible to use locally installed yosys
 
 ## v0.3.1
  - Fix path in examples to work with github action
