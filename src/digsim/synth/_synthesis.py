@@ -9,6 +9,7 @@ import sys
 
 import pexpect
 import pexpect.popen_spawn
+
 from digsim.circuit.components.atoms import DigsimException
 
 

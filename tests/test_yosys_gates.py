@@ -3,9 +3,9 @@
 
 """ Pystest module to test functionality of yosys gates """
 
+import pytest
 from utilities import _H, _L, _X
 
-import pytest
 from digsim.circuit import Circuit
 from digsim.circuit.components._yosys_atoms import (
     _AND_,

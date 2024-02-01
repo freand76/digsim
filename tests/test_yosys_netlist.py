@@ -4,6 +4,7 @@
 """ Pystest module to test functionality of yosys component """
 
 import pytest
+
 from digsim.circuit import Circuit
 from digsim.circuit.components import YosysComponent, YosysComponentException
 from digsim.utils import YosysNetlist

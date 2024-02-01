@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 
 import pytest
+
 from digsim.synth import Synthesis, SynthesisException
 
 

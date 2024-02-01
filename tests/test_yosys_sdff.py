@@ -3,9 +3,9 @@
 
 """ Pystest module to test functionality of yosys synrhonous reset dff """
 
+import pytest
 from utilities import _H, _L, inv
 
-import pytest
 from digsim.circuit import Circuit
 from digsim.circuit.components._yosys_atoms import (
     _SDFF_NN0_,

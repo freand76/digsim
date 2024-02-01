@@ -23,7 +23,6 @@ class LogicAnalyzerObject(ImageObject):
         self.update_ports()
 
     def paint_component(self, painter):
-
         self.paint_component_base(painter)
         painter.setBrush(Qt.SolidPattern)
         painter.setBrush(Qt.black)
