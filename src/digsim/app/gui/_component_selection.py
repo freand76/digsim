@@ -1,9 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """Module for the component selection classes"""
-
-# pylint: disable=too-few-public-methods
 
 from functools import partial
 

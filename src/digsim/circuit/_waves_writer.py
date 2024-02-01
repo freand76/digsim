@@ -1,12 +1,9 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """
 Module that handles the creation of vcd files
 """
-
-# pylint: disable=consider-using-with
-# pylint: disable=import-error
 
 from vcd import VCDWriter
 

@@ -1,9 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """ Pystest module to test functionality of yosys sr """
-
-# pylint: disable=too-many-statements
 
 import pytest
 from utilities import _H, _L, inv

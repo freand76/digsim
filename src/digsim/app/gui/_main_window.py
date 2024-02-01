@@ -1,9 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """The main window and widgets of the digsim gui application"""
-
-# pylint: disable=too-few-public-methods
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QKeySequence, QShortcut

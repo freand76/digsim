@@ -1,11 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """The circuit area and component widget"""
-
-# pylint: disable=unused-argument
-# pylint: disable=useless-parent-delegation
-# pylint: disable=too-few-public-methods
 
 from functools import partial
 

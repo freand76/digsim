@@ -1,13 +1,10 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """
 Module with classes to create a yosys component
 from a yosys json netlist.
 """
-
-# pylint: disable=protected-access
-# pylint: disable=too-many-instance-attributes
 
 import json
 

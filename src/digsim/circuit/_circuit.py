@@ -1,12 +1,9 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """
 Module that handles the circuit simulation of components
 """
-
-# pylint: disable=too-many-public-methods
-# pylint: disable=too-many-arguments
 
 import json
 import os

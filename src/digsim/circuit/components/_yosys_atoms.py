@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """
@@ -7,11 +7,6 @@ Module with yosys atom component classes
 All components are implemented from the specification in:
 https://github.com/YosysHQ/yosys/blob/master/techlibs/common/simcells.v
 """
-
-# pylint: disable=too-many-arguments
-# pylint: disable=consider-using-in
-# pylint: disable=too-many-lines
-# pylint: disable=too-many-branches
 
 from .atoms import Component, DigsimException, PortIn, PortOutDelta, PortWire
 

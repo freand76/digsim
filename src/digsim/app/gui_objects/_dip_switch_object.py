@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """ A hexdigit component placed in the GUI """
@@ -7,9 +7,6 @@ from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtGui import QFont, QPen
 
 from ._image_objects import ImageObject
-
-
-# pylint: disable=too-many-arguments
 
 
 class DipSwitchObject(ImageObject):

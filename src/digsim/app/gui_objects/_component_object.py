@@ -1,12 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """ A component placed in the GUI """
-
-# pylint: disable=unused-argument
-# pylint: disable=too-many-public-methods
-# pylint: disable=too-many-instance-attributes
-# pylint: disable=too-many-arguments
 
 import abc
 

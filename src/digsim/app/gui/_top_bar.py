@@ -1,10 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """The top bar of the main window/gui application"""
-
-# pylint: disable=too-few-public-methods
-# pylint: disable=too-many-instance-attributes
 
 from pathlib import Path
 

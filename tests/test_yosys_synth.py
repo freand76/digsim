@@ -1,9 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """ Pystest module to test functionality of yosys synthesis """
-
-# pylint: disable=redefined-outer-name
 
 import os
 from pathlib import Path

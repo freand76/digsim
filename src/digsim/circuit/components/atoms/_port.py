@@ -1,9 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """ This module contains the classes for all component ports """
-
-# pylint: disable=too-many-public-methods
 
 import abc
 

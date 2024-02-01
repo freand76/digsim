@@ -1,9 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """The component settings dialog(s)"""
-
-# pylint: disable=too-many-branches
 
 import pathlib
 

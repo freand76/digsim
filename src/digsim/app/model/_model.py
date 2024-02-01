@@ -1,9 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """ An application model for a GUI simulated circuit """
-
-# pylint: disable=too-many-instance-attributes
 
 import json
 import queue

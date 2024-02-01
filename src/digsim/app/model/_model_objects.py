@@ -1,9 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """Handle objects in the model"""
-
-# pylint: disable=too-many-public-methods
 
 from digsim.circuit import Circuit
 from digsim.circuit.components.atoms import DigsimException

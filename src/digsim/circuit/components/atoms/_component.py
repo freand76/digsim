@@ -1,10 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """ This module contains the base classes for all component types """
-
-
-# pylint: disable=too-many-public-methods
 
 import abc
 import copy

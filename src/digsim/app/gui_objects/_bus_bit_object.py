@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """ A hexdigit component placed in the GUI """
@@ -7,9 +7,6 @@ from PySide6.QtCore import QPoint, QSize, Qt
 from PySide6.QtGui import QPen
 
 from ._component_object import ComponentObject
-
-
-# pylint: disable=too-many-arguments
 
 
 class BusBitsObject(ComponentObject):

@@ -1,9 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """A warning dialog"""
-
-# pylint: disable=too-few-public-methods
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (

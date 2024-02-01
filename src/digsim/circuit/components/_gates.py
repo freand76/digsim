@@ -1,9 +1,7 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """ Module with the basic logic gates """
-
-# pylint: disable=too-many-arguments
 
 import math
 
