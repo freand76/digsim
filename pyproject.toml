@@ -39,7 +39,7 @@ line-length = 99
 target-version = "py38"
 
 show-fixes = true
-show-source = true
+output-format = "full"
 
 src = ["src"]
 namespace-packages = ["src/digsim"]
@@ -51,13 +51,13 @@ extend-select = ["Q", "TID", "I", "FA"]
 # E501 = "line too long". Handled by black.
 extend-ignore = ["E501"]
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 
-[tool.ruff.flake8-tidy-imports]
+[tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 lines-after-imports = 2
 
 known-third-party = [
@@ -77,6 +77,6 @@ section-order = [
     "local-folder",
 ]
 
-[tool.ruff.isort.sections]
+[tool.ruff.lint.isort.sections]
 "PySide6" = ["PySide6"]
 "pyqtgraph" = ["pyqtgraph"]
