@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" A buzzer component object """
+"""A buzzer component object"""
 
 from math import pi, sin
 from struct import pack

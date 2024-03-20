@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" Clock component module """
+"""Clock component module"""
 
 from .atoms import CallbackComponent, PortOutDelta, PortOutImmediate
 

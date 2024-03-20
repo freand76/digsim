@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" A Dip-switch component """
+"""A Dip-switch component"""
 
 from .atoms import CallbackComponent, PortOutImmediate
 

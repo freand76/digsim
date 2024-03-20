@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" A component context menu """
+"""A component context menu"""
 
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu

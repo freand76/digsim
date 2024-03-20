@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" A yosys component with an image as symbol the GUI """
+"""A yosys component with an image as symbol the GUI"""
 
 from PySide6.QtGui import QAction
 

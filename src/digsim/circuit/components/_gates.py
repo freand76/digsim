@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
-""" Module with the basic logic gates """
+"""Module with the basic logic gates"""
 
 import math
 

@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" A GUI component object factory module """
+"""A GUI component object factory module"""
 
 from digsim.circuit.components.atoms import DigsimException
 

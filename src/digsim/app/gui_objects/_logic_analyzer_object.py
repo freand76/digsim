@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" A Logic Analyzer component placed in the GUI """
+"""A Logic Analyzer component placed in the GUI"""
 
 from PySide6.QtCore import QPoint, QRect, Qt
 from PySide6.QtGui import QPainterPath, QPen

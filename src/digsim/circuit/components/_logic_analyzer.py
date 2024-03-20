@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" Module with Logic Analyzer component """
+"""Module with Logic Analyzer component"""
 
 from .atoms import CallbackComponent, PortOutDelta, PortWire
 

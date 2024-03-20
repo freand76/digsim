@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" Pystest module to test functionality of yosys component """
+"""Pystest module to test functionality of yosys component"""
 
 import pytest
 

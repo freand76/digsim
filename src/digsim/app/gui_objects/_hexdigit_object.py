@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" A hexdigit component placed in the GUI """
+"""A hexdigit component placed in the GUI"""
 
 from ._component_object import ComponentObject
 from ._seven_segment_object import SevenSegmentObject

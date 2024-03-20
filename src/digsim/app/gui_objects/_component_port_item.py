@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" A component port graphics item """
+"""A component port graphics item"""
 
 from PySide6.QtCore import QRect, Qt
 from PySide6.QtGui import QBrush, QPen

@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" All classes within digsim.circuit.components namespace """
+"""All classes within digsim.circuit.components namespace"""
 
 from ._bus_bits import Bus2Wires, Wires2Bus  # noqa: F401
 from ._button import PushButton  # noqa: F401

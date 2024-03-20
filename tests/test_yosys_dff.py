@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" Pystest module to test functionality of yosys dff """
+"""Pystest module to test functionality of yosys dff"""
 
 import pytest
 from utilities import _H, _L, inv

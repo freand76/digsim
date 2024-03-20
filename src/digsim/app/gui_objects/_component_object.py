@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
-""" A component placed in the GUI """
+"""A component placed in the GUI"""
 
 import abc
 

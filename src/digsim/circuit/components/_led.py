@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" Module with the LED component """
+"""Module with the LED component"""
 
 from .atoms import CallbackComponent, PortIn
 

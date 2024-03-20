@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
-""" This module contains the base classes for all component types """
+"""This module contains the base classes for all component types"""
 
 import abc
 import copy

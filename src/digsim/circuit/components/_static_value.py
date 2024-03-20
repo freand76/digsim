@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" Module with the Static Leve component """
+"""Module with the Static Leve component"""
 
 from .atoms import Component, PortOutImmediate
 

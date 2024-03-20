@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" Module with the Static Logic components """
+"""Module with the Static Logic components"""
 
 from .atoms import Component, PortOutDelta
 

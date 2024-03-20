@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
-""" An application model for a GUI simulated circuit """
+"""An application model for a GUI simulated circuit"""
 
 import json
 import queue

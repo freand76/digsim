@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
-""" This module contains the classes for all component ports """
+"""This module contains the classes for all component ports"""
 
 import abc
 

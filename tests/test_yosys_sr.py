@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
-""" Pystest module to test functionality of yosys sr """
+"""Pystest module to test functionality of yosys sr"""
 
 import pytest
 from utilities import _H, _L, inv

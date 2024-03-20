@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" HexDigit component module """
+"""HexDigit component module"""
 
 from .atoms import CallbackComponent, PortIn
 

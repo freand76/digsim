@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" The main class module of the digsim.synth namespace """
+"""The main class module of the digsim.synth namespace"""
 
 import argparse
 import sys

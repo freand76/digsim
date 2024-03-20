@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
-""" Pystest module to test functionality of yosys synthesis """
+"""Pystest module to test functionality of yosys synthesis"""
 
 import os
 from pathlib import Path

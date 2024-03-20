@@ -4,6 +4,7 @@
 """
 Module for creating a yosys component in the ic folder
 """
+
 from pathlib import Path
 
 from ._yosys_component import YosysComponent

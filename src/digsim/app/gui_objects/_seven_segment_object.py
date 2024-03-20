@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
-""" A 7-segment component placed in the GUI """
+"""A 7-segment component placed in the GUI"""
 
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QPainterPath

@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" A PushButton component """
+"""A PushButton component"""
 
 import logging
 

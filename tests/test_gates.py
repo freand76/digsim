@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" Pystest module to test functionality of gates """
+"""Pystest module to test functionality of gates"""
 
 import pytest
 

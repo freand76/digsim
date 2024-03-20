@@ -19,7 +19,6 @@ from digsim.app.settings import ComponentSettingsDialog
 
 
 class WirePartGraphicsItem(QGraphicsRectItem):
-
     """A part of a wire graphcis item"""
 
     CLOSE_TO_WIRE_MARGIN = 10

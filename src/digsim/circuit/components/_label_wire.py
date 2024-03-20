@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" Label Wire components module """
+"""Label Wire components module"""
 
 from .atoms import Component, DigsimException, PortWire
 

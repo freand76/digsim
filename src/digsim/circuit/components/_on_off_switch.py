@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023
 # All rights reserved
 
-""" An On/Off Switch  component """
+"""An On/Off Switch  component"""
 
 import logging
 

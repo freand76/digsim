@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
-""" A button component with an image as symbol the GUI """
+"""A button component with an image as symbol the GUI"""
 
 from functools import partial
 
