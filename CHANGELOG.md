@@ -1,7 +1,11 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.4.0
  - Make it possible to use locally installed yosys
+ - Use ruff for python formatting and linting of code
+ - Fix issue #3 (AttributeError when trying to delete objects)
 
 ## v0.3.1
  - Fix path in examples to work with github action
