@@ -58,7 +58,7 @@ class ComponentContextMenu(QMenu):
         return self._menu_action.text() if self._menu_action is not None else ""
 
     def _delete(self):
-        self._component_object.select(True)
+        self._component_object.setSelected(True)
         self._app_model.objects.delete_selected()
 
     def _raise(self):
