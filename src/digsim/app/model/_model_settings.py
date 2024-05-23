@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """Handle settings in the model"""
@@ -24,10 +24,6 @@ class ModelSettings:
     def get_all(self):
         """Return settings dict"""
         return self._settings
-
-    def to_dict(self):
-        """Return settings dict to save"""
-        return {"settings": self._settings}
 
     def from_dict(self, circuit_dict):
         """Get settings from circuit dict"""

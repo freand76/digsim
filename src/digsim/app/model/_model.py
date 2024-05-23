@@ -3,7 +3,6 @@
 
 """An application model for a GUI simulated circuit"""
 
-import json
 import queue
 import time
 from pathlib import Path
@@ -12,6 +11,7 @@ from PySide6.QtCore import QThread, Signal
 
 from digsim.app.gui_objects import ComponentObject
 from digsim.circuit.components.atoms import Component
+from digsim.storage_model import AppFileDataClass
 
 from ._model_objects import ModelObjects
 from ._model_settings import ModelSettings
@@ -155,28 +155,27 @@ class AppModel(QThread):
     def save_circuit(self, path):
         """Save the circuit with GUI information"""
         circuit_folder = str(Path(path).parent)
-        circuit_dict = self.objects.circuit_to_dict(circuit_folder)
-        shortcuts_dict = self.shortcuts.to_dict()
-        circuit_dict.update(shortcuts_dict)
-        settings_dict = self.settings.to_dict()
-        circuit_dict.update(settings_dict)
-        json_object = json.dumps(circuit_dict, indent=4)
-        with open(path, mode="w", encoding="utf-8") as json_file:
-            json_file.write(json_object)
+        model_dataclass = self.objects.circuit_to_model(circuit_folder)
+        appfile_dataclass = AppFileDataClass(
+            circuit=model_dataclass.circuit,
+            gui=model_dataclass.gui,
+            shortcuts=self.shortcuts.to_dict(),
+            settings=self.settings.get_all(),
+        )
+        appfile_dataclass.save(path)
         self._changed = False
         self.sig_control_notify.emit()
 
     def load_circuit(self, path):
         """Load a circuit with GUI information"""
         self._model_clear()
-        with open(path, mode="r", encoding="utf-8") as json_file:
-            circuit_dict = json.load(json_file)
+        app_file_dc = AppFileDataClass.load(path)
         circuit_folder = str(Path(path).parent)
         if len(circuit_folder) == 0:
             circuit_folder = "."
-        exception_str_list = self.objects.dict_to_circuit(circuit_dict, circuit_folder)
-        self.shortcuts.from_dict(circuit_dict)
-        self.settings.from_dict(circuit_dict)
+        exception_str_list = self.objects.model_to_circuit(app_file_dc, circuit_folder)
+        self.shortcuts.from_dict(app_file_dc.shortcuts)
+        self.settings.from_dict(app_file_dc.settings)
         self.model_init()
         self._changed = False
         self.objects.reset_undo_stack()

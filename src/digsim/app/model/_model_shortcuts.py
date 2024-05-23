@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """Handle shortcuts in the model"""
@@ -72,9 +72,9 @@ class ModelShortcuts:
 
     def to_dict(self):
         """Generate dict from shortcuts"""
-        shortcuts_dict = {"shortcuts": {}}
+        shortcuts_dict = {}
         for key, component in self._shortcut_component.items():
-            shortcuts_dict["shortcuts"][key] = component.name()
+            shortcuts_dict[key] = component.name()
         return shortcuts_dict
 
     def from_dict(self, model_dict):

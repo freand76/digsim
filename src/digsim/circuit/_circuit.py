@@ -5,11 +5,12 @@
 Module that handles the circuit simulation of components
 """
 
-import json
 import os
 
+from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
+
 from ._waves_writer import WavesWriter
-from .components.atoms import Component, DigsimException
+from .components.atoms import DigsimException
 
 
 class CircuitError(DigsimException):
@@ -69,6 +70,11 @@ class Circuit:
             self._vcd = WavesWriter(filename=vcd)
         else:
             self._vcd = None
+
+    @property
+    def name(self):
+        """Get the circuit name"""
+        return self._name
 
     @property
     def time_ns(self):
@@ -243,65 +249,24 @@ class Circuit:
             return comp
         raise CircuitError(f"Component '{component_name}' not found")
 
-    def _connect_from_dict(self, source, dest):
-        source_component_name = source.split(".")[0]
-        source_port_name = source.split(".")[1]
-        dest_component_name = dest.split(".")[0]
-        dest_port_name = dest.split(".")[1]
-
-        source_component = self.get_component(source_component_name)
-        dest_componment = self.get_component(dest_component_name)
-        source_component.port(source_port_name).wire = dest_componment.port(dest_port_name)
-
-    def to_dict(self, folder=None):
+    def to_dataclass(self, folder=None):
         """Generate dict from circuit, used when storing circuit"""
         if self._name is None:
             raise CircuitError("Circuit must have a name")
-
         self._folder = folder
-        components_list = []
-        for comp in self.get_toplevel_components():
-            components_list.append(comp.to_dict())
+        return CircuitDataClass.from_circuit(self)
 
-        connection_list = []
-        for comp in self.get_toplevel_components():
-            for port in comp.ports:
-                port_conn_list = port.to_dict_list()
-                connection_list.extend(port_conn_list)
-
-        circuit_dict = {
-            "circuit": {
-                "name": self._name,
-                "components": components_list,
-                "wires": connection_list,
-            }
-        }
-
-        return circuit_dict
-
-    def from_dict(
-        self, circuit_dict, folder=None, component_exceptions=True, connect_exceptions=True
+    def from_dataclass(
+        self, circuit_dc, folder=None, component_exceptions=True, connect_exceptions=True
     ):
         """Clear circuit and add components from dict"""
         self._folder = folder
         self.clear()
-        if "circuit" not in circuit_dict:
-            raise CircuitError("No 'circuit' in JSON")
-        json_circuit = circuit_dict["circuit"]
-        if "name" not in json_circuit:
-            raise CircuitError("No 'circuit/name' in JSON")
-        self._name = json_circuit["name"]
-        if "components" not in json_circuit:
-            raise CircuitError("No 'circuit/components' in JSON")
-        json_components = json_circuit["components"]
-        if "wires" not in json_circuit:
-            raise CircuitError("No 'circuit/connections' in JSON")
-        json_connections = json_circuit["wires"]
 
         exception_str_list = []
-        for json_component in json_components:
+        for component in circuit_dc.components:
             try:
-                Component.from_dict(self, json_component)
+                component.create(self)
             except DigsimException as exc:
                 if component_exceptions:
                     raise exc
@@ -310,9 +275,9 @@ class Circuit:
                 if component_exceptions:
                     raise exc
                 exception_str_list.append(f"{str(exc.__class__.__name__)}:{str(exc)}")
-        for json_connection in json_connections:
+        for wire in circuit_dc.wires:
             try:
-                self._connect_from_dict(json_connection["src"], json_connection["dst"])
+                wire.connect(self)
             except DigsimException as exc:
                 if connect_exceptions:
                     raise exc
@@ -322,15 +287,10 @@ class Circuit:
 
     def to_json_file(self, filename):
         """Store circuit in json file"""
-        circuit_dict = self.to_dict()
-        json_object = json.dumps(circuit_dict, indent=4)
-
-        with open(filename, mode="w", encoding="utf-8") as json_file:
-            json_file.write(json_object)
+        circuitfile_dc = CircuitFileDataClass(circuit=self.to_dataclass())
+        circuitfile_dc.save(filename)
 
     def from_json_file(self, filename, folder=None):
         """Load circuit from json file"""
-        self._folder = folder
-        with open(filename, mode="r", encoding="utf-8") as json_file:
-            circuit_dict = json.load(json_file)
-            self.from_dict(circuit_dict, folder)
+        file_dc = CircuitFileDataClass.load(filename)
+        self.from_dataclass(file_dc.circuit, folder)

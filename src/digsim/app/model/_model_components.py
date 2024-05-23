@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2024
 # All rights reserved
 
 """Handle component objects in the model"""
@@ -7,6 +7,7 @@ import digsim.circuit.components
 from digsim.app.gui_objects import ComponentObject
 from digsim.circuit.components import Buzzer
 from digsim.circuit.components.atoms import CallbackComponent
+from digsim.storage_model import GuiPositionDataClass
 
 
 class ModelComponents:
@@ -149,20 +150,16 @@ class ModelComponents:
         self._circuit.delete_component(component_object.component)
         self._app_model.sig_delete_component.emit(component_object)
 
-    def create_from_dict(self, circuit_dict):
+    def add_gui_positions(self, gui_dc_dict):
         """Create model components from circuit_dict"""
         for comp in self._circuit.get_toplevel_components():
-            gui_dict = circuit_dict.get("gui", {})
-            component_dict = gui_dict.get(comp.name(), {})
-            x = component_dict.get("x", 100)
-            y = component_dict.get("y", 100)
-            z = component_dict.get("z", 0)
-            component_object = self._add_object(comp, x, y)
-            component_object.zlevel = z
+            gui_dc = gui_dc_dict.get(comp.name(), GuiPositionDataClass())
+            component_object = self._add_object(comp, gui_dc.x, gui_dc.y)
+            component_object.zlevel = gui_dc.z
 
-    def get_circuit_dict(self):
-        """Create model components dict"""
-        model_components_dict = {"gui": {}}
+    def get_gui_dict(self):
+        """Return gui dict from component objects"""
+        gui_dict = {}
         for comp, comp_object in self.get_dict().items():
-            model_components_dict["gui"][comp.name()] = comp_object.to_dict()
-        return model_components_dict
+            gui_dict[comp.name()] = comp_object.to_gui_dataclass()
+        return gui_dict

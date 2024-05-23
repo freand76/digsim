@@ -9,6 +9,8 @@ from PySide6.QtCore import QPoint, QRect, QSize, Qt
 from PySide6.QtGui import QFont, QFontMetrics, QPen
 from PySide6.QtWidgets import QGraphicsItem, QGraphicsRectItem
 
+from digsim.storage_model import GuiPositionDataClass
+
 from ._component_context_menu import ComponentContextMenu
 from ._component_port_item import PortGraphicsItem
 
@@ -365,6 +367,7 @@ class ComponentObject(QGraphicsRectItem):
         """Set zlevel"""
         self.setZValue(level)
 
-    def to_dict(self):
-        """Return position as dict"""
-        return {"x": int(self._save_pos.x()), "y": int(self._save_pos.y()), "z": self.zlevel}
+    def to_gui_dataclass(self):
+        return GuiPositionDataClass(
+            x=int(self._save_pos.x()), y=int(self._save_pos.y()), z=int(self.zlevel)
+        )

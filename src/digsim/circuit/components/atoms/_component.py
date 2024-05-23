@@ -5,7 +5,6 @@
 
 import abc
 import copy
-import importlib
 
 from ._digsim_exception import DigsimException
 
@@ -165,44 +164,6 @@ class Component(abc.ABC):
         for port in self.outports():
             comp_str += f"\n - O:{port.name()}={port.value}"
         return comp_str
-
-    def to_dict(self):
-        """Return the component information as a dict, used when storing a circuit"""
-        component_dict = {
-            "name": self.name(),
-            "display_name": self.display_name(),
-        }
-
-        module_split = type(self).__module__.split(".")
-        type_str = ""
-        for module in module_split:
-            if not module.startswith("_"):
-                type_str += f"{module}."
-        type_str += type(self).__name__
-        component_dict["type"] = type_str
-        component_dict["settings"] = self.settings_to_dict()
-        return component_dict
-
-    @classmethod
-    def from_dict(cls, circuit, json_component):
-        """Factory: Create a component from a dict"""
-        component_name = json_component["name"]
-        component_type = json_component["type"]
-        component_settings = json_component.get("settings", {})
-        if "path" in component_settings:
-            component_settings["path"] = circuit.load_path(component_settings["path"])
-
-        display_name = json_component.get("display_name")
-        py_module_name = ".".join(component_type.split(".")[0:-1])
-        py_class_name = component_type.split(".")[-1]
-
-        module = importlib.import_module(py_module_name)
-        class_ = getattr(module, py_class_name)
-        component = class_(circuit=circuit, **component_settings)
-        component.set_name(component_name)
-        if display_name is not None:
-            component.set_display_name(display_name)
-        return component
 
     @property
     def has_action(self):

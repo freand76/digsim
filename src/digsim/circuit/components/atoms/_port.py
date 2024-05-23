@@ -32,6 +32,11 @@ class Port(abc.ABC):
         self.update_wires("X")
 
     @property
+    def wired_ports(self):
+        """Get wires from thisport"""
+        return self._wired_ports
+
+    @property
     def value(self):
         """Get the value of the port, can be "X" """
         return self._value
@@ -173,20 +178,6 @@ class Port(abc.ABC):
 
     def __str__(self):
         return f"{self._parent.name()}:{self._name}={self.value}"
-
-    def to_dict_list(self):
-        """Output port connections as a dict, used when storing a circuit"""
-        port_conn_list = []
-        for port in self._wired_ports:
-            # Only add port on top-level components
-            if port.parent().is_toplevel():
-                port_conn_list.append(
-                    {
-                        "src": f"{self.parent().name()}.{self.name()}",
-                        "dst": f"{port.parent().name()}.{port.name()}",
-                    }
-                )
-        return port_conn_list
 
 
 class PortWire(Port):
