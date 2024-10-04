@@ -77,6 +77,11 @@ Then the following package must be installed:
 > gtkwave sr.vcd
 ```
 
+### Examples of writing pytest/python test benches for synthesized verilog code
+```
+> pytest examples/pytest_tb
+```
+
 ## Yosys synthesis helper tool
 
 ```
