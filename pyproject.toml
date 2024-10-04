@@ -24,12 +24,12 @@ classifiers = [
 
 requires-python = ">=3.9"
 dependencies = [
-  "pyvcd>=0.3.0",
-  "pyside6>=6.6.0",
-  "pexpect==4.8.0",
-  "pydantic==2.7.1",
+  "pyvcd>=0.4.0",
+  "pyside6>=6.7.3",
+  "pexpect==4.9.0",
+  "pydantic==2.9.2",
   "qtawesome",
-  "yowasp-yosys==0.36.0.8.post620",
+  "yowasp-yosys==0.45.0.0.post775",
 ]
 
 keywords = ["educational", "simulation", "digital"]
