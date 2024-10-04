@@ -64,7 +64,7 @@ class DipSwitch(CallbackComponent):
     def get_parameters(cls):
         return {
             "bits": {
-                "type": int,
+                "type": "int",
                 "min": 2,
                 "max": 8,
                 "default": 8,

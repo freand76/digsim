@@ -36,7 +36,7 @@ class Buzzer(CallbackComponent):
     def get_parameters(cls):
         return {
             "tone": {
-                "type": list,
+                "type": "list",
                 "items": ["A", "B", "C", "D", "E", "F", "G"],
                 "default": "A",
                 "description": "Buzzer tone",

@@ -44,7 +44,7 @@ class Clock(CallbackComponent):
     def get_parameters(cls):
         return {
             "frequency": {
-                "type": int,
+                "type": "int",
                 "min": 1,
                 "max": 50,
                 "default": 1,

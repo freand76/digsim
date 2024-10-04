@@ -17,7 +17,7 @@ class Note(Component):
     def get_parameters(cls):
         return {
             "text": {
-                "type": str,
+                "type": "str",
                 "default": "Write something here...",
                 "description": "Note text",
                 "reconfigurable": True,

@@ -106,14 +106,14 @@ class LabelWireIn(Component):
 
         return {
             "label": {
-                "type": str,
+                "type": "str",
                 "single_line": True,
                 "default": "WireLabel",
                 "description": "Label name",
                 "invalid_list": label_list,
             },
             "width": {
-                "type": int,
+                "type": "int",
                 "min": 1,
                 "max": 32,
                 "default": 1,
@@ -160,7 +160,7 @@ class LabelWireOut(Component):
 
         return {
             "label": {
-                "type": list,
+                "type": "list",
                 "items": label_list,
                 "description": "Select label",
             }

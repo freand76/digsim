@@ -29,7 +29,7 @@ class Bus2Wires(Component):
     def get_parameters(cls):
         return {
             "width": {
-                "type": int,
+                "type": "int",
                 "min": 2,
                 "max": 32,
                 "default": 2,
@@ -59,7 +59,7 @@ class Wires2Bus(Component):
     def get_parameters(cls):
         return {
             "width": {
-                "type": int,
+                "type": "int",
                 "min": 2,
                 "max": 32,
                 "default": 2,

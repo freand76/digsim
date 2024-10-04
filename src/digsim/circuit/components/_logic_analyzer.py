@@ -50,7 +50,7 @@ class LogicAnalyzer(CallbackComponent):
     def get_parameters(cls):
         return {
             "sample_rate": {
-                "type": int,
+                "type": "int",
                 "min": 10,
                 "max": 100,
                 "default": 20,

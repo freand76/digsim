@@ -44,7 +44,7 @@ class ConfigPortsComponent(Component):
     def get_parameters(cls):
         return {
             "ports": {
-                "type": int,
+                "type": "int",
                 "min": 2,
                 "max": 8,
                 "default": 2,
@@ -161,17 +161,17 @@ class DFF(Component):
     def get_parameters(cls):
         return {
             "async_reset": {
-                "type": bool,
+                "type": "bool",
                 "default": False,
                 "description": "Use asynchronous reset",
             },
             "clock_enable": {
-                "type": bool,
+                "type": "bool",
                 "default": False,
                 "description": "Use clock enable",
             },
             "width": {
-                "type": int,
+                "type": "int",
                 "min": 1,
                 "max": 32,
                 "default": 1,
@@ -215,7 +215,7 @@ class MUX(Component):
                 "description": "Number of input ports",
             },
             "width": {
-                "type": int,
+                "type": "int",
                 "min": 1,
                 "max": 32,
                 "default": 1,

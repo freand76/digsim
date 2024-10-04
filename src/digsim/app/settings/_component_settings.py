@@ -358,9 +358,9 @@ class ComponentSettingsDialog(QDialog):
                 widget = ComponentSettingsCheckBoxWidthBool(
                     self, parameter, parameter_dict, self._settings
                 )
-            elif parameter_dict["type"] == int:
+            elif parameter_dict["type"] == "int":
                 widget = ComponentSettingsSlider(self, parameter, parameter_dict, self._settings)
-            elif parameter_dict["type"] == str:
+            elif parameter_dict["type"] == "str":
                 single_line = parameter_dict.get("single_line", False)
                 if single_line:
                     widget = ComponentSettingSingleLineText(
@@ -368,7 +368,7 @@ class ComponentSettingsDialog(QDialog):
                     )
                 else:
                     widget = ComponentSettingText(self, parameter, parameter_dict, self._settings)
-            elif parameter_dict["type"] == bool:
+            elif parameter_dict["type"] == "bool":
                 widget = ComponentSettingsCheckBox(self, parameter, parameter_dict, self._settings)
             elif parameter_dict["type"] == "intrange":
                 widget = ComponentSettingsIntRangeSlider(
@@ -382,7 +382,7 @@ class ComponentSettingsDialog(QDialog):
                 widget = ComponentSettingsNameSelector(
                     self, parameter, parameter_dict, self._settings
                 )
-            elif parameter_dict["type"] == list:
+            elif parameter_dict["type"] == "list":
                 widget = ComponentSettingsListSelector(
                     self, parameter, parameter_dict, self._settings
                 )

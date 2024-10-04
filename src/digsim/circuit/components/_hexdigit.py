@@ -68,14 +68,14 @@ class HexDigit(CallbackComponent):
     def get_parameters(cls):
         return {
             "digits": {
-                "type": int,
+                "type": "int",
                 "min": 1,
                 "max": 8,
                 "default": 1,
                 "description": "Number of digits",
             },
             "dot": {
-                "type": bool,
+                "type": "bool",
                 "default": False,
                 "description": "Use decimal dot",
             },

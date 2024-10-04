@@ -35,7 +35,7 @@ class StaticValue(Component):
                 "reconfigurable": True,
             },
             "width": {
-                "type": int,
+                "type": "int",
                 "min": 1,
                 "max": 16,
                 "default": 1,
