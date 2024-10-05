@@ -2,6 +2,12 @@
 
 ## vx.x.x
 
+## v0.5.0
+ - Added pytest verilog testbench example
+ - Update python dependencies (yosys/pydantic/pyside6/...)
+ - Update to ruff 0.6.9 (And fix code that ruff thought was bad)
+ - Drop python 3.8 support
+
 ## v0.4.0
  - Make it possible to use locally installed yosys
  - Use ruff for python formatting and linting of code

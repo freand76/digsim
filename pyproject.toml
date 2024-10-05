@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "digsim-logic-simulator"
 description = "Interactive Digital Logic Simulator"
-version = "0.4.0"
+version = "0.5.0"
 authors = [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 maintainers =  [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 readme = "README.md"
@@ -36,7 +36,7 @@ keywords = ["educational", "simulation", "digital"]
 
 [tool.ruff]
 line-length = 99
-target-version = "py38"
+target-version = "py39"
 
 show-fixes = true
 output-format = "full"
