@@ -1,6 +1,6 @@
 The Clear BSD License
 
-Copyright (c) 2023, Fredrik Andersson
+Copyright (c) 2023-2024, Fredrik Andersson
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
