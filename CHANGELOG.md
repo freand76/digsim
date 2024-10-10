@@ -2,7 +2,7 @@
 
 ## vx.x.x
 
-## v0.5.0
+## v0.6.0
  - Block bad pyside version 6.8.0
 
 ## v0.5.0
