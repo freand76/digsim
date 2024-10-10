@@ -3,6 +3,9 @@
 ## vx.x.x
 
 ## v0.5.0
+ - Block bad pyside version 6.8.0
+
+## v0.5.0
  - Added pytest verilog testbench example
  - Update python dependencies (yosys/pydantic/pyside6/...)
  - Update to ruff 0.6.9 (And fix code that ruff thought was bad)
