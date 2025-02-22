@@ -117,7 +117,7 @@ class _NetlistCell(_NetlistBlock):
 
     def get_friendly_name(self):
         """Return a friendly name for a netlist cell"""
-        return f'{self.name().split("$")[-1]}_{self.get_friendly_type()}'
+        return f"{self.name().split('$')[-1]}_{self.get_friendly_type()}"
 
     def get_friendly_type(self):
         """Return a friendly type for a netlist cell"""

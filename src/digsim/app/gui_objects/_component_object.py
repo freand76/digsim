@@ -151,7 +151,7 @@ class ComponentObject(QGraphicsRectItem):
             if port.width == 1:
                 self._port_dict[port]["name"] = port.name()
             else:
-                self._port_dict[port]["name"] = f"{port.name()}[{port.width-1}:0]"
+                self._port_dict[port]["name"] = f"{port.name()}[{port.width - 1}:0]"
             item = PortGraphicsItem(self._app_model, self, port)
             self._port_dict[port]["item"] = item
         self.update_ports()

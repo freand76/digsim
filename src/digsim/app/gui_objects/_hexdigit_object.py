@@ -22,7 +22,7 @@ class HexDigitObject(SevenSegmentObject):
     def setup_size(self):
         """Setup the size of the component"""
         self.digits = self.component.get_digits()
-        str_pixels_w, _ = self.get_string_metrics(f"val[{4*self.digits-1}:0]")
+        str_pixels_w, _ = self.get_string_metrics(f"val[{4 * self.digits - 1}:0]")
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
         self.digit_top = self.RECT_TO_DIGIT_RECT_MARGIN
         self.width = (
