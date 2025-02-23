@@ -6,15 +6,16 @@ rm -rfv dist/*
 
 # Install needed packages
 echo "Install tools"
-pip3 install pip --upgrade > build.log
-pip3 install pip-tools build twine >> build.log
+uv venv .dist_venv
+. .dist_venv/bin/activate
+uv pip install pip-tools build twine
 
 # Build dist
 echo "Build dist"
 echo " - Compile"
-pip-compile pyproject.toml 2>> build.log
+pip-compile pyproject.toml
 echo " - Build"
-python3 -m build >> build.log
+uv run --active -m build
 
 # Print dist files
 echo "Dist files:"
