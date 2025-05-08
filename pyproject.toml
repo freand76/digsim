@@ -9,7 +9,7 @@ version = "0.7.0"
 authors = [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 maintainers =  [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 readme = "README.md"
-license = { file = "LICENSE.md" }
+license-files = ["LICENSE.md"]
 urls = { homepage = "https://github.com/freand76/digsim" }
 
 classifiers = [
