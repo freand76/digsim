@@ -1,2 +1,2 @@
 echo "Starting DigSim application"
-uv run -m digsim.app $@
+uv run --upgrade -m digsim.app $@

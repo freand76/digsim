@@ -259,7 +259,7 @@ class LoadSaveWidget(QFrame):
         self._redo_button.setToolTip("Redo")
         self.layout().addWidget(self._redo_button)
         self._settings_button = QPushButton("", self)
-        self._settings_button.setIcon(qta.icon("fa.cog"))
+        self._settings_button.setIcon(qta.icon("mdi.cog"))
         self._settings_button.clicked.connect(self._settings_dialog)
         self._settings_button.setToolTip("Settings")
         self.layout().addWidget(self._settings_button)
