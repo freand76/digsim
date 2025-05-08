@@ -8,7 +8,7 @@ rm -rfv dist/*
 echo "Install tools"
 uv venv .dist_venv
 . .dist_venv/bin/activate
-uv pip install pip-tools build twine
+uv pip install pip-tools build twine --upgrade
 
 # Build dist
 echo "Build dist"
