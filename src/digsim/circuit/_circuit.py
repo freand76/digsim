@@ -1,16 +1,19 @@
-# Copyright (c) Fredrik Andersson, 2023-2024
+# Copyright (c) Fredrik Andersson, 2023-2025
 # All rights reserved
 
 """
 Module that handles the circuit simulation of components
 """
 
+from __future__ import annotations
+
 import os
+from typing import Tuple
 
 from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
 
 from ._waves_writer import WavesWriter
-from .components.atoms import DigsimException
+from .components.atoms import Component, DigsimException, PortOutDelta
 
 
 class CircuitError(DigsimException):
@@ -23,90 +26,89 @@ class CircuitEvent:
     delta events in the simulation.
     """
 
-    def __init__(self, time_ns, port, value):
-        self._time_ns = time_ns
-        self._port = port
-        self._value = value
+    def __init__(self, time_ns: int, port: PortOutDelta, value: int | str | None):
+        self._time_ns: int = time_ns
+        self._port: PortOutDelta = port
+        self._value: int | str | None = value
 
     @property
-    def time_ns(self):
+    def time_ns(self) -> int:
         """Get the simulation time (ns) of this event"""
         return self._time_ns
 
     @property
-    def port(self):
+    def port(self) -> PortOutDelta:
         """Get the port of this event"""
         return self._port
 
     @property
-    def value(self):
+    def value(self) -> int | str | None:
         """Get the delta cycle value of this event"""
         return self._value
 
-    def is_same_event(self, port):
+    def is_same_event(self, port: PortOutDelta):
         """Return True if the in the event is the same as"""
         return port == self._port
 
-    def update(self, time_ns, value):
+    def update(self, time_ns: int, value: int | str | None):
         """Update the event with a new time (ns) and a new value"""
         self._time_ns = time_ns
         self._value = value
 
-    def __lt__(self, other):
+    def __lt__(self, other) -> bool:
         return other.time_ns > self.time_ns
 
 
 class Circuit:
     """Class thay handles the circuit simulation"""
 
-    def __init__(self, name=None, vcd=None):
-        self._components = {}
-        self._circuit_events = []
-        self._name = name
-        self._time_ns = 0
-        self._folder = None
+    def __init__(self, name: str | None = None, vcd: str | None = None):
+        self._components: dict[str, Component] = {}
+        self._circuit_events: list[CircuitEvent] = []
+        self._name: str | None = name
+        self._time_ns: int = 0
+        self._folder: str | None = None
+        self._vcd: WavesWriter | None = None
 
         if vcd is not None:
             self._vcd = WavesWriter(filename=vcd)
-        else:
-            self._vcd = None
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Get the circuit name"""
         return self._name
 
     @property
-    def time_ns(self):
+    def time_ns(self) -> int:
         """Get the current simulation time (ns)"""
         return self._time_ns
 
     @property
-    def components(self):
+    def components(self) -> list[Component]:
         """Get the components in this circuit"""
         comp_array = []
         for _, comp in self._components.items():
             comp_array.append(comp)
         return comp_array
 
-    def load_path(self, path):
+    def load_path(self, path) -> str:
         """Get the load path relative to the circuit path"""
         if self._folder is not None:
             return self._folder + "/" + path
         return path
 
-    def store_path(self, path):
+    def store_path(self, path) -> str:
         """Get the store path relative to the circuit path"""
         if self._folder is not None:
             return os.path.relpath(path, self._folder)
         return path
 
-    def delete_component(self, component):
+    def delete_component(self, component: Component):
         """Delete a component from the circuit"""
         del self._components[component.name()]
         component.remove_connections()
 
-    def get_toplevel_components(self):
+    def get_toplevel_components(self) -> list[Component]:
         """Get toplevel components in the circuit"""
         toplevel_components = []
         for _, comp in self._components.items():
@@ -157,7 +159,7 @@ class Circuit:
             for port in comp.ports:
                 self._vcd.write(port, self._time_ns)
 
-    def _time_to_ns(self, s=None, ms=None, us=None, ns=None):
+    def _time_to_ns(self, s=None, ms=None, us=None, ns=None) -> int:
         time_ns = 0
         time_ns += s * 1e9 if s is not None else 0
         time_ns += ms * 1e6 if ms is not None else 0
@@ -168,7 +170,7 @@ class Circuit:
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self._vcd.close()
 
-    def process_single_event(self, stop_time_ns=None):
+    def process_single_event(self, stop_time_ns=None) -> Tuple[bool, bool]:
         """
         Process one simulation event
         Return False if ther are now events of if the stop_time has passed
@@ -190,13 +192,20 @@ class Circuit:
             self._vcd.write(event.port, self._time_ns)
         return True, toplevel
 
-    def _is_toplevel_event(self):
+    def _is_toplevel_event(self) -> bool:
         if len(self._circuit_events) == 0:
             return False
         event = self._circuit_events[0]
         return event.port.parent().is_toplevel()
 
-    def run(self, s=None, ms=None, us=None, ns=None, single_step=False):
+    def run(
+        self,
+        s: int | None = None,
+        ms: int | None = None,
+        us: int | None = None,
+        ns: int | None = None,
+        single_step: bool = False,
+    ) -> bool:
         """Run simulation for a period of time"""
         stop_time_ns = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
         single_step_stop = False
@@ -210,13 +219,19 @@ class Circuit:
         self._time_ns = max(self._time_ns, stop_time_ns)
         return single_step_stop
 
-    def run_until(self, s=None, ms=None, us=None, ns=None):
+    def run_until(
+        self,
+        s: int | None = None,
+        ms: int | None = None,
+        us: int | None = None,
+        ns: int | None = None,
+    ):
         """Run simulation until a specified time"""
         stop_time_ns = self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
         if stop_time_ns >= self._time_ns:
             self.run(ns=stop_time_ns - self._time_ns)
 
-    def add_event(self, port, value, propagation_delay_ns):
+    def add_event(self, port: PortOutDelta, value: int | str | None, propagation_delay_ns: int):
         """Add delta cycle event, this will also write values to .vcd file"""
         event_time_ns = self._time_ns + propagation_delay_ns
         # print(f"Add event {port.parent().name()}:{port.name()} => {value}")
@@ -226,7 +241,7 @@ class Circuit:
                 return
         self._circuit_events.append(CircuitEvent(event_time_ns, port, value))
 
-    def add_component(self, component):
+    def add_component(self, component: Component):
         """Add component to circuit"""
         name_id = 1
         namebase = component.name()
@@ -235,21 +250,21 @@ class Circuit:
             name_id += 1
         self._components[component.name()] = component
 
-    def change_component_name(self, component, name):
+    def change_component_name(self, component: Component, name: str):
         """Change component name"""
         comp = self._components[component.name()]
         del self._components[component.name()]
         comp.set_name(name, update_circuit=False)
         self.add_component(comp)
 
-    def get_component(self, component_name):
+    def get_component(self, component_name: str) -> Component:
         """Get component witgh 'component_name'"""
         comp = self._components.get(component_name)
         if comp is not None:
             return comp
         raise CircuitError(f"Component '{component_name}' not found")
 
-    def to_dataclass(self, folder=None):
+    def to_dataclass(self, folder: str | None = None) -> CircuitDataClass:
         """Generate dict from circuit, used when storing circuit"""
         if self._name is None:
             raise CircuitError("Circuit must have a name")
@@ -257,8 +272,12 @@ class Circuit:
         return CircuitDataClass.from_circuit(self)
 
     def from_dataclass(
-        self, circuit_dc, folder=None, component_exceptions=True, connect_exceptions=True
-    ):
+        self,
+        circuit_dc: CircuitDataClass,
+        folder: str | None = None,
+        component_exceptions: bool = True,
+        connect_exceptions: bool = True,
+    ) -> list[str]:
         """Clear circuit and add components from dict"""
         self._folder = folder
         self.clear()
@@ -285,12 +304,12 @@ class Circuit:
 
         return exception_str_list
 
-    def to_json_file(self, filename):
+    def to_json_file(self, filename: str):
         """Store circuit in json file"""
         circuitfile_dc = CircuitFileDataClass(circuit=self.to_dataclass())
         circuitfile_dc.save(filename)
 
-    def from_json_file(self, filename, folder=None):
+    def from_json_file(self, filename: str, folder: str | None = None):
         """Load circuit from json file"""
         file_dc = CircuitFileDataClass.load(filename)
         self.from_dataclass(file_dc.circuit, folder)

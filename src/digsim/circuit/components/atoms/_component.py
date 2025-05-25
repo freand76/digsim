@@ -1,12 +1,16 @@
-# Copyright (c) Fredrik Andersson, 2023-2024
+# Copyright (c) Fredrik Andersson, 2023-2025
 # All rights reserved
 
 """This module contains the base classes for all component types"""
 
+from __future__ import annotations
+
 import abc
 import copy
+from typing import Callable
 
 from ._digsim_exception import DigsimException
+from ._port import Port
 
 
 class ComponentException(DigsimException):
@@ -16,15 +20,14 @@ class ComponentException(DigsimException):
 class Component(abc.ABC):
     """The component base class"""
 
-    def __init__(self, circuit, name=None, display_name=None):
+    def __init__(self, circuit, name: str | None = None, display_name: str | None = None):
         self._circuit = circuit
-        self._name = name or self.__class__.__name__
-        self._parent = None
-        self._ports = []
-        self._edge_detect_dict = {}
+        self._name: str = name or self.__class__.__name__
+        self._parent: Component | None = None
+        self._ports: list[Port] = []
         self._circuit.add_component(self)
-        self._display_name = display_name or self.__class__.__name__
-        self._parameters = {}
+        self._display_name: str = display_name or self.__class__.__name__
+        self._parameters: dict[str, int | str | bool] = {}
 
     def init(self):
         """Initialize port, will be called when circuit is initialized"""
@@ -37,15 +40,15 @@ class Component(abc.ABC):
     def clear(self):
         """Remove static state within the component class"""
 
-    def parameter_set(self, parameter, value):
+    def parameter_set(self, parameter: str, value: int | str | bool):
         """Set component parameter"""
         self._parameters[parameter] = value
 
-    def parameter_get(self, parameter):
+    def parameter_get(self, parameter: str) -> int | str | bool:
         """Get component parameter"""
         return self._parameters[parameter]
 
-    def add_port(self, port):
+    def add_port(self, port: Port):
         """
         Add port to component,
         also add a 'portname' variable to the component with help of the 'self.__dict__'
@@ -59,7 +62,7 @@ class Component(abc.ABC):
         """
         self._ports = []
 
-    def path(self):
+    def path(self) -> str:
         """Get component path"""
         if self._parent is not None:
             return f"{self._parent.path()}.{self.name()}"
@@ -70,22 +73,22 @@ class Component(abc.ABC):
         """Get component ports"""
         return self._ports
 
-    def _get_ports(self, output):
+    def _get_ports(self, output) -> list[Port]:
         sel_ports = []
         for port in self._ports:
             if port.is_output() == output:
                 sel_ports.append(port)
         return sel_ports
 
-    def inports(self):
+    def inports(self) -> list[Port]:
         """Get component input ports"""
         return self._get_ports(False)
 
-    def outports(self):
+    def outports(self) -> list[Port]:
         """Get component output ports"""
         return self._get_ports(True)
 
-    def port(self, portname):
+    def port(self, portname: str) -> Port:
         """Get port with name 'portname'"""
         for port in self._ports:
             if port.name() == portname:
@@ -97,36 +100,36 @@ class Component(abc.ABC):
         """Get the circuit for the current component"""
         return self._circuit
 
-    def name(self):
+    def name(self) -> str:
         """Get the component name"""
         return self._name
 
-    def set_name(self, name, update_circuit=True):
+    def set_name(self, name: str, update_circuit: bool = True):
         """Set the component name"""
         if update_circuit:
             self.circuit.change_component_name(self, name)
         else:
             self._name = name
 
-    def display_name(self):
+    def display_name(self) -> str:
         """Get the component display name"""
         return self._display_name
 
-    def set_display_name(self, display_name):
+    def set_display_name(self, display_name: str):
         """Set the component display name"""
         self._display_name = display_name
 
     @property
-    def parent(self):
+    def parent(self) -> Component | None:
         """Get parent component"""
         return self._parent
 
     @parent.setter
-    def parent(self, parent):
+    def parent(self, parent: Component):
         """Set component parent"""
         self._parent = parent
 
-    def is_toplevel(self):
+    def is_toplevel(self) -> bool:
         """Return True if this component is a toplevel component"""
         return self._parent is None
 
@@ -136,7 +139,7 @@ class Component(abc.ABC):
         raise ComponentException(f"Cannot get wire for component '{self.display_name}'")
 
     @wire.setter
-    def wire(self, port):
+    def wire(self, port: Port):
         """Some components have a single output port, they can wired at component level"""
         self.outports()[0].wire = port
 
@@ -146,14 +149,14 @@ class Component(abc.ABC):
     def remove_connections(self):
         """Remove component connections"""
         for src_port in self.outports():
-            for dst_port in src_port.get_wires():
+            for dst_port in src_port.wired_ports:
                 dst_port.set_driver(None)
 
         for dst_port in self.inports():
             if dst_port.has_driver():
                 dst_port.get_driver().disconnect(dst_port)
 
-    def add_event(self, port, value, delay_ns):
+    def add_event(self, port: Port, value: int, delay_ns: int):
         """Add delta cycle event"""
         self.circuit.add_event(port, value, delay_ns)
 
@@ -166,12 +169,12 @@ class Component(abc.ABC):
         return comp_str
 
     @property
-    def has_action(self):
+    def has_action(self) -> bool:
         """Return True if this component is interactive"""
         return False
 
     @property
-    def active(self):
+    def active(self) -> bool:
         """Return True if this component is active/activated ('on' for a switch for example)"""
         return False
 
@@ -185,7 +188,7 @@ class Component(abc.ABC):
         """Get component settings from dict"""
         raise ComponentException(f"No setup for component '{self.display_name}'")
 
-    def settings_to_dict(self):
+    def settings_to_dict(self) -> dict[str, int | str | bool]:
         """Return component settings as a dict"""
         return copy.deepcopy(self._parameters)
 
@@ -194,7 +197,7 @@ class Component(abc.ABC):
         """Return parameters"""
         return {}
 
-    def update_settings(self, settings):
+    def update_settings(self, settings: dict[str, int | str | bool]):
         """Update parameters from settings dict"""
         for setting, value in settings.items():
             self.parameter_set(setting, value)
@@ -222,9 +225,9 @@ class Component(abc.ABC):
 class MultiComponent(Component):
     """A component that holds one or several sub components"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit, name: str):
         super().__init__(circuit, name)
-        self._components = []
+        self._components: list[Component] = []
 
     def init(self):
         super().init()
@@ -253,11 +256,11 @@ class CallbackComponent(Component):
     objects when the component change value.
     """
 
-    def __init__(self, circuit, name, callback=None):
+    def __init__(self, circuit, name: str, callback: Callable[[Component], None] | None = None):
         super().__init__(circuit, name)
         self._callback = callback
 
-    def set_callback(self, callback):
+    def set_callback(self, callback: Callable[[Component], None]):
         """Set CallbackComponent callback function"""
         self._callback = callback
 

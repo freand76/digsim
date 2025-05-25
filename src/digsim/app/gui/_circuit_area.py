@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2024
+# Copyright (c) Fredrik Andersson, 2023-2025
 # All rights reserved
 
 """The circuit area and component widget"""
@@ -275,7 +275,7 @@ class _CircuitAreaScene(QGraphicsScene):
         component_objects = self._app_model.objects.components.get_object_list()
         for src_comp_item in component_objects:
             for src_port in src_comp_item.component.outports():
-                for dst_port in src_port.get_wires():
+                for dst_port in src_port.wired_ports:
                     dst_comp_item = self._app_model.objects.components.get_object(
                         dst_port.parent()
                     )

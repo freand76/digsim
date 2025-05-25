@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2024
+# Copyright (c) Fredrik Andersson, 2023-2025
 # All rights reserved
 
 """This module contains the classes for all component ports"""
@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import abc
 
-from ._component import Component
 from ._digsim_exception import DigsimException
 
 
@@ -18,14 +17,14 @@ class PortConnectionError(DigsimException):
 class Port(abc.ABC):
     """The abstract base class for all ports"""
 
-    def __init__(self, parent: Component, name: str, width: int = 1, output: bool = False):
-        self._parent: Component = parent  # The parent component
+    def __init__(self, parent, name: str, width: int = 1, output: bool = False):
+        self._parent = parent  # The parent component
         self._name: str = name  # The name of this port
         self._width: int = width  # The bit-width of this port
         self._output: bool = output  # Is this port an output port
         self._wired_ports: list[Port] = []  # The ports that this port drives
         self._value: int | str | None = None  # The value of this port
-        self._edge_detect_value: int | str = "X"  # Last edge detect value
+        self._edge_detect_value: int | str | None = "X"  # Last edge detect value
         self.init()  # Initialize the port
 
     def init(self):
@@ -35,22 +34,22 @@ class Port(abc.ABC):
         self.update_wires("X")
 
     @property
-    def wired_ports(self):
+    def wired_ports(self) -> list[Port]:
         """Get wires from thisport"""
         return self._wired_ports
 
     @property
-    def value(self):
+    def value(self) -> int | str | None:
         """Get the value of the port, can be "X" """
         return self._value
 
     @value.setter
-    def value(self, value: int):
+    def value(self, value: int | str | None):
         """Set the value of the port"""
         self.set_value(value)
 
     @property
-    def width(self):
+    def width(self) -> int:
         """Get the bit-width of the port"""
         return self._width
 
@@ -87,11 +86,11 @@ class Port(abc.ABC):
             port.set_driver(None)
         self._wired_ports = []
 
-    def name(self):
+    def name(self) -> str:
         """Get port name"""
         return self._name
 
-    def path(self):
+    def path(self) -> str:
         """Get port path, <component_name>...<component_name>"""
         return self._parent.path()
 
@@ -99,7 +98,7 @@ class Port(abc.ABC):
         """Get parent component"""
         return self._parent
 
-    def update_wires(self, value: int):
+    def update_wires(self, value: int | str | None):
         """Update connected wires (and self._value) with value"""
         if self._value == value:
             return
@@ -107,26 +106,22 @@ class Port(abc.ABC):
         for port in self._wired_ports:
             port.value = self._value
 
-    def get_wires(self):
-        """Get connected ports"""
-        return self._wired_ports
-
-    def get_wired_ports_recursive(self):
+    def get_wired_ports_recursive(self) -> list[Port]:
         """Get all connected ports (recursive)"""
         all_wired_ports = [self]
         for port in self._wired_ports:
             all_wired_ports.extend(port.get_wired_ports_recursive())
         return all_wired_ports
 
-    def is_output(self):
+    def is_output(self) -> bool:
         """Return True if this port is an output port"""
         return self._output
 
-    def is_input(self):
+    def is_input(self) -> bool:
         """Return True if this port is an input port"""
         return not self._output
 
-    def is_rising_edge(self):
+    def is_rising_edge(self) -> bool:
         """
         Return True if a rising edge has occured
         Note: This function can only be called once per 'update'
@@ -137,7 +132,7 @@ class Port(abc.ABC):
         self._edge_detect_value = self.value
         return rising_edge
 
-    def is_falling_edge(self):
+    def is_falling_edge(self) -> bool:
         """
         Return True if a falling edge has occured
         Note: This function can only be called once per 'update'
@@ -149,17 +144,21 @@ class Port(abc.ABC):
         return falling_edge
 
     @abc.abstractmethod
-    def set_value(self, value: int):
+    def set_value(self, value: int | str | None):
         """Set value on port"""
 
     @abc.abstractmethod
     def set_driver(self, port: Port | None):
         """Set port driver"""
 
+    @abc.abstractmethod
+    def has_driver(self) -> bool:
+        """Return True if port has driver"""
+
     def get_driver(self):
         """Get port driver"""
 
-    def can_add_wire(self):
+    def can_add_wire(self) -> bool:
         """Return True if it is possible to add a wire to this port"""
         if self.is_output():
             return True
@@ -174,7 +173,7 @@ class Port(abc.ABC):
             del self._wired_ports[index]
         port.set_driver(None)
 
-    def strval(self):
+    def strval(self) -> str:
         """Return value as string"""
         if self.value == "X":
             return "X"
@@ -182,7 +181,7 @@ class Port(abc.ABC):
             return f"0x{self.value:x}"
         return f"{self.value}"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self._parent.name()}:{self._name}={self.value}"
 
 
@@ -192,22 +191,22 @@ class PortWire(Port):
     * The port wire will instantaneously update the driven wires upon change.
     """
 
-    def __init__(self, parent: Component, name: str, width: int = 1, output: bool = False):
+    def __init__(self, parent, name: str, width: int = 1, output: bool = False):
         super().__init__(parent, name, width, output)
         self._port_driver: Port | None = None  # The port that drives this port
 
-    def set_value(self, value: int):
+    def set_value(self, value: int | str | None):
         if value != self.value:
             self.update_wires(value)
 
     def set_driver(self, port: Port | None):
         self._port_driver = port
 
-    def get_driver(self):
+    def get_driver(self) -> Port | None:
         """Get driver for port"""
         return self._port_driver
 
-    def has_driver(self):
+    def has_driver(self) -> bool:
         """Return True if port has driver"""
         return self._port_driver is not None
 
@@ -219,10 +218,10 @@ class PortIn(PortWire):
     * The port will update the parent component upon change.
     """
 
-    def __init__(self, parent: Component, name: str, width: int = 1):
+    def __init__(self, parent, name: str, width: int = 1):
         super().__init__(parent, name, width, output=False)
 
-    def set_value(self, value: int):
+    def set_value(self, value: int | str | None):
         super().set_value(value)
         self.parent().update()
 
@@ -234,7 +233,7 @@ class PortOutDelta(Port):
     * The port will update the parent component if the _update_parent variable is set to true.
     """
 
-    def __init__(self, parent: Component, name: str, width: int = 1, delay_ns: int = 1):
+    def __init__(self, parent, name: str, width: int = 1, delay_ns: int = 1):
         super().__init__(parent, name, width, output=True)
         self._delay_ns = delay_ns  # Propagation delay for this port
         self._update_parent = False  # Should this port update parent on change
@@ -247,27 +246,27 @@ class PortOutDelta(Port):
         """Set port propagation delay"""
         self._delay_ns = delay_ns
 
-    def set_value(self, value: int):
+    def set_value(self, value: int | str | None):
         self.parent().add_event(self, value, self._delay_ns)
 
-    def update_port(self, value: int):
+    def update_port(self, value: int | str | None):
         """Update the port output and the connected wires"""
         self.update_wires(value)
         if self._update_parent:
             self.parent().update()
 
-    def delta_cycle(self, value: int):
+    def delta_cycle(self, value: int | str | None):
         """Handle the delta cycle event from the circuit"""
         self.update_port(value)
 
     def set_driver(self, port: Port | None):
         raise PortConnectionError(f"The port {self.path()}.{self.name()} cannot be driven")
 
-    def get_driver(self):
+    def get_driver(self) -> Port | None:
         """Get driver for port, the output port has no driver"""
         return None
 
-    def has_driver(self):
+    def has_driver(self) -> bool:
         """Return False since the port does not have a driver"""
         return False
 
@@ -280,14 +279,14 @@ class PortOutImmediate(PortOutDelta):
     * The port will update the parent component if the _update_parent variable is set to true.
     """
 
-    def __init__(self, parent: Component, name: str, width: int = 1):
+    def __init__(self, parent, name: str, width: int = 1):
         super().__init__(parent, name, width)
 
-    def set_value(self, value: int):
+    def set_value(self, value: int | str | None):
         self.parent().add_event(self, value, 0)
         super().update_port(value)
 
-    def delta_cycle(self, value: int):
+    def delta_cycle(self, value: int | str | None):
         """
         Do nothing here, the event is just used to updates waves in Circuit class
         """
@@ -300,15 +299,15 @@ class PortWireBit(PortWire):
     The PortWireBit will update its parent (a PortMultiBitWire) upon change.
     """
 
-    def __init__(self, parent: Component, name: str, parent_port: PortMultiBitWire, output: bool):
+    def __init__(self, parent, name: str, parent_port: PortMultiBitWire, output: bool):
         super().__init__(parent, name, 1, output)
         self._parent_port = parent_port
 
-    def set_value(self, value: int):
+    def set_value(self, value: int | str | None):
         super().set_value(value)
         self._parent_port.update_value_from_bits()
 
-    def get_parent_port(self):
+    def get_parent_port(self) -> PortMultiBitWire:
         """Get the parent PortMultiBitWire for this port"""
         return self._parent_port
 
@@ -320,7 +319,7 @@ class PortMultiBitWire(Port):
     The PortWireMultiBit will add events to the circuit upon change to update vcd output.
     """
 
-    def __init__(self, parent: Component, name: str, width: int, output: bool = False):
+    def __init__(self, parent, name: str, width: int, output: bool = False):
         self._port_driver: Port | None = None  # The port that drives this port
         self._bits = []
         super().__init__(parent, name, width, output)
@@ -334,14 +333,14 @@ class PortMultiBitWire(Port):
         for bit in self._bits:
             bit.init()
 
-    def set_value(self, value: int):
-        if value == "X":
+    def set_value(self, value: int | str | None):
+        if value is None or isinstance(value, str):
             return
         for bit_id, bit in enumerate(self._bits):
             bit_val = (value >> bit_id) & 1
             bit.value = bit_val
 
-    def get_wired_ports_recursive(self):
+    def get_wired_ports_recursive(self) -> list[Port]:
         all_wired_ports = super().get_wired_ports_recursive()
         for bit in self._bits:
             all_wired_ports.extend(bit.get_wired_ports_recursive())
@@ -351,15 +350,15 @@ class PortMultiBitWire(Port):
         """Set port driver"""
         self._port_driver = port
 
-    def get_driver(self):
+    def get_driver(self) -> Port | None:
         """Get port driver"""
         return self._port_driver
 
-    def has_driver(self):
+    def has_driver(self) -> bool:
         """Return True if port has driver"""
         return self._port_driver is not None
 
-    def get_bit(self, bit_id: int):
+    def get_bit(self, bit_id: int) -> Port:
         """Get bit port"""
         return self._bits[bit_id]
 
@@ -376,7 +375,7 @@ class PortMultiBitWire(Port):
         # Send event just to update waves
         self.parent().add_event(self, value, 0)
 
-    def delta_cycle(self, value: int):
+    def delta_cycle(self, value: int | str | None):
         """
         Do nothing here, the event passed in 'update_value_from_bits'
         is just used to updates waves in Circuit class
