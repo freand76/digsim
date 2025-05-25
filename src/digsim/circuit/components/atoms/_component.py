@@ -121,14 +121,14 @@ class Component(abc.ABC):
         """Get parent component"""
         return self._parent
 
-    def is_toplevel(self):
-        """Return True if this component is a toplevel component"""
-        return self._parent is None
-
     @parent.setter
     def parent(self, parent):
         """Set component parent"""
         self._parent = parent
+
+    def is_toplevel(self):
+        """Return True if this component is a toplevel component"""
+        return self._parent is None
 
     @property
     def wire(self):

@@ -3,6 +3,8 @@
 
 """A component with an image as symbol the GUI"""
 
+from __future__ import annotations
+
 from pathlib import Path
 
 from PySide6.QtCore import QPoint, Qt
@@ -14,8 +16,8 @@ from ._component_object import ComponentObject
 class ImageObject(ComponentObject):
     """The class for a image component placed in the GUI"""
 
-    IMAGE_FILENAME = None
-    ACTIVE_IMAGE_FILENAME = None
+    IMAGE_FILENAME: str | None = None
+    ACTIVE_IMAGE_FILENAME: str | None = None
     _pixmap = None
     _pixmap_active = None
 

@@ -3,15 +3,15 @@
 
 """Label Wire components module"""
 
-from .atoms import Component, DigsimException, PortWire
+from .atoms import Component, DigsimException, PortIn, PortWire
 
 
 class _LabelWireStorage:
     """Singleton class with label wires"""
 
     _instance = None
-    _wire_drivers = {}
-    _wire_sinks = {}
+    _wire_drivers: dict[str, PortWire] = {}
+    _wire_sinks: dict[str, PortIn] = {}
 
     def __new__(cls):
         if cls._instance is None:
