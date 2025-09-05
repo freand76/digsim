@@ -10,7 +10,7 @@ python3 -m digsim.synth synth \
 python3 -m digsim.synth synth \
         -i $SCRIPT_DIR/74xx/7448.v \
         -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/7448.json \
-        -t ic_7448
+        -t ic7448
 
 python3 -m digsim.synth synth \
         -i $SCRIPT_DIR/6502/ALU.v $SCRIPT_DIR/6502/cpu.v \

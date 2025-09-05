@@ -170,6 +170,8 @@ class _NestlistModule(_NetlistBlock):
         for cell_name, cell_dict in module_dict["cells"].items():
             cell = _NetlistCell(cell_name)
             cell.from_dict(cell_dict, self._nets)
+            if cell.get_type() == "$scopeinfo":
+                continue
             self._cells[cell_name] = cell
 
     def get_cells(self):
