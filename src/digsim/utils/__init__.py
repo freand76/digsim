@@ -3,4 +3,4 @@
 
 """All classes within digsim.utils namespace"""
 
-from ._yosys_netlist import YosysNetlist  # noqa: F401
+from ._yosys_netlist import YosysCell, YosysModule, YosysNetlist  # noqa: F401

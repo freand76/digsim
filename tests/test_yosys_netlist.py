@@ -3,6 +3,9 @@
 
 """Pystest module to test functionality of yosys component"""
 
+import json
+from pathlib import Path
+
 import pytest
 
 from digsim.circuit import Circuit
@@ -63,8 +66,7 @@ def test_yosys_component_create():
     """Test create YosysComponent"""
     circuit = Circuit()
     comp = YosysComponent(circuit)
-    yosys_netlist = YosysNetlist()
-    yosys_netlist.from_dict(netlist_dict_if_one)
+    yosys_netlist = YosysNetlist(**netlist_dict_if_one)
     comp.create_from_netlist(yosys_netlist)
 
     comp.in_port.value = 0xA
@@ -76,16 +78,14 @@ def test_yosys_component_create_reload():
     """Test create YosysComponent - and reload changed netlist OK"""
     circuit = Circuit()
     comp = YosysComponent(circuit)
-    yosys_netlist = YosysNetlist()
-    yosys_netlist.from_dict(netlist_dict_if_one)
+    yosys_netlist = YosysNetlist(**netlist_dict_if_one)
     comp.create_from_netlist(yosys_netlist)
 
     comp.in_port.value = 0xA
     circuit.run(ms=1)
     assert comp.out_port.value == 0x5
 
-    yosys_netlist = YosysNetlist()
-    yosys_netlist.from_dict(netlist_dict_if_two)
+    yosys_netlist = YosysNetlist(**netlist_dict_if_two)
     comp.reload_from_netlist(yosys_netlist)
 
     comp.in_port.value = 0xA
@@ -97,18 +97,16 @@ def test_yosys_component_create_reload_fail():
     """Test create YosysComponent - and reload changed netlist OK"""
     circuit = Circuit()
     comp = YosysComponent(circuit)
-    yosys_netlist = YosysNetlist()
-    yosys_netlist.from_dict(netlist_dict_if_one)
+    yosys_netlist = YosysNetlist(**netlist_dict_if_one)
     comp.create_from_netlist(yosys_netlist)
 
-    yosys_netlist = YosysNetlist()
-    yosys_netlist.from_dict(netlist_dict_if_three)
+    yosys_netlist = YosysNetlist(**netlist_dict_if_three)
 
     # Fail due to wider in_port
     with pytest.raises(YosysComponentException):
         comp.reload_from_netlist(yosys_netlist)
 
-    yosys_netlist.from_dict(netlist_dict_if_four)
+    yosys_netlist = YosysNetlist(**netlist_dict_if_four)
 
     # Fail due to wider out_port
     with pytest.raises(YosysComponentException):
@@ -132,8 +130,7 @@ def test_yosys_component_create_static_levels():
     }
     circuit = Circuit()
     comp = YosysComponent(circuit)
-    yosys_netlist = YosysNetlist()
-    yosys_netlist.from_dict(netlist_dict_static)
+    yosys_netlist = YosysNetlist(**netlist_dict_static)
     comp.create_from_netlist(yosys_netlist)
     circuit.init()
     circuit.run(ms=1)
@@ -167,8 +164,7 @@ def test_yosys_component_not_gate_multiple_outputs():
     }
     circuit = Circuit()
     comp = YosysComponent(circuit)
-    yosys_netlist = YosysNetlist()
-    yosys_netlist.from_dict(netlist_dict)
+    yosys_netlist = YosysNetlist(**netlist_dict)
     comp.create_from_netlist(yosys_netlist)
     circuit.init()
     comp.in_port.value = 0
@@ -202,10 +198,18 @@ def test_yosys_component_not_gate_static_input():
     }
     circuit = Circuit()
     comp = YosysComponent(circuit)
-    yosys_netlist = YosysNetlist()
-    yosys_netlist.from_dict(netlist_dict)
+    yosys_netlist = YosysNetlist(**netlist_dict)
     comp.create_from_netlist(yosys_netlist)
     circuit.init()
     assert comp.out_port.value == "X"
     circuit.run(ms=1)
     assert comp.out_port.value == 1
+
+
+def test_yosys_complex_netlist():
+    comlex_json_netlist_file = (
+        Path(__file__).parent.parent / "src/digsim/circuit/components/ic/74162.json"
+    )
+    with open(comlex_json_netlist_file, encoding="utf-8") as json_file:
+        netlist_dict = json.load(json_file)
+    YosysNetlist(**netlist_dict)

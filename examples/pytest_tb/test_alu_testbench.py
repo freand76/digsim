@@ -60,8 +60,7 @@ def dut(current_path):
     # Synth DUT
     _dut = YosysComponent(circuit)
     _dut_synthesis = Synthesis([f"{current_path}/alu.v"], "alu")
-    _yosys_netlist = YosysNetlist()
-    _yosys_netlist.from_dict(_dut_synthesis.synth_to_dict())
+    _yosys_netlist = YosysNetlist(**_dut_synthesis.synth_to_dict())
     _dut.create_from_netlist(_yosys_netlist)
 
     circuit.init()

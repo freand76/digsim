@@ -10,8 +10,9 @@ import json
 
 import digsim.circuit.components._yosys_atoms
 from digsim.synth import Synthesis
-from digsim.utils import YosysNetlist
+from digsim.utils import YosysCell, YosysModule, YosysNetlist
 
+from ._static_level import GND, VDD
 from .atoms import Component, DigsimException, MultiComponent, PortMultiBitWire
 
 
@@ -29,6 +30,7 @@ class YosysComponent(MultiComponent):
         self._gates_comp = None
         self._net_comp = None
         self._netlist_module = None
+        self._netlist_nets = None
         self._setup_base()
 
         if nets:
@@ -47,13 +49,15 @@ class YosysComponent(MultiComponent):
         modules = netlist_object.get_modules()
         module_name = list(modules.keys())[0]
         self._netlist_module = netlist_object.get_modules()[module_name]
+        self._netlist_nets = self._netlist_module.get_nets()
+
         # Set Name
         self.set_name(module_name)
         self.set_display_name(module_name)
         # Add External Ports
-        for portname, port_dict in self._netlist_module.get_external_interface().items():
+        for portname, port_dict in self._netlist_module.ports.items():
             external_port = PortMultiBitWire(
-                self, portname, width=len(port_dict["nets"]), output=not port_dict["output"]
+                self, portname, width=len(port_dict.bits), output=port_dict.is_output
             )
             self.add_port(external_port)
         # Create component
@@ -64,18 +68,10 @@ class YosysComponent(MultiComponent):
         modules = netlist_object.get_modules()
         module_name = list(modules.keys())[0]
         reload_module = netlist_object.get_modules()[module_name]
+        reload_nets = reload_module.get_nets()
 
-        # Verify that new external interface is the same as the current
-        current_ext_if = self._netlist_module.get_external_interface()
-        new_ext_if = reload_module.get_external_interface()
-
-        if current_ext_if.keys() != new_ext_if.keys():
+        if not self._netlist_module.is_same_interface(reload_module):
             raise YosysComponentException("Yosys component interface differs")
-        for key, _ in current_ext_if.items():
-            if len(current_ext_if[key]["nets"]) != len(new_ext_if[key]["nets"]):
-                raise YosysComponentException("Yosys component interface differs")
-            if current_ext_if[key]["output"] != new_ext_if[key]["output"]:
-                raise YosysComponentException("Yosys component interface differs")
 
         # Disconnect ports
         self._disconnect_external_ports()
@@ -86,63 +82,79 @@ class YosysComponent(MultiComponent):
             self._net_comp.delete_all_ports()
         # Setup netlist
         self._netlist_module = reload_module
+        self._netlist_nets = reload_nets
         # Create component
         self._create_component()
 
     def _create_cells(self):
         """Create cells in component"""
         components_dict = {}
-        for cellname, cell in self._netlist_module.get_cells().items():
+        for cellname, cell in self._netlist_module.cells.items():
+            if cell.type == "$scopeinfo":
+                continue
             component_class = getattr(
-                digsim.circuit.components._yosys_atoms, cell.get_friendly_type()
+                digsim.circuit.components._yosys_atoms, cell.component_type()
             )
-            component = component_class(self._circuit, name=cell.get_friendly_name())
+            component = component_class(self._circuit, name=cell.component_name(cellname))
             self._gates_comp.add(component)
             components_dict[cellname] = component
+
+        vdd = VDD(self._circuit)
+        self._gates_comp.add(vdd)
+        components_dict["VDD"] = vdd
+        gnd = GND(self._circuit)
+        self._gates_comp.add(gnd)
+        components_dict["GND"] = gnd
+
         return components_dict
 
-    def _connect_cell_port(self, components_dict, src_cell, source_port):
-        """Connect cell ports"""
-        src_comp = components_dict[src_cell.name()]
-        src_comp_port = src_comp.port(source_port.name())
-        net = source_port.get_nets()[0]
-        for sink_port in source_port.get_sinks():
-            if sink_port.get_parent().get_type() == "module":
+    def _connect_sinks(self, components_dict, src_comp_port, sinks):
+        """Connect a source port to multiple sinks"""
+        for sink_port in sinks:
+            if isinstance(sink_port.parent, YosysModule):
                 # Connect cell output to module top
-                for dst_bit, sink_net in enumerate(sink_port.get_nets()):
-                    if net == sink_net:
-                        dst_port = self.port(sink_port.name()).get_bit(dst_bit)
-                        src_comp_port.wire = dst_port
+                dst_port = self.port(sink_port.name).get_bit(sink_port.bit_index)
+                src_comp_port.wire = dst_port
             else:
                 # Connect cell output to cell input
-                dst_comp = components_dict[sink_port.get_parent().name()]
-                src_comp_port.wire = dst_comp.port(sink_port.name())
+                dst_comp = components_dict[sink_port.parent_name]
+                src_comp_port.wire = dst_comp.port(sink_port.name)
 
     def _connect_cells(self, components_dict):
         """Connect all cells"""
-        for _, src_cell in self._netlist_module.get_cells().items():
-            for source_port in src_cell.get_source_ports():
-                self._connect_cell_port(components_dict, src_cell, source_port)
+        for net, source in self._netlist_nets.source.items():
+            if isinstance(source.parent, YosysModule):
+                # Only connect cells here
+                continue
+            if isinstance(source.parent, YosysCell):
+                src_comp = components_dict[source.parent_name]
+                self._connect_sinks(
+                    components_dict, src_comp.port(source.name), self._netlist_nets.sinks[net]
+                )
+
+        gnd_sinks = self._netlist_nets.sinks.get("0", [])
+        self._connect_sinks(components_dict, components_dict["GND"].port("O"), gnd_sinks)
+        vdd_sinks = self._netlist_nets.sinks.get("1", [])
+        self._connect_sinks(components_dict, components_dict["VDD"].port("O"), vdd_sinks)
 
     def _connect_external_input_port(self, components_dict, portname, port_dict):
-        """Conenct external input port"""
-        for bit_idx, net in enumerate(port_dict["nets"]):
-            for sink_port in self._netlist_module.get_sinks(net):
-                if sink_port.get_parent().get_type() == "module":
+        """Connect external input port"""
+        for bit_idx, net in enumerate(port_dict.bits):
+            for sink_port in self._netlist_nets.sinks[net]:
+                if isinstance(sink_port.parent, YosysModule):
                     # Connect module input to module output
-                    for dst_bit, sink_net in enumerate(sink_port.get_nets()):
-                        if net == sink_net:
-                            dst_port = self.port(sink_port.name()).get_bit(dst_bit)
-                            self.port(portname).get_bit(bit_idx).wire = dst_port
+                    dst_port = self.port(sink_port.name).get_bit(sink_port.bit_index)
+                    self.port(portname).get_bit(bit_idx).wire = dst_port
                 else:
                     # Connect module input to cell input
-                    dst_comp = components_dict[sink_port.get_parent().name()]
-                    self.port(portname).get_bit(bit_idx).wire = dst_comp.port(sink_port.name())
+                    self._connect_sinks(
+                        components_dict, self.port(portname).get_bit(bit_idx), [sink_port]
+                    )
 
     def _connect_external_input(self, components_dict):
         """Connect all external input ports"""
-        for portname, port_dict in self._netlist_module.get_external_interface().items():
-            if not port_dict["output"]:
+        for portname, port_dict in self._netlist_module.ports.items():
+            if port_dict.direction == "output":
                 continue
             self._connect_external_input_port(components_dict, portname, port_dict)
 
@@ -176,8 +188,7 @@ class YosysComponent(MultiComponent):
         else:
             raise YosysComponentException(f"Unknown file extension '{self._path}'")
 
-        yosys_netlist = YosysNetlist()
-        yosys_netlist.from_dict(netlist_dict)
+        yosys_netlist = YosysNetlist(**netlist_dict)
         modules = yosys_netlist.get_modules()
 
         if len(modules) > 1:
