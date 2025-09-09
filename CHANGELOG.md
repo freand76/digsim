@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.9.0
  - Use pydantic to load yosys netlist
  - Update ruff github action
  - Update to yosys 0.57.0
