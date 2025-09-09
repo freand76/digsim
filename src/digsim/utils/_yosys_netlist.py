@@ -7,7 +7,7 @@ Module with classes to parse a yosys netlist
 
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
@@ -116,7 +116,7 @@ class YosysModule:
 
 @dataclass
 class YosysNetlist:
-    creator: str | None = None
+    creator: Optional[str] = None
     modules: dict[str, YosysModule] = Field(default_factory=dict)
 
     def get_modules(self):
