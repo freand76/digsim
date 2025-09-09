@@ -2,6 +2,7 @@
 
 ## vx.x.x
  - Use pydantic to load yosys netlist
+ - Update ruff github action
 
 ## v0.8.0
  - Prepare for release 0.8.0
