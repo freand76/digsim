@@ -18,7 +18,7 @@ class NetPort:
     parent: Union[YosysModule, YosysCell]
     parent_name: str
     name: str
-    bit_index: int | None = None
+    bit_index: Optional[int] = None
 
 
 @dataclass
