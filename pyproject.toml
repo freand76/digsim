@@ -30,7 +30,7 @@ dependencies = [
   "pexpect==4.9.0",
   "pydantic==2.11.7",
   "qtawesome==1.4.0",
-  "yowasp-yosys==0.55.0.0.post944",
+  "yowasp-yosys==0.57.0.0.post986",
 ]
 
 keywords = ["educational", "simulation", "digital"]
