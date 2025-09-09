@@ -1,6 +1,26 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Use pydantic to load yosys netlist
+
+## v0.8.0
+ - Prepare for release 0.8.0
+ - Bugfix netlist readed after yosys update
+ - Update python packages
+ - Some more mypy checking
+ - Add types to _port.py file
+ - Fixed some mypy checking
+ - Update pyproject.toml to silence warnings
+ - Update bash script to use latest version of pypi packages
+
+## v0.7.0
+ - Upgrade pypi packages and prepare for release 0.7.0
+ - Add script to run pytest through uv
+ - Use uv for scripts
+ - Add python 3.13 to project
+ - Use ruff 0.9.7 to format files
+ - Update the python packages to "latest"
+ - Fix version in changelog
 
 ## v0.6.0
  - Block bad pyside version 6.8.0
