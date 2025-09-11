@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.10.0
  - Fix reload bug: Adding/removing port
  - Fix shortcuts load bug
 
