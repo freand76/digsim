@@ -61,6 +61,33 @@ netlist_dict_if_four = {
     }
 }
 
+netlist_dict_if_2outports = {
+    "modules": {
+        "counter": {
+            "ports": {
+                "in_port": {"direction": "input", "bits": [2, 3, 4, 5]},
+                "out_port_a": {"direction": "output", "bits": [2, 3, 4, 5]},
+                "out_port_b": {"direction": "output", "bits": [2, 3, 4, 5]},
+            },
+            "cells": {},
+        }
+    }
+}
+
+netlist_dict_if_3outports = {
+    "modules": {
+        "counter": {
+            "ports": {
+                "in_port": {"direction": "input", "bits": [2, 3, 4, 5]},
+                "out_port_a": {"direction": "output", "bits": [2, 3, 4, 5]},
+                "out_port_b": {"direction": "output", "bits": [2, 3, 4, 5]},
+                "out_port_c": {"direction": "output", "bits": [2, 3, 4, 5]},
+            },
+            "cells": {},
+        }
+    }
+}
+
 
 def test_yosys_component_create():
     """Test create YosysComponent"""
@@ -93,7 +120,7 @@ def test_yosys_component_create_reload():
     assert comp.out_port.value == 0xA
 
 
-def test_yosys_component_create_reload_fail():
+def test_yosys_component_create_reload_fail_portwidth():
     """Test create YosysComponent - and reload changed netlist OK"""
     circuit = Circuit()
     comp = YosysComponent(circuit)
@@ -109,6 +136,34 @@ def test_yosys_component_create_reload_fail():
     yosys_netlist = YosysNetlist(**netlist_dict_if_four)
 
     # Fail due to wider out_port
+    with pytest.raises(YosysComponentException):
+        comp.reload_from_netlist(yosys_netlist)
+
+
+def test_yosys_component_create_reload_fail_extra_ports():
+    """Test create YosysComponent - and reload changed netlist OK"""
+    circuit = Circuit()
+    comp = YosysComponent(circuit)
+    yosys_netlist = YosysNetlist(**netlist_dict_if_2outports)
+    comp.create_from_netlist(yosys_netlist)
+
+    yosys_netlist = YosysNetlist(**netlist_dict_if_3outports)
+
+    # Fail due to extra port
+    with pytest.raises(YosysComponentException):
+        comp.reload_from_netlist(yosys_netlist)
+
+
+def test_yosys_component_create_reload_fail_less_ports():
+    """Test create YosysComponent - and reload changed netlist OK"""
+    circuit = Circuit()
+    comp = YosysComponent(circuit)
+    yosys_netlist = YosysNetlist(**netlist_dict_if_3outports)
+    comp.create_from_netlist(yosys_netlist)
+
+    yosys_netlist = YosysNetlist(**netlist_dict_if_2outports)
+
+    # Fail due to extra port
     with pytest.raises(YosysComponentException):
         comp.reload_from_netlist(yosys_netlist)
 

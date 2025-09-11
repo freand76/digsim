@@ -88,11 +88,16 @@ class YosysModule:
 
     def is_same_interface(self, netlist):
         is_same = True
-        for netlist_port_name, netlist_port in netlist.ports.items():
-            module_port = self.ports.get(netlist_port_name)
-            if module_port is None or not module_port.is_same(netlist_port):
-                is_same = False
-                break
+        if len(netlist.ports) == len(self.ports):
+            for netlist_port_name, netlist_port in netlist.ports.items():
+                module_port = self.ports.get(netlist_port_name)
+                if module_port is None or not module_port.is_same(netlist_port):
+                    # Port does not exist or has a different bitwidth
+                    is_same = False
+                    break
+        else:
+            # The number of ports does not match
+            is_same = False
         return is_same
 
     def get_nets(self):

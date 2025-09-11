@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Fix reload bug: Adding/removing port
 
 ## v0.9.0
  - Use pydantic to load yosys netlist
