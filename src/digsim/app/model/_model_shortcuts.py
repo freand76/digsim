@@ -77,10 +77,9 @@ class ModelShortcuts:
             shortcuts_dict[key] = component.name()
         return shortcuts_dict
 
-    def from_dict(self, model_dict):
+    def from_dict(self, shortcuts_dict):
         """Generate shortcuts from dict"""
         self.clear()
-        shortcuts_dict = model_dict.get("shortcuts")
         if shortcuts_dict is not None:
             for key, component_name in shortcuts_dict.items():
                 component = self._app_model.objects.circuit.get_component(component_name)

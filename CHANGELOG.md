@@ -2,6 +2,7 @@
 
 ## vx.x.x
  - Fix reload bug: Adding/removing port
+ - Fix shortcuts load bug
 
 ## v0.9.0
  - Use pydantic to load yosys netlist
