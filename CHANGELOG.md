@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Use default audio output
 
 ## v0.11.0
  - Fix settings load bug

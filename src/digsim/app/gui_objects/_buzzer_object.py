@@ -66,12 +66,7 @@ class BuzzerObject(ImageObjectWithActiveRect):
         self.audio_sink = None
         self._app_model.sig_audio_start.connect(self._audio_start)
         self._app_model.sig_audio_notify.connect(self._audio_notify)
-        self.device = None
-        devices = QMediaDevices.audioOutputs()
-        if len(devices) == 0:
-            return
-        self.device = devices[0]
-
+        self.device = QMediaDevices.defaultAudioOutput()
         self.audio_format = QAudioFormat()
         self.audio_format.setSampleRate(self.DATA_SAMPLE_RATE_HZ)
         self.audio_format.setChannelCount(1)
