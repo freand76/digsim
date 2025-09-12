@@ -27,7 +27,7 @@ class ModelSettings:
 
     def from_dict(self, circuit_dict):
         """Get settings from circuit dict"""
-        for key, data in circuit_dict.get("settings", {}).items():
+        for key, data in circuit_dict.items():
             self._settings[key] = data
 
     def get(self, key):

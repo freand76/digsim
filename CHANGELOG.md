@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Fix settings load bug
 
 ## v0.10.0
  - Fix reload bug: Adding/removing port
