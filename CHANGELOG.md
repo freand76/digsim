@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.11.0
  - Fix settings load bug
 
 ## v0.10.0
