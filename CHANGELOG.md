@@ -2,6 +2,7 @@
 
 ## vx.x.x
  - Use default audio output
+ - Automatically find yowasp-yosys.exe binary on windows
 
 ## v0.11.0
  - Fix settings load bug

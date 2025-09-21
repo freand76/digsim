@@ -4,7 +4,9 @@
 """Helper module for yosys synthesis"""
 
 import json
+import pathlib
 import shutil
+import site
 import sys
 
 import pexpect
@@ -43,9 +45,29 @@ class Synthesis:
             out_lines.append(line)
         return out_lines
 
+    @staticmethod
+    def _find_win_yowasp_yosys_binary():
+        try:
+            # Use getusersitepackages if this is present, as it ensures that the
+            # value is initialised properly.
+            user_site = site.getusersitepackages()
+        except AttributeError:
+            user_site = site.USER_SITE
+        scripts_path = pathlib.Path(user_site).parent / "Scripts"
+        yowasp_yosys_path = scripts_path / "yowasp-yosys.exe"
+        if yowasp_yosys_path.is_file():
+            return str(yowasp_yosys_path)
+        return None
+
     @classmethod
     def _pexpect_spawn_yosys(cls):
+        # Find linux binary
         yosys_exe = shutil.which("yosys") or shutil.which("yowasp-yosys")
+
+        # No binary found
+        if yosys_exe is None:
+            # Try to find windows binary
+            yosys_exe = cls._find_win_yowasp_yosys_binary()
 
         if yosys_exe is None:
             raise SynthesisException("Yosys executable not found")
