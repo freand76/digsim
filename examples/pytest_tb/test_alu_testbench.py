@@ -1,7 +1,7 @@
 # Copyright (c) Fredrik Andersson, 2024
 # All rights reserved
 
-import os
+import pathlib
 
 import pytest
 
@@ -50,7 +50,7 @@ class DutTester:
 
 @pytest.fixture(scope="module")
 def current_path():
-    return f"{os.path.dirname(os.path.abspath(__file__))}"
+    return pathlib.Path(__file__).parent
 
 
 @pytest.fixture(scope="module")
@@ -59,7 +59,7 @@ def dut(current_path):
 
     # Synth DUT
     _dut = YosysComponent(circuit)
-    _dut_synthesis = Synthesis([f"{current_path}/alu.v"], "alu")
+    _dut_synthesis = Synthesis([str(current_path / "alu.v")], "alu")
     _yosys_netlist = YosysNetlist(**_dut_synthesis.synth_to_dict())
     _dut.create_from_netlist(_yosys_netlist)
 
