@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.12.0
  - Use default audio output
  - Automatically find yowasp-yosys.exe binary on windows
  - Use pathlib for examples and test
