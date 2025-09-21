@@ -1,4 +1,4 @@
-name: Install and Test
+name: Install and Test Win
 
 on: [push]
 
@@ -7,8 +7,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        os: [windows-latest]
+        python-version: ["3.13"]
     steps:
     - uses: actions/checkout@v3
     - name: Set timezone
