@@ -47,7 +47,7 @@ class DutTester:
 
 @pytest.fixture(scope="module")
 def current_path():
-    return pathlib.Path(__file__).parent
+    return pathlib.Path(__file__).parent.relative_to(pathlib.Path.cwd())
 
 
 @pytest.fixture(scope="module")
@@ -56,7 +56,7 @@ def dut(current_path):
 
     # Synth DUT
     _dut = YosysComponent(circuit)
-    _dut_synthesis = Synthesis([str(current_path  / "up_down_counter.v")], "up_down_counter")
+    _dut_synthesis = Synthesis([str(current_path / "up_down_counter.v")], "up_down_counter")
     _yosys_netlist = YosysNetlist(**_dut_synthesis.synth_to_dict())
     _dut.create_from_netlist(_yosys_netlist)
 

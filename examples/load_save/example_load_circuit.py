@@ -22,8 +22,8 @@ def led_callback(comp):
         print(f"{time_ns:9}:LED: '{name}' is OFF")
 
 
-# Get the path to example folder
-example_path = pathlib.Path(__file__).parent
+# Get the relative path to example folder
+example_path = pathlib.Path(__file__).parent.relative_to(pathlib.Path.cwd())
 
 circuit = Circuit(vcd="circuit.vcd")
 circuit.from_json_file(example_path / "example_circuit.json")

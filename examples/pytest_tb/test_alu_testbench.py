@@ -50,7 +50,7 @@ class DutTester:
 
 @pytest.fixture(scope="module")
 def current_path():
-    return pathlib.Path(__file__).parent
+    return pathlib.Path(__file__).parent.relative_to(pathlib.Path.cwd())
 
 
 @pytest.fixture(scope="module")
