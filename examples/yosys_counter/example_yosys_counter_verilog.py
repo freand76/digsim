@@ -12,8 +12,8 @@ from digsim.circuit import Circuit
 from digsim.circuit.components import VDD, PushButton, YosysComponent
 
 
-# Get the path to example folder
-example_path = pathlib.Path(__file__).parent
+# Get the relative path to example folder
+example_path = pathlib.Path(__file__).parent.relative_to(pathlib.Path.cwd())
 
 circuit = Circuit()
 yosys_counter = YosysComponent(circuit, path=str(example_path / "counter.v"))
