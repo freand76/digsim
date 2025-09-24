@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Fix validation "0", "1", "X" in yosys netlist
 
 ## v0.12.0
  - Use default audio output

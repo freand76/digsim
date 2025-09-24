@@ -7,10 +7,13 @@ Module with classes to parse a yosys netlist
 
 from __future__ import annotations
 
-from typing import Any, Optional, Union
+from typing import Any, Literal, Optional, Union
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
+
+
+BIT_TYPE = list[Union[int, Literal["X"], Literal["0"], Literal["1"]]]
 
 
 @dataclass
@@ -30,7 +33,7 @@ class Nets:
 @dataclass
 class YosysPort:
     direction: str
-    bits: list[Union[int, str]]
+    bits: BIT_TYPE
 
     @property
     def is_output(self):
@@ -46,7 +49,7 @@ class YosysPort:
 class YosysCell:
     type: str
     port_directions: dict[str, str] = Field(default_factory=dict)
-    connections: dict[str, list[Union[str, int]]] = Field(default_factory=dict)
+    connections: dict[str, BIT_TYPE] = Field(default_factory=dict)
     hide_name: int = 0
     parameters: dict[str, Any] = Field(default_factory=dict)
     attributes: dict[str, Any] = Field(default_factory=dict)
