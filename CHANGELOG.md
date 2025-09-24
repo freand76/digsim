@@ -2,6 +2,7 @@
 
 ## vx.x.x
  - Fix validation "0", "1", "X" in yosys netlist
+ - Fix value type in _port.py (int, "X" or None is valid)
 
 ## v0.12.0
  - Use default audio output

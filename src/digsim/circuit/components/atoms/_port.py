@@ -6,8 +6,12 @@
 from __future__ import annotations
 
 import abc
+from typing import Literal, Optional, Union
 
 from ._digsim_exception import DigsimException
+
+
+VALUE_TYPE = Optional[Union[int, Literal["X"]]]
 
 
 class PortConnectionError(DigsimException):
@@ -23,8 +27,8 @@ class Port(abc.ABC):
         self._width: int = width  # The bit-width of this port
         self._output: bool = output  # Is this port an output port
         self._wired_ports: list[Port] = []  # The ports that this port drives
-        self._value: int | str | None = None  # The value of this port
-        self._edge_detect_value: int | str | None = "X"  # Last edge detect value
+        self._value: VALUE_TYPE = None  # The value of this port
+        self._edge_detect_value: VALUE_TYPE = "X"  # Last edge detect value
         self.init()  # Initialize the port
 
     def init(self):
@@ -39,12 +43,12 @@ class Port(abc.ABC):
         return self._wired_ports
 
     @property
-    def value(self) -> int | str | None:
+    def value(self) -> VALUE_TYPE:
         """Get the value of the port, can be "X" """
         return self._value
 
     @value.setter
-    def value(self, value: int | str | None):
+    def value(self, value: VALUE_TYPE):
         """Set the value of the port"""
         self.set_value(value)
 
@@ -98,7 +102,7 @@ class Port(abc.ABC):
         """Get parent component"""
         return self._parent
 
-    def update_wires(self, value: int | str | None):
+    def update_wires(self, value: VALUE_TYPE):
         """Update connected wires (and self._value) with value"""
         if self._value == value:
             return
@@ -144,7 +148,7 @@ class Port(abc.ABC):
         return falling_edge
 
     @abc.abstractmethod
-    def set_value(self, value: int | str | None):
+    def set_value(self, value: VALUE_TYPE):
         """Set value on port"""
 
     @abc.abstractmethod
@@ -195,7 +199,7 @@ class PortWire(Port):
         super().__init__(parent, name, width, output)
         self._port_driver: Port | None = None  # The port that drives this port
 
-    def set_value(self, value: int | str | None):
+    def set_value(self, value: VALUE_TYPE):
         if value != self.value:
             self.update_wires(value)
 
@@ -221,7 +225,7 @@ class PortIn(PortWire):
     def __init__(self, parent, name: str, width: int = 1):
         super().__init__(parent, name, width, output=False)
 
-    def set_value(self, value: int | str | None):
+    def set_value(self, value: VALUE_TYPE):
         super().set_value(value)
         self.parent().update()
 
@@ -246,16 +250,16 @@ class PortOutDelta(Port):
         """Set port propagation delay"""
         self._delay_ns = delay_ns
 
-    def set_value(self, value: int | str | None):
+    def set_value(self, value: VALUE_TYPE):
         self.parent().add_event(self, value, self._delay_ns)
 
-    def update_port(self, value: int | str | None):
+    def update_port(self, value: VALUE_TYPE):
         """Update the port output and the connected wires"""
         self.update_wires(value)
         if self._update_parent:
             self.parent().update()
 
-    def delta_cycle(self, value: int | str | None):
+    def delta_cycle(self, value: VALUE_TYPE):
         """Handle the delta cycle event from the circuit"""
         self.update_port(value)
 
@@ -282,11 +286,11 @@ class PortOutImmediate(PortOutDelta):
     def __init__(self, parent, name: str, width: int = 1):
         super().__init__(parent, name, width)
 
-    def set_value(self, value: int | str | None):
+    def set_value(self, value: VALUE_TYPE):
         self.parent().add_event(self, value, 0)
         super().update_port(value)
 
-    def delta_cycle(self, value: int | str | None):
+    def delta_cycle(self, value: VALUE_TYPE):
         """
         Do nothing here, the event is just used to updates waves in Circuit class
         """
@@ -303,7 +307,7 @@ class PortWireBit(PortWire):
         super().__init__(parent, name, 1, output)
         self._parent_port = parent_port
 
-    def set_value(self, value: int | str | None):
+    def set_value(self, value: VALUE_TYPE):
         super().set_value(value)
         self._parent_port.update_value_from_bits()
 
@@ -333,7 +337,7 @@ class PortMultiBitWire(Port):
         for bit in self._bits:
             bit.init()
 
-    def set_value(self, value: int | str | None):
+    def set_value(self, value: VALUE_TYPE):
         if value is None or isinstance(value, str):
             return
         for bit_id, bit in enumerate(self._bits):
@@ -375,7 +379,7 @@ class PortMultiBitWire(Port):
         # Send event just to update waves
         self.parent().add_event(self, value, 0)
 
-    def delta_cycle(self, value: int | str | None):
+    def delta_cycle(self, value: VALUE_TYPE):
         """
         Do nothing here, the event passed in 'update_value_from_bits'
         is just used to updates waves in Circuit class

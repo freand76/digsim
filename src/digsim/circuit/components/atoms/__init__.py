@@ -11,6 +11,7 @@ from ._component import (  # noqa: F401
 )
 from ._digsim_exception import DigsimException  # noqa: F401
 from ._port import (  # noqa: F401
+    VALUE_TYPE,
     Port,
     PortConnectionError,
     PortIn,

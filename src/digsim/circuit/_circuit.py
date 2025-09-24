@@ -13,7 +13,7 @@ from typing import Tuple
 from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
 
 from ._waves_writer import WavesWriter
-from .components.atoms import Component, DigsimException, PortOutDelta
+from .components.atoms import VALUE_TYPE, Component, DigsimException, PortOutDelta
 
 
 class CircuitError(DigsimException):
@@ -26,10 +26,10 @@ class CircuitEvent:
     delta events in the simulation.
     """
 
-    def __init__(self, time_ns: int, port: PortOutDelta, value: int | str | None):
+    def __init__(self, time_ns: int, port: PortOutDelta, value: VALUE_TYPE):
         self._time_ns: int = time_ns
         self._port: PortOutDelta = port
-        self._value: int | str | None = value
+        self._value: VALUE_TYPE = value
 
     @property
     def time_ns(self) -> int:
@@ -42,7 +42,7 @@ class CircuitEvent:
         return self._port
 
     @property
-    def value(self) -> int | str | None:
+    def value(self) -> VALUE_TYPE:
         """Get the delta cycle value of this event"""
         return self._value
 
@@ -50,7 +50,7 @@ class CircuitEvent:
         """Return True if the in the event is the same as"""
         return port == self._port
 
-    def update(self, time_ns: int, value: int | str | None):
+    def update(self, time_ns: int, value: VALUE_TYPE):
         """Update the event with a new time (ns) and a new value"""
         self._time_ns = time_ns
         self._value = value
@@ -231,7 +231,7 @@ class Circuit:
         if stop_time_ns >= self._time_ns:
             self.run(ns=stop_time_ns - self._time_ns)
 
-    def add_event(self, port: PortOutDelta, value: int | str | None, propagation_delay_ns: int):
+    def add_event(self, port: PortOutDelta, value: VALUE_TYPE, propagation_delay_ns: int):
         """Add delta cycle event, this will also write values to .vcd file"""
         event_time_ns = self._time_ns + propagation_delay_ns
         # print(f"Add event {port.parent().name()}:{port.name()} => {value}")
