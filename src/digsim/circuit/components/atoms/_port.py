@@ -338,7 +338,7 @@ class PortMultiBitWire(Port):
             bit.init()
 
     def set_value(self, value: VALUE_TYPE):
-        if value is None or isinstance(value, str):
+        if isinstance(value, str):
             return
         for bit_id, bit in enumerate(self._bits):
             bit_val = (value >> bit_id) & 1
