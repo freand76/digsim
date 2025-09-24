@@ -6,12 +6,12 @@
 from __future__ import annotations
 
 import abc
-from typing import Literal, Optional, Union
+from typing import Literal, Union
 
 from ._digsim_exception import DigsimException
 
 
-VALUE_TYPE = Optional[Union[int, Literal["X"]]]
+VALUE_TYPE = Union[int, Literal["X"]]
 
 
 class PortConnectionError(DigsimException):
@@ -27,7 +27,7 @@ class Port(abc.ABC):
         self._width: int = width  # The bit-width of this port
         self._output: bool = output  # Is this port an output port
         self._wired_ports: list[Port] = []  # The ports that this port drives
-        self._value: VALUE_TYPE = None  # The value of this port
+        self._value: VALUE_TYPE = "X"  # The value of this port
         self._edge_detect_value: VALUE_TYPE = "X"  # Last edge detect value
         self.init()  # Initialize the port
 
