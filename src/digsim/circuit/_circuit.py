@@ -99,7 +99,9 @@ class Circuit:
     def store_path(self, path) -> str:
         """Get the store path relative to the circuit path"""
         if self._folder is not None:
-            return str(pathlib.Path(path).relative_to(pathlib.Path(self._folder)))
+            return str(
+                pathlib.Path(path).resolve().absolute().relative_to(pathlib.Path(self._folder))
+            )
         return path
 
     def delete_component(self, component: Component):
