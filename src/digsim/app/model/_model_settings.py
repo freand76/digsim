@@ -23,7 +23,7 @@ class ModelSettings:
 
     def get_all(self):
         """Return settings dict"""
-        return self._settings
+        return self._settings.copy()
 
     def from_dict(self, circuit_dict):
         """Get settings from circuit dict"""

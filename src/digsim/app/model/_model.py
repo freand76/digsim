@@ -37,14 +37,17 @@ class AppModel(QThread):
 
     def __init__(self):
         super().__init__()
-        self._model_objects = ModelObjects(self)
-        self._model_shortcuts = ModelShortcuts(self)
-        self._model_settings = ModelSettings(self)
+        self._setup_model_components()
         self._started = False
         self._single_step = False
         self._changed = False
         self._gui_event_queue = queue.Queue()
         self._multi_select = False
+
+    def _setup_model_components(self):
+        self._model_objects = ModelObjects(self)
+        self._model_shortcuts = ModelShortcuts(self)
+        self._model_settings = ModelSettings(self)
 
     @property
     def objects(self):
@@ -100,6 +103,7 @@ class AppModel(QThread):
     def model_stop(self):
         """Stop model simulation thread"""
         self._started = False
+        self.wait()
 
     def model_reset(self):
         """Reset model simulation"""

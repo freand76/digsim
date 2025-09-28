@@ -53,11 +53,7 @@ class ModelObjects:
 
     def get_selected(self):
         """Get selected objects"""
-        objects = []
-        for obj in self.get_list():
-            if obj.selected:
-                objects.append(obj)
-        return objects
+        return [obj for obj in self.get_list() if obj.selected]
 
     def _delete(self, selected_objects):
         for obj in selected_objects:

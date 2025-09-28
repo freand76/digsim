@@ -38,20 +38,6 @@ class ModelShortcuts:
         """Get shortcut"""
         return self._shortcut_component.get(key)
 
-    def _qtkey_to_key(self, qt_key):
-        return {
-            Qt.Key_0: "0",
-            Qt.Key_1: "1",
-            Qt.Key_2: "2",
-            Qt.Key_3: "3",
-            Qt.Key_4: "4",
-            Qt.Key_5: "5",
-            Qt.Key_6: "6",
-            Qt.Key_7: "7",
-            Qt.Key_8: "8",
-            Qt.Key_9: "9",
-        }.get(qt_key)
-
     def press(self, qtkey):
         """Handle shortcut keypress"""
         key = self.QT_KEY_TO_KEY.get(qtkey)

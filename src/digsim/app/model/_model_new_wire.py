@@ -29,11 +29,12 @@ class NewWire:
 
     def end(self, component, portname):
         """End new wire object"""
-        self._app_model.objects.push_undo_state()
         end_port = component.port(portname)
         if self._start_port.is_output() and end_port.is_input():
+            self._app_model.objects.push_undo_state()
             self._start_port.wire = end_port
         elif self._start_port.is_input() and end_port.is_output():
+            self._app_model.objects.push_undo_state()
             end_port.wire = self._start_port
         else:
             raise PortConnectionError("Cannot connect to port of same type")

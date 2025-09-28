@@ -125,10 +125,7 @@ class ModelComponents:
 
     def get_object_list(self):
         """Get list of component objects"""
-        component_objects = []
-        for _, comp in self._component_objects.items():
-            component_objects.append(comp)
-        return component_objects
+        return list(self._component_objects.values())
 
     def update_settings(self, component_object, settings):
         """Update settings for a component"""
