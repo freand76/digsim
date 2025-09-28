@@ -23,7 +23,7 @@ def led_callback(comp):
 
 
 circuit = Circuit(vcd="clock.vcd")
-clk = Clock(circuit, 20)
+clk = Clock(circuit, frequency=20)
 D1 = Led(circuit, "D1", callback=led_callback)
 clk.wire = D1.I
 circuit.init()

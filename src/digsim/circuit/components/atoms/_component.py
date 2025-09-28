@@ -63,10 +63,20 @@ class Component(abc.ABC):
         self._ports = []
 
     def path(self) -> str:
-        """Get component path"""
-        if self._parent is not None:
-            return f"{self._parent.path()}.{self.name()}"
-        return f"{self.name()}"
+        """Get component path (iterative)"""
+        path_parts = []
+        current_component = self
+        while current_component is not None:
+            name = current_component.name()
+            if not isinstance(name, str):
+                raise TypeError(
+                    f"Component name is not a string: "
+                    f"{name} ({type(name)}), "
+                    f"component: {current_component.__class__.__name__}"
+                )
+            path_parts.append(name)
+            current_component = current_component._parent
+        return ".".join(reversed(path_parts))
 
     @property
     def ports(self):
