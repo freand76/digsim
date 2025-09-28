@@ -40,6 +40,8 @@ class SelectableComponentWidget(QPushButton):
             mime.setText(self._name)
             drag.setMimeData(mime)
             drag.setHotSpot(event.pos() - self.rect().topLeft())
+            # Create a square pixmap for dragging, using the widget's width for both dimensions.
+            # This is intentional to maintain a consistent visual representation during drag operations.
             pixmap = QPixmap(self.size().width(), self.size().width())
             self.render(pixmap)
             drag.setPixmap(pixmap)
