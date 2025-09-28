@@ -45,7 +45,7 @@ if __name__ == "__main__":
     subparser = parser.add_subparsers(required=True)
     synth_parser = subparser.add_parser("synth")
     synth_parser.add_argument(
-        "--input-files", "-i", type=str, nargs="*", required=True, help="The verilog input files"
+        "--input-files", "-i", type=str, nargs="+", required=True, help="The verilog input files"
     )
     synth_parser.add_argument(
         "--output-file", "-o", type=str, required=True, help="The json output file"
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     synth_parser.set_defaults(func=_synth_modules)
     list_parser = subparser.add_parser("list")
     list_parser.add_argument(
-        "--input-files", "-i", type=str, nargs="*", required=True, help="The verilog input files"
+        "--input-files", "-i", type=str, nargs="+", required=True, help="The verilog input files"
     )
     list_parser.set_defaults(func=_list_modules)
     arguments = parser.parse_args()

@@ -21,9 +21,11 @@ class WireDataClass:
     dst: str
 
     def connect(self, circuit):
-        src_comp = circuit.get_component(self.src.split(".")[0])
-        dst_comp = circuit.get_component(self.dst.split(".")[0])
-        src_comp.port(self.src.split(".")[1]).wire = dst_comp.port(self.dst.split(".")[1])
+        src_comp_name, src_port_name = self.src.split(".")
+        dst_comp_name, dst_port_name = self.dst.split(".")
+        src_comp = circuit.get_component(src_comp_name)
+        dst_comp = circuit.get_component(dst_comp_name)
+        src_comp.port(src_port_name).wire = dst_comp.port(dst_port_name)
 
     @classmethod
     def list_from_port(cls, src_port):
@@ -92,10 +94,11 @@ class CircuitDataClass:
     @staticmethod
     def from_circuit(circuit):
         dc = CircuitDataClass(name=circuit.name)
-        for comp in circuit.get_toplevel_components():
+        toplevel_components = circuit.get_toplevel_components()
+        for comp in toplevel_components:
             dc.components.append(ComponentDataClass.from_component(comp))
 
-        for comp in circuit.get_toplevel_components():
+        for comp in toplevel_components:
             for port in comp.ports:
                 dc.wires.extend(WireDataClass.list_from_port(port))
 
@@ -108,8 +111,13 @@ class CircuitFileDataClass:
 
     @staticmethod
     def load(filename):
-        with open(filename, mode="r", encoding="utf-8") as json_file:
-            dc = CircuitFileDataClass(**json.load(json_file))
+        try:
+            with open(filename, mode="r", encoding="utf-8") as json_file:
+                dc = CircuitFileDataClass(**json.load(json_file))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Malformed JSON file: {filename} - {exc}") from exc
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"File not found: {filename}") from exc
         return dc
 
     def save(self, filename):

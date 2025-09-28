@@ -47,6 +47,10 @@ class SevenSegmentObject(ComponentObject):
     DIGIT_WIDTH = 54
     DIGIT_HEIGHT = 80
 
+    DOT_OFFSET_X = 40
+    DOT_OFFSET_Y = 60
+    DOT_RADIUS = 3
+
     def __init__(self, app_model, component, xpos, ypos, port_distance=10):
         super().__init__(app_model, component, xpos, ypos, port_distance=port_distance)
         self.setup_size()
@@ -89,7 +93,6 @@ class SevenSegmentObject(ComponentObject):
         """Paint the digit background"""
         painter.setBrush(Qt.SolidPattern)
         painter.setPen(Qt.black)
-        painter.setBrush(Qt.black)
         painter.drawRoundedRect(xpos, ypos, cls.DIGIT_WIDTH * digits, cls.DIGIT_HEIGHT, 4, 4)
 
     @classmethod
@@ -114,11 +117,15 @@ class SevenSegmentObject(ComponentObject):
             path.closeSubpath()
             painter.drawPath(path)
 
+        DOT_OFFSET_X = 40
+        DOT_OFFSET_Y = 60
+        DOT_RADIUS = 3
+
         if "." in active_segments:
             painter.setPen(Qt.red)
             painter.setBrush(Qt.red)
         else:
             painter.setPen(Qt.darkRed)
             painter.setBrush(Qt.darkRed)
-        dotPoint = QPoint(40, 60) + start_point
-        painter.drawEllipse(dotPoint, 3, 3)
+        dotPoint = QPoint(DOT_OFFSET_X, DOT_OFFSET_Y) + start_point
+        painter.drawEllipse(dotPoint, DOT_RADIUS, DOT_RADIUS)

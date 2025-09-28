@@ -70,7 +70,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT = {
 }
 
 
-def get_class_by_name(component_class_name):
+def class_factory(component_class_name):
     """A function that returns the GUI for a component class (str or class)"""
 
     if component_class_name in CLASS_NAME_TO_COMPONENT_OBJECT:

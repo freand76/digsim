@@ -17,6 +17,10 @@ class LogicAnalyzerObject(ImageObject):
     SIGNAL_NAME_WIDTH = 40
     ANALYZER_DISPLAY_WIDTH = 200
 
+    _ANALYZER_PEN = QPen(Qt.green)
+    _SIGNAL_VERTICAL_SCALE = 10
+    _SIGNAL_HORIZONTAL_SCALE = 2
+
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
         self.width = self.SIGNAL_NAME_WIDTH + self.ANALYZER_DISPLAY_WIDTH + 2 * self.RECT_TO_BORDER
@@ -37,8 +41,7 @@ class LogicAnalyzerObject(ImageObject):
             5,
         )
 
-        pen = QPen()
-        pen.setColor(Qt.green)
+        pen = self._ANALYZER_PEN
         pen.setWidth(2)
         painter.setPen(pen)
         signal_data_dict = self.component.signal_data()
@@ -48,7 +51,7 @@ class LogicAnalyzerObject(ImageObject):
             path = QPainterPath(
                 QPoint(
                     self.object_pos.x() + self.SIGNAL_NAME_WIDTH,
-                    port_pos.y() - signal_data[0] * 10,
+                    port_pos.y() - signal_data[0] * self._SIGNAL_VERTICAL_SCALE,
                 )
             )
             last_level = signal_data[0]
@@ -57,21 +60,27 @@ class LogicAnalyzerObject(ImageObject):
                     continue
                 path.lineTo(
                     QPoint(
-                        self.object_pos.x() + self.SIGNAL_NAME_WIDTH + (idx + 1) * 2,
-                        port_pos.y() - last_level * 10,
+                        self.object_pos.x()
+                        + self.SIGNAL_NAME_WIDTH
+                        + (idx + 1) * self._SIGNAL_HORIZONTAL_SCALE,
+                        port_pos.y() - last_level * self._SIGNAL_VERTICAL_SCALE,
                     )
                 )
                 path.lineTo(
                     QPoint(
-                        self.object_pos.x() + self.SIGNAL_NAME_WIDTH + (idx + 1) * 2,
-                        port_pos.y() - level * 10,
+                        self.object_pos.x()
+                        + self.SIGNAL_NAME_WIDTH
+                        + (idx + 1) * self._SIGNAL_HORIZONTAL_SCALE,
+                        port_pos.y() - level * self._SIGNAL_VERTICAL_SCALE,
                     )
                 )
                 last_level = level
             path.lineTo(
                 QPoint(
-                    self.object_pos.x() + self.SIGNAL_NAME_WIDTH + len(signal_data) * 2,
-                    port_pos.y() - last_level * 10,
+                    self.object_pos.x()
+                    + self.SIGNAL_NAME_WIDTH
+                    + len(signal_data) * self._SIGNAL_HORIZONTAL_SCALE,
+                    port_pos.y() - last_level * self._SIGNAL_VERTICAL_SCALE,
                 )
             )
             painter.drawPath(path)

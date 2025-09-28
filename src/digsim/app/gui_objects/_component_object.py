@@ -25,6 +25,10 @@ class ComponentObject(QGraphicsRectItem):
     PORT_SIDE = 8
     DEFAULT_PORT_TO_PORT_DISTANCE = 20
 
+    _COMPONENT_NAME_FONT = QFont("Arial", 10)
+    _PORT_NAME_FONT = QFont("Arial", 8)
+    _SELECTABLE_COMPONENT_NAME_FONT = QFont("Arial", 8)
+
     def __init__(
         self, app_model, component, xpos, ypos, port_distance=DEFAULT_PORT_TO_PORT_DISTANCE
     ):
@@ -237,9 +241,8 @@ class ComponentObject(QGraphicsRectItem):
 
     def paint_component_name(self, painter):
         """Paint the component name"""
-        font = QFont("Arial", 10)
-        painter.setFont(font)
-        fm = QFontMetrics(font)
+        painter.setFont(self._COMPONENT_NAME_FONT)
+        fm = QFontMetrics(self._COMPONENT_NAME_FONT)
         display_name_str = self._component.display_name()
         str_pixels_w = fm.horizontalAdvance(display_name_str)
         str_pixels_h = fm.height()
@@ -278,11 +281,10 @@ class ComponentObject(QGraphicsRectItem):
     @classmethod
     def paint_selectable_component_name(cls, painter, point, size, name):
         """Paint the name for the selectable component"""
-        font = QFont("Arial", 8)
-        fm = QFontMetrics(font)
+        painter.setFont(cls._SELECTABLE_COMPONENT_NAME_FONT)
+        fm = QFontMetrics(cls._SELECTABLE_COMPONENT_NAME_FONT)
         str_pixels_w = fm.horizontalAdvance(name)
         str_pixels_h = fm.height()
-        painter.setFont(font)
         painter.setPen(Qt.black)
         painter.drawText(
             point.x() + size.width() / 2 - str_pixels_w / 2,
@@ -297,12 +299,11 @@ class ComponentObject(QGraphicsRectItem):
     def paint_portnames(self, painter, color=Qt.black):
         """Paint component ports"""
         painter.setPen(color)
-        font = QFont("Arial", 8)
-        painter.setFont(font)
+        painter.setFont(self._PORT_NAME_FONT)
         for port in self._component.ports:
             rect = self.get_port_item(port).rect()
             port_str = self._port_dict[port]["name"]
-            str_pixels_w, str_pixels_h = self.get_string_metrics(port_str, font)
+            str_pixels_w, str_pixels_h = self.get_string_metrics(port_str, self._PORT_NAME_FONT)
             text_y = rect.y() + str_pixels_h - self.PORT_SIDE / 2
             if rect.x() < self.object_pos.x():
                 text_pos = QPoint(rect.x() + self.inport_x_pos(), text_y)

@@ -33,8 +33,13 @@ class AppFileDataClass:
 
     @staticmethod
     def load(filename):
-        with open(filename, mode="r", encoding="utf-8") as json_file:
-            app_filedata_class = AppFileDataClass(**json.load(json_file))
+        try:
+            with open(filename, mode="r", encoding="utf-8") as json_file:
+                app_filedata_class = AppFileDataClass(**json.load(json_file))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Malformed JSON file: {filename} - {exc}") from exc
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"File not found: {filename}") from exc
         return app_filedata_class
 
     def save(self, filename):

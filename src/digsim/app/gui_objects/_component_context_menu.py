@@ -18,7 +18,7 @@ class ComponentContextMenu(QMenu):
         self._app_model = app_model
         self._component_object = component_object
         self._component = self._component_object.component
-        self._reconfigurable_parameters = None
+        self._reconfigurable_parameters = {}
         # Title
         titleAction = QAction(self._component.display_name(), self)
         titleAction.setEnabled(False)

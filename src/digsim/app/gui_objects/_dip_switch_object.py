@@ -16,6 +16,8 @@ class DipSwitchObject(ImageObject):
     DIP_SWITCH_WIDTH = 20
     DIP_SWITCH_HEIGHT = 10
 
+    _DIP_SWITCH_FONT = QFont("Arial", 8)
+
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos, port_distance=self.DIP_SWITCH_HEIGHT)
         self.width = 2.5 * self.DIP_SWITCH_WIDTH
@@ -77,17 +79,16 @@ class DipSwitchObject(ImageObject):
                 painter.drawRect(
                     rect.x() + 1, rect.y() + 1, rect.width() / 2 - 2, rect.height() - 2
                 )
-        font = QFont("Arial", 8)
-        painter.setFont(font)
+        painter.setFont(self._DIP_SWITCH_FONT)
         painter.setPen(Qt.white)
         for idx, rect in enumerate(self._rects):
             port_str = f"{idx + 1}"
-            str_pixels_w, _ = self.get_string_metrics(port_str, font)
+            str_pixels_w, _ = self.get_string_metrics(port_str, self._DIP_SWITCH_FONT)
             painter.drawText(
                 QPoint(rect.x() - str_pixels_w - 4, rect.y() + rect.height() - 1), port_str
             )
 
-        _, str_h = self.get_string_metrics("ON", font)
+        _, str_h = self.get_string_metrics("ON", self._DIP_SWITCH_FONT)
         painter.drawText(
             self.rect().x() + self.rect().width() / 2,
             self.rect().y() + self.BORDER_TO_PORT - str_h,

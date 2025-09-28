@@ -56,6 +56,9 @@ class YosysCell:
 
     def get_nets(self, name, nets):
         for port_name, net_list in self.connections.items():
+            if not net_list:
+                # Handle empty net_list, e.g., by skipping or raising an error
+                continue
             net = net_list[0]
             port = NetPort(parent=self, parent_name=name, name=port_name)
             if self.port_directions[port_name] == "input":
