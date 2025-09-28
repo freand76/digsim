@@ -3,7 +3,6 @@
 
 """A PushButton component"""
 
-
 from .atoms import CallbackComponent, PortOutImmediate
 
 
