@@ -7,6 +7,7 @@ Module that handles the circuit simulation of components
 
 from __future__ import annotations
 
+import heapq
 import os
 from typing import Tuple
 
@@ -65,6 +66,7 @@ class Circuit:
     def __init__(self, name: str | None = None, vcd: str | None = None):
         self._components: dict[str, Component] = {}
         self._circuit_events: list[CircuitEvent] = []
+        self._events_by_port: dict[PortOutDelta, CircuitEvent] = {}
         self._name: str | None = name
         self._time_ns: int = 0
         self._folder: str | None = None
@@ -120,6 +122,7 @@ class Circuit:
         """Initialize circuit and components (and ports)"""
         self._time_ns = 0
         self._circuit_events = []
+        self._events_by_port = {}
         if self._vcd is not None:
             self._vcd_init()
         for _, comp in self._components.items():
@@ -177,10 +180,10 @@ class Circuit:
         """
         if len(self._circuit_events) == 0:
             return False, False
-        self._circuit_events.sort()
         if stop_time_ns is None or self._circuit_events[0].time_ns > stop_time_ns:
             return False, False
-        event = self._circuit_events.pop(0)
+        event = heapq.heappop(self._circuit_events)
+        del self._events_by_port[event.port]
         # print(
         #     f"Execute event {event.port.path()}.{event.port.name()}"
         #     " {event.time_ns} {event.value}"
@@ -235,11 +238,14 @@ class Circuit:
         """Add delta cycle event, this will also write values to .vcd file"""
         event_time_ns = self._time_ns + propagation_delay_ns
         # print(f"Add event {port.parent().name()}:{port.name()} => {value}")
-        for event in self._circuit_events:
-            if event.is_same_event(port):
-                event.update(event_time_ns, value)
-                return
-        self._circuit_events.append(CircuitEvent(event_time_ns, port, value))
+        if port in self._events_by_port:
+            event = self._events_by_port[port]
+            event.update(event_time_ns, value)
+            heapq.heapify(self._circuit_events)
+        else:
+            event = CircuitEvent(event_time_ns, port, value)
+            self._events_by_port[port] = event
+            heapq.heappush(self._circuit_events, event)
 
     def add_component(self, component: Component):
         """Add component to circuit"""
