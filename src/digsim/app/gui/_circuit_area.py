@@ -6,7 +6,7 @@
 from functools import partial
 
 from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, Qt, QTimer
-from PySide6.QtGui import QBrush, QPainterPath, QPen
+from PySide6.QtGui import QBrush, QColor, QPainterPath, QPen
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsPathItem,
@@ -52,6 +52,19 @@ class WirePartGraphicsItem(QGraphicsRectItem):
             self._parent.select(self.isSelected())
         return super().itemChange(change, value)
 
+    def _get_wire_color(self, port_value, bus_width):
+        if port_value == "X":
+            return Qt.red
+        if port_value == 0:
+            return Qt.darkGray
+
+        max_value = 2**bus_width - 1
+        # Start with dark gray
+        green = 128
+        # Calculate the green component, ranging from 128 to 255
+        green += int(127 * port_value / max_value)
+        return QColor(128, green, 128)
+
     def paint(self, painter, option, widget=None):
         """QT function"""
         pen = QPen(Qt.darkGray)
@@ -60,20 +73,13 @@ class WirePartGraphicsItem(QGraphicsRectItem):
             pen.setWidth(4)
         else:
             pen.setWidth(2)
+
         if not self._app_model.is_running and self._selected:
             pen.setColor(Qt.black)
-        else:
-            if self._app_model.settings.get("color_wires"):
-                port_value = self._src_port.value
-                if port_value == "X":
-                    pen.setColor(Qt.red)
-                elif port_value != 0:
-                    max_value = 2**bus_width - 1
-                    color = pen.color()
-                    green = color.green()
-                    full_range = 255 - green
-                    color.setGreen(green + (full_range * port_value / max_value))
-                    pen.setColor(color)
+        elif self._app_model.settings.get("color_wires"):
+            port_value = self._src_port.value
+            pen.setColor(self._get_wire_color(port_value, bus_width))
+
         painter.setPen(pen)
         painter.drawLine(self._start, self._end)
 
@@ -82,6 +88,7 @@ class WireGraphicsItem(QGraphicsPathItem):
     """A wire graphics item"""
 
     WIRE_TO_COMPONENT_DIST = 5
+    X_OFFSET = 10
 
     def __init__(self, app_model, connection, src_port_item, dst_port_item):
         super().__init__()
@@ -116,14 +123,14 @@ class WireGraphicsItem(QGraphicsPathItem):
     def create_points(cls, source, dest, rect):
         """Create a wire path"""
         points = []
-
         points.append(source)
+
         if source.x() < dest.x():
             half_dist_x = (dest.x() - source.x()) / 2
             points.append(QPointF(source.x() + half_dist_x, source.y()))
             points.append(QPointF(source.x() + half_dist_x, dest.y()))
         else:
-            half_dist_y = dest.y() - (dest.y() - source.y()) / 2
+            half_dist_y = (source.y() + dest.y()) / 2
             if dest.y() < source.y():
                 comp_top = rect.y() - cls.WIRE_TO_COMPONENT_DIST
                 y_mid = min(comp_top, half_dist_y)
@@ -131,10 +138,11 @@ class WireGraphicsItem(QGraphicsPathItem):
                 comp_bottom = rect.y() + rect.height() + cls.WIRE_TO_COMPONENT_DIST
                 y_mid = max(comp_bottom, half_dist_y)
 
-            points.append(QPointF(source.x() + 10, source.y()))
-            points.append(QPointF(source.x() + 10, y_mid))
-            points.append(QPointF(dest.x() - 10, y_mid))
-            points.append(QPointF(dest.x() - 10, dest.y()))
+            points.append(QPointF(source.x() + cls.X_OFFSET, source.y()))
+            points.append(QPointF(source.x() + cls.X_OFFSET, y_mid))
+            points.append(QPointF(dest.x() - cls.X_OFFSET, y_mid))
+            points.append(QPointF(dest.x() - cls.X_OFFSET, dest.y()))
+
         points.append(dest)
         return points
 
@@ -315,6 +323,9 @@ class _CircuitAreaScene(QGraphicsScene):
 class CircuitArea(QGraphicsView):
     """The circuit area graphics view"""
 
+    ZOOM_IN_FACTOR = 1.25
+    ZOOM_OUT_FACTOR = 0.8
+
     def __init__(self, app_model, parent):
         super().__init__(parent=parent)
         self._app_model = app_model
@@ -333,10 +344,10 @@ class CircuitArea(QGraphicsView):
         return len(self._scene.selectedItems()) > 0
 
     def _zoom_in(self):
-        self.scale(1.25, 1.25)
+        self.scale(self.ZOOM_IN_FACTOR, self.ZOOM_IN_FACTOR)
 
     def _zoom_out(self):
-        self.scale(0.8, 0.8)
+        self.scale(self.ZOOM_OUT_FACTOR, self.ZOOM_OUT_FACTOR)
 
     def _repaint(self):
         """Make scene repaint for component update"""
