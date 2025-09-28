@@ -87,11 +87,11 @@ class BuzzerObject(ImageObjectWithActiveRect):
         if self.device is None:
             return
         if active:
-            self.audio_sink = QAudioSink(self.device, self.audio_format)
-            self.audio_sink.setVolume(0.1)
+            if self.audio_sink is None:
+                self.audio_sink = QAudioSink(self.device, self.audio_format)
+                self.audio_sink.setVolume(0.1)
             self.audio_sink.start(self.audio_output)
         else:
-            if self.audio_sink is None:
-                return
-            self.audio_sink.stop()
-            self.audio_sink = None
+            if self.audio_sink is not None:
+                self.audio_sink.stop()
+                self.audio_sink = None

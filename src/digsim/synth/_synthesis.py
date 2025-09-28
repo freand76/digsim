@@ -137,7 +137,10 @@ class Synthesis:
     def synth_to_dict(self, silent=False):
         """Execute yosys with generated synthesis script and return python dict"""
         yosys_json = self.synth_to_json(silent)
-        netlist_dict = json.loads(yosys_json)
+        try:
+            netlist_dict = json.loads(yosys_json)
+        except json.JSONDecodeError as exc:
+            raise SynthesisException(f"Malformed JSON output from Yosys: {exc}") from exc
         return netlist_dict
 
     def synth_to_json_file(self, filename, silent=False):

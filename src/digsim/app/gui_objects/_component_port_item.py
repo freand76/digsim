@@ -44,7 +44,6 @@ class PortGraphicsItem(QGraphicsRectItem):
             return
         self.setBrush(QBrush(Qt.black))
         self.setCursor(Qt.CrossCursor)
-        self._repaint()
 
     def hoverLeaveEvent(self, _):
         """QT event callback function"""
@@ -52,7 +51,6 @@ class PortGraphicsItem(QGraphicsRectItem):
             return
         self.setBrush(QBrush(Qt.gray))
         self.setCursor(Qt.ArrowCursor)
-        self._repaint()
 
     def portParentRect(self):
         """return the parent rect"""

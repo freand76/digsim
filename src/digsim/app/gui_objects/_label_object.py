@@ -12,6 +12,8 @@ from ._component_object import ComponentObject
 class LabelObject(ComponentObject):
     """The class for a bus/bit component placed in the GUI"""
 
+    _LABEL_PEN = QPen(Qt.black)
+
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
         label = component.label()
@@ -35,12 +37,11 @@ class LabelObject(ComponentObject):
 
     @classmethod
     def _paint_label(cls, painter, comp_rect, name, selected=False):
-        pen = QPen()
+        pen = cls._LABEL_PEN
         if selected:
             pen.setWidth(4)
         else:
             pen.setWidth(1)
-        pen.setColor(Qt.black)
         painter.setPen(pen)
         painter.setBrush(Qt.SolidPattern)
         painter.setBrush(Qt.gray)

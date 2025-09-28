@@ -165,6 +165,8 @@ class ImageObjectStaticValue(ImageObject):
     IMAGE_FILENAME = "images/ZERO.png"
     ACTIVE_IMAGE_FILENAME = "images/ONE.png"
 
+    _STATIC_VALUE_FONT = QFont("Arial", 16)
+
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
         self.show_name(False)
@@ -174,10 +176,9 @@ class ImageObjectStaticValue(ImageObject):
             super().paint_component(painter)
         else:
             self.paint_component_base(painter)
-            font = QFont("Arial", 16)
             value_str = f"{self.component.parameter_get('value')}"
-            str_w, str_h = self.get_string_metrics(value_str, font=font)
-            painter.setFont(font)
+            str_w, str_h = self.get_string_metrics(value_str, font=self._STATIC_VALUE_FONT)
+            painter.setFont(self._STATIC_VALUE_FONT)
             painter.drawText(
                 self.rect().x() + self.rect().width() / 2 - str_w / 2,
                 self.rect().y() + str_h,
@@ -213,6 +214,8 @@ class ImageObjectWithActiveRect(ImageObject):
     When active the image will have a green border painted around it.
     """
 
+    _ACTIVE_RECT_PEN = QPen(Qt.green)
+
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
         self.show_name(False)
@@ -223,9 +226,8 @@ class ImageObjectWithActiveRect(ImageObject):
         if self.component.active:
             xpos = self.object_pos.x() + self.size.width() / 2 - self._pixmap.width() / 2
             ypos = self.object_pos.y() + self.size.height() / 2 - self._pixmap.height() / 2
-            pen = QPen()
+            pen = self._ACTIVE_RECT_PEN
             pen.setWidth(4)
-            pen.setColor(Qt.green)
             painter.setPen(pen)
             painter.setBrush(Qt.NoBrush)
             painter.drawRoundedRect(xpos, ypos, self._pixmap.width(), self._pixmap.height(), 5, 5)
