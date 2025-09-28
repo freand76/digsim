@@ -113,7 +113,7 @@ class ModelObjects:
 
     def push_undo_state(self, clear_redo_stack=True):
         """Push undo state to stack"""
-        self._undo_stack.append(self.circuit_to_model("/"))
+        self._undo_stack.append(self.circuit_to_model("."))
         if clear_redo_stack:
             self._redo_stack = []
             self._app_model.sig_control_notify.emit()
@@ -126,7 +126,7 @@ class ModelObjects:
 
     def push_redo_state(self):
         """Push redo state to stack"""
-        self._redo_stack.append(self.circuit_to_model("/"))
+        self._redo_stack.append(self.circuit_to_model("."))
 
     def undo(self):
         """Undo to last saved state"""
