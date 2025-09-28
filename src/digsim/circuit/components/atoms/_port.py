@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import abc
-from typing import Literal, Union
+from typing import Literal, Optional, Union
 
 from ._digsim_exception import DigsimException
 
@@ -64,7 +64,7 @@ class Port(abc.ABC):
             driver = self.get_driver()
             if driver is not None:
                 driver.disconnect(self)
-            for port in self._wired_ports:
+            for port in self._wired_ports[:]:
                 self.disconnect(port)
         self._width = width
 
@@ -110,11 +110,21 @@ class Port(abc.ABC):
         for port in self._wired_ports:
             port.value = self._value
 
-    def get_wired_ports_recursive(self) -> list[Port]:
-        """Get all connected ports (recursive)"""
-        all_wired_ports = [self]
-        for port in self._wired_ports:
-            all_wired_ports.extend(port.get_wired_ports_recursive())
+    def get_wired_ports_recursive(self, processed_ports: Optional[set] = None) -> list[Port]:
+        """Get all connected ports (iterative), avoiding duplicates."""
+        if processed_ports is None:
+            processed_ports = set()
+
+        all_wired_ports = []
+        ports_to_process = [self]
+
+        while ports_to_process:
+            port = ports_to_process.pop()
+            if port in processed_ports:
+                continue
+            processed_ports.add(port)
+            all_wired_ports.append(port)
+            ports_to_process.extend(port.wired_ports)
         return all_wired_ports
 
     def is_output(self) -> bool:
@@ -344,10 +354,13 @@ class PortMultiBitWire(Port):
             bit_val = (value >> bit_id) & 1
             bit.value = bit_val
 
-    def get_wired_ports_recursive(self) -> list[Port]:
-        all_wired_ports = super().get_wired_ports_recursive()
+    def get_wired_ports_recursive(self, processed_ports: Optional[set] = None) -> list[Port]:
+        if processed_ports is None:
+            processed_ports = set()
+
+        all_wired_ports = super().get_wired_ports_recursive(processed_ports)
         for bit in self._bits:
-            all_wired_ports.extend(bit.get_wired_ports_recursive())
+            all_wired_ports.extend(bit.get_wired_ports_recursive(processed_ports))
         return all_wired_ports
 
     def set_driver(self, port: Port | None):
@@ -368,12 +381,11 @@ class PortMultiBitWire(Port):
 
     def update_value_from_bits(self):
         """Update the port with the value of the bits"""
-        for bit in self._bits:
+        value = 0
+        for bit_id, bit in enumerate(self._bits):
             if bit.value == "X":
                 self.update_wires("X")
                 return
-        value = 0
-        for bit_id, bit in enumerate(self._bits):
             value = value | (bit.value << bit_id)
         self.update_wires(value)
         # Send event just to update waves
