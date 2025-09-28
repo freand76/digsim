@@ -3,7 +3,6 @@
 
 """A PushButton component"""
 
-import logging
 
 from .atoms import CallbackComponent, PortOutImmediate
 
@@ -11,13 +10,11 @@ from .atoms import CallbackComponent, PortOutImmediate
 class PushButton(CallbackComponent):
     """PushButton component class"""
 
-    def __init__(self, circuit, name=None, inverted=False):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         portout = PortOutImmediate(self, "O")
         self.add_port(portout)
         portout.update_parent(True)
-        if inverted:
-            logging.warning("Setting 'inverted' has been removed")
 
     def default_state(self):
         self.release()
