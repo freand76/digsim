@@ -20,12 +20,11 @@ class ShortcutDialog(QDialog):
         self.layout().addWidget(QLabel("Select shortcut key for component"))
         self._key_selector = QComboBox(parent)
         for key in "1234567890":
-            shortcut_key = str(key)
-            shortcut_string = shortcut_key
-            shortcut_component = app_model.shortcuts.get_component(shortcut_key)
+            shortcut_string = key
+            shortcut_component = app_model.shortcuts.get_component(key)
             if shortcut_component is not None:
                 shortcut_string += f" - {shortcut_component.name()}"
-            self._key_selector.addItem(shortcut_string, userData=shortcut_key)
+            self._key_selector.addItem(shortcut_string, userData=key)
         self.layout().addWidget(self._key_selector)
         self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.buttonBox.accepted.connect(self.accept)

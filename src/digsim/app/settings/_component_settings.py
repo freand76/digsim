@@ -271,7 +271,7 @@ class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
             checkbox = QCheckBox(f"bit{checkbox_id}")
             checkbox.setChecked(True)
             checkbox.stateChanged.connect(self._update)
-            self.layout().addWidget(checkbox, checkbox_id % 8, checkbox_id / 8, 1, 1)
+            self.layout().addWidget(checkbox, checkbox_id % 8, checkbox_id // 8, 1, 1)
             self._bit_checkboxes.append(checkbox)
         disable_all = QPushButton("Disable All")
         disable_all.clicked.connect(self._disable_all)
