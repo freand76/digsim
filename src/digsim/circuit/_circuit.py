@@ -88,10 +88,7 @@ class Circuit:
     @property
     def components(self) -> list[Component]:
         """Get the components in this circuit"""
-        comp_array = []
-        for _, comp in self._components.items():
-            comp_array.append(comp)
-        return comp_array
+        return list(self._components.values())
 
     def load_path(self, path) -> str:
         """Get the load path relative to the circuit path"""
@@ -112,11 +109,7 @@ class Circuit:
 
     def get_toplevel_components(self) -> list[Component]:
         """Get toplevel components in the circuit"""
-        toplevel_components = []
-        for _, comp in self._components.items():
-            if comp.is_toplevel():
-                toplevel_components.append(comp)
-        return toplevel_components
+        return [comp for comp in self._components.values() if comp.is_toplevel()]
 
     def init(self):
         """Initialize circuit and components (and ports)"""
