@@ -13,53 +13,65 @@ from digsim.utils import YosysNetlist
 
 
 class DutTester:
+    """A helper class to test the up/down counter DUT (Device Under Test)"""
+
     def __init__(self, circuit, dut):
         self._circuit = circuit
         self._dut = dut
+        # Initialize DUT inputs
         self._dut.clk.value = 0
         self._dut.nrst.value = 0
         self._dut.up.value = 0
         self._dut.down.value = 0
 
     def reset(self):
+        """Reset the DUT"""
         self._dut.nrst.value = 0
         self._circuit.run(ms=1)
         self._dut.nrst.value = 1
         self._circuit.run(ms=1)
 
     def clock(self):
+        """Generate a clock cycle"""
         self._dut.clk.value = 1
         self._circuit.run(ms=1)
         self._dut.clk.value = 0
         self._circuit.run(ms=1)
 
     def up(self, up):
+        """Set the 'up' signal"""
         self._dut.up.value = 1 if up else 0
         self._circuit.run(ms=1)
 
     def down(self, down):
+        """Set the 'down' signal"""
         self._dut.down.value = 1 if down else 0
         self._circuit.run(ms=1)
 
     def value(self):
+        """Get the counter value"""
         return self._dut.value.value
 
 
 @pytest.fixture(scope="module")
 def current_path():
+    """Pytest fixture to get the current path"""
     return pathlib.Path(__file__).parent.relative_to(pathlib.Path.cwd())
 
 
 @pytest.fixture(scope="module")
 def dut(current_path):
+    """Pytest fixture to set up the DUT"""
+    # Create a new circuit with VCD output
     circuit = Circuit(vcd="up_down_counter_test.vcd")
 
-    # Synth DUT
+    # Synthesize the DUT from Verilog
     _dut = YosysComponent(circuit)
     _dut_synthesis = Synthesis([str(current_path / "up_down_counter.v")], "up_down_counter")
     _yosys_netlist = YosysNetlist(**_dut_synthesis.synth_to_dict())
     _dut.create_from_netlist(_yosys_netlist)
 
+    # Initialize the circuit and yield the DUT tester
     circuit.init()
     yield DutTester(circuit, _dut)
 
@@ -120,7 +132,7 @@ def test_up_precedence(dut):
 
 
 def test_reset_after_count(dut):
-    """Test up precedence down counting (both up and down enabled)"""
+    """Test reset after counting"""
     dut.reset()
     assert dut.value() == 0
     dut.up(True)

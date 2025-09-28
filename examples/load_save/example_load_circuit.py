@@ -25,18 +25,30 @@ def led_callback(comp):
 # Get the relative path to example folder
 example_path = pathlib.Path(__file__).parent.relative_to(pathlib.Path.cwd())
 
+# Create a new circuit with VCD output
 circuit = Circuit(vcd="circuit.vcd")
+
+# Load the circuit from the JSON file
 circuit.from_json_file(example_path / "example_circuit.json")
+
+# Initialize the circuit
 circuit.init()
+
+# Get components from the circuit
 led1 = circuit.get_component("and_led")
 led2 = circuit.get_component("not_led")
 led3 = circuit.get_component("xor_led")
+
+# Set callbacks for the LEDs
 led1.set_callback(led_callback)
 led2.set_callback(led_callback)
 led3.set_callback(led_callback)
+
+# Get the buttons from the circuit
 button1 = circuit.get_component("button1")
 button2 = circuit.get_component("button2")
 
+# --- Test sequence ---
 circuit.run_until(ms=5)
 print("------------ 10")
 button1.push()
