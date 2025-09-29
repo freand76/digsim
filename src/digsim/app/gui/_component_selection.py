@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2024
+# Copyright (c) Fredrik Andersson, 2023-2025
 # All rights reserved
 
 """Module for the component selection classes"""

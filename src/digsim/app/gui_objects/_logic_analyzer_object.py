@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023
+# Copyright (c) Fredrik Andersson, 2023-2025
 # All rights reserved
 
 """A Logic Analyzer component placed in the GUI"""

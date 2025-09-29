@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2024
+# Copyright (c) Fredrik Andersson, 2024-2025
 # All rights reserved
 
 

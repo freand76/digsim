@@ -1,4 +1,4 @@
-// Copyright (c) Fredrik Andersson, 2023
+// Copyright (c) Fredrik Andersson, 2023-2025
 // All rights reserved
 
 module ic7448 (bcd, lt, a,b,c,d,e,f,g);
