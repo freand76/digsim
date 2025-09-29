@@ -6,6 +6,7 @@
  - Remove None from value type in _port.py (int, "X" is now valid)
  - Optimize simulation with the help of Gemeni
  - Use pathlib evrywhere (on not os.path)
+ - Optimize event handling (suggestion from Gemini)
 
 ## v0.12.0
  - Use default audio output
