@@ -3,7 +3,6 @@
 
 """Pystest module to test functionality of yosys synthesis"""
 
-import os
 from pathlib import Path
 
 import pytest
@@ -15,7 +14,7 @@ from digsim.synth import Synthesis, SynthesisException
 def verilog_path():
     """Fixture: get path to verilog modules"""
     # Get the relative path to example folder
-    test_path = os.path.relpath(os.path.abspath(__file__), os.getcwd())
+    test_path = Path(__file__).resolve().relative_to(Path.cwd())
     return Path(test_path).parent / "verilog"
 
 
