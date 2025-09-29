@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.13.0
  - Fix validation "0", "1", "X" in yosys netlist
  - Fix value type in _port.py (int, "X" or None is valid)
  - Remove None from value type in _port.py (int, "X" is now valid)
