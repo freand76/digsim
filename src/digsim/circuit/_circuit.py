@@ -59,6 +59,14 @@ class CircuitEvent:
     def __lt__(self, other) -> bool:
         return other.time_ns > self.time_ns
 
+    def __eq__(self, other) -> bool:
+        return (
+            isinstance(other, CircuitEvent)
+            and self._port == other._port
+            and self._time_ns == other._time_ns
+            and self._value == other._value
+        )
+
 
 class Circuit:
     """Class thay handles the circuit simulation"""
@@ -173,22 +181,32 @@ class Circuit:
         Process one simulation event
         Return False if ther are now events of if the stop_time has passed
         """
-        if len(self._circuit_events) == 0:
-            return False, False
-        if stop_time_ns is None or self._circuit_events[0].time_ns > stop_time_ns:
-            return False, False
-        event = heapq.heappop(self._circuit_events)
-        del self._events_by_port[event.port]
-        # print(
-        #     f"Execute event {event.port.path()}.{event.port.name()}"
-        #     " {event.time_ns} {event.value}"
-        # )
-        self._time_ns = event.time_ns
-        event.port.delta_cycle(event.value)
-        toplevel = event.port.parent().is_toplevel()
-        if self._vcd is not None:
-            self._vcd.write(event.port, self._time_ns)
-        return True, toplevel
+        while self._circuit_events:
+            event = heapq.heappop(self._circuit_events)
+
+            # Check if this is the latest event for this port
+            if event != self._events_by_port.get(event.port):
+                # This is a stale event, ignore it
+                continue
+
+            if stop_time_ns is not None and event.time_ns > stop_time_ns:
+                # Put the event back if it's after the stop time
+                heapq.heappush(self._circuit_events, event)
+                return False, False
+
+            del self._events_by_port[event.port]
+            # print(
+            #     f"Execute event {event.port.path()}.{event.port.name()}"
+            #     f" {event.time_ns} {event.value}"
+            # )
+            self._time_ns = event.time_ns
+            event.port.delta_cycle(event.value)
+            toplevel = event.port.parent().is_toplevel()
+            if self._vcd is not None:
+                self._vcd.write(event.port, self._time_ns)
+            return True, toplevel
+
+        return False, False
 
     def _is_toplevel_event(self) -> bool:
         if len(self._circuit_events) == 0:
@@ -233,14 +251,9 @@ class Circuit:
         """Add delta cycle event, this will also write values to .vcd file"""
         event_time_ns = self._time_ns + propagation_delay_ns
         # print(f"Add event {port.parent().name()}:{port.name()} => {value}")
-        if port in self._events_by_port:
-            event = self._events_by_port[port]
-            event.update(event_time_ns, value)
-            heapq.heapify(self._circuit_events)
-        else:
-            event = CircuitEvent(event_time_ns, port, value)
-            self._events_by_port[port] = event
-            heapq.heappush(self._circuit_events, event)
+        event = CircuitEvent(event_time_ns, port, value)
+        self._events_by_port[port] = event
+        heapq.heappush(self._circuit_events, event)
 
     def add_component(self, component: Component):
         """Add component to circuit"""
