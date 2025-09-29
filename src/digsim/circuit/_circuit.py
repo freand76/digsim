@@ -8,7 +8,7 @@ Module that handles the circuit simulation of components
 from __future__ import annotations
 
 import heapq
-import os
+import pathlib
 from typing import Tuple
 
 from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
@@ -107,7 +107,9 @@ class Circuit:
     def store_path(self, path) -> str:
         """Get the store path relative to the circuit path"""
         if self._folder is not None:
-            return os.path.relpath(path, self._folder)
+            return str(
+                pathlib.Path(path).resolve().absolute().relative_to(pathlib.Path(self._folder))
+            )
         return path
 
     def delete_component(self, component: Component):

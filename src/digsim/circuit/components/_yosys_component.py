@@ -26,7 +26,7 @@ class YosysComponent(MultiComponent):
     def __init__(self, circuit, path=None, name=None, nets=True):
         super().__init__(circuit, name)
         self._circuit = circuit
-        self._path = path
+        self._path = str(path)
         self._gates_comp = None
         self._net_comp = None
         self._netlist_module = None
