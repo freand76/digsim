@@ -7,7 +7,7 @@
  - Fix value type in _port.py (int, "X" or None is valid)
  - Remove None from value type in _port.py (int, "X" is now valid)
  - Optimize simulation with the help of Gemeni
- - Use pathlib evrywhere (on not os.path)
+ - Use pathlib everywhere (and not os.path)
  - Optimize event handling (suggestion from Gemini)
 
 ## v0.12.0
