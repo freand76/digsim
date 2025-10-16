@@ -15,7 +15,6 @@ urls = { homepage = "https://github.com/freand76/digsim" }
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -37,7 +36,7 @@ keywords = ["educational", "simulation", "digital"]
 
 [tool.ruff]
 line-length = 99
-target-version = "py39"
+target-version = "py310"
 
 show-fixes = true
 output-format = "full"
