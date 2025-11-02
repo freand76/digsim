@@ -28,6 +28,8 @@ class PortGraphicsItem(QGraphicsRectItem):
 
     def mousePressEvent(self, _):
         """QT event callback function"""
+        if self._app_model.is_running:
+            return
         if self._app_model.objects.new_wire.ongoing():
             try:
                 self._app_model.objects.new_wire.end(self._port.parent(), self._port.name())

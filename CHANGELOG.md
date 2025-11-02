@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Avoid creating new wires when simulation is running
 
 ## v0.14.0
  - Drop python 3.9 support
