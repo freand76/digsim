@@ -232,7 +232,7 @@ yosys> hierarchy -top <verilog top module>
 yosys> proc; flatten
 yosys> memory_dff
 yosys> proc; opt; techmap; opt;
-yosys> synth -top <verilog top module>
+yosys> synth -noabc -top <verilog top module>
 yosys> write_json <netlist_file.json>
 ```
 

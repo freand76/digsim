@@ -2,6 +2,7 @@
 
 ## vx.x.x
  - Drop python 3.9 support
+ - Remove abc from yosys synthesize script
 
 ## v0.13.0
  - Fix validation "0", "1", "X" in yosys netlist
