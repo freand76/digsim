@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.15.0
  - Avoid creating new wires when simulation is running
  - Start/Stop simulation with space key
  - Abort ongoing new wire when simulation starts
