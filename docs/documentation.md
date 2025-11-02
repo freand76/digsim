@@ -2,12 +2,12 @@
 
 * **Table of contents**
   * **[GUI Application](#gui-application)**
-	* [Circuit Editor](#circuit-editor)
-	* [Components](#components)
-	* [Wires](#wires)
-	* [Simulation](#simulation)
-	* [VCD Generation](#vcd-generation)
-	* [Yosys Synthesis](#yosys-synthesis)
+  * [Circuit Editor](#circuit-editor)
+  * [Components](#components)
+  * [Wires](#wires)
+  * [Simulation](#simulation)
+  * [VCD Generation](#vcd-generation)
+  * [Yosys Synthesis](#yosys-synthesis)
 
   * **[Python Circuits](#python-circuits)**
 
@@ -127,10 +127,10 @@ These basic logic gates have been implemented, most of them can be configured wi
  * The Flip Flop component will let you pick one of the following Flip Flop types.
  <br/><img alt="FlipFlop" src="../src/digsim/app/gui_objects/images/FlipFlop.png"/>
 
-	* SR Flop Flop
-	* Edge Triggered SR Flip Flop
-	* Edge Triggered JK Flip Flop
-	* Edge Triggered T Flip FLop
+ * SR Flop Flop
+ * Edge Triggered SR Flip Flop
+ * Edge Triggered JK Flip Flop
+ * Edge Triggered T Flip FLop
 
 ### Multiplexer
 The multiplexer component can be configured with 2, 4 or 8 inputs and with a data width between 1 and 32 bits.
