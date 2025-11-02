@@ -111,6 +111,15 @@ class MainWindow(QMainWindow):
         if event.isAutoRepeat():
             event.accept()
             return
+
+        if event.key() == Qt.Key_Space:
+            if self._app_model.is_running:
+                self._app_model.model_stop()
+            else:
+                self._app_model.model_start()
+            event.accept()
+            return
+
         if self._app_model.is_running:
             self._app_model.shortcuts.press(event.key())
             event.accept()
