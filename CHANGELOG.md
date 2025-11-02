@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.14.0
  - Drop python 3.9 support
  - Remove abc from yosys synthesize script
  - Update pydantic and yowasp-yosys packages
