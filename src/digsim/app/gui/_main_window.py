@@ -126,10 +126,8 @@ class MainWindow(QMainWindow):
             return
 
         if event.key() == Qt.Key_Escape:
-            if self._app_model.objects.new_wire.ongoing():
-                self._app_model.objects.new_wire.abort()
-                self._app_model.sig_repaint.emit()
-                event.accept()
+            self._app_model.model_abort_wire()
+            event.accept()
 
     def keyReleaseEvent(self, event):
         """QT event callback function"""

@@ -88,6 +88,7 @@ class AppModel(QThread):
 
     def model_start(self):
         """Start model simulation thread"""
+        self.model_abort_wire()
         self._started = True
         self._single_step = False
         self.start()
@@ -118,6 +119,11 @@ class AppModel(QThread):
     def model_add_event(self, func):
         """Add medel events (functions) from the GUI"""
         self._gui_event_queue.put(func)
+
+    def model_abort_wire(self):
+        if self._model_objects.new_wire.ongoing():
+            self._model_objects.new_wire.abort()
+            self.sig_repaint.emit()
 
     def run(self):
         """Simulation thread run function"""
