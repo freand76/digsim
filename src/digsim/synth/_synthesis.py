@@ -116,7 +116,7 @@ class Synthesis:
         script += "proc; flatten; "
         script += "memory_dff; "
         script += "proc; opt; techmap; opt; "
-        script += f"synth -top {self._verilog_top_module}; "
+        script += f"synth -noabc -top {self._verilog_top_module}; "
 
         pexp = self._pexpect_spawn_yosys()
         self._pexpect_wait_for_prompt(pexp)
