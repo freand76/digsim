@@ -25,7 +25,7 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
   "pyvcd==0.4.1",
-  "pyside6==6.9.1",
+  "pyside6==6.10.0",
   "pexpect==4.9.0",
   "pydantic==2.12.3",
   "qtawesome==1.4.0",
