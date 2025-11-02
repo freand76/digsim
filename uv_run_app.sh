@@ -1,2 +1,4 @@
 echo "Starting DigSim application"
-uv run --upgrade -m digsim.app $@
+uv venv .run_venv
+uv pip install . --upgrade
+uv run -m digsim.app $@
