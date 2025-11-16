@@ -2,6 +2,7 @@
 
 ## vx.x.x
  - Update pyside6 package to 6.10.0
+ - Update uv test scripts
 
 ## v0.15.0
  - Avoid creating new wires when simulation is running
