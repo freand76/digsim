@@ -7,8 +7,8 @@ rm -rfv dist/*
 # Install needed packages
 echo "Install tools"
 uv venv .dist_venv
-. .dist_venv/bin/activate
-uv pip install pip-tools build twine --upgrade
+source .dist_venv/bin/activate
+uv pip install pip-tools build twine --upgrade --python .dist_venv/bin/python
 
 # Build dist
 echo "Build dist"
