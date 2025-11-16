@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.16.0
  - Update pyside6 package to 6.10.0
  - Update uv test scripts
  - Update to yosys 0.59.0 (And update yosys netlist reader)
