@@ -13,7 +13,7 @@ from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 
-BIT_TYPE = list[Union[int, Literal["X"], Literal["0"], Literal["1"]]]
+BIT_TYPE = list[Union[int, Literal["X"], Literal["x"], Literal["0"], Literal["1"]]]
 
 
 @dataclass
@@ -79,7 +79,7 @@ class YosysCell:
 
 @dataclass
 class YosysNetName:
-    bits: list[int]
+    bits: BIT_TYPE
     attributes: dict[str, Any] = Field(default_factory=dict)
     hide_name: int = 0
 

@@ -27,9 +27,9 @@ dependencies = [
   "pyvcd==0.4.1",
   "pyside6==6.10.0",
   "pexpect==4.9.0",
-  "pydantic==2.12.3",
+  "pydantic==2.12.4",
   "qtawesome==1.4.0",
-  "yowasp-yosys==0.58.0.0.post1010",
+  "yowasp-yosys==0.59.0.0.post1039",
 ]
 
 keywords = ["educational", "simulation", "digital"]
