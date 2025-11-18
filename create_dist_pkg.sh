@@ -6,7 +6,7 @@ rm -rfv dist/*
 
 # Install needed packages
 echo "Install tools"
-uv venv .dist_venv
+uv venv --clear .dist_venv --python 3.13
 source .dist_venv/bin/activate
 uv pip install pip-tools build twine --upgrade --python .dist_venv/bin/python
 

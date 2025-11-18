@@ -1,6 +1,9 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Update uv test scripts
+   - Clear venv before creating it
+   - Use python 3.13
 
 ## v0.16.0
  - Update pyside6 package to 6.10.0
