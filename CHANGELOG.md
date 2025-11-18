@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Add python 3.14 support to project
 
 ## v0.16.0
  - Update pyside6 package to 6.10.0
