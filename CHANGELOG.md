@@ -4,6 +4,7 @@
  - Update uv test scripts
    - Clear venv before creating it
    - Use python 3.13
+ - Add uv_ruff.sh script
 
 ## v0.16.0
  - Update pyside6 package to 6.10.0
