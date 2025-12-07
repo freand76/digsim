@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.17.0
  - Update uv test scripts
    - Clear venv before creating it
    - Use python 3.13
