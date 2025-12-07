@@ -8,6 +8,7 @@
  - Use "uv sync" instead of "uv pip install ."
  - Add python 3.14 support to project
  - Run pytest with python 3.14 (uv_run_test.sh)
+ - Update to yosys 0.60.0
 
 ## v0.16.0
  - Update pyside6 package to 6.10.0
