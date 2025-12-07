@@ -19,15 +19,16 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: 3 :: Only",
 ]
 
 requires-python = ">=3.10"
 dependencies = [
   "pyvcd==0.4.1",
-  "pyside6==6.10.0",
+  "pyside6==6.10.1",
   "pexpect==4.9.0",
-  "pydantic==2.12.4",
+  "pydantic==2.12.5",
   "qtawesome==1.4.0",
   "yowasp-yosys==0.59.0.0.post1039",
 ]
