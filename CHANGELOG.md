@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.18.0
  - Add executable 'digsim-logic-simulator'
 
 ## v0.17.0
