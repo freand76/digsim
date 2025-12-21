@@ -2,6 +2,9 @@
 
 ## vx.x.x
 
+## v0.19.0
+ - Fix problems with script
+
 ## v0.18.0
  - Add executable 'digsim-logic-simulator'
 

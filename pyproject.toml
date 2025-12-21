@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "digsim-logic-simulator"
 description = "Interactive Digital Logic Simulator"
-version = "0.18.0"
+version = "0.19.0"
 authors = [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 maintainers =  [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 readme = "README.md"
@@ -33,7 +33,7 @@ dependencies = [
   "yowasp-yosys==0.60.0.0.post1055",
 ]
 
-scripts = { digsim-logic-simulator = "digsim.app:main" }
+scripts = { digsim-logic-simulator = "digsim.app.cli:main" }
 
 keywords = ["educational", "simulation", "digital"]
 
