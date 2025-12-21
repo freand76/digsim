@@ -47,6 +47,13 @@ pip3 install digsim-logic-simulator
 > python3 -m digsim.app
 ```
 
+or
+
+```
+> digsim-interactive-simulator
+```
+
+
 **Note: Ubuntu**
 
 If your Ubuntu installation gives the folloing error message:
