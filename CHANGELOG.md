@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Add executable 'digsim-logic-simulator'
 
 ## v0.17.0
  - Update uv test scripts

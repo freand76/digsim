@@ -33,6 +33,8 @@ dependencies = [
   "yowasp-yosys==0.60.0.0.post1055",
 ]
 
+scripts = { digsim-logic-simulator = "digsim.app:main" }
+
 keywords = ["educational", "simulation", "digital"]
 
 [tool.ruff]
