@@ -3,4 +3,4 @@
 
 """All classes within digsim.app namespace"""
 
-from .__main__ import main  # noqa: F401
+from .cli import main  # noqa: F401
