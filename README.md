@@ -55,10 +55,10 @@ or
 
 ### Start using uv
 
-Download and setup [uv](https://docs.astral.sh/uv/)
+Download and install [uv](https://docs.astral.sh/uv/)
 
 ```
-uvx digsim-logic-simulator
+> uvx digsim-logic-simulator
 ```
 
 **Note: Ubuntu**
