@@ -50,9 +50,16 @@ pip3 install digsim-logic-simulator
 or
 
 ```
-> digsim-interactive-simulator
+> digsim-logic-simulator
 ```
 
+### Start using uv
+
+Download and setup [uv](https://docs.astral.sh/uv/)
+
+```
+uvx digsim-logic-simulator
+```
 
 **Note: Ubuntu**
 

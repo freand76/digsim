@@ -2,6 +2,7 @@
 
 ## vx.x.x
  - Add current version in window title bar
+ - Bugfix documentation
 
 ## v0.19.0
  - Fix problems with script
