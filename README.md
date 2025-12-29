@@ -43,7 +43,7 @@ pip3 install digsim-logic-simulator
 
 ### Start Interactive GUI
 
-**Prerequisites:** Install by usingoption 1 or option 2 above.
+**Prerequisites:** Install by using *Option 1* or *Option 2* above.
 
 ```
 > python3 -m digsim.app
