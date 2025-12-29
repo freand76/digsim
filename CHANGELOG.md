@@ -1,7 +1,9 @@
 # CHANGELOG
 
+## vx.x.x
+
 ## v0.21.0
- - Add requriement to setuptools (for pkg_resources)
+ - Add requirement to setuptools (for pkg_resources)
 
 ## v0.20.0
  - Add current version in window title bar
