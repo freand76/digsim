@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+
+## v0.20.0
  - Add current version in window title bar
  - Bugfix documentation
 
