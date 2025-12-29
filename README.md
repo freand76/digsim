@@ -29,12 +29,12 @@ and even if it is slower than many other simulators it is not entirely useless.
 
 ## Quickstart
 
-### Install from PyPi
+### Install from PyPi (Option 1)
 ```
 pip3 install digsim-logic-simulator
 ```
 
-### Install from GitHub
+### Install from GitHub (Option 2)
 ```
 > git clone https://github.com/freand76/digsim.git
 > cd digsim
@@ -42,6 +42,8 @@ pip3 install digsim-logic-simulator
 ```
 
 ### Start Interactive GUI
+
+**Prerequisites:** Install by usingoption 1 or option 2 above.
 
 ```
 > python3 -m digsim.app
@@ -55,7 +57,7 @@ or
 
 ### Start using uv
 
-Download and install [uv](https://docs.astral.sh/uv/)
+**Prerequisites:** Download and install [uv](https://docs.astral.sh/uv/)
 
 ```
 > uvx digsim-logic-simulator
