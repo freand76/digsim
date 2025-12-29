@@ -2,6 +2,9 @@
 
 ## vx.x.x
 
+## v0.22.0
+ - Remove dependency to pkg_resources (due to deprecation)
+
 ## v0.21.0
  - Add requirement to setuptools (for pkg_resources)
 

@@ -4,10 +4,9 @@
 """The main class module of the digsim.app namespace"""
 
 import argparse
+import importlib
 import sys
 from pathlib import Path
-
-import pkg_resources
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QPainter, QPixmap
@@ -60,7 +59,7 @@ def main():
     parser.add_argument("--load", "-l", help="The circuit to load when starting the application")
     args = parser.parse_args()
 
-    package_version = pkg_resources.get_distribution(PACKAGE_NAME).version
+    package_version = importlib.metadata.version(PACKAGE_NAME)
 
     if args.version:
         print(f"DigSim '{PACKAGE_NAME}' [v{package_version}]")
