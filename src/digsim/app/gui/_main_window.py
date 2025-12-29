@@ -87,13 +87,13 @@ class MainWindow(QMainWindow):
     The main window for the applicaton.
     """
 
-    def __init__(self, app_model):
+    def __init__(self, app_model, package_version):
         super().__init__()
 
         self._app_model = app_model
         self.resize(1280, 720)
         central_widget = CentralWidget(app_model, self)
-        self.setWindowTitle("DigSim - Interactive Digital Logic Simulator")
+        self.setWindowTitle(f"DigSim - Interactive Digital Logic Simulator [v{package_version}]")
         self.setCentralWidget(central_widget)
         self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
         self._app_model.sig_error.connect(self.error_dialog)
