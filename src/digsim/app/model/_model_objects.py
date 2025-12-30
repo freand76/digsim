@@ -87,7 +87,7 @@ class ModelObjects:
             # Add component positions
             self.components.add_gui_positions(dc.gui)
         except DigsimException as exc:
-            self.sig_error.emit(f"Circuit error: {str(exc)}")
+            self._app_model.sig_error.emit(f"Circuit error: {str(exc)}")
             return exception_str_list
         return exception_str_list
 
@@ -103,7 +103,9 @@ class ModelObjects:
         self._app_model.model_init()
         self._app_model.model_changed()
         if len(exception_str_list) > 0:
-            self.sig_warning_log.emit("Load Circuit Warning", "\n".join(exception_str_list))
+            self._app_model.sig_warning_log.emit(
+                "Load Circuit Warning", "\n".join(exception_str_list)
+            )
 
     def reset_undo_stack(self):
         """Clear undo/redo stacks"""
