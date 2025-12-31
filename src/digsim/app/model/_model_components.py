@@ -26,6 +26,8 @@ class ModelComponents:
 
     def clear(self):
         """Clear components objects"""
+        for component_object in self.get_object_list():
+            component_object.disconnect()
         self._component_objects = {}
 
     def init(self):
@@ -143,6 +145,7 @@ class ModelComponents:
 
     def delete(self, component_object):
         """Delete a component object in the model"""
+        component_object.disconnect()
         del self._component_objects[component_object.component]
         self._circuit.delete_component(component_object.component)
         self._app_model.sig_delete_component.emit(component_object)

@@ -65,6 +65,10 @@ class ComponentObject(QGraphicsRectItem):
             self.setFlag(QGraphicsItem.ItemIsMovable, True)
             self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
 
+    def disconnect(self):
+        """Disconnect signals (before removal)"""
+        self._app_model.sig_control_notify.disconnect(self._control_notify)
+
     def itemChange(self, change, value):
         """QT event callback function"""
         if change == QGraphicsItem.ItemPositionHasChanged:

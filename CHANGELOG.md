@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Bugfix: Fix bad signal path
+ - Bugfix: Disconnect signal before GUI component removal
 
 ## v0.22.0
  - Remove dependency to pkg_resources (due to deprecation)
