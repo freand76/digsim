@@ -10,8 +10,8 @@ from pathlib import Path
 from PySide6.QtCore import QThread, Signal
 
 from digsim.app.gui_objects import ComponentObject
-from digsim.circuit.components.atoms import Component
-from digsim.storage_model import AppFileDataClass
+from digsim.circuit.components.atoms import Component, DigsimException
+from digsim.storage_model import AppFileDataClass, ModelDataClass
 
 from ._model_objects import ModelObjects
 from ._model_settings import ModelSettings
@@ -43,6 +43,7 @@ class AppModel(QThread):
         self._changed = False
         self._gui_event_queue = queue.Queue()
         self._multi_select = False
+        self._circuit_folder = ""
 
     def _setup_model_components(self):
         self._model_objects = ModelObjects(self)
@@ -162,10 +163,39 @@ class AppModel(QThread):
         self.sig_control_notify.emit()
         self.sig_audio_start.emit(False)
 
+    def model_to_circuit(self, model_dc):
+        if isinstance(model_dc, AppFileDataClass):
+            # Loaded model
+            dc = ModelDataClass.from_app_file_dc(model_dc)
+        else:
+            dc = model_dc
+
+        try:
+            # Create circuit
+            exception_str_list = self.objects.circuit.from_dataclass(
+                dc.circuit,
+                self._circuit_folder,
+                component_exceptions=False,
+                connect_exceptions=False,
+            )
+            # Add component positions
+            self.objects.components.add_gui_positions(dc.gui)
+        except DigsimException as exc:
+            self._app_model.sig_error.emit(f"Circuit error: {str(exc)}")
+            return exception_str_list
+        return exception_str_list
+
+    def circuit_to_model(self):
+        model_dc = ModelDataClass(
+            circuit=self.objects.circuit.to_dataclass(self._circuit_folder),
+            gui=self.objects.components.get_gui_dict(),
+        )
+        return model_dc
+
     def save_circuit(self, path):
         """Save the circuit with GUI information"""
-        circuit_folder = str(Path(path).parent)
-        model_dataclass = self.objects.circuit_to_model(circuit_folder)
+        self._circuit_folder = str(Path(path).parent)
+        model_dataclass = self.circuit_to_model()
         appfile_dataclass = AppFileDataClass(
             circuit=model_dataclass.circuit,
             gui=model_dataclass.gui,
@@ -180,10 +210,10 @@ class AppModel(QThread):
         """Load a circuit with GUI information"""
         self._model_clear()
         app_file_dc = AppFileDataClass.load(path)
-        circuit_folder = str(Path(path).parent)
-        if len(circuit_folder) == 0:
-            circuit_folder = "."
-        exception_str_list = self.objects.model_to_circuit(app_file_dc, circuit_folder)
+        self._circuit_folder = str(Path(path).parent)
+        if len(self._circuit_folder) == 0:
+            self._circuit_folder = "."
+        exception_str_list = self.model_to_circuit(app_file_dc)
         self.shortcuts.from_dict(app_file_dc.shortcuts)
         self.settings.from_dict(app_file_dc.settings)
         self.model_init()

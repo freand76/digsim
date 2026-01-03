@@ -8,7 +8,8 @@ Module that handles the circuit simulation of components
 from __future__ import annotations
 
 import heapq
-import pathlib
+import os
+from pathlib import Path
 from typing import Tuple
 
 from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
@@ -77,7 +78,7 @@ class Circuit:
         self._events_by_port: dict[PortOutDelta, CircuitEvent] = {}
         self._name: str | None = name
         self._time_ns: int = 0
-        self._folder: str | None = None
+        self._folder: str = "."
         self._vcd: WavesWriter | None = None
 
         if vcd is not None:
@@ -100,17 +101,22 @@ class Circuit:
 
     def load_path(self, path) -> str:
         """Get the load path relative to the circuit path"""
-        if self._folder is not None:
-            return self._folder + "/" + path
-        return path
+        load_path = Path(path)
+        if not load_path.is_absolute():
+            load_path = Path(self._folder) / load_path
+        return str(load_path)
 
     def store_path(self, path) -> str:
         """Get the store path relative to the circuit path"""
-        if self._folder is not None:
-            return str(
-                pathlib.Path(path).resolve().absolute().relative_to(pathlib.Path(self._folder))
-            )
-        return path
+
+        store_path = Path(path).resolve(strict=False)
+        folder_path = Path(self._folder).resolve(strict=False)
+        try:
+            store_path = Path(os.path.relpath(store_path, folder_path))
+        except ValueError:
+            """If relative path is impossible"""
+            pass
+        return str(store_path)
 
     def delete_component(self, component: Component):
         """Delete a component from the circuit"""
@@ -278,7 +284,7 @@ class Circuit:
             return comp
         raise CircuitError(f"Component '{component_name}' not found")
 
-    def to_dataclass(self, folder: str | None = None) -> CircuitDataClass:
+    def to_dataclass(self, folder: str = ".") -> CircuitDataClass:
         """Generate dict from circuit, used when storing circuit"""
         if self._name is None:
             raise CircuitError("Circuit must have a name")
@@ -288,7 +294,7 @@ class Circuit:
     def from_dataclass(
         self,
         circuit_dc: CircuitDataClass,
-        folder: str | None = None,
+        folder: str = "",
         component_exceptions: bool = True,
         connect_exceptions: bool = True,
     ) -> list[str]:
@@ -323,7 +329,7 @@ class Circuit:
         circuitfile_dc = CircuitFileDataClass(circuit=self.to_dataclass())
         circuitfile_dc.save(filename)
 
-    def from_json_file(self, filename: str, folder: str | None = None):
+    def from_json_file(self, filename: str, folder: str):
         """Load circuit from json file"""
         file_dc = CircuitFileDataClass.load(filename)
         self.from_dataclass(file_dc.circuit, folder)
