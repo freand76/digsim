@@ -12,12 +12,13 @@ from digsim.storage_model._circuit import (
     CircuitDataClass,
     CircuitFileDataClass,
     ComponentDataClass,
+    NetDataClass,
     WireDataClass,
 )
 
 
 @pytest.fixture
-def sample_circuit_dict():
+def sample_circuit_with_wires_dict():
     """Return a minimal valid circuit dict structure."""
     return {
         "circuit": {
@@ -34,28 +35,63 @@ def sample_circuit_dict():
 
 
 @pytest.fixture
-def sample_circuit_file(tmp_path, sample_circuit_dict):
+def sample_circuit_with_nets_dict():
+    """Return a minimal valid circuit dict structure."""
+    return {
+        "circuit": {
+            "name": "test_circuit",
+            "components": [
+                {"name": "and1", "type": "digsim.circuit.components.AND"},
+                {"name": "not1", "type": "digsim.circuit.components.NOT"},
+                {"name": "not2", "type": "digsim.circuit.components.NOT"},
+            ],
+            "nets": [
+                {"source": "and1.Y", "sinks": ["not1.A", "not2.A"]},
+            ],
+        }
+    }
+
+
+@pytest.fixture
+def sample_circuit_with_wires_file(tmp_path, sample_circuit_with_wires_dict):
     """Write a sample circuit JSON to a temp file and return the path."""
     filepath = tmp_path / "test_circuit.json"
     with open(filepath, mode="w", encoding="utf-8") as f:
-        json.dump(sample_circuit_dict, f, indent=4)
+        json.dump(sample_circuit_with_wires_dict, f, indent=4)
+    return filepath
+
+
+@pytest.fixture
+def sample_circuit_with_nets_file(tmp_path, sample_circuit_with_nets_dict):
+    """Write a sample circuit JSON to a temp file and return the path."""
+    filepath = tmp_path / "test_circuit.json"
+    with open(filepath, mode="w", encoding="utf-8") as f:
+        json.dump(sample_circuit_with_nets_dict, f, indent=4)
     return filepath
 
 
 class TestCircuitFileDataClassLoad:
     """Tests for CircuitFileDataClass.load()"""
 
-    def test_load_valid_file(self, sample_circuit_file):
+    def test_load_valid_file_with_wires(self, sample_circuit_with_wires_file):
         """Loading a valid JSON file produces a CircuitFileDataClass with correct data."""
-        dc = CircuitFileDataClass.load(sample_circuit_file)
+        dc = CircuitFileDataClass.load(sample_circuit_with_wires_file)
 
         assert isinstance(dc, CircuitFileDataClass)
         assert isinstance(dc.circuit, CircuitDataClass)
         assert dc.circuit.name == "test_circuit"
 
-    def test_load_components(self, sample_circuit_file):
+    def test_load_valid_file_with_nets(self, sample_circuit_with_nets_file):
+        """Loading a valid JSON file produces a CircuitFileDataClass with correct data."""
+        dc = CircuitFileDataClass.load(sample_circuit_with_nets_file)
+
+        assert isinstance(dc, CircuitFileDataClass)
+        assert isinstance(dc.circuit, CircuitDataClass)
+        assert dc.circuit.name == "test_circuit"
+
+    def test_load_components_with_wires(self, sample_circuit_with_wires_file):
         """Components are correctly deserialized."""
-        dc = CircuitFileDataClass.load(sample_circuit_file)
+        dc = CircuitFileDataClass.load(sample_circuit_with_wires_file)
 
         assert len(dc.circuit.components) == 2
         assert all(isinstance(c, ComponentDataClass) for c in dc.circuit.components)
@@ -63,14 +99,35 @@ class TestCircuitFileDataClassLoad:
         assert dc.circuit.components[0].type == "digsim.circuit.components.AND"
         assert dc.circuit.components[1].name == "not1"
 
-    def test_load_wires(self, sample_circuit_file):
+    def test_load_components_with_nets(self, sample_circuit_with_nets_file):
+        """Components are correctly deserialized."""
+        dc = CircuitFileDataClass.load(sample_circuit_with_nets_file)
+
+        assert len(dc.circuit.components) == 3
+        assert all(isinstance(c, ComponentDataClass) for c in dc.circuit.components)
+        assert dc.circuit.components[0].name == "and1"
+        assert dc.circuit.components[0].type == "digsim.circuit.components.AND"
+        assert dc.circuit.components[1].name == "not1"
+        assert dc.circuit.components[2].name == "not2"
+
+    def test_load_wires(self, sample_circuit_with_wires_file):
         """Wires are correctly deserialized."""
-        dc = CircuitFileDataClass.load(sample_circuit_file)
+        dc = CircuitFileDataClass.load(sample_circuit_with_wires_file)
 
         assert len(dc.circuit.wires) == 1
         assert isinstance(dc.circuit.wires[0], WireDataClass)
         assert dc.circuit.wires[0].src == "and1.Y"
         assert dc.circuit.wires[0].dst == "not1.A"
+
+    def test_load_nets(self, sample_circuit_with_nets_file):
+        """Wires are correctly deserialized."""
+        dc = CircuitFileDataClass.load(sample_circuit_with_nets_file)
+
+        assert len(dc.circuit.nets) == 1
+        assert isinstance(dc.circuit.nets[0], NetDataClass)
+        assert dc.circuit.nets[0].source == "and1.Y"
+        assert dc.circuit.nets[0].sinks[0] == "not1.A"
+        assert dc.circuit.nets[0].sinks[1] == "not2.A"
 
     def test_load_component_defaults(self, tmp_path):
         """Components with missing optional fields get default values."""
@@ -147,6 +204,7 @@ class TestCircuitFileDataClassLoad:
         assert dc.circuit.name == "empty"
         assert dc.circuit.components == []
         assert dc.circuit.wires == []
+        assert dc.circuit.nets == []
 
     def test_load_circuit_default_name(self, tmp_path):
         """Loading a circuit without a name uses the default 'unnamed'."""
@@ -189,6 +247,33 @@ class TestCircuitFileDataClassLoad:
         assert len(dc.circuit.wires) == 3
         assert dc.circuit.wires[0].src == "btn1.O"
         assert dc.circuit.wires[2].dst == "led1.I"
+
+    def test_load_multiple_nets(self, tmp_path):
+        """Loading a circuit with multiple wires works correctly."""
+        data = {
+            "circuit": {
+                "name": "multi_wire",
+                "components": [
+                    {"name": "btn1", "type": "digsim.circuit.components.PushButton"},
+                    {"name": "btn2", "type": "digsim.circuit.components.PushButton"},
+                    {"name": "and1", "type": "digsim.circuit.components.AND"},
+                    {"name": "led1", "type": "digsim.circuit.components.Led"},
+                ],
+                "nets": [
+                    {"source": "btn1.O", "sinks": ["and1.A"]},
+                    {"source": "btn2.O", "sinks": ["and1.B"]},
+                    {"source": "and1.Y", "sinks": ["led1.I"]},
+                ],
+            }
+        }
+        filepath = tmp_path / "multi_nets.json"
+        with open(filepath, mode="w", encoding="utf-8") as f:
+            json.dump(data, f)
+
+        dc = CircuitFileDataClass.load(filepath)
+        assert len(dc.circuit.nets) == 3
+        assert dc.circuit.nets[0].source == "btn1.O"
+        assert dc.circuit.nets[2].sinks[0] == "led1.I"
 
 
 class TestCircuitFileDataClassSave:
@@ -364,4 +449,4 @@ class TestCircuitFileDataClassRoundTrip:
 
         assert dc.circuit.name == "example_circuit"
         assert len(dc.circuit.components) == 8
-        assert len(dc.circuit.wires) == 8
+        assert len(dc.circuit.nets) == 5

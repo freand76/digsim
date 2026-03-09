@@ -4,8 +4,8 @@
         "components": [
             {
                 "name": "DFF",
-                "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
                 "settings": {
                     "width": 1,
                     "async_reset": false,
@@ -14,8 +14,8 @@
             },
             {
                 "name": "DFF_1",
-                "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
                 "settings": {
                     "width": 1,
                     "async_reset": false,
@@ -24,8 +24,8 @@
             },
             {
                 "name": "DFF_2",
-                "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
                 "settings": {
                     "width": 1,
                     "async_reset": false,
@@ -34,8 +34,8 @@
             },
             {
                 "name": "DFF_3",
-                "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
                 "settings": {
                     "width": 1,
                     "async_reset": false,
@@ -44,8 +44,8 @@
             },
             {
                 "name": "DFF_4",
-                "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
                 "settings": {
                     "width": 1,
                     "async_reset": false,
@@ -54,8 +54,8 @@
             },
             {
                 "name": "DFF_5",
-                "display_name": "DFF",
                 "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
                 "settings": {
                     "width": 1,
                     "async_reset": false,
@@ -64,127 +64,114 @@
             },
             {
                 "name": "PushButton",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "Clock",
-                "display_name": "Clock",
                 "type": "digsim.circuit.components.Clock",
+                "display_name": "Clock",
                 "settings": {
                     "frequency": 5
                 }
             },
             {
                 "name": "Led",
-                "display_name": "Led",
                 "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
                 "settings": {}
             },
             {
                 "name": "Led_1",
-                "display_name": "Led",
                 "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
                 "settings": {}
             },
             {
                 "name": "Led_2",
-                "display_name": "Led",
                 "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
                 "settings": {}
             },
             {
                 "name": "Led_3",
-                "display_name": "Led",
                 "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
                 "settings": {}
             },
             {
                 "name": "Led_4",
-                "display_name": "Led",
                 "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
                 "settings": {}
             },
             {
                 "name": "Led_5",
-                "display_name": "Led",
                 "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
                 "settings": {}
             }
         ],
-        "wires": [
+        "wires": [],
+        "nets": [
             {
-                "src": "DFF.Q",
-                "dst": "DFF_1.D"
+                "source": "DFF.Q",
+                "sinks": [
+                    "DFF_1.D",
+                    "Led.I"
+                ]
             },
             {
-                "src": "DFF.Q",
-                "dst": "Led.I"
+                "source": "DFF_1.Q",
+                "sinks": [
+                    "DFF_2.D",
+                    "Led_1.I"
+                ]
             },
             {
-                "src": "DFF_1.Q",
-                "dst": "DFF_2.D"
+                "source": "DFF_2.Q",
+                "sinks": [
+                    "DFF_3.D",
+                    "Led_2.I"
+                ]
             },
             {
-                "src": "DFF_1.Q",
-                "dst": "Led_1.I"
+                "source": "DFF_3.Q",
+                "sinks": [
+                    "DFF_4.D",
+                    "Led_3.I"
+                ]
             },
             {
-                "src": "DFF_2.Q",
-                "dst": "DFF_3.D"
+                "source": "DFF_4.Q",
+                "sinks": [
+                    "DFF_5.D",
+                    "Led_4.I"
+                ]
             },
             {
-                "src": "DFF_2.Q",
-                "dst": "Led_2.I"
+                "source": "DFF_5.Q",
+                "sinks": [
+                    "Led_5.I"
+                ]
             },
             {
-                "src": "DFF_3.Q",
-                "dst": "DFF_4.D"
+                "source": "PushButton.O",
+                "sinks": [
+                    "DFF.D"
+                ]
             },
             {
-                "src": "DFF_3.Q",
-                "dst": "Led_3.I"
-            },
-            {
-                "src": "DFF_4.Q",
-                "dst": "DFF_5.D"
-            },
-            {
-                "src": "DFF_4.Q",
-                "dst": "Led_4.I"
-            },
-            {
-                "src": "DFF_5.Q",
-                "dst": "Led_5.I"
-            },
-            {
-                "src": "PushButton.O",
-                "dst": "DFF.D"
-            },
-            {
-                "src": "Clock.O",
-                "dst": "DFF.C"
-            },
-            {
-                "src": "Clock.O",
-                "dst": "DFF_1.C"
-            },
-            {
-                "src": "Clock.O",
-                "dst": "DFF_2.C"
-            },
-            {
-                "src": "Clock.O",
-                "dst": "DFF_3.C"
-            },
-            {
-                "src": "Clock.O",
-                "dst": "DFF_4.C"
-            },
-            {
-                "src": "Clock.O",
-                "dst": "DFF_5.C"
+                "source": "Clock.O",
+                "sinks": [
+                    "DFF.C",
+                    "DFF_1.C",
+                    "DFF_2.C",
+                    "DFF_3.C",
+                    "DFF_4.C",
+                    "DFF_5.C"
+                ]
             }
         ]
     },
@@ -192,72 +179,72 @@
         "DFF": {
             "x": 250,
             "y": 20,
-            "z": 0.0
+            "z": 0
         },
         "DFF_1": {
             "x": 250,
             "y": 130,
-            "z": 0.0
+            "z": 0
         },
         "DFF_2": {
             "x": 250,
             "y": 240,
-            "z": 0.0
+            "z": 0
         },
         "DFF_3": {
             "x": 250,
             "y": 350,
-            "z": 0.0
+            "z": 0
         },
         "DFF_4": {
             "x": 250,
             "y": 460,
-            "z": 0.0
+            "z": 0
         },
         "DFF_5": {
             "x": 250,
             "y": 570,
-            "z": 0.0
+            "z": 0
         },
         "PushButton": {
             "x": 20,
             "y": 10,
-            "z": 0.0
+            "z": 0
         },
         "Clock": {
             "x": 20,
             "y": 200,
-            "z": 0.0
+            "z": 0
         },
         "Led": {
             "x": 600,
             "y": 20,
-            "z": 0.0
+            "z": 0
         },
         "Led_1": {
             "x": 600,
             "y": 130,
-            "z": 0.0
+            "z": 0
         },
         "Led_2": {
             "x": 600,
             "y": 240,
-            "z": 0.0
+            "z": 0
         },
         "Led_3": {
             "x": 600,
             "y": 350,
-            "z": 0.0
+            "z": 0
         },
         "Led_4": {
             "x": 600,
             "y": 460,
-            "z": 0.0
+            "z": 0
         },
         "Led_5": {
             "x": 600,
             "y": 570,
-            "z": 0.0
+            "z": 0
         }
     },
     "shortcuts": {},

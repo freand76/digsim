@@ -3,8 +3,8 @@
     {
         "name": "example_circuit",
         "components": [
-            { "name": "button1", "type": "digsim.circuit.components.PushButton" } ,           
-            { "name": "button2", "type": "digsim.circuit.components.PushButton" },            
+            { "name": "button1", "type": "digsim.circuit.components.PushButton" } ,
+            { "name": "button2", "type": "digsim.circuit.components.PushButton" },
             { "name": "and1", "type": "digsim.circuit.components.AND" },
             { "name": "not1", "type": "digsim.circuit.components.NOT" },
             { "name": "xor1", "type": "digsim.circuit.components.XOR" },
@@ -12,15 +12,12 @@
             { "name": "not_led", "type": "digsim.circuit.components.Led" },
             { "name": "xor_led", "type": "digsim.circuit.components.Led" }
         ],
-        "wires": [
-            { "src": "button1.O", "dst": "and1.A" },
-            { "src": "button2.O", "dst": "and1.B" },            
-            { "src": "button1.O", "dst": "not1.A" },
-            { "src": "button1.O", "dst": "xor1.A" },
-            { "src": "button2.O", "dst": "xor1.B" },            
-            { "src": "and1.Y", "dst": "and_led.I" },
-            { "src": "not1.Y", "dst": "not_led.I" },
-            { "src": "xor1.Y", "dst": "xor_led.I" }
+        "nets": [
+            { "source": "button1.O", "sinks": ["and1.A", "not1.A", "xor1.A"] },
+            { "source": "button2.O", "sinks": ["and1.B", "xor1.B"] },
+            { "source": "and1.Y", "sinks": ["and_led.I"] },
+            { "source": "not1.Y", "sinks": ["not_led.I"] },
+            { "source": "xor1.Y", "sinks": ["xor_led.I"] }
         ]
     }
 }

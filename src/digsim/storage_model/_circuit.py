@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -40,6 +40,32 @@ class WireDataClass:
                     )
                 )
         return wires
+
+
+@dataclass
+class NetDataClass:
+    """Net data class"""
+
+    source: str
+    sinks: list[str] = Field(default_factory=list)
+
+    def connect(self, circuit):
+        src_comp_name, src_port_name = self.source.split(".")
+        src_comp = circuit.get_component(src_comp_name)
+        for dst in self.sinks:
+            dst_comp_name, dst_port_name = dst.split(".")
+            dst_comp = circuit.get_component(dst_comp_name)
+            src_comp.port(src_port_name).wire = dst_comp.port(dst_port_name)
+
+    @classmethod
+    def create_from_port(cls, src_port):
+        source = f"{src_port.parent().name()}.{src_port.name()}"
+        sinks = []
+        for port in src_port.wired_ports:
+            # Only add port on top-level components
+            if port.parent().is_toplevel():
+                sinks.append(f"{port.parent().name()}.{port.name()}")
+        return NetDataClass(source=source, sinks=sinks)
 
 
 @dataclass
@@ -90,6 +116,7 @@ class CircuitDataClass:
     name: str = "unnamed"
     components: list[ComponentDataClass] = Field(default_factory=list)
     wires: list[WireDataClass] = Field(default_factory=list)
+    nets: list[NetDataClass] = Field(default_factory=list)
 
     @staticmethod
     def from_circuit(circuit):
@@ -99,8 +126,8 @@ class CircuitDataClass:
             dc.components.append(ComponentDataClass.from_component(comp))
 
         for comp in toplevel_components:
-            for port in comp.ports:
-                dc.wires.extend(WireDataClass.list_from_port(port))
+            for port in comp.outports():
+                dc.nets.append(NetDataClass.create_from_port(port))
 
         return dc
 

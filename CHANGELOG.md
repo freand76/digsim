@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Change JSON format for saved circuit (wires ==> nets)
 
 ## v1.0.0
  - Bugfix: Fix bad signal path

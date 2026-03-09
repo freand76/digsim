@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -314,6 +314,13 @@ class Circuit:
                 if component_exceptions:
                     raise exc
                 exception_str_list.append(f"{str(exc.__class__.__name__)}:{str(exc)}")
+        for net in circuit_dc.nets:
+            try:
+                net.connect(self)
+            except DigsimException as exc:
+                if connect_exceptions:
+                    raise exc
+                exception_str_list.append(f"{exc.__class__.__name__}:{str(exc)}")
         for wire in circuit_dc.wires:
             try:
                 wire.connect(self)

@@ -4,181 +4,221 @@
         "components": [
             {
                 "name": "SevenSegment",
-                "display_name": "SevenSegment",
                 "type": "digsim.circuit.components.SevenSegment",
+                "display_name": "SevenSegment",
                 "settings": {}
             },
             {
                 "name": "ic7448",
-                "display_name": "ic7448",
                 "type": "digsim.circuit.components.IntegratedCircuit",
+                "display_name": "ic7448",
                 "settings": {
                     "ic_name": "7448"
                 }
             },
             {
                 "name": "ttl_74162",
-                "display_name": "ttl_74162",
                 "type": "digsim.circuit.components.IntegratedCircuit",
+                "display_name": "ttl_74162",
                 "settings": {
                     "ic_name": "74162"
                 }
             },
             {
                 "name": "Clock",
-                "display_name": "Clock",
                 "type": "digsim.circuit.components.Clock",
+                "display_name": "Clock",
                 "settings": {
                     "frequency": 5
                 }
             },
             {
                 "name": "OnOffSwitch",
-                "display_name": "OnOffSwitch",
                 "type": "digsim.circuit.components.OnOffSwitch",
+                "display_name": "OnOffSwitch",
                 "settings": {}
             },
             {
                 "name": "Led",
-                "display_name": "Led",
                 "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
                 "settings": {}
             },
             {
                 "name": "PushButton",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "DipSwitch",
-                "display_name": "DipSwitch",
                 "type": "digsim.circuit.components.DipSwitch",
+                "display_name": "DipSwitch",
                 "settings": {
                     "bits": 4
                 }
             },
             {
                 "name": "Wires2Bus",
-                "display_name": "Wires2Bus",
                 "type": "digsim.circuit.components.Wires2Bus",
+                "display_name": "Wires2Bus",
                 "settings": {
                     "width": 4
                 }
             },
             {
                 "name": "PushButton_1",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "PushButton_2",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "NOT",
-                "display_name": "NOT",
                 "type": "digsim.circuit.components.NOT",
+                "display_name": "NOT",
                 "settings": {}
             },
             {
                 "name": "NOT_1",
-                "display_name": "NOT",
                 "type": "digsim.circuit.components.NOT",
+                "display_name": "NOT",
                 "settings": {}
             }
         ],
-        "wires": [
+        "wires": [],
+        "nets": [
             {
-                "src": "ic7448.a",
-                "dst": "SevenSegment.A"
+                "source": "ic7448.a",
+                "sinks": [
+                    "SevenSegment.A"
+                ]
             },
             {
-                "src": "ic7448.b",
-                "dst": "SevenSegment.B"
+                "source": "ic7448.b",
+                "sinks": [
+                    "SevenSegment.B"
+                ]
             },
             {
-                "src": "ic7448.c",
-                "dst": "SevenSegment.C"
+                "source": "ic7448.c",
+                "sinks": [
+                    "SevenSegment.C"
+                ]
             },
             {
-                "src": "ic7448.d",
-                "dst": "SevenSegment.D"
+                "source": "ic7448.d",
+                "sinks": [
+                    "SevenSegment.D"
+                ]
             },
             {
-                "src": "ic7448.e",
-                "dst": "SevenSegment.E"
+                "source": "ic7448.e",
+                "sinks": [
+                    "SevenSegment.E"
+                ]
             },
             {
-                "src": "ic7448.f",
-                "dst": "SevenSegment.F"
+                "source": "ic7448.f",
+                "sinks": [
+                    "SevenSegment.F"
+                ]
             },
             {
-                "src": "ic7448.g",
-                "dst": "SevenSegment.G"
+                "source": "ic7448.g",
+                "sinks": [
+                    "SevenSegment.G"
+                ]
             },
             {
-                "src": "ttl_74162.RCO",
-                "dst": "Led.I"
+                "source": "ttl_74162.RCO",
+                "sinks": [
+                    "Led.I"
+                ]
             },
             {
-                "src": "ttl_74162.Q",
-                "dst": "ic7448.bcd"
+                "source": "ttl_74162.Q",
+                "sinks": [
+                    "ic7448.bcd"
+                ]
             },
             {
-                "src": "Clock.O",
-                "dst": "ttl_74162.Clk"
+                "source": "Clock.O",
+                "sinks": [
+                    "ttl_74162.Clk"
+                ]
             },
             {
-                "src": "OnOffSwitch.O",
-                "dst": "ttl_74162.ENP"
+                "source": "OnOffSwitch.O",
+                "sinks": [
+                    "ttl_74162.ENP",
+                    "ttl_74162.ENT"
+                ]
             },
             {
-                "src": "OnOffSwitch.O",
-                "dst": "ttl_74162.ENT"
+                "source": "PushButton.O",
+                "sinks": [
+                    "ic7448.lt"
+                ]
             },
             {
-                "src": "PushButton.O",
-                "dst": "ic7448.lt"
+                "source": "DipSwitch.0",
+                "sinks": [
+                    "Wires2Bus.bus_0"
+                ]
             },
             {
-                "src": "DipSwitch.0",
-                "dst": "Wires2Bus.bus_0"
+                "source": "DipSwitch.1",
+                "sinks": [
+                    "Wires2Bus.bus_1"
+                ]
             },
             {
-                "src": "DipSwitch.1",
-                "dst": "Wires2Bus.bus_1"
+                "source": "DipSwitch.2",
+                "sinks": [
+                    "Wires2Bus.bus_2"
+                ]
             },
             {
-                "src": "DipSwitch.2",
-                "dst": "Wires2Bus.bus_2"
+                "source": "DipSwitch.3",
+                "sinks": [
+                    "Wires2Bus.bus_3"
+                ]
             },
             {
-                "src": "DipSwitch.3",
-                "dst": "Wires2Bus.bus_3"
+                "source": "Wires2Bus.bus",
+                "sinks": [
+                    "ttl_74162.D"
+                ]
             },
             {
-                "src": "Wires2Bus.bus",
-                "dst": "ttl_74162.D"
+                "source": "PushButton_1.O",
+                "sinks": [
+                    "NOT_1.A"
+                ]
             },
             {
-                "src": "PushButton_1.O",
-                "dst": "NOT_1.A"
+                "source": "PushButton_2.O",
+                "sinks": [
+                    "NOT.A"
+                ]
             },
             {
-                "src": "PushButton_2.O",
-                "dst": "NOT.A"
+                "source": "NOT.Y",
+                "sinks": [
+                    "ttl_74162.Load_bar"
+                ]
             },
             {
-                "src": "NOT.Y",
-                "dst": "ttl_74162.Load_bar"
-            },
-            {
-                "src": "NOT_1.Y",
-                "dst": "ttl_74162.Clear_bar"
+                "source": "NOT_1.Y",
+                "sinks": [
+                    "ttl_74162.Clear_bar"
+                ]
             }
         ]
     },
@@ -186,67 +226,67 @@
         "SevenSegment": {
             "x": 826,
             "y": 346,
-            "z": 0.0
+            "z": 0
         },
         "ic7448": {
             "x": 558,
             "y": 316,
-            "z": 0.0
+            "z": 0
         },
         "ttl_74162": {
             "x": 318,
             "y": 206,
-            "z": 0.0
+            "z": 0
         },
         "Clock": {
             "x": 132,
             "y": 381,
-            "z": 0.0
+            "z": 0
         },
         "OnOffSwitch": {
             "x": 76,
             "y": 231,
-            "z": 0.0
+            "z": 0
         },
         "Led": {
             "x": 735,
             "y": 231,
-            "z": 0.0
+            "z": 0
         },
         "PushButton": {
             "x": 318,
             "y": 426,
-            "z": 0.0
+            "z": 0
         },
         "DipSwitch": {
             "x": -114,
             "y": 326,
-            "z": 0.0
+            "z": 0
         },
         "Wires2Bus": {
             "x": -33,
             "y": 326,
-            "z": 0.0
+            "z": 0
         },
         "PushButton_1": {
             "x": -13,
             "y": 41,
-            "z": 0.0
+            "z": 0
         },
         "PushButton_2": {
             "x": -13,
             "y": 142,
-            "z": 0.0
+            "z": 0
         },
         "NOT": {
             "x": 172,
             "y": 142,
-            "z": 0.0
+            "z": 0
         },
         "NOT_1": {
             "x": 194,
             "y": 41,
-            "z": 0.0
+            "z": 0
         }
     },
     "shortcuts": {},
