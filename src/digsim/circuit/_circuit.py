@@ -329,7 +329,7 @@ class Circuit:
         circuitfile_dc = CircuitFileDataClass(circuit=self.to_dataclass())
         circuitfile_dc.save(filename)
 
-    def from_json_file(self, filename: str, folder: str):
+    def from_json_file(self, filename: str, folder: str = "."):
         """Load circuit from json file"""
         file_dc = CircuitFileDataClass.load(filename)
         self.from_dataclass(file_dc.circuit, folder)
