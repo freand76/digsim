@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
@@ -25,9 +25,19 @@ class GuiPositionDataClass:
 
 
 @dataclass
+class GuiNetSegmentDataClass:
+    name: str
+    direction: str
+    length: int = 0
+    sink: Optional[str] = None
+    parent: Optional[str] = None
+
+
+@dataclass
 class AppFileDataClass:
     circuit: CircuitDataClass
     gui: dict[str, GuiPositionDataClass] = Field(default_factory=dict)
+    gui_nets: dict[str, list[GuiNetSegmentDataClass]] = Field(default_factory=dict)
     shortcuts: dict[str, str] = Field(default_factory=dict)
     settings: dict[str, Any] = Field(default_factory=dict)
 
@@ -52,7 +62,10 @@ class AppFileDataClass:
 class ModelDataClass:
     circuit: CircuitDataClass
     gui: dict[str, GuiPositionDataClass]
+    gui_nets: dict[str, list[GuiNetSegmentDataClass]] = Field(default_factory=dict)
 
     @staticmethod
     def from_app_file_dc(app_file_dc):
-        return ModelDataClass(circuit=app_file_dc.circuit, gui=app_file_dc.gui)
+        return ModelDataClass(
+            circuit=app_file_dc.circuit, gui=app_file_dc.gui, gui_nets=app_file_dc.gui_nets
+        )

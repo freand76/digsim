@@ -6,6 +6,7 @@
 from digsim.circuit import Circuit
 
 from ._model_components import ModelComponents
+from ._model_nets import ModelNets
 from ._model_new_wire import NewWire
 
 
@@ -16,6 +17,7 @@ class ModelObjects:
         self._app_model = app_model
         self._circuit = Circuit(name="DigSimCircuit")
         self._model_components = ModelComponents(app_model, self._circuit)
+        self._model_nets = ModelNets(app_model, self._circuit)
         self._undo_stack = []
         self._redo_stack = []
         self._new_wire = NewWire(self._app_model)
@@ -29,6 +31,11 @@ class ModelObjects:
     def components(self):
         """return the model components"""
         return self._model_components
+
+    @property
+    def nets(self):
+        """return the model components"""
+        return self._model_nets
 
     @property
     def new_wire(self):

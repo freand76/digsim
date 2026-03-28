@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """An application model for a GUI simulated circuit"""
@@ -180,6 +180,7 @@ class AppModel(QThread):
             )
             # Add component positions
             self.objects.components.add_gui_positions(dc.gui)
+            self.objects.nets.add_gui_nets(dc.gui_nets)
         except DigsimException as exc:
             self._app_model.sig_error.emit(f"Circuit error: {str(exc)}")
             return exception_str_list
