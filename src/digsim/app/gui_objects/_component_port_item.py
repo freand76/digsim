@@ -17,10 +17,22 @@ class PortGraphicsItem(QGraphicsRectItem):
         super().__init__(QRect(0, 0, 0, 0), parent)
         self._app_model = app_model
         self._port = port
+        self._children = []
         self.setPen(QPen(Qt.black))
         self.setBrush(Qt.SolidPattern)
         self.setBrush(QBrush(Qt.gray))
         self.setAcceptHoverEvents(True)
+
+    def add_child(self, child):
+        self._children.append(child)
+
+    def update_nets(self):
+        port_y = self.point().y()
+        for child in self._children:
+            child.update_y(port_y)
+
+    def select(self, selected):
+        pass
 
     def _repaint(self):
         """Make scene repaint for component update"""
@@ -54,10 +66,6 @@ class PortGraphicsItem(QGraphicsRectItem):
         self.setBrush(QBrush(Qt.gray))
         self.setCursor(Qt.ArrowCursor)
 
-    def portParentRect(self):
-        """return the parent rect"""
-        return self.parentItem().rect().translated(self.parentItem().pos())
-
-    def portPos(self):
+    def point(self):
         """return the parent position"""
         return self.parentItem().pos() + self.rect().center()

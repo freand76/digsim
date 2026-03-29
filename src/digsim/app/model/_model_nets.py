@@ -7,6 +7,8 @@ from dataclasses import dataclass
 
 from PySide6.QtCore import QPoint
 
+from digsim.app.gui_objects import WireSegmentObject
+
 
 @dataclass
 class WireSegment:
@@ -29,40 +31,51 @@ class ModelNets:
     def net_dict(self):
         return self._nets
 
-    def _add_segment(self, net_name, segment):
+    def get_object_list(self):
+        object_list = []
+        for net_name, segment_dict in self._nets.items():
+            for segment_name, wire_object in segment_dict.items():
+                object_list.append(wire_object)
+        return object_list
+
+    def _add_wire_object(self, net_name, segment_name, wire_object):
         if net_name not in self._nets:
             self._nets[net_name] = {}
-        self._nets[net_name][segment.name] = segment
+        self._nets[net_name][segment_name] = wire_object
 
     def add_gui_nets(self, gui_nets):
         for net_name, gui_net in gui_nets.items():
-            src_comp_name, src_port_name = net_name.split(".")
-            src_comp = self._circuit.get_component(src_comp_name)
-            src_port = src_comp.port(src_port_name)
+            src_comp, src_port = self._app_model.objects.circuit.net_name_to_component_port(
+                net_name
+            )
             src_comp_object = self._app_model.objects.components.get_object(src_comp)
-            src_pos = src_comp_object.get_port_item(src_port).portPos()
+            source_port = src_comp_object.get_port_item(src_port)
+
             for segment in gui_net:
                 if segment.parent is None:
-                    start_point = QPoint(int(src_pos.x()), int(src_pos.y()))
+                    parent = source_port
                 else:
-                    start_point = self._nets[net_name][segment.parent].end
+                    parent = self._nets[net_name][segment.parent]
+
+                start_point = parent.point()
+                end_point = None
+                sink_port = None
                 if segment.sink is None:
                     if segment.direction == "V":
                         end_point = QPoint(start_point.x(), start_point.y() + segment.length)
                     else:
                         end_point = QPoint(start_point.x() + segment.length, start_point.y())
                 else:
-                    dst_comp_name, dst_port_name = segment.sink.split(".")
-                    dst_comp = self._circuit.get_component(dst_comp_name)
-                    dst_port = dst_comp.port(dst_port_name)
+                    dst_comp, dst_port = (
+                        self._app_model.objects.circuit.net_name_to_component_port(segment.sink)
+                    )
                     dst_comp_object = self._app_model.objects.components.get_object(dst_comp)
-                    dst_pos = dst_comp_object.get_port_item(dst_port).portPos()
-                    end_point = QPoint(int(dst_pos.x()), int(dst_pos.y()))
-                wire_segment = WireSegment(
-                    name=segment.name,
-                    parent=segment.parent,
-                    movable=segment.parent is not None and segment.sink is None,
-                    start=start_point,
-                    end=end_point,
+                    sink_port = dst_comp_object.get_port_item(dst_port)
+
+                wire_object = WireSegmentObject(
+                    self._app_model, net_name, parent, end_point, sink_port
                 )
-                self._add_segment(net_name, wire_segment)
+                parent.add_child(wire_object)
+                if sink_port is not None:
+                    sink_port.add_child(wire_object)
+                self._add_wire_object(net_name, segment.name, wire_object)

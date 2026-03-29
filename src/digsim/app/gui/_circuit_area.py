@@ -1,14 +1,13 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """The circuit area and component widget"""
 
 from functools import partial
 
-from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, Qt, QTimer
-from PySide6.QtGui import QBrush, QColor, QPainterPath, QPen
+from PySide6.QtCore import QPoint, QRect, Qt, QTimer
+from PySide6.QtGui import QBrush, QPainterPath
 from PySide6.QtWidgets import (
-    QGraphicsItem,
     QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsView,
@@ -157,8 +156,8 @@ from digsim.app.settings import ComponentSettingsDialog
 
 #     def update_wire(self):
 #         """Update the wire path"""
-#         source = self._src_port_item.portPos()
-#         dest = self._dst_port_item.portPos()
+#         source = self._src_port_item.point()
+#         dest = self._dst_port_item.point()
 #         rect = self._src_port_item.portParentRect()
 #         points = self.create_points(source, dest, rect)
 #         self._part_items = []
@@ -196,73 +195,6 @@ from digsim.app.settings import ComponentSettingsDialog
 #         self.setPath(path)
 #         self.setPen(pen)
 #         super().paint(painter, option, widget)
-
-
-class WireSegmentGraphicsItem(QGraphicsRectItem):
-    CLOSE_TO_WIRE_MARGIN = 10
-
-    def __init__(self, app_model, net_name, segment_name, segment):
-        super().__init__(self.get_rect(segment))
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        self._app_model = app_model
-        self._net_name = net_name
-        self._segment_name = segment_name
-        self._segment = segment
-        self._start = QPointF(segment.start.x(), segment.start.y())
-        self._end = QPointF(segment.end.x(), segment.end.y())
-        self._src_port = self._app_model.objects.circuit.net_name_to_port(net_name)
-        self._selected = False
-        pen = QPen(QColor("red"))
-        pen.setWidth(2)
-        self.setPen(pen)
-
-    def get_rect(self, segment):
-        x_low = min(segment.start.x(), segment.end.x())
-        x_high = max(segment.start.x(), segment.end.x())
-        y_low = min(segment.start.y(), segment.end.y())
-        y_high = max(segment.start.y(), segment.end.y())
-        return QRectF(
-            x_low - self.CLOSE_TO_WIRE_MARGIN,
-            y_low - self.CLOSE_TO_WIRE_MARGIN,
-            x_high - x_low + 2 * self.CLOSE_TO_WIRE_MARGIN,
-            y_high - y_low + 2 * self.CLOSE_TO_WIRE_MARGIN,
-        )
-
-    def itemChange(self, change, value):
-        """QT function"""
-        if change == QGraphicsItem.ItemSelectedHasChanged:
-            self._selected = self.isSelected()
-        return super().itemChange(change, value)
-
-    def _get_wire_color(self):
-        port_value = self._src_port.value
-        if port_value == "X":
-            return Qt.red
-        if port_value == 0:
-            return Qt.darkGray
-
-        max_value = 2**self._src_port.width - 1
-        # Start with dark gray
-        green = 128
-        # Calculate the green component, ranging from 128 to 255
-        green += int(127 * port_value / max_value)
-        return QColor(128, green, 128)
-
-    def paint(self, painter, option, widget=None):
-        """QT function"""
-        pen = QPen(Qt.darkGray)
-        if self._src_port.width > 1:
-            pen.setWidth(4)
-        else:
-            pen.setWidth(2)
-
-        if not self._app_model.is_running and self._selected:
-            pen.setColor(Qt.black)
-        elif self._app_model.settings.get("color_wires"):
-            pen.setColor(self._get_wire_color())
-
-        painter.setPen(pen)
-        painter.drawLine(self._start, self._end)
 
 
 class _CircuitAreaScene(QGraphicsScene):
@@ -314,12 +246,13 @@ class _CircuitAreaScene(QGraphicsScene):
             self._repaint()
 
         # Make sure to loop through complete list to clear has_moved()
-        has_moved_component = False
-        for component_object in self._app_model.objects.components.get_object_list():
-            if component_object.has_moved():
-                has_moved_component = True
-        if has_moved_component:
-            self._app_model.sig_update_wires.emit()
+        # has_moved_component = False
+        # for component_object in self._app_model.objects.components.get_object_list():
+        #     if component_object.has_moved():
+        #         has_moved_component = True
+        # if has_moved_component:
+        #     self._app_model.sig_update_wires.emit()
+        self._repaint()
 
     def mouseReleaseEvent(self, event):
         """QT event callback function"""
@@ -345,9 +278,8 @@ class _CircuitAreaScene(QGraphicsScene):
     def _update_wires(self):
         return
 
-        for item in self._wire_items:
-            self.removeItem(item)
-
+        # for item in self._wire_items:
+        #    self.removeItem(item)
         # self._wire_items = []
         # component_objects = self._app_model.objects.components.get_object_list()
         # for src_comp_item in component_objects:
@@ -375,25 +307,19 @@ class _CircuitAreaScene(QGraphicsScene):
         """Remove everything from scene"""
         self.clear()
         self._wire_items = []
-        # Add new wire item
-
-        for net_name, segments in self._app_model.objects.nets.net_dict.items():
-            for segment_name, segment in segments.items():
-                line = WireSegmentGraphicsItem(self._app_model, net_name, segment_name, segment)
-                self._wire_segments[f"{net_name}.{segment_name}"] = line
-                self.addItem(line)
-
         # self.addItem(NewWireGraphicsItem(self._app_model))
         # Add selection rect
         self._selection_rect_item = QGraphicsRectItem()
         self._selection_rect_item.setPen(Qt.DashLine)
         self._selection_rect_item.setBrush(Qt.Dense7Pattern)
         self.addItem(self._selection_rect_item)
-        # Add component
+        # Add wire segements
+        for wire_object in self._app_model.objects.nets.get_object_list():
+            self.addItem(wire_object)
+            wire_object.set_parent_widget(self._view)
+        # Add components
         for component_object in self._app_model.objects.components.get_object_list():
             self.add_scene_component(component_object)
-        # Update (add) wires
-        self._update_wires()
 
 
 class CircuitArea(QGraphicsView):

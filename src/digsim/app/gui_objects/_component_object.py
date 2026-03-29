@@ -44,7 +44,6 @@ class ComponentObject(QGraphicsRectItem):
         self._port_dict = {}
         self._parent_widget = None
         self._mouse_press_pos = None
-        self._moved = False
         self._paint_port_names = True
         self._save_pos = self.rect().topLeft()
 
@@ -72,7 +71,8 @@ class ComponentObject(QGraphicsRectItem):
     def itemChange(self, change, value):
         """QT event callback function"""
         if change == QGraphicsItem.ItemPositionHasChanged:
-            self._moved = True
+            for _, port_item in self._port_dict.items():
+                port_item["item"].update_nets()
         elif change == QGraphicsItem.ItemSelectedChange:
             if self._app_model.is_running:
                 value = 0
@@ -145,12 +145,6 @@ class ComponentObject(QGraphicsRectItem):
     def paint_port_names(self, enable):
         """Enable/Disable paint port names"""
         self._paint_port_names = enable
-
-    def has_moved(self):
-        """True if the component has moved since last call"""
-        moved = self._moved
-        self._moved = False
-        return moved
 
     def create_ports(self):
         """Create ports for component object"""

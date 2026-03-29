@@ -99,10 +99,10 @@ class Circuit:
         """Get the components in this circuit"""
         return list(self._components.values())
 
-    def net_name_to_port(self, net_name):
+    def net_name_to_component_port(self, net_name):
         comp_name, port_name = net_name.split(".")
         component = self.get_component(comp_name)
-        return component.port(port_name)
+        return component, component.port(port_name)
 
     def load_path(self, path) -> str:
         """Get the load path relative to the circuit path"""
