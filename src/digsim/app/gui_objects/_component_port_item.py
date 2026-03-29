@@ -3,7 +3,7 @@
 
 """A component port graphics item"""
 
-from PySide6.QtCore import QRect, Qt
+from PySide6.QtCore import QPointF, QRect, Qt
 from PySide6.QtGui import QBrush, QPen
 from PySide6.QtWidgets import QGraphicsRectItem
 
@@ -17,19 +17,11 @@ class PortGraphicsItem(QGraphicsRectItem):
         super().__init__(QRect(0, 0, 0, 0), parent)
         self._app_model = app_model
         self._port = port
-        self._children = []
+        self._pos = QPointF(0, 0)
         self.setPen(QPen(Qt.black))
         self.setBrush(Qt.SolidPattern)
         self.setBrush(QBrush(Qt.gray))
         self.setAcceptHoverEvents(True)
-
-    def add_child(self, child):
-        self._children.append(child)
-
-    def update_nets(self):
-        port_y = self.point().y()
-        for child in self._children:
-            child.update_y(port_y)
 
     def select(self, selected):
         pass
@@ -66,6 +58,12 @@ class PortGraphicsItem(QGraphicsRectItem):
         self.setBrush(QBrush(Qt.gray))
         self.setCursor(Qt.ArrowCursor)
 
+    def update_point(self):
+        pos = self.parentItem().pos() + self.rect().center()
+        self._pos.setX(pos.x())
+        self._pos.setY(pos.y())
+
     def point(self):
         """return the parent position"""
-        return self.parentItem().pos() + self.rect().center()
+        self.update_point()
+        return self._pos

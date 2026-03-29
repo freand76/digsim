@@ -12,14 +12,19 @@ from PySide6.QtWidgets import (
 class WireSegmentObject(QGraphicsRectItem):
     CLOSE_TO_WIRE_MARGIN = 10
 
-    def __init__(self, app_model, net_name, parent, end, sink_port):
-        self._end = QPointF(end.x(), end.y()) if end is not None else None
-        self._sink_port = sink_port
+    def __init__(self, app_model, net_name, parent, vertical, start, end):
+        super().__init__(QRectF(0, 0, 0, 0))
+        self._app_model = app_model
         self._parent = parent
-        super().__init__(self.get_rect(self._parent.point(), self.point()))
+        self._vertical = vertical
+        self._start = start
+        self._end = end
+        self._start_org = QPointF(start.x(), start.y())
+        self._end_org = QPointF(end.x(), end.y())
+        self.set_rect(self._start, self._end)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
-        self._app_model = app_model
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self._net_name = net_name
         _, self._src_port = self._app_model.objects.circuit.net_name_to_component_port(net_name)
         self._selected = False
@@ -33,31 +38,16 @@ class WireSegmentObject(QGraphicsRectItem):
         """Set the parent"""
         self._parent_widget = parent
 
-    def add_child(self, child):
-        self._children.append(child)
-
     def repaint(self):
         """Update GUI for this component object"""
         self._app_model.sig_repaint.emit()
 
-    def update_y(self, y):
-        if self._end is not None:
-            self._end.setY(y)
-        else:
-            self._parent.point().setY(y)
-        self.setRect(self.get_rect(self._parent.point(), self.point()))
-
-    def get_rect(self, start, end):
-        x_low = min(start.x(), end.x())
-        x_high = max(start.x(), end.x())
-        y_low = min(start.y(), end.y())
-        y_high = max(start.y(), end.y())
-        return QRectF(
-            x_low - self.CLOSE_TO_WIRE_MARGIN,
-            y_low - self.CLOSE_TO_WIRE_MARGIN,
-            x_high - x_low + 2 * self.CLOSE_TO_WIRE_MARGIN,
-            y_high - y_low + 2 * self.CLOSE_TO_WIRE_MARGIN,
-        )
+    def set_rect(self, start, end):
+        x_low = min(start.x(), end.x()) - self.CLOSE_TO_WIRE_MARGIN
+        x_high = max(start.x(), end.x()) + self.CLOSE_TO_WIRE_MARGIN
+        y_low = min(start.y(), end.y()) - self.CLOSE_TO_WIRE_MARGIN
+        y_high = max(start.y(), end.y()) + self.CLOSE_TO_WIRE_MARGIN
+        self.setRect(x_low, y_low, x_high - x_low, y_high - y_low)
 
     def select(self, selected):
         self._selected = selected
@@ -66,12 +56,23 @@ class WireSegmentObject(QGraphicsRectItem):
 
     def itemChange(self, change, value):
         """QT function"""
-        if change == QGraphicsItem.ItemSelectedHasChanged:
+        if change == QGraphicsItem.ItemPositionChange:
+            if self._vertical:
+                value.setY(0)
+                self._start.setX(self._start_org.x() + self.pos().x())
+                self._end.setX(self._end_org.x() + self.pos().x())
+            else:
+                value.setX(0)
+                self._start.setY(self._start_org.y() + self.pos().y())
+                self._end.setY(self._end_org.y() + self.pos().y())
+        elif change == QGraphicsItem.ItemPositionHasChanged:
+            pass
+        elif change == QGraphicsItem.ItemSelectedHasChanged:
             self.select(self.isSelected())
         return super().itemChange(change, value)
 
-    def point(self):
-        return self._sink_port.point() if self._sink_port is not None else self._end
+    def end_point(self):
+        return self._end
 
     def _get_wire_color(self):
         port_value = self._src_port.value
@@ -101,4 +102,5 @@ class WireSegmentObject(QGraphicsRectItem):
             pen.setColor(self._get_wire_color())
 
         painter.setPen(pen)
-        painter.drawLine(self._parent.point(), self.point())
+        painter.drawLine(self._start - self.pos(), self._end - self.pos())
+        painter.drawRect(self.rect())

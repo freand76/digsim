@@ -3,20 +3,9 @@
 
 """Handle nets in the model"""
 
-from dataclasses import dataclass
-
-from PySide6.QtCore import QPoint
+from PySide6.QtCore import QPointF
 
 from digsim.app.gui_objects import WireSegmentObject
-
-
-@dataclass
-class WireSegment:
-    name: str
-    parent: str
-    movable: bool
-    start: QPoint
-    end: QPoint
 
 
 class ModelNets:
@@ -54,17 +43,19 @@ class ModelNets:
             for segment in gui_net:
                 if segment.parent is None:
                     parent = source_port
+                    start_point = parent.point()
                 else:
                     parent = self._nets[net_name][segment.parent]
+                    start_point = parent.end_point()
 
-                start_point = parent.point()
                 end_point = None
                 sink_port = None
+                vertical = segment.direction == "V"
                 if segment.sink is None:
                     if segment.direction == "V":
-                        end_point = QPoint(start_point.x(), start_point.y() + segment.length)
+                        end_point = QPointF(start_point.x(), start_point.y() + segment.length)
                     else:
-                        end_point = QPoint(start_point.x() + segment.length, start_point.y())
+                        end_point = QPointF(start_point.x() + segment.length, start_point.y())
                 else:
                     dst_comp, dst_port = (
                         self._app_model.objects.circuit.net_name_to_component_port(segment.sink)
@@ -73,9 +64,11 @@ class ModelNets:
                     sink_port = dst_comp_object.get_port_item(dst_port)
 
                 wire_object = WireSegmentObject(
-                    self._app_model, net_name, parent, end_point, sink_port
+                    self._app_model,
+                    net_name,
+                    parent=parent,
+                    vertical=vertical,
+                    start=start_point,
+                    end=end_point or sink_port.point(),
                 )
-                parent.add_child(wire_object)
-                if sink_port is not None:
-                    sink_port.add_child(wire_object)
                 self._add_wire_object(net_name, segment.name, wire_object)

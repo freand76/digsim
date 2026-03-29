@@ -71,8 +71,7 @@ class ComponentObject(QGraphicsRectItem):
     def itemChange(self, change, value):
         """QT event callback function"""
         if change == QGraphicsItem.ItemPositionHasChanged:
-            for _, port_item in self._port_dict.items():
-                port_item["item"].update_nets()
+            pass
         elif change == QGraphicsItem.ItemSelectedChange:
             if self._app_model.is_running:
                 value = 0
@@ -121,6 +120,13 @@ class ComponentObject(QGraphicsRectItem):
                     if not self._app_model.objects.new_wire.ongoing():
                         self.single_click_action()
         self._mouse_press_pos = None
+
+    def mouseMoveEvent(self, event):
+        """QT event callback function"""
+        super().mouseMoveEvent(event)
+        if self._mouse_press_pos is not None:
+            for _, port_dict in self._port_dict.items():
+                port_dict["item"].point()
 
     def contextMenuEvent(self, event):
         """QT event callback function"""
