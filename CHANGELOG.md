@@ -1,7 +1,9 @@
 # CHANGELOG
 
-## vx.x.x
+## v1.1.0
  - Update python packages
+ - Fix ruffing in code
+ - Fixed windows test github action
 
 ## v1.0.0
  - Bugfix: Fix bad signal path

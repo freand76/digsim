@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "digsim-logic-simulator"
 description = "I    nteractive Digital Logic Simulator"
-version = "1.0.0"
+version = "1.1.0"
 authors = [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 maintainers =  [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 readme = "README.md"
