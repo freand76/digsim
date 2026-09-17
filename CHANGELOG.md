@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Update python packages
 
 ## v1.0.0
  - Bugfix: Fix bad signal path

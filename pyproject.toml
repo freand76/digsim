@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "digsim-logic-simulator"
-description = "Interactive Digital Logic Simulator"
+description = "I    nteractive Digital Logic Simulator"
 version = "1.0.0"
 authors = [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 maintainers =  [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
@@ -25,12 +25,13 @@ classifiers = [
 
 requires-python = ">=3.10"
 dependencies = [
-  "pyvcd==0.4.1",
-  "pyside6==6.10.1",
+  "pyvcd==0.5.0",
+  "pyside6==6.11.2",
   "pexpect==4.9.0",
-  "pydantic==2.12.5",
-  "qtawesome==1.4.0",
-  "yowasp-yosys==0.60.0.0.post1055",
+  "pydantic==2.13.5",
+  "qtawesome==1.4.2",
+  "yowasp-yosys==0.69.0.0.post1233",
+  "wasmtime==47.0.1",
 ]
 
 scripts = { digsim-logic-simulator = "digsim.app.cli:main" }
