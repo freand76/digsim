@@ -3,4 +3,4 @@
 
 """All classes within digsim.app.model namespace"""
 
-from ._model import AppModel  # noqa: F401
+from ._model import AppModel

@@ -21,7 +21,7 @@ def _synth_modules(args):
         synthesis.synth_to_json_file(args.output_file, silent=args.silent)
         print(f"Synthesis complete in {time.monotonic() - start_time:.2f}s")
     except SynthesisException as exc:
-        print(f"ERROR: {str(exc)}")
+        print(f"ERROR: {exc!s}")
         return -1
     return 0
 
@@ -35,7 +35,7 @@ def _list_modules(args):
             print(f"{idx}: {module}")
         print("========")
     except SynthesisException as exc:
-        print(f"ERROR: {str(exc)}")
+        print(f"ERROR: {exc!s}")
         return -1
     return 0
 

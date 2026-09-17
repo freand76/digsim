@@ -1128,12 +1128,15 @@ class _SDFFCE_(ClassNameParameterComponent):
         self.Q.value = 0
 
     def update(self):
-        if self.C.value != self._old_C_level and self.C.value == self._clock_edge:
-            if self.E.value == self._enable_level:
-                if self.R.value == self._reset_level:
-                    self.Q.value = self._reset_value
-                else:
-                    self.Q.value = self.D.value
+        if (
+            self.C.value != self._old_C_level
+            and self.C.value == self._clock_edge
+            and self.E.value == self._enable_level
+        ):
+            if self.R.value == self._reset_level:
+                self.Q.value = self._reset_value
+            else:
+                self.Q.value = self.D.value
         self._old_C_level = self.C.value
 
 

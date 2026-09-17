@@ -59,7 +59,7 @@ print(yosys_counter)
 print("\n===================== Start ==========================\n")
 
 # Simulate 16 clock cycles and print the counter value
-for _ in range(0, 16):
+for _ in range(16):
     print("OUT", yosys_counter.cnt.value)
 
     clk.push()

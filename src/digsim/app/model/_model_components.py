@@ -45,7 +45,7 @@ class ModelComponents:
     def get_top_zlevel(self):
         """Get thehighest z level in the model"""
         max_zlevel = None
-        for _, comp_object in self._component_objects.items():
+        for comp_object in self._component_objects.values():
             max_zlevel = (
                 comp_object.zlevel if max_zlevel is None else (max(max_zlevel, comp_object.zlevel))
             )
@@ -65,12 +65,12 @@ class ModelComponents:
     def send_to_back(self, component_object):
         """Make the component object the lowest in the stack"""
         min_zlevel = None
-        for _, comp_object in self._component_objects.items():
+        for comp_object in self._component_objects.values():
             min_zlevel = (
                 comp_object.zlevel if min_zlevel is None else (min(min_zlevel, comp_object.zlevel))
             )
         if min_zlevel == 0:
-            for _, comp_object in self._component_objects.items():
+            for comp_object in self._component_objects.values():
                 comp_object.zlevel = comp_object.zlevel + 1
             component_object.zlevel = 0
         else:

@@ -70,7 +70,7 @@ synth_component.reset.value = 0
 circuit.run(ms=1)
 
 # Loop 16 times (print the index and value + generate clock cycle)
-for _ in range(0, 16):
+for _ in range(16):
     index = synth_component.index.value
     value = synth_component.value.value
     print(f"Fibonacci sequence [{index}] value is {value}")

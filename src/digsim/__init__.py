@@ -3,4 +3,4 @@
 
 """All classes within digsim namespace"""
 
-from .circuit import Circuit  # noqa: F401
+from .circuit import Circuit

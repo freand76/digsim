@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import abc
 import copy
-from typing import Callable
+from collections.abc import Callable
 
 from ._digsim_exception import DigsimException
 from ._port import Port

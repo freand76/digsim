@@ -181,7 +181,7 @@ class AppModel(QThread):
             # Add component positions
             self.objects.components.add_gui_positions(dc.gui)
         except DigsimException as exc:
-            self._app_model.sig_error.emit(f"Circuit error: {str(exc)}")
+            self._app_model.sig_error.emit(f"Circuit error: {exc!s}")
             return exception_str_list
         return exception_str_list
 

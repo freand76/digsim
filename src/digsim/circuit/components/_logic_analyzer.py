@@ -3,13 +3,15 @@
 
 """Module with Logic Analyzer component"""
 
+import typing
+
 from .atoms import CallbackComponent, PortOutDelta, PortWire
 
 
 class LogicAnalyzer(CallbackComponent):
     """Logic Analyzer component class"""
 
-    PORTLIST = ["A", "B", "C", "D", "E", "F", "G", "H"]
+    PORTLIST: typing.ClassVar = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
     def __init__(self, circuit, name=None, sample_rate=100):
         super().__init__(circuit, name)

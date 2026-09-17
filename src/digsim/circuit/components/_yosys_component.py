@@ -47,7 +47,7 @@ class YosysComponent(MultiComponent):
     def create_from_netlist(self, netlist_object):
         """Create component from netlist object"""
         modules = netlist_object.get_modules()
-        module_name = list(modules.keys())[0]
+        module_name = next(iter(modules.keys()))
         self._netlist_module = netlist_object.get_modules()[module_name]
         self._netlist_nets = self._netlist_module.get_nets()
 
@@ -66,7 +66,7 @@ class YosysComponent(MultiComponent):
     def reload_from_netlist(self, netlist_object):
         """Reload netlist from netlist object"""
         modules = netlist_object.get_modules()
-        module_name = list(modules.keys())[0]
+        module_name = next(iter(modules.keys()))
         reload_module = netlist_object.get_modules()[module_name]
         reload_nets = reload_module.get_nets()
 

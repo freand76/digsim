@@ -10,14 +10,16 @@ class _LabelWireStorage:
     """Singleton class with label wires"""
 
     _instance = None
-    _wire_drivers: dict[str, PortWire] = {}
-    _wire_sinks: dict[str, PortIn] = {}
+    _wire_drivers: dict[str, PortWire]
+    _wire_sinks: dict[str, PortIn]
 
     def __new__(cls):
-        if cls._instance is None:
-            if not cls._instance:
-                cls._instance = super(_LabelWireStorage, cls).__new__(cls)
+        if cls._instance is None and not cls._instance:
+            cls._instance = super().__new__(cls)
         return cls._instance
+
+    def __init__(self):
+        self.clear()
 
     def clear(self):
         """Remove all wires"""

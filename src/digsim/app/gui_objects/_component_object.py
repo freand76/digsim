@@ -236,8 +236,10 @@ class ComponentObject(QGraphicsRectItem):
         """Update GUI for this component object"""
         self._app_model.sig_repaint.emit()
 
-    def get_string_metrics(self, port_str, font=QFont("Arial", 8)):
+    def get_string_metrics(self, port_str, font=None):
         """Get the port display name (including bits if available)"""
+        if font is None:
+            font = self._PORT_NAME_FONT
         fm = QFontMetrics(font)
         str_pixels_w = fm.horizontalAdvance(port_str)
         str_pixels_h = fm.height()

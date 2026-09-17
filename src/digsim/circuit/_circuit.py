@@ -10,7 +10,6 @@ from __future__ import annotations
 import heapq
 import os
 from pathlib import Path
-from typing import Tuple
 
 from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
 
@@ -115,7 +114,6 @@ class Circuit:
             store_path = Path(os.path.relpath(store_path, folder_path))
         except ValueError:
             """If relative path is impossible"""
-            pass
         return str(store_path)
 
     def delete_component(self, component: Component):
@@ -134,15 +132,15 @@ class Circuit:
         self._events_by_port = {}
         if self._vcd is not None:
             self._vcd_init()
-        for _, comp in self._components.items():
+        for comp in self._components.values():
             comp.init()
-        for _, comp in self._components.items():
+        for comp in self._components.values():
             comp.default_state()
         self.run_until(ns=0)  # Handle all time zero events
 
     def clear(self):
         """Remove all components"""
-        for _, comp in self._components.items():
+        for comp in self._components.values():
             comp.clear()
         self._components = {}
 
@@ -161,13 +159,13 @@ class Circuit:
 
     def _vcd_init(self):
         port_info = []
-        for _, comp in self._components.items():
+        for comp in self._components.values():
             for port in comp.ports:
                 port_info.append((port.path(), port.name(), port.width))
         self._vcd.init(port_info)
 
         # Dump initial state in vcd
-        for _, comp in self._components.items():
+        for comp in self._components.values():
             for port in comp.ports:
                 self._vcd.write(port, self._time_ns)
 
@@ -182,7 +180,7 @@ class Circuit:
     def __exit__(self, exc_type, exc_value, exc_traceback):
         self._vcd.close()
 
-    def process_single_event(self, stop_time_ns=None) -> Tuple[bool, bool]:
+    def process_single_event(self, stop_time_ns=None) -> tuple[bool, bool]:
         """
         Process one simulation event
         Return False if ther are now events of if the stop_time has passed
@@ -308,19 +306,19 @@ class Circuit:
                 component.create(self)
             except DigsimException as exc:
                 if component_exceptions:
-                    raise exc
-                exception_str_list.append(f"{str(exc.__class__.__name__)}:{str(exc)}")
+                    raise
+                exception_str_list.append(f"{exc.__class__.__name__!s}:{exc!s}")
             except FileNotFoundError as exc:
                 if component_exceptions:
-                    raise exc
-                exception_str_list.append(f"{str(exc.__class__.__name__)}:{str(exc)}")
+                    raise
+                exception_str_list.append(f"{exc.__class__.__name__!s}:{exc!s}")
         for wire in circuit_dc.wires:
             try:
                 wire.connect(self)
             except DigsimException as exc:
                 if connect_exceptions:
-                    raise exc
-                exception_str_list.append(f"{exc.__class__.__name__}:{str(exc)}")
+                    raise
+                exception_str_list.append(f"{exc.__class__.__name__}:{exc!s}")
 
         return exception_str_list
 

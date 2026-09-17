@@ -7,21 +7,21 @@ Module with classes to parse a yosys netlist
 
 from __future__ import annotations
 
-from typing import Any, Literal, Optional, Union
+from typing import Any, Literal
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 
-BIT_TYPE = list[Union[int, Literal["X"], Literal["x"], Literal["0"], Literal["1"]]]
+BIT_TYPE = list[Literal["X", "x", "0", "1"] | int]
 
 
 @dataclass
 class NetPort:
-    parent: Union[YosysModule, YosysCell]
+    parent: YosysModule | YosysCell
     parent_name: str
     name: str
-    bit_index: Optional[int] = None
+    bit_index: int | None = None
 
 
 @dataclass
@@ -127,7 +127,7 @@ class YosysModule:
 
 @dataclass
 class YosysNetlist:
-    creator: Optional[str] = None
+    creator: str | None = None
     modules: dict[str, YosysModule] = Field(default_factory=dict)
 
     def get_modules(self):

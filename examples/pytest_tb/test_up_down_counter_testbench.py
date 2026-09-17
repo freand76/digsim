@@ -83,7 +83,7 @@ def test_no_count(dut):
     dut.up(False)
     dut.down(False)
 
-    for _ in range(0, 10):
+    for _ in range(10):
         dut.clock()
         assert dut.value() == 0
 

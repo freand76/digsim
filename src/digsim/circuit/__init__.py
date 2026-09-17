@@ -3,5 +3,5 @@
 
 """All classes within digsim.circuit namespace"""
 
-from ._circuit import Circuit  # noqa: F401
-from .components import PortConnectionError  # noqa: F401
+from ._circuit import Circuit
+from .components import PortConnectionError

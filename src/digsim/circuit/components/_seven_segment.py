@@ -3,13 +3,15 @@
 
 """Module with 7-segment LED component"""
 
+import typing
+
 from .atoms import CallbackComponent, PortIn
 
 
 class SevenSegment(CallbackComponent):
     """7-segment LED component class"""
 
-    PORTLIST = ["A", "B", "C", "D", "E", "F", "G", "dot"]
+    PORTLIST: typing.ClassVar = ["A", "B", "C", "D", "E", "F", "G", "dot"]
 
     def __init__(self, circuit, name=None):
         super().__init__(circuit, name)

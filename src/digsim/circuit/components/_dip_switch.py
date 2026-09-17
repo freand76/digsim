@@ -14,7 +14,7 @@ class DipSwitch(CallbackComponent):
         self._bits = bits
         self.parameter_set("bits", bits)
         self._select = None
-        for index in range(0, self._bits):
+        for index in range(self._bits):
             portout = PortOutImmediate(self, f"{index}")
             self.add_port(portout)
 

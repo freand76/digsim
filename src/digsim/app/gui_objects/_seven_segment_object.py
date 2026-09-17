@@ -3,6 +3,8 @@
 
 """A 7-segment component placed in the GUI"""
 
+import typing
+
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QPainterPath
 
@@ -12,7 +14,7 @@ from ._component_object import ComponentObject
 class SevenSegmentObject(ComponentObject):
     """The class for a 7-segment component placed in the GUI"""
 
-    SEGMENT_TYPE_AND_POS = {
+    SEGMENT_TYPE_AND_POS: typing.ClassVar = {
         "A": ("H", QPoint(3, 0)),
         "B": ("V", QPoint(31, 3)),
         "C": ("V", QPoint(31, 33)),
@@ -22,7 +24,7 @@ class SevenSegmentObject(ComponentObject):
         "G": ("H", QPoint(3, 31)),
     }
 
-    SEGMENT_CORDS = {
+    SEGMENT_CORDS: typing.ClassVar = {
         "V": [
             QPoint(3, 3),
             QPoint(3, 20),

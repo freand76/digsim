@@ -3,4 +3,4 @@
 
 """All classes within digsim.app.gui namespace"""
 
-from ._main_window import MainWindow  # noqa: F401
+from ._main_window import MainWindow

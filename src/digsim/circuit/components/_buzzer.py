@@ -3,13 +3,15 @@
 
 """Module with the Buzzer component"""
 
+import typing
+
 from .atoms import CallbackComponent, PortIn
 
 
 class Buzzer(CallbackComponent):
     """Buzzer component class"""
 
-    TONE_TO_FREQUENCY = {
+    TONE_TO_FREQUENCY: typing.ClassVar = {
         "A": 880,
         "B": 987.77,
         "C": 1046.5,

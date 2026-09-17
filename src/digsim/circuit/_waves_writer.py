@@ -6,7 +6,7 @@ Module that handles the creation of vcd files
 """
 
 import io
-from typing import Any, Tuple
+from typing import Any
 
 from vcd import VCDWriter
 
@@ -22,11 +22,11 @@ class WavesWriter:
         self._vcd_writer: VCDWriter | None = None
         self._vcd_dict: dict[str, Any] = {}
 
-    def init(self, port_info: list[Tuple[str, str, int]]):
+    def init(self, port_info: list[tuple[str, str, int]]):
         """Initialize vcd writer"""
         if self._vcd_file is not None or self._vcd_writer is not None:
             self.close()
-        self._vcd_file = open(self._vcd_name, mode="w", encoding="utf-8")
+        self._vcd_file = open(self._vcd_name, mode="w", encoding="utf-8")  # noqa
         if self._vcd_file is None:
             raise RuntimeError("VCD file is None")
         self._vcd_writer = VCDWriter(self._vcd_file, timescale="1 ns", date="today")

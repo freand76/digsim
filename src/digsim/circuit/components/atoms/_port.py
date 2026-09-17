@@ -6,12 +6,12 @@
 from __future__ import annotations
 
 import abc
-from typing import Literal, Optional, Union
+from typing import Literal
 
 from ._digsim_exception import DigsimException
 
 
-VALUE_TYPE = Union[int, Literal["X"]]
+VALUE_TYPE = int | Literal["X"]
 
 
 class PortConnectionError(DigsimException):
@@ -110,7 +110,7 @@ class Port(abc.ABC):
         for port in self._wired_ports:
             port.value = self._value
 
-    def get_wired_ports_recursive(self, processed_ports: Optional[set] = None) -> list[Port]:
+    def get_wired_ports_recursive(self, processed_ports: set | None = None) -> list[Port]:
         """Get all connected ports (iterative), avoiding duplicates."""
         if processed_ports is None:
             processed_ports = set()
@@ -176,9 +176,7 @@ class Port(abc.ABC):
         """Return True if it is possible to add a wire to this port"""
         if self.is_output():
             return True
-        if not self.has_driver():
-            return True
-        return False
+        return bool(not self.has_driver())
 
     def disconnect(self, port: Port):
         """Disconnect port if it is wired"""
@@ -354,7 +352,7 @@ class PortMultiBitWire(Port):
             bit_val = (value >> bit_id) & 1
             bit.value = bit_val
 
-    def get_wired_ports_recursive(self, processed_ports: Optional[set] = None) -> list[Port]:
+    def get_wired_ports_recursive(self, processed_ports: set | None = None) -> list[Port]:
         if processed_ports is None:
             processed_ports = set()
 

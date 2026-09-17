@@ -3,13 +3,15 @@
 
 """HexDigit component module"""
 
+import typing
+
 from .atoms import CallbackComponent, PortIn
 
 
 class HexDigit(CallbackComponent):
     """HexDigit component class"""
 
-    VAL_TO_SEGMENTS = {
+    VAL_TO_SEGMENTS: typing.ClassVar = {
         0: "ABCDEF",
         1: "BC",
         2: "ABDEG",

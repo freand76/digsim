@@ -3,13 +3,15 @@
 
 """Handle shortcuts in the model"""
 
+import typing
+
 from PySide6.QtCore import Qt
 
 
 class ModelShortcuts:
     """class to handle key shortcuts in the model"""
 
-    QT_KEY_TO_KEY = {
+    QT_KEY_TO_KEY: typing.ClassVar = {
         Qt.Key_0: "0",
         Qt.Key_1: "1",
         Qt.Key_2: "2",

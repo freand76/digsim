@@ -28,7 +28,7 @@ class DipSwitchObject(ImageObject):
     def update_ports(self):
         super().update_ports()
         self._rects = []
-        for idx in range(0, self.component.bits()):
+        for idx in range(self.component.bits()):
             port_pos = self.get_port_pos(f"{idx}")
             self._rects.append(
                 QRect(
@@ -44,10 +44,14 @@ class DipSwitchObject(ImageObject):
         select = None
         pos = pos - self.pos()
         for idx, rect in enumerate(self._rects):
-            if pos.x() > rect.x() and pos.x() < (rect.x() + rect.width()):
-                if pos.y() > rect.y() and pos.y() < (rect.y() + rect.height()):
-                    select = idx
-                    break
+            if (
+                pos.x() > rect.x()
+                and pos.x() < (rect.x() + rect.width())
+                and pos.y() > rect.y()
+                and pos.y() < (rect.y() + rect.height())
+            ):
+                select = idx
+                break
         self.component.select(select)
         self.repaint()
 

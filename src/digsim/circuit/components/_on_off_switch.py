@@ -3,22 +3,18 @@
 
 """An On/Off Switch  component"""
 
-import logging
-
 from .atoms import CallbackComponent, PortOutDelta
 
 
 class OnOffSwitch(CallbackComponent):
     """On/Off Switch  component class"""
 
-    def __init__(self, circuit, name=None, start_on=False):
+    def __init__(self, circuit, name=None):
         super().__init__(circuit, name)
         portout = PortOutDelta(self, "O", delay_ns=0)
         self.add_port(portout)
         portout.update_parent(True)
         self._on = False
-        if start_on:
-            logging.warning("Setting 'start_on' has been removed")
 
     def _set(self, state):
         self._on = state
