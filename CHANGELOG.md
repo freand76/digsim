@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## vx.x.x
+ - Update pyside6 to 6.12.0
+ - Add Application icon for Wayland
+
 ## v1.1.0
  - Update python packages
  - Fix ruffing in code
