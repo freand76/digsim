@@ -6,6 +6,10 @@
  - Publish documentation at https://freand76.github.io/digsim/
  - Rewrite README and documentation with separate install/run options
  - Bugfix: Circuit.from_json_file() no longer requires a folder argument
+ - Add type annotations to the whole package (checked with mypy)
+ - Bugfix: Crash on init for Yosys async-load flip-flops with enable (_ALDFFE_*)
+ - Bugfix: Crash instead of error dialog when a loaded circuit cannot be built
+ - Bugfix: Synthesis crashed when given a pathlib.Path
 
 ## v1.1.0
  - Update python packages
