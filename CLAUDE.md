@@ -13,8 +13,9 @@ Verilog into simulatable netlists.
 - `src/digsim/synth/` — Yosys synthesis helper (`python -m digsim.synth`)
 - `src/digsim/storage_model/` — pydantic models for saving/loading circuits
 - `src/digsim/utils/` — Yosys netlist parsing
-- `tests/` — pytest suite; `examples/` — runnable examples, incl. pytest testbenches
-  in `examples/pytest_tb/`; `example_circuits/` — circuits for the GUI
+- `tests/` — pytest suite
+- `examples/` — runnable examples, incl. pytest testbenches in `examples/pytest_tb/`
+- `example_circuits/` — circuits for the GUI
 - `docs/` — user documentation, published to https://freand76.github.io/digsim/ with
   MkDocs Material (`mkdocs.yml`). `docs/documentation.md` is only a pointer to the site.
 
@@ -39,20 +40,22 @@ The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test
 `uv_run_app.sh`). Run ruff format + check, mypy and pytest before committing.
 
 CI (`.github/workflows/`) runs ruff, and pytest plus `examples/yosys_counter/*.py` on Linux
-(Python 3.10–3.14) and Windows; the test workflows run on push only, not on pull requests.
+(Python 3.10–3.14) and Windows. The test workflows run on push only, not on pull requests.
 mypy is local only. The docs site is rebuilt and deployed by `docs.yaml` on every push to
 `main` that touches `docs/`, `mkdocs.yml` or `CHANGELOG.md` (included in the site's
 Changelog page).
 
 - CI runners can't load Qt's GUI libraries (no `libEGL`): tests must not import `QtGui` or
   `QtWidgets`. Keep testable logic in Qt-free modules (like `app/_desktop_entry.py`). The
-  GUI has no automated tests; check GUI changes by running the app (offscreen with
+  GUI has no automated tests, so check GUI changes by running the app (offscreen with
   `QT_QPA_PLATFORM=offscreen` for scripted checks).
 - Ruff 0.17 also formats Python code blocks in Markdown files, and CI checks that.
+- Documentation prose doesn't use semicolons unless one is really called for. Split the
+  sentence or join the parts with a word instead. Code examples are exempt.
 - Component images in `docs/images/components/` are copies of
   `src/digsim/app/gui_objects/images/` (except `LedBar.png`, a screenshot of the drawn
   component), and `docs/images/app_icon.png` of `src/digsim/app/images/app_icon.png`.
-- `docs/components.md` walks through the real `XNOR` and `LedBar` code; keep it in sync
+- `docs/components.md` walks through the real `XNOR` and `LedBar` code. Keep it in sync
   when changing them. Regenerate the example images when an example changes.
 
 Ruff config is in `pyproject.toml`: line length 99, isort with PySide6 imports in their
@@ -64,9 +67,10 @@ own section and two blank lines after imports, no relative imports from parent p
   `# Copyright (c) Fredrik Andersson, 2023-2025` / `# All rights reserved`, followed by a
   module docstring.
 - Private modules are prefixed `_` and re-exported through the package `__init__.py`.
-- Everything is type annotated; mypy runs with `disallow_untyped_defs`, so new functions need
+- Everything is type annotated. mypy runs with `disallow_untyped_defs`, so new functions need
   full signatures. Component ports are attached at runtime and typed via
-  `Component.__getattr__`; GUI objects narrow their `component` property to the concrete type.
+  `Component.__getattr__`, and GUI objects narrow their `component` property to the concrete
+  type.
 - Use fully qualified Qt enums (`Qt.GlobalColor.red`, not `Qt.red`), and pass `int()` to Qt
   APIs that only take ints.
 
@@ -78,13 +82,13 @@ own section and two blank lines after imports, no relative imports from parent p
   Don't change class attributes of hot classes (like `Port`) repeatedly at runtime: after
   enough changes CPython stops optimizing attribute access on that class.
 - **GUI threading**: the model's signals are emitted from the simulation thread, so they are
-  queued. GUI objects must not connect to model signals themselves (a queued call to a
-  removed object runs on freed memory); the circuit area receives them and forwards them to
+  queued. GUI objects must not connect to model signals themselves, since a queued call to a
+  removed object runs on freed memory. The circuit area receives them and forwards them to
   the current objects.
 - **Yosys** runs in-process (`yowasp_yosys.run_yosys`, WebAssembly) unless a native `yosys`
   is on `PATH`. In the sandbox `/tmp` is a private folder, so work files go in a temp
-  folder in the user cache; paths given to Yosys must use forward slashes (`C:/...` on
-  Windows); after a failed run, Yosys keeps its files open until garbage collection, which
+  folder in the user cache. Paths given to Yosys must use forward slashes (`C:/...` on
+  Windows). After a failed run, Yosys keeps its files open until garbage collection, which
   breaks cleanup on Windows. Things like this only show up in the Windows CI.
 
 ## Releases

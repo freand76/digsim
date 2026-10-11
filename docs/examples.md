@@ -364,7 +364,7 @@ library: a 74162 synchronous decade counter and a 7448 BCD to 7-segment decoder.
 - A 5 Hz clock drives the counter, and the switch enables counting (`ENP` and `ENT`).
 - The 7448 decodes the counter value to the 7-segment display.
 - The LED shows the counter's ripple-carry output (`RCO`), which is high on the count of 9.
-- The DIP switch sets a value that is loaded with one push button (`Load`); another push
+- The DIP switch sets a value that is loaded with one push button (`Load`), and another push
   button clears the counter (`Clear`). Both inputs are active low, hence the NOT gates.
 - The third push button drives the 7448 lamp-test input (`lt`).
 

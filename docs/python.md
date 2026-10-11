@@ -8,7 +8,7 @@ Install DigSim into a virtual environment first, see
 [Installation](installation.md#install-into-a-virtual-environment). The runnable
 examples referenced on this page are in the
 [`examples`](https://github.com/freand76/digsim/tree/main/examples) folder of the
-repository; run them from the repository root.
+repository. Run them from the repository root.
 
 ## A first circuit
 
@@ -63,14 +63,14 @@ gtkwave sr.vcd
 | Method | Description |
 | --- | --- |
 | `Circuit(name=None, vcd=None)` | Create a circuit, optionally writing a VCD file |
-| `init()` | Initialize the circuit; call after adding and connecting components |
+| `init()` | Initialize the circuit, after adding and connecting components |
 | `run(s=, ms=, us=, ns=)` | Run the simulation for a period of time |
 | `run_until(s=, ms=, us=, ns=)` | Run the simulation until an absolute time |
 | `time_ns` | The current simulation time in nanoseconds |
 | `get_component(name)` | Look up a component by name |
 | `vcd(filename)` / `vcd_close()` | Start or finish writing a VCD file |
 | `to_json_file(filename)` | Save the circuit |
-| `from_json_file(filename, folder=".")` | Load a circuit; relative paths in it are resolved from `folder` |
+| `from_json_file(filename, folder=".")` | Load a circuit, resolving relative paths in it from `folder` |
 
 ### Components and ports
 

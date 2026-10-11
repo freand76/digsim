@@ -23,7 +23,7 @@ environment with a single command:
 uvx digsim-logic-simulator
 ```
 
-The first start takes a little while since packages are downloaded; later starts are
+The first start takes a little while since packages are downloaded. Later starts are
 fast thanks to uv's cache. Add `@latest` to make sure you get the newest release:
 
 ```sh

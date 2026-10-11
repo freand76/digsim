@@ -62,7 +62,7 @@ can be used as `self.A` afterwards.
 | Base class | Use |
 | --- | --- |
 | `Component` | Most components. |
-| `CallbackComponent` | Components that should notify someone when they change, typically outputs such as LEDs. The callback is called from `update()`; the GUI uses it to repaint the component. |
+| `CallbackComponent` | Components that should notify someone when they change, typically outputs such as LEDs. The callback is called from `update()`, and the GUI uses it to repaint the component. |
 | `MultiComponent` | Components built from other components, such as the `SR` latch, built from two `NOR` gates. |
 
 ### Methods to implement
@@ -150,7 +150,7 @@ circuit.run(ms=1)  # A=1, B=1: equal, LED on
   2000001 ns: led is ON
 ```
 
-The LED is off at 0 ns because the XNOR output is still unknown; it turns on 1 ns later,
+The LED is off at 0 ns because the XNOR output is still unknown. It turns on 1 ns later,
 after the gate delay.
 
 ### Step 3: Add parameters
@@ -397,7 +397,7 @@ changes.
 
 !!! note
     Qt drawing functions that take whole pixels, such as `drawRect(x, y, w, h)`, need
-    `int` values; use `int()` around calculated positions.
+    `int` values, so use `int()` around calculated positions.
 
 ### 4. Register the GUI object
 
@@ -449,8 +449,8 @@ placed right away). The parameter's `type` selects the input:
 
 Every parameter needs a `description`, the label shown in the dialog. Add
 `"reconfigurable": True` to let the user change the parameter later, with **Settings** in
-the component's context menu; the component's `reconfigure()` method and the GUI object's
-`update_size()` are called afterwards.
+the component's context menu. Afterwards, the component's `reconfigure()` method and the GUI
+object's `update_size()` are called.
 
 ### Interactive components
 
