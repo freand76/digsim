@@ -609,7 +609,7 @@ EXAMPLES = [
     "examples/load_save/example_load_circuit.py",
     "examples/yosys_counter/example_yosys_counter_netlist.py",
     "examples/synthesis/example_synthesis.py",
-    "examples/yosys_6502/example_yosys_6502.py",
+    "examples/yosys_6502/example_yosys_6502.py --vcd",
 ]
 
 
@@ -617,7 +617,9 @@ def run_examples(vcd_dir: Path) -> None:
     """Run the examples (from the repository root) and collect their VCD files"""
     before = set(glob.glob(str(ROOT / "**/*"), recursive=True))
     for example in EXAMPLES:
-        subprocess.run([sys.executable, example], cwd=ROOT, check=True, capture_output=True)
+        subprocess.run(
+            [sys.executable, *example.split()], cwd=ROOT, check=True, capture_output=True
+        )
     subprocess.run(
         [sys.executable, "-m", "pytest", "-q", "examples/pytest_tb"],
         cwd=ROOT,

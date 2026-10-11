@@ -9,9 +9,13 @@ one 64kByte memory and one memory mapped 'stdout' writer.
 The example code that is loaded into the memory before the
 simulation starts will send the characters 'Hello World' to
 the MemStdOut component.
-The example will generate a gtkwave file, '6502.vcd'.
+
+Waveforms are not written by default, since that makes the simulation
+slower. Use '--vcd' to write them to '6502.vcd', or '--vcd <file>' to
+choose the file name.
 """
 
+import argparse
 import pathlib
 
 from digsim.circuit import Circuit
@@ -28,8 +32,19 @@ from digsim.circuit.components import (
 # Get the relative path to the example folder
 example_path = pathlib.Path(__file__).parent.resolve().relative_to(pathlib.Path.cwd())
 
-# Create a new circuit with VCD output
-test_circuit = Circuit(vcd="6502.vcd")
+parser = argparse.ArgumentParser(description="Simulate a 6502 CPU printing 'Hello World'")
+parser.add_argument(
+    "--vcd",
+    nargs="?",
+    const="6502.vcd",
+    default=None,
+    metavar="FILE",
+    help="write waveforms to a VCD file (default file: 6502.vcd)",
+)
+args = parser.parse_args()
+
+# Create a new circuit, with VCD output if requested
+test_circuit = Circuit(vcd=args.vcd)
 
 # Instantiate components
 rst = PushButton(test_circuit, "RST")

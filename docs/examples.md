@@ -249,7 +249,7 @@ writes "Hello World" to the text output, which prints each character.
 uv run python examples/yosys_6502/example_yosys_6502.py
 ```
 
-The simulation of 300 clock cycles takes a few seconds:
+The simulation of 300 clock cycles takes less than a second:
 
 ```text
 cpu
@@ -276,9 +276,16 @@ StringOutput [char]: 'd'
 StringOutput [line]: 'Hello World'
 ```
 
-`6502.vcd` contains every signal in the CPU. The waveforms below (values in hex) show the
-CPU fetching the program from `F823` and onwards, then writing `48`, the character `H`, to
-the text output at address `8000`:
+Waveforms are not written by default, since writing every signal in the CPU makes the
+simulation slower. Add `--vcd` to write them to `6502.vcd`, or `--vcd <file>` to choose the
+file name:
+
+```sh
+uv run python examples/yosys_6502/example_yosys_6502.py --vcd
+```
+
+The waveforms below (values in hex) show the CPU fetching the program from `F823` and
+onwards, then writing `48`, the character `H`, to the text output at address `8000`:
 
 ![6502 waveforms](images/examples/6502_waves.svg)
 
