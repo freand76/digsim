@@ -146,6 +146,7 @@ class ComponentSelection(QWidget):
         layout.addWidget(SelectableComponentWidget("AND", self, circuit_area))
         layout.addWidget(SelectableComponentWidget("NOT", self, circuit_area))
         layout.addWidget(SelectableComponentWidget("XOR", self, circuit_area))
+        layout.addWidget(SelectableComponentWidget("XNOR", self, circuit_area))
         layout.addWidget(SelectableComponentWidget("NAND", self, circuit_area))
         layout.addWidget(SelectableComponentWidget("NOR", self, circuit_area))
         layout.addWidget(SelectableComponentWidget("DFF", self, circuit_area))

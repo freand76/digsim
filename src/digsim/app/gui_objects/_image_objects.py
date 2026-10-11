@@ -132,6 +132,12 @@ class ImageObjectNOT(GateImageObject):
     IMAGE_FILENAME = "images/NOT.png"
 
 
+class ImageObjectXNOR(GateImageObject):
+    """The class for a XNOR image component placed in the GUI"""
+
+    IMAGE_FILENAME = "images/XNOR.png"
+
+
 class ImageObjectXOR(GateImageObject):
     """The class for a XOR image component placed in the GUI"""
 

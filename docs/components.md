@@ -9,6 +9,11 @@ This guide shows how to write your own DigSim component, step by step, using two
 
 ![The XNOR and LED bar components in the GUI](images/guide/new_components.png)
 
+!!! info
+    The `XNOR` gate is part of DigSim. Its source in
+    [`_gates.py`](https://github.com/freand76/digsim/blob/main/src/digsim/circuit/components/_gates.py)
+    extends the two-input version in this guide to 2 to 8 inputs, like the other gates.
+
 [Part 1](#part-1-a-component-for-python-circuits) works in your own project, without
 changing DigSim. [Part 2](#part-2-adding-the-component-to-the-gui) adds the component to the
 DigSim application itself, which means changing DigSim's source code. Contributions of new

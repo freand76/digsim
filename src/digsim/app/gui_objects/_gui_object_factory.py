@@ -24,6 +24,7 @@ from ._image_objects import (
     ImageObjectNOT,
     ImageObjectOR,
     ImageObjectStaticValue,
+    ImageObjectXNOR,
     ImageObjectXOR,
 )
 from ._label_object import LabelObject
@@ -59,6 +60,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "SevenSegment": SevenSegmentObject,
     "StaticValue": ImageObjectStaticValue,
     "XOR": ImageObjectXOR,
+    "XNOR": ImageObjectXNOR,
     "IntegratedCircuit": ImageObjectIC,
     "YosysComponent": YosysObject,
     "Note": GuiNoteObject,

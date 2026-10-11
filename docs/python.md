@@ -103,7 +103,7 @@ The available components are:
 | --- | --- |
 | Inputs | `PushButton`, `OnOffSwitch`, `DipSwitch`, `Clock`, `StaticValue`, `VDD`, `GND` |
 | Outputs | `Led`, `HexDigit`, `SevenSegment`, `Buzzer`, `LogicAnalyzer` |
-| Gates | `AND`, `OR`, `NOT`, `XOR`, `NAND`, `NOR`, `MUX` |
+| Gates | `AND`, `OR`, `NOT`, `XOR`, `XNOR`, `NAND`, `NOR`, `MUX` |
 | Flip-flops | `DFF`, `SR`, `FlipFlop`, `SRFF`, `ClockedSRFF`, `ClockedJKFF`, `ClockedTFF` |
 | Buses | `Bus2Wires`, `Wires2Bus`, `LabelWireIn`, `LabelWireOut` |
 | Complex | `IntegratedCircuit`, `YosysComponent`, `Mem64kByte`, `MemStdOut` |

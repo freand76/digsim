@@ -108,6 +108,24 @@ class XOR(ConfigPortsComponent):
             self.Y.value = count % 2
 
 
+class XNOR(ConfigPortsComponent):
+    """XNOR logic gate, high when an even number of inputs are high"""
+
+    def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
+        super().__init__(circuit, name, ports)
+
+    def update(self) -> None:
+        if any(port.value == "X" for port in self._inports):
+            self.Y.value = "X"
+        else:
+            count = 0
+            for port in self._inports:
+                value = port.value
+                assert value != "X"
+                count += value
+            self.Y.value = 1 - count % 2
+
+
 class NAND(ConfigPortsComponent):
     """NAND logic gate"""
 

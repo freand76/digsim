@@ -142,10 +142,11 @@ presses the button or toggles the switch.
 
 ### Logic gates
 
-![OR](images/components/OR.png) ![AND](images/components/AND.png) ![NOT](images/components/NOT.png) ![XOR](images/components/XOR.png) ![NAND](images/components/NAND.png) ![NOR](images/components/NOR.png)
+![OR](images/components/OR.png) ![AND](images/components/AND.png) ![NOT](images/components/NOT.png) ![XOR](images/components/XOR.png) ![XNOR](images/components/XNOR.png) ![NAND](images/components/NAND.png) ![NOR](images/components/NOR.png)
 
-OR, AND, NOT, XOR, NAND and NOR. All gates except NOT can be configured with 2 to 8
-inputs.
+OR, AND, NOT, XOR, XNOR, NAND and NOR. All gates except NOT can be configured with 2 to 8
+inputs. With more than two inputs, XOR is high when an odd number of inputs are high, and
+XNOR when an even number are.
 
 ### Flip-flops
 

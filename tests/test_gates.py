@@ -6,7 +6,7 @@
 import pytest
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import AND, DFF, MUX, NAND, NOR, NOT, OR, SR, XOR
+from digsim.circuit.components import AND, DFF, MUX, NAND, NOR, NOT, OR, SR, XNOR, XOR
 
 
 @pytest.mark.parametrize(
@@ -348,3 +348,46 @@ def test_dff_clock_enable():
     _dff.C.value = 1
     circuit.run(ms=1)
     assert _dff.Q.value == 1
+
+
+@pytest.mark.parametrize(
+    "in_a,in_b,out_y",
+    [
+        ("X", "X", "X"),
+        (0, "X", "X"),
+        ("X", 1, "X"),
+        (0, 0, 1),
+        (1, 0, 0),
+        (0, 1, 0),
+        (1, 1, 1),
+    ],
+)
+def test_xnor(in_a, in_b, out_y):
+    """Test XNOR gate"""
+    circuit = Circuit()
+    _xnor = XNOR(circuit)
+
+    _xnor.A.value = in_a
+    _xnor.B.value = in_b
+    assert _xnor.Y.value == "X"
+    circuit.run(ms=1)
+    assert _xnor.Y.value == out_y
+
+
+@pytest.mark.parametrize(
+    "inputs,out_y",
+    [
+        ((0, 0, 0), 1),
+        ((1, 0, 0), 0),
+        ((1, 1, 0), 1),
+        ((1, 1, 1), 0),
+    ],
+)
+def test_xnor_three_inputs(inputs, out_y):
+    """Test XNOR gate with three inputs: high for an even number of high inputs"""
+    circuit = Circuit()
+    _xnor = XNOR(circuit, ports=3)
+    for port, value in zip((_xnor.A, _xnor.B, _xnor.C), inputs):
+        port.value = value
+    circuit.run(ms=1)
+    assert _xnor.Y.value == out_y
