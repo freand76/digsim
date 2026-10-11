@@ -10,6 +10,7 @@
  - Bugfix: Crash on init for Yosys async-load flip-flops with enable (_ALDFFE_*)
  - Bugfix: Crash instead of error dialog when a loaded circuit cannot be built
  - Bugfix: Synthesis crashed when given a pathlib.Path
+ - Bugfix: Wire Source/Sink (label wires) lost their connections
 
 ## v1.1.0
  - Update python packages

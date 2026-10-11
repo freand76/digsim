@@ -22,12 +22,10 @@ class _LabelWireStorage:
     _wire_sinks: dict[PortWire, str]
 
     def __new__(cls) -> _LabelWireStorage:  # noqa: PYI034 (singleton)
-        if cls._instance is None and not cls._instance:
+        if cls._instance is None:
             cls._instance = super().__new__(cls)
+            cls._instance.clear()
         return cls._instance
-
-    def __init__(self) -> None:
-        self.clear()
 
     def clear(self) -> None:
         """Remove all wires"""
