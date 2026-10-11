@@ -17,6 +17,8 @@ exclude_docs: |
 
 theme:
   name: material
+  logo: images/app_icon.png
+  favicon: images/app_icon.png
   features:
     - content.code.copy
     - navigation.sections
