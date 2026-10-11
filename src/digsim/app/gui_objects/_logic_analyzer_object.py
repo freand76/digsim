@@ -17,7 +17,7 @@ class LogicAnalyzerObject(ImageObject):
     SIGNAL_NAME_WIDTH = 40
     ANALYZER_DISPLAY_WIDTH = 200
 
-    _ANALYZER_PEN = QPen(Qt.green)
+    _ANALYZER_PEN = QPen(Qt.GlobalColor.green)
     _SIGNAL_VERTICAL_SCALE = 10
     _SIGNAL_HORIZONTAL_SCALE = 2
 
@@ -28,8 +28,8 @@ class LogicAnalyzerObject(ImageObject):
 
     def paint_component(self, painter):
         self.paint_component_base(painter)
-        painter.setBrush(Qt.SolidPattern)
-        painter.setBrush(Qt.black)
+        painter.setBrush(Qt.BrushStyle.SolidPattern)
+        painter.setBrush(Qt.GlobalColor.black)
         painter.drawRoundedRect(
             QRect(
                 self.object_pos.x() + self.SIGNAL_NAME_WIDTH,

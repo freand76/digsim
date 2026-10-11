@@ -61,17 +61,17 @@ class DipSwitchObject(ImageObject):
 
     def _paint_dip_switch(self, painter):
         pen = QPen()
-        pen.setColor(Qt.black)
+        pen.setColor(Qt.GlobalColor.black)
         pen.setWidth(1)
         painter.setPen(pen)
         select_id = self.component.selected()
         for idx, rect in enumerate(self._rects):
-            painter.setBrush(Qt.darkGray)
+            painter.setBrush(Qt.GlobalColor.darkGray)
             painter.drawRect(rect)
             if select_id == idx:
-                painter.setBrush(Qt.green)
+                painter.setBrush(Qt.GlobalColor.green)
             else:
-                painter.setBrush(Qt.white)
+                painter.setBrush(Qt.GlobalColor.white)
             if self.component.is_set(idx):
                 painter.drawRect(
                     rect.x() + rect.width() / 2 + 1,
@@ -84,7 +84,7 @@ class DipSwitchObject(ImageObject):
                     rect.x() + 1, rect.y() + 1, rect.width() / 2 - 2, rect.height() - 2
                 )
         painter.setFont(self._DIP_SWITCH_FONT)
-        painter.setPen(Qt.white)
+        painter.setPen(Qt.GlobalColor.white)
         for idx, rect in enumerate(self._rects):
             port_str = f"{idx + 1}"
             str_pixels_w, _ = self.get_string_metrics(port_str, self._DIP_SWITCH_FONT)
@@ -104,5 +104,5 @@ class DipSwitchObject(ImageObject):
 
     def paint(self, painter, option, widget=None):
         """QT function"""
-        self.paint_component_base(painter, color=Qt.red)
+        self.paint_component_base(painter, color=Qt.GlobalColor.red)
         self._paint_dip_switch(painter)

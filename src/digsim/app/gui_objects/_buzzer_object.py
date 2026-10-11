@@ -32,7 +32,7 @@ class _AudioOutput(QIODevice):
                 self.audio_buffer.append(packed)
                 length -= channel_bytes
             sample_index += 1
-        self.open(QIODevice.ReadOnly)
+        self.open(QIODevice.OpenModeFlag.ReadOnly)
 
     def readData(self, maxlen):
         """Read function"""
@@ -70,7 +70,7 @@ class BuzzerObject(ImageObjectWithActiveRect):
         self.audio_format = QAudioFormat()
         self.audio_format.setSampleRate(self.DATA_SAMPLE_RATE_HZ)
         self.audio_format.setChannelCount(1)
-        self.audio_format.setSampleFormat(QAudioFormat.Int16)
+        self.audio_format.setSampleFormat(QAudioFormat.SampleFormat.Int16)
         self.audio_output = _AudioOutput(self.audio_format, self.component.tone_frequency())
 
     def _audio_start(self, enable):

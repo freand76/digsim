@@ -35,7 +35,7 @@ class ComponentSettingsBase(QFrame):
 
     def __init__(self, parent, parameter, parameter_dict, settings):
         super().__init__(parent)
-        self.setFrameStyle(QFrame.Panel)
+        self.setFrameStyle(QFrame.Shape.Panel)
         self._parent = parent
         self._parameter = parameter
         self._parameter_dict = parameter_dict
@@ -110,10 +110,10 @@ class ComponentSettingsSlider(ComponentSettingsBase):
     def __init__(self, parent, parameter, parameter_dict, settings):
         super().__init__(parent, parameter, parameter_dict, settings)
         self.setLayout(QGridLayout(self))
-        self._settings_slider = QSlider(Qt.Horizontal, self)
+        self._settings_slider = QSlider(Qt.Orientation.Horizontal, self)
         self._settings_slider.setSingleStep(1)
         self._settings_slider.setPageStep(1)
-        self._settings_slider.setTickPosition(QSlider.TicksBothSides)
+        self._settings_slider.setTickPosition(QSlider.TickPosition.TicksBothSides)
         self._settings_slider.valueChanged.connect(self._update)
         self._value_label = QLabel("")
         self.layout().addWidget(QLabel(self._parameter_dict["description"]), 0, 0, 1, 6)
@@ -185,7 +185,7 @@ class ComponentSettingsCheckBox(ComponentSettingsBase):
     def __init__(self, parent, parameter, parameter_dict, settings):
         super().__init__(parent, parameter, parameter_dict, settings)
         self.setLayout(QHBoxLayout(self))
-        self.setFrameStyle(QFrame.Panel)
+        self.setFrameStyle(QFrame.Shape.Panel)
         self._settings[parameter] = parameter_dict["default"]
         self._settings_checkbox = QCheckBox(parameter_dict["description"], self)
         self._settings_checkbox.setChecked(parameter_dict["default"])
@@ -397,10 +397,10 @@ class ComponentSettingsDialog(QDialog):
         self._app_model = app_model
         self.setLayout(QVBoxLayout(self))
         self.setWindowTitle(f"Setup {name}")
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self._settings = {}
         self._setup_dialog(parameters)
-        QBtn = QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        QBtn = QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
         self.buttonBox = QDialogButtonBox(QBtn)
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
@@ -408,7 +408,7 @@ class ComponentSettingsDialog(QDialog):
         self.sig_enable_ok.connect(self._enable_ok)
 
     def _enable_ok(self, enable):
-        self.buttonBox.button(QDialogButtonBox.Ok).setEnabled(enable)
+        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(enable)
 
     def get_settings(self):
         """Get settings from setting dialog"""

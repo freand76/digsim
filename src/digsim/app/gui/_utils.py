@@ -12,9 +12,9 @@ def warning_messagebox(parent, dialog_text, message_text):
         parent,
         dialog_text,
         message_text,
-        QMessageBox.Yes | QMessageBox.No,
+        QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
     )
-    return result == QMessageBox.Yes
+    return result == QMessageBox.StandardButton.Yes
 
 
 def are_you_sure_destroy_circuit(parent, dialog_text):

@@ -28,7 +28,7 @@ def _create_app_icon(image_path: Path) -> QIcon:
     image_pixmap = QPixmap(image_path)
     size = max(image_pixmap.size().height(), image_pixmap.size().width())
     icon_pixmap = QPixmap(size, size)
-    icon_pixmap.fill(Qt.transparent)
+    icon_pixmap.fill(Qt.GlobalColor.transparent)
     painter = QPainter(icon_pixmap)
     painter.drawPixmap(
         (icon_pixmap.size().width() - image_pixmap.size().width()) // 2,

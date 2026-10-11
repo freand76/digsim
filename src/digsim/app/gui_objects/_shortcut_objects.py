@@ -37,7 +37,7 @@ class ButtonObject(ImageObject):
     IMAGE_FILENAME = "images/PB.png"
     BUTTON_RADIUS = 35
 
-    _BUTTON_ACTIVE_PEN = QPen(Qt.green)
+    _BUTTON_ACTIVE_PEN = QPen(Qt.GlobalColor.green)
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
@@ -50,7 +50,7 @@ class ButtonObject(ImageObject):
             pen = self._BUTTON_ACTIVE_PEN
             pen.setWidth(4)
             painter.setPen(pen)
-            painter.setBrush(Qt.NoBrush)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawEllipse(
                 self.object_pos.x() + self.width / 2 - self.BUTTON_RADIUS,
                 self.object_pos.y() + self.height / 2 - self.BUTTON_RADIUS,

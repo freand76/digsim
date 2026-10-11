@@ -15,7 +15,7 @@ class GuiSettingsDialog(QDialog):
         self._app_model = app_model
         self.setLayout(QGridLayout(self))
         self.setWindowTitle("Application Settings")
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         # GUI Update Frequency
         self._update_frequency = QComboBox(self)
@@ -26,7 +26,9 @@ class GuiSettingsDialog(QDialog):
         self._show_wire_value = QCheckBox("", self)
 
         # OK / Cancel
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
@@ -41,7 +43,9 @@ class GuiSettingsDialog(QDialog):
         self.layout().addWidget(QLabel("Show Wire Value", self), row, 0, 1, 1)
         self.layout().addWidget(self._show_wire_value, row, 1, 1, 1)
         row += 1
-        self.layout().addWidget(self.buttonBox, row, 0, 1, 2, alignment=Qt.AlignCenter)
+        self.layout().addWidget(
+            self.buttonBox, row, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter
+        )
 
         self._settings = self._app_model.settings.get_all()
         self._slow_to_real_time.setChecked(self._settings["real_time"])

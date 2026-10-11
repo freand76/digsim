@@ -12,7 +12,7 @@ from ._component_object import ComponentObject
 class LabelObject(ComponentObject):
     """The class for a bus/bit component placed in the GUI"""
 
-    _LABEL_PEN = QPen(Qt.black)
+    _LABEL_PEN = QPen(Qt.GlobalColor.black)
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
@@ -43,8 +43,8 @@ class LabelObject(ComponentObject):
         else:
             pen.setWidth(1)
         painter.setPen(pen)
-        painter.setBrush(Qt.SolidPattern)
-        painter.setBrush(Qt.gray)
+        painter.setBrush(Qt.BrushStyle.SolidPattern)
+        painter.setBrush(Qt.GlobalColor.gray)
 
         if "in" in name.lower():
             points = QPolygon(

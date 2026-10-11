@@ -17,7 +17,7 @@ class GuiNoteObject(ComponentObject):
     NOTE_MINIMUM_HEIGHT = 20
 
     _NOTE_FONT = QFont("Arial", 8)
-    _NOTE_PEN = QPen(Qt.black)
+    _NOTE_PEN = QPen(Qt.GlobalColor.black)
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
@@ -49,8 +49,8 @@ class GuiNoteObject(ComponentObject):
         else:
             pen.setWidth(1)
         painter.setPen(pen)
-        painter.setBrush(Qt.SolidPattern)
-        painter.setBrush(Qt.yellow)
+        painter.setBrush(Qt.BrushStyle.SolidPattern)
+        painter.setBrush(Qt.GlobalColor.yellow)
         painter.drawRect(self.rect())
         painter.setFont(self._NOTE_FONT)
         for idx, line in enumerate(lines):
@@ -71,8 +71,8 @@ class GuiNoteObject(ComponentObject):
         pen = cls._NOTE_PEN
         pen.setWidth(1)
         painter.setPen(pen)
-        painter.setBrush(Qt.SolidPattern)
-        painter.setBrush(Qt.yellow)
+        painter.setBrush(Qt.BrushStyle.SolidPattern)
+        painter.setBrush(Qt.GlobalColor.yellow)
         painter.drawRect(note_rect)
         painter.setFont(cls._NOTE_FONT)
         fm = QFontMetrics(cls._NOTE_FONT)

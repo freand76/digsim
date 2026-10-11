@@ -38,8 +38,8 @@ class CircuitEditor(QSplitter):
 
         self._selection_area = QScrollArea(self)
         self._selection_area.setFixedWidth(106)
-        self._selection_area.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
-        self._selection_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self._selection_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self._selection_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self._circuit_area = CircuitArea(app_model, self)
         selection_panel = ComponentSelection(app_model, self._circuit_area, self)
@@ -112,7 +112,7 @@ class MainWindow(QMainWindow):
             event.accept()
             return
 
-        if event.key() == Qt.Key_Space:
+        if event.key() == Qt.Key.Key_Space:
             if self._app_model.is_running:
                 self._app_model.model_stop()
             else:
@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
             event.accept()
             return
 
-        if event.key() == Qt.Key_Escape:
+        if event.key() == Qt.Key.Key_Escape:
             self._app_model.model_abort_wire()
             event.accept()
 
@@ -144,7 +144,7 @@ class MainWindow(QMainWindow):
 
     def error_dialog(self, error_message):
         """Execute Error dialog"""
-        QMessageBox.critical(self.parent(), "Error!", error_message, QMessageBox.Ok)
+        QMessageBox.critical(self.parent(), "Error!", error_message, QMessageBox.StandardButton.Ok)
 
     def warning_log_dialog(self, title, warning_message):
         """Execute warning log dialog"""

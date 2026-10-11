@@ -12,16 +12,16 @@ class ModelShortcuts:
     """class to handle key shortcuts in the model"""
 
     QT_KEY_TO_KEY: typing.ClassVar = {
-        Qt.Key_0: "0",
-        Qt.Key_1: "1",
-        Qt.Key_2: "2",
-        Qt.Key_3: "3",
-        Qt.Key_4: "4",
-        Qt.Key_5: "5",
-        Qt.Key_6: "6",
-        Qt.Key_7: "7",
-        Qt.Key_8: "8",
-        Qt.Key_9: "9",
+        Qt.Key.Key_0: "0",
+        Qt.Key.Key_1: "1",
+        Qt.Key.Key_2: "2",
+        Qt.Key.Key_3: "3",
+        Qt.Key.Key_4: "4",
+        Qt.Key.Key_5: "5",
+        Qt.Key.Key_6: "6",
+        Qt.Key.Key_7: "7",
+        Qt.Key.Key_8: "8",
+        Qt.Key.Key_9: "9",
     }
 
     def __init__(self, app_model):

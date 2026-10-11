@@ -52,18 +52,18 @@ class ComponentObject(QGraphicsRectItem):
         self.create_ports()
 
         # Qt Flags
-        self.setFlag(QGraphicsItem.ItemIsMovable, True)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
         self.setAcceptHoverEvents(True)
 
     def _control_notify(self):
         if self._app_model.is_running:
-            self.setFlag(QGraphicsItem.ItemIsMovable, False)
-            self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, False)
+            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
+            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, False)
         else:
-            self.setFlag(QGraphicsItem.ItemIsMovable, True)
-            self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
+            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
+            self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
 
     def disconnect(self):
         """Disconnect signals (before removal)"""
@@ -71,23 +71,23 @@ class ComponentObject(QGraphicsRectItem):
 
     def itemChange(self, change, value):
         """QT event callback function"""
-        if change == QGraphicsItem.ItemPositionHasChanged:
+        if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             self._moved = True
-        elif change == QGraphicsItem.ItemSelectedChange:
+        elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
             if self._app_model.is_running:
                 value = 0
-        elif change == QGraphicsItem.ItemSelectedHasChanged:
+        elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:
             self.repaint()
         return super().itemChange(change, value)
 
     def hoverEnterEvent(self, _):
         """QT event callback function"""
         if self._app_model.is_running and self.component.has_action:
-            self.setCursor(Qt.PointingHandCursor)
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def hoverLeaveEvent(self, _):
         """QT event callback function"""
-        self.setCursor(Qt.ArrowCursor)
+        self.setCursor(Qt.CursorShape.ArrowCursor)
 
     def hoverMoveEvent(self, event):
         """QT event callback function"""
@@ -97,21 +97,21 @@ class ComponentObject(QGraphicsRectItem):
     def mousePressEvent(self, event):
         """QT event callback function"""
         super().mousePressEvent(event)
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             if self._app_model.is_running:
                 self._app_model.model_add_event(self.component.onpress)
             else:
                 self._mouse_press_pos = event.screenPos()
-                self.setCursor(Qt.ClosedHandCursor)
+                self.setCursor(Qt.CursorShape.ClosedHandCursor)
 
     def mouseReleaseEvent(self, event):
         """QT event callback function"""
         super().mouseReleaseEvent(event)
-        if event.button() == Qt.LeftButton:
+        if event.button() == Qt.MouseButton.LeftButton:
             if self._app_model.is_running:
                 self._app_model.model_add_event(self.component.onrelease)
             else:
-                self.setCursor(Qt.ArrowCursor)
+                self.setCursor(Qt.CursorShape.ArrowCursor)
                 if event.screenPos() != self._mouse_press_pos:
                     # Move completed, set model to changed
                     self._app_model.objects.components.component_moved()
@@ -258,7 +258,7 @@ class ComponentObject(QGraphicsRectItem):
             display_name_str,
         )
 
-    def paint_component_base(self, painter, color=Qt.gray):
+    def paint_component_base(self, painter, color=Qt.GlobalColor.gray):
         """Paint component base rect"""
         comp_rect = self.rect()
         pen = QPen()
@@ -266,9 +266,9 @@ class ComponentObject(QGraphicsRectItem):
             pen.setWidth(4)
         else:
             pen.setWidth(1)
-        pen.setColor(Qt.black)
+        pen.setColor(Qt.GlobalColor.black)
         painter.setPen(pen)
-        painter.setBrush(Qt.SolidPattern)
+        painter.setBrush(Qt.BrushStyle.SolidPattern)
         painter.setBrush(color)
         painter.drawRoundedRect(comp_rect, 5, 5)
 
@@ -291,7 +291,7 @@ class ComponentObject(QGraphicsRectItem):
         fm = QFontMetrics(cls._SELECTABLE_COMPONENT_NAME_FONT)
         str_pixels_w = fm.horizontalAdvance(name)
         str_pixels_h = fm.height()
-        painter.setPen(Qt.black)
+        painter.setPen(Qt.GlobalColor.black)
         painter.drawText(
             point.x() + size.width() / 2 - str_pixels_w / 2,
             point.y() + size.height() - str_pixels_h,
@@ -302,7 +302,7 @@ class ComponentObject(QGraphicsRectItem):
         """Get the X position left of the input port"""
         return 1.5 * self.PORT_SIDE
 
-    def paint_portnames(self, painter, color=Qt.black):
+    def paint_portnames(self, painter, color=Qt.GlobalColor.black):
         """Paint component ports"""
         painter.setPen(color)
         painter.setFont(self._PORT_NAME_FONT)

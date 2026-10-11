@@ -214,7 +214,7 @@ class ImageObjectWithActiveRect(ImageObject):
     When active the image will have a green border painted around it.
     """
 
-    _ACTIVE_RECT_PEN = QPen(Qt.green)
+    _ACTIVE_RECT_PEN = QPen(Qt.GlobalColor.green)
 
     def __init__(self, app_model, component, xpos, ypos):
         super().__init__(app_model, component, xpos, ypos)
@@ -229,7 +229,7 @@ class ImageObjectWithActiveRect(ImageObject):
             pen = self._ACTIVE_RECT_PEN
             pen.setWidth(4)
             painter.setPen(pen)
-            painter.setBrush(Qt.NoBrush)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawRoundedRect(xpos, ypos, self._pixmap.width(), self._pixmap.height(), 5, 5)
 
 

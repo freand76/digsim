@@ -40,7 +40,7 @@ class WirePartGraphicsItem(QGraphicsRectItem):
         self._end = QPointF(x_high, y_high)
         self._selected = False
         super().__init__(rect, parent)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
 
     def wire_selected(self, selected):
         """Set Wire Selected"""
@@ -48,15 +48,15 @@ class WirePartGraphicsItem(QGraphicsRectItem):
 
     def itemChange(self, change, value):
         """QT event callback function"""
-        if change == QGraphicsItem.ItemSelectedHasChanged:
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:
             self._parent.select(self.isSelected())
         return super().itemChange(change, value)
 
     def _get_wire_color(self, port_value, bus_width):
         if port_value == "X":
-            return Qt.red
+            return Qt.GlobalColor.red
         if port_value == 0:
-            return Qt.darkGray
+            return Qt.GlobalColor.darkGray
 
         max_value = 2**bus_width - 1
         # Start with dark gray
@@ -67,7 +67,7 @@ class WirePartGraphicsItem(QGraphicsRectItem):
 
     def paint(self, painter, option, widget=None):
         """QT function"""
-        pen = QPen(Qt.darkGray)
+        pen = QPen(Qt.GlobalColor.darkGray)
         bus_width = self._src_port.width
         if bus_width > 1:
             pen.setWidth(4)
@@ -75,7 +75,7 @@ class WirePartGraphicsItem(QGraphicsRectItem):
             pen.setWidth(2)
 
         if not self._app_model.is_running and self._selected:
-            pen.setColor(Qt.black)
+            pen.setColor(Qt.GlobalColor.black)
         elif self._app_model.settings.get("color_wires"):
             port_value = self._src_port.value
             pen.setColor(self._get_wire_color(port_value, bus_width))
@@ -181,7 +181,7 @@ class NewWireGraphicsItem(QGraphicsPathItem):
         end_pos = None
         start_port = self._app_model.objects.new_wire.start_port()
         end_pos = self._app_model.objects.new_wire.end_pos()
-        pen = QPen(Qt.darkGray)
+        pen = QPen(Qt.GlobalColor.darkGray)
         if start_port is None or end_pos is None:
             return
         if start_port.width > 1:
@@ -310,8 +310,8 @@ class _CircuitAreaScene(QGraphicsScene):
         self.addItem(NewWireGraphicsItem(self._app_model))
         # Add selection rect
         self._selection_rect_item = QGraphicsRectItem()
-        self._selection_rect_item.setPen(Qt.DashLine)
-        self._selection_rect_item.setBrush(Qt.Dense7Pattern)
+        self._selection_rect_item.setPen(Qt.PenStyle.DashLine)
+        self._selection_rect_item.setBrush(Qt.BrushStyle.Dense7Pattern)
         self.addItem(self._selection_rect_item)
         # Add component
         for component_object in self._app_model.objects.components.get_object_list():
@@ -334,9 +334,9 @@ class CircuitArea(QGraphicsView):
         self._scene = _CircuitAreaScene(app_model, self)
         self._wheel_zoom_mode = False
         self.setScene(self._scene)
-        self.setBackgroundBrush(QBrush(Qt.lightGray))
+        self.setBackgroundBrush(QBrush(Qt.GlobalColor.lightGray))
         self.setAcceptDrops(True)
-        self.setTransformationAnchor(QGraphicsView.NoAnchor)
+        self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
         self._mouse_pos = QPoint(0, 0)
 
     def has_selection(self):
@@ -358,12 +358,12 @@ class CircuitArea(QGraphicsView):
         super().keyPressEvent(event)
         if event.isAutoRepeat():
             return
-        if event.key() == Qt.Key_Shift:
-            self.setCursor(Qt.OpenHandCursor)
-            self.setDragMode(QGraphicsView.ScrollHandDrag)
+        if event.key() == Qt.Key.Key_Shift:
+            self.setCursor(Qt.CursorShape.OpenHandCursor)
+            self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
             event.accept()
-        elif event.key() == Qt.Key_Control:
-            self.setCursor(Qt.ArrowCursor)
+        elif event.key() == Qt.Key.Key_Control:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
             self._wheel_zoom_mode = True
             event.accept()
 
@@ -372,12 +372,12 @@ class CircuitArea(QGraphicsView):
         super().keyReleaseEvent(event)
         if event.isAutoRepeat():
             return
-        if event.key() == Qt.Key_Shift:
-            self.setCursor(Qt.ArrowCursor)
-            self.setDragMode(QGraphicsView.NoDrag)
+        if event.key() == Qt.Key.Key_Shift:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+            self.setDragMode(QGraphicsView.DragMode.NoDrag)
             event.accept()
-        elif event.key() == Qt.Key_Control:
-            self.setCursor(Qt.ArrowCursor)
+        elif event.key() == Qt.Key.Key_Control:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
             self._wheel_zoom_mode = False
             event.accept()
 
@@ -395,7 +395,7 @@ class CircuitArea(QGraphicsView):
 
     def dropEvent(self, event):
         """QT event callback function"""
-        event.setDropAction(Qt.IgnoreAction)
+        event.setDropAction(Qt.DropAction.IgnoreAction)
         event.accept()
         self.setFocus()
 

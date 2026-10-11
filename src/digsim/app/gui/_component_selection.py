@@ -34,7 +34,7 @@ class SelectableComponentWidget(QPushButton):
 
     def mousePressEvent(self, event):
         """QT event callback function"""
-        if event.buttons() == Qt.LeftButton:
+        if event.buttons() == Qt.MouseButton.LeftButton:
             drag = QDrag(self)
             mime = QMimeData()
             mime.setText(self._name)
@@ -45,7 +45,9 @@ class SelectableComponentWidget(QPushButton):
             pixmap = QPixmap(self.size().width(), self.size().width())
             self.render(pixmap)
             drag.setPixmap(pixmap)
-            drag.exec_(Qt.CopyAction | Qt.MoveAction, Qt.CopyAction)
+            drag.exec_(
+                Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction
+            )
 
     def mouseDoubleClickEvent(self, _):
         """QT event callback function"""
@@ -67,8 +69,8 @@ class HorizontalLine(QFrame):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Sunken)
+        self.setFrameShape(QFrame.Shape.HLine)
+        self.setFrameShadow(QFrame.Shadow.Sunken)
 
 
 class DescriptionText(QWidget):
@@ -83,7 +85,7 @@ class DescriptionText(QWidget):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(0)
         label = QLabel(text)
-        label.setAlignment(Qt.AlignCenter)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(label)
         self.layout().addWidget(HorizontalLine(self))
 

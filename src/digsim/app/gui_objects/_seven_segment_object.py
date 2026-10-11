@@ -93,8 +93,8 @@ class SevenSegmentObject(ComponentObject):
     @classmethod
     def paint_digit_rect(cls, painter, xpos, ypos, digits=1):
         """Paint the digit background"""
-        painter.setBrush(Qt.SolidPattern)
-        painter.setPen(Qt.black)
+        painter.setBrush(Qt.BrushStyle.SolidPattern)
+        painter.setPen(Qt.GlobalColor.black)
         painter.drawRoundedRect(xpos, ypos, cls.DIGIT_WIDTH * digits, cls.DIGIT_HEIGHT, 4, 4)
 
     @classmethod
@@ -105,11 +105,11 @@ class SevenSegmentObject(ComponentObject):
         )
         for seg, type_pos in cls.SEGMENT_TYPE_AND_POS.items():
             if seg in active_segments:
-                painter.setPen(Qt.red)
-                painter.setBrush(Qt.red)
+                painter.setPen(Qt.GlobalColor.red)
+                painter.setBrush(Qt.GlobalColor.red)
             else:
-                painter.setPen(Qt.darkRed)
-                painter.setBrush(Qt.darkRed)
+                painter.setPen(Qt.GlobalColor.darkRed)
+                painter.setBrush(Qt.GlobalColor.darkRed)
             pos_vector = cls.SEGMENT_CORDS[type_pos[0]]
             offset = type_pos[1]
             path = QPainterPath()
@@ -124,10 +124,10 @@ class SevenSegmentObject(ComponentObject):
         DOT_RADIUS = 3
 
         if "." in active_segments:
-            painter.setPen(Qt.red)
-            painter.setBrush(Qt.red)
+            painter.setPen(Qt.GlobalColor.red)
+            painter.setBrush(Qt.GlobalColor.red)
         else:
-            painter.setPen(Qt.darkRed)
-            painter.setBrush(Qt.darkRed)
+            painter.setPen(Qt.GlobalColor.darkRed)
+            painter.setBrush(Qt.GlobalColor.darkRed)
         dotPoint = QPoint(DOT_OFFSET_X, DOT_OFFSET_Y) + start_point
         painter.drawEllipse(dotPoint, DOT_RADIUS, DOT_RADIUS)

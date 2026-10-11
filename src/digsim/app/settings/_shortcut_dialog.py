@@ -15,7 +15,7 @@ class ShortcutDialog(QDialog):
         self._app_model = app_model
         self.setLayout(QVBoxLayout(self))
         self.setWindowTitle("Add shortcut")
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         self.layout().addWidget(QLabel("Select shortcut key for component"))
         self._key_selector = QComboBox(parent)
@@ -26,7 +26,9 @@ class ShortcutDialog(QDialog):
                 shortcut_string += f" - {shortcut_component.name()}"
             self._key_selector.addItem(shortcut_string, userData=key)
         self.layout().addWidget(self._key_selector)
-        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.layout().addWidget(self.buttonBox)

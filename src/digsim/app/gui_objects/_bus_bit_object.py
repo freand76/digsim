@@ -27,7 +27,7 @@ class BusBitsObject(ComponentObject):
         center_pos = QPoint(size.width() / 2, size.height() / 2)
         pen = QPen()
         pen.setWidth(4)
-        pen.setColor(Qt.black)
+        pen.setColor(Qt.GlobalColor.black)
         painter.setPen(pen)
         line_height = size.height() - cls.BORDER_TO_PORT
         painter.drawLine(

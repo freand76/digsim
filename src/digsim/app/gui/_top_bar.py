@@ -99,18 +99,18 @@ class SimTimeWidget(QFrame):
 
     def __init__(self, app_model, parent):
         super().__init__(parent)
-        self.setFrameShape(QFrame.StyledPanel)
-        self.setFrameShadow(QFrame.Sunken)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setFrameShadow(QFrame.Shadow.Sunken)
         self.setLayout(QHBoxLayout(self))
         self.layout().setContentsMargins(5, 1, 5, 1)
         self.layout().setSpacing(5)
         self._app_model = app_model
         sim_time_desc = QLabel("Simulation time:")
-        sim_time_desc.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        sim_time_desc.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.layout().addWidget(sim_time_desc)
         self._sim_time = QLabel("0 s")
         self._sim_time.setMinimumWidth(60)
-        self._sim_time.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self._sim_time.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.layout().addWidget(self._sim_time)
         self._app_model.sig_sim_time_notify.connect(self._sim_time_notify)
 
@@ -125,13 +125,15 @@ class VcdFilenameWidget(QFrame):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.setFrameShape(QFrame.StyledPanel)
-        self.setFrameShadow(QFrame.Sunken)
+        self.setFrameShape(QFrame.Shape.StyledPanel)
+        self.setFrameShadow(QFrame.Shadow.Sunken)
         self.setLayout(QHBoxLayout(self))
         self.layout().setContentsMargins(5, 1, 5, 1)
         self.layout().setSpacing(5)
         self._vcd_filename = QLabel("<vcd file>")
-        self._vcd_filename.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        self._vcd_filename.setAlignment(
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
+        )
         self._vcd_filename.setMinimumWidth(200)
         self.layout().addWidget(self._vcd_filename)
 
@@ -155,7 +157,7 @@ class VcdControlWidget(QFrame):
         self._enable_vcd = QCheckBox("VCD output", self)
         self._enable_vcd.stateChanged.connect(self._enable)
         self._vcd_path = QPushButton("", self)
-        self._vcd_path.setIcon(self.style().standardIcon(QStyle.SP_FileIcon))
+        self._vcd_path.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon))
         self._vcd_path.clicked.connect(self._change_vcd_file)
         self._vcd_path.setToolTip("Select VCD output")
         self._filename_widget = VcdFilenameWidget(self)
