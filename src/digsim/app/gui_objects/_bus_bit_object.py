@@ -3,10 +3,20 @@
 
 """A hexdigit component placed in the GUI"""
 
-from PySide6.QtCore import QPoint, QSize, Qt
-from PySide6.QtGui import QPen
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from PySide6.QtCore import QPoint, QPointF, QRectF, QSize, Qt
+from PySide6.QtGui import QPainter, QPen
+
+from digsim.circuit.components.atoms import Component, Port
 
 from ._component_object import ComponentObject
+
+
+if TYPE_CHECKING:
+    from digsim.app.model import AppModel
 
 
 class BusBitsObject(ComponentObject):
@@ -16,43 +26,55 @@ class BusBitsObject(ComponentObject):
     WIRE_LENGTH_SELECTABLE = 15
     PORT_DISTANCE = 10
 
-    def __init__(self, app_model, component, xpos, ypos):
+    def __init__(
+        self, app_model: AppModel, component: Component, xpos: float, ypos: float
+    ) -> None:
         super().__init__(app_model, component, xpos, ypos, port_distance=self.PORT_DISTANCE)
         bus_w, _ = self.get_string_metrics("bus[31:0]")
         self.width = 2 * self.inport_x_pos() + 2 * bus_w + abs(2 * self.WIRE_LENGTH_COMPONENT)
         self.update_ports()
 
     @classmethod
-    def _paint_bus_bit(cls, painter, pos, size, wire_length, bit_wires_y):
-        center_pos = QPoint(size.width() / 2, size.height() / 2)
+    def _paint_bus_bit(
+        cls,
+        painter: QPainter,
+        pos: QPoint | QPointF,
+        size: QSize | QRectF,
+        wire_length: int,
+        bit_wires_y: list[float],
+    ) -> None:
+        center_pos = QPoint(int(size.width() / 2), int(size.height() / 2))
         pen = QPen()
         pen.setWidth(4)
         pen.setColor(Qt.GlobalColor.black)
         painter.setPen(pen)
         line_height = size.height() - cls.BORDER_TO_PORT
         painter.drawLine(
-            pos.x() + center_pos.x(),
-            pos.y() + center_pos.y() - line_height / 2,
-            pos.x() + center_pos.x(),
-            pos.y() + center_pos.y() + line_height / 2,
+            int(pos.x() + center_pos.x()),
+            int(pos.y() + center_pos.y() - line_height / 2),
+            int(pos.x() + center_pos.x()),
+            int(pos.y() + center_pos.y() + line_height / 2),
         )
         painter.drawLine(
-            pos.x() + center_pos.x() - wire_length,
-            pos.y() + center_pos.y(),
-            pos.x() + center_pos.x(),
-            pos.y() + center_pos.y(),
+            int(pos.x() + center_pos.x() - wire_length),
+            int(pos.y() + center_pos.y()),
+            int(pos.x() + center_pos.x()),
+            int(pos.y() + center_pos.y()),
         )
         pen.setWidth(2)
         painter.setPen(pen)
         for wire_y in bit_wires_y:
             painter.drawLine(
-                pos.x() + center_pos.x() + wire_length, wire_y, pos.x() + center_pos.x(), wire_y
+                int(pos.x() + center_pos.x() + wire_length),
+                int(wire_y),
+                int(pos.x() + center_pos.x()),
+                int(wire_y),
             )
 
-    def _portlist(self):
+    def _portlist(self) -> list[Port]:
         return self.component.outports()
 
-    def paint_component(self, painter):
+    def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter)
         bit_wires_y = []
         for port in self._portlist():
@@ -66,7 +88,7 @@ class BusBitsObject(ComponentObject):
         )
 
     @classmethod
-    def paint_selectable_component(cls, painter, size, name):
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         image_size = QSize(size.width(), size.width())
         bit_wires_y = [
             size.width() / 2 - 3 * size.width() / 12,
@@ -90,5 +112,5 @@ class BitsBusObject(BusBitsObject):
     WIRE_LENGTH_COMPONENT = -5
     WIRE_LENGTH_SELECTABLE = -15
 
-    def _portlist(self):
+    def _portlist(self) -> list[Port]:
         return self.component.inports()

@@ -3,73 +3,85 @@
 
 """Handle component objects in the model"""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from PySide6.QtCore import QPointF
+
+import digsim.app.gui_objects
 import digsim.circuit.components
 from digsim.app.gui_objects import ComponentObject
+from digsim.circuit import Circuit
 from digsim.circuit.components import Buzzer
-from digsim.circuit.components.atoms import CallbackComponent
+from digsim.circuit.components.atoms import CallbackComponent, Component
 from digsim.storage_model import GuiPositionDataClass
+
+
+if TYPE_CHECKING:
+    from ._model import AppModel
 
 
 class ModelComponents:
     """Class to handle the component objects in the model"""
 
     @staticmethod
-    def is_component_object(obj):
+    def is_component_object(obj: object) -> bool:
         """Test if this object is a component object"""
         return isinstance(obj, ComponentObject)
 
-    def __init__(self, app_model, circuit):
+    def __init__(self, app_model: AppModel, circuit: Circuit) -> None:
         self._app_model = app_model
         self._circuit = circuit
-        self._component_objects = {}
-        self._component_callback_list = []
+        self._component_objects: dict[Component, ComponentObject] = {}
+        self._component_callback_list: list[Component] = []
 
-    def clear(self):
+    def clear(self) -> None:
         """Clear components objects"""
         for component_object in self.get_object_list():
             component_object.disconnect()
         self._component_objects = {}
 
-    def init(self):
+    def init(self) -> None:
         """Initialize components objects"""
         self._app_model.sig_repaint.emit()
 
-    def get_dict(self):
+    def get_dict(self) -> dict[Component, ComponentObject]:
         """Get component objects dict"""
         return self._component_objects
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         """Return True if there are component objects in the model"""
         return len(self._component_objects) == 0
 
-    def get_top_zlevel(self):
-        """Get thehighest z level in the model"""
-        max_zlevel = None
+    def get_top_zlevel(self) -> float:
+        """Get the highest z level in the model"""
+        max_zlevel: float | None = None
         for comp_object in self._component_objects.values():
             max_zlevel = (
                 comp_object.zlevel if max_zlevel is None else (max(max_zlevel, comp_object.zlevel))
             )
-        return max_zlevel
+        return max_zlevel if max_zlevel is not None else 0
 
-    def component_moved(self):
+    def component_moved(self) -> None:
         """Call when component has moved to update state"""
         self._app_model.objects.push_undo_state()
         self._app_model.model_changed()
 
-    def bring_to_front(self, component_object):
+    def bring_to_front(self, component_object: ComponentObject) -> None:
         """Make the component object the highest in the stack"""
         max_zlevel = self.get_top_zlevel()
         component_object.zlevel = max_zlevel + 1
         self._app_model.model_changed()
 
-    def send_to_back(self, component_object):
+    def send_to_back(self, component_object: ComponentObject) -> None:
         """Make the component object the lowest in the stack"""
-        min_zlevel = None
+        min_zlevel: float | None = None
         for comp_object in self._component_objects.values():
             min_zlevel = (
                 comp_object.zlevel if min_zlevel is None else (min(min_zlevel, comp_object.zlevel))
             )
-        if min_zlevel == 0:
+        if min_zlevel is None or min_zlevel == 0:
             for comp_object in self._component_objects.values():
                 comp_object.zlevel = comp_object.zlevel + 1
             component_object.zlevel = 0
@@ -77,7 +89,7 @@ class ModelComponents:
             component_object.zlevel = min_zlevel - 1
         self._app_model.model_changed()
 
-    def update_callback_objects(self):
+    def update_callback_objects(self) -> None:
         """
         Update the GUI for the components that have changed since the last call
         """
@@ -89,19 +101,19 @@ class ModelComponents:
         self._app_model.sig_repaint.emit()
         self._component_callback_list = []
 
-    def _component_callback(self, component):
+    def _component_callback(self, component: Component) -> None:
         """Add component to callback list (if not available)"""
         if component not in self._component_callback_list:
             self._component_callback_list.append(component)
 
-    def _get_component_class(self, name):
+    def _get_component_class(self, name: str) -> type[Component]:
         return getattr(digsim.circuit.components, name)
 
-    def get_object_parameters(self, name):
+    def get_object_parameters(self, name: str) -> dict[str, dict[str, Any]]:
         """Get parameters for a component"""
         return self._get_component_class(name).get_parameters()
 
-    def _add_object(self, component, xpos, ypos):
+    def _add_object(self, component: Component, xpos: float, ypos: float) -> ComponentObject:
         """Add component object in position"""
         component_object_class = digsim.app.gui_objects.class_factory(type(component).__name__)
         self._component_objects[component] = component_object_class(
@@ -111,7 +123,9 @@ class ModelComponents:
             component.set_callback(self._component_callback)
         return self._component_objects[component]
 
-    def add_object_by_name(self, name, pos, settings):
+    def add_object_by_name(
+        self, name: str, pos: QPointF, settings: dict[str, Any]
+    ) -> ComponentObject:
         """Add component object from class name"""
         self._app_model.objects.push_undo_state()
         component_class = self._get_component_class(name)
@@ -121,15 +135,15 @@ class ModelComponents:
         self._app_model.model_changed()
         return component_object
 
-    def get_object(self, component):
+    def get_object(self, component: Component) -> ComponentObject:
         """Get component object (from component)"""
         return self._component_objects[component]
 
-    def get_object_list(self):
+    def get_object_list(self) -> list[ComponentObject]:
         """Get list of component objects"""
         return list(self._component_objects.values())
 
-    def update_settings(self, component_object, settings):
+    def update_settings(self, component_object: ComponentObject, settings: dict[str, Any]) -> None:
         """Update settings for a component"""
         self._app_model.objects.push_undo_state()
         component_object.component.update_settings(settings)
@@ -138,26 +152,26 @@ class ModelComponents:
         component_object.update_size()
         self._app_model.sig_repaint.emit()
 
-    def update_sizes(self):
+    def update_sizes(self) -> None:
         """Update all component sizes"""
         for comp_object in self.get_object_list():
             comp_object.update_size()
 
-    def delete(self, component_object):
+    def delete(self, component_object: ComponentObject) -> None:
         """Delete a component object in the model"""
         component_object.disconnect()
         del self._component_objects[component_object.component]
         self._circuit.delete_component(component_object.component)
         self._app_model.sig_delete_component.emit(component_object)
 
-    def add_gui_positions(self, gui_dc_dict):
+    def add_gui_positions(self, gui_dc_dict: dict[str, GuiPositionDataClass]) -> None:
         """Create model components from circuit_dict"""
         for comp in self._circuit.get_toplevel_components():
             gui_dc = gui_dc_dict.get(comp.name(), GuiPositionDataClass())
             component_object = self._add_object(comp, gui_dc.x, gui_dc.y)
             component_object.zlevel = gui_dc.z
 
-    def get_gui_dict(self):
+    def get_gui_dict(self) -> dict[str, GuiPositionDataClass]:
         """Return gui dict from component objects"""
         gui_dict = {}
         for comp, comp_object in self.get_dict().items():

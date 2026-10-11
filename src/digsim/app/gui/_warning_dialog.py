@@ -12,20 +12,23 @@ from PySide6.QtWidgets import (
     QLabel,
     QStyle,
     QVBoxLayout,
+    QWidget,
 )
 
 
 class WarningDialog(QDialog):
     """WarningDialog"""
 
-    def __init__(self, parent, title, warning_message):
+    def __init__(self, parent: QWidget | None, title: str, warning_message: str) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.setLayout(QVBoxLayout(self))
+        layout = QVBoxLayout(self)
+        self.setLayout(layout)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setStyleSheet("QLabel{font-size: 18pt;}")
         frame = QFrame(parent)
-        frame.setLayout(QHBoxLayout(frame))
+        frame_layout = QHBoxLayout(frame)
+        frame.setLayout(frame_layout)
         frame.setFrameShape(QFrame.Shape.StyledPanel)
         frame.setFrameShadow(QFrame.Shadow.Sunken)
         label = QLabel()
@@ -34,13 +37,13 @@ class WarningDialog(QDialog):
         icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MessageBoxWarning)
         button = QLabel()
         button.setPixmap(icon.pixmap(QSize(32, 32)))
-        frame.layout().addWidget(button)
-        frame.layout().setStretchFactor(label, 0)
-        frame.layout().addWidget(label)
-        frame.layout().setStretchFactor(label, 1)
+        frame_layout.addWidget(button)
+        frame_layout.setStretchFactor(label, 0)
+        frame_layout.addWidget(label)
+        frame_layout.setStretchFactor(label, 1)
         buttonBox = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
         buttonBox.accepted.connect(self.accept)
-        self.layout().addWidget(frame)
-        self.layout().setStretchFactor(frame, 1)
-        self.layout().addWidget(buttonBox)
-        self.layout().setStretchFactor(buttonBox, 0)
+        layout.addWidget(frame)
+        layout.setStretchFactor(frame, 1)
+        layout.addWidget(buttonBox)
+        layout.setStretchFactor(buttonBox, 0)

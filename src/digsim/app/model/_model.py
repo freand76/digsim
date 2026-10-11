@@ -3,8 +3,11 @@
 
 """An application model for a GUI simulated circuit"""
 
+from __future__ import annotations
+
 import queue
 import time
+from collections.abc import Callable
 from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal
@@ -35,59 +38,59 @@ class AppModel(QThread):
     sig_zoom_in_gui = Signal()
     sig_zoom_out_gui = Signal()
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._setup_model_components()
         self._started = False
         self._single_step = False
         self._changed = False
-        self._gui_event_queue = queue.Queue()
+        self._gui_event_queue: queue.Queue[Callable[[], None]] = queue.Queue()
         self._multi_select = False
         self._circuit_folder = ""
 
-    def _setup_model_components(self):
+    def _setup_model_components(self) -> None:
         self._model_objects = ModelObjects(self)
         self._model_shortcuts = ModelShortcuts(self)
         self._model_settings = ModelSettings(self)
 
     @property
-    def objects(self):
+    def objects(self) -> ModelObjects:
         """return the model objects"""
         return self._model_objects
 
     @property
-    def shortcuts(self):
+    def shortcuts(self) -> ModelShortcuts:
         """return the model shortcuts"""
         return self._model_shortcuts
 
     @property
-    def settings(self):
+    def settings(self) -> ModelSettings:
         """return the model settings"""
         return self._model_settings
 
     @property
-    def is_running(self):
+    def is_running(self) -> bool:
         """Return True if the simulation thread is running"""
         return self._started
 
     @property
-    def is_changed(self):
+    def is_changed(self) -> bool:
         """Return True if there are changes in the model since last save"""
         return self._changed
 
-    def _model_clear(self):
+    def _model_clear(self) -> None:
         """Clear model"""
         self.objects.clear()
         self.shortcuts.clear()
         self._changed = False
 
-    def model_init(self):
+    def model_init(self) -> None:
         """(Re)initialize the model/circuit"""
         self.objects.circuit.init()
         self.objects.init()
         self.sig_sim_time_notify.emit(0)
 
-    def model_start(self):
+    def model_start(self) -> None:
         """Start model simulation thread"""
         self.model_abort_wire()
         self._started = True
@@ -95,38 +98,39 @@ class AppModel(QThread):
         self.start()
         self.sig_control_notify.emit()
 
-    def model_single_step(self):
+    def model_single_step(self) -> None:
         """Start model simulation thread"""
         self._started = True
         self._single_step = True
         self.start()
         self.sig_control_notify.emit()
 
-    def model_stop(self):
+    def model_stop(self) -> None:
         """Stop model simulation thread"""
         self._started = False
         self.wait()
 
-    def model_reset(self):
+    def model_reset(self) -> None:
         """Reset model simulation"""
         if not self._started:
             self.model_init()
 
-    def model_changed(self):
+    def model_changed(self) -> None:
         """Set changed to True, for example when gui has moved component"""
         self._changed = True
         self.sig_control_notify.emit()
 
-    def model_add_event(self, func):
+    def model_add_event(self, func: Callable[[], None]) -> None:
         """Add medel events (functions) from the GUI"""
         self._gui_event_queue.put(func)
 
-    def model_abort_wire(self):
+    def model_abort_wire(self) -> None:
+        """Abort a wire that is being drawn"""
         if self._model_objects.new_wire.ongoing():
             self._model_objects.new_wire.abort()
             self.sig_repaint.emit()
 
-    def run(self):
+    def run(self) -> None:
         """Simulation thread run function"""
         start_time = time.perf_counter()
         next_tick = start_time
@@ -163,7 +167,7 @@ class AppModel(QThread):
         self.sig_control_notify.emit()
         self.sig_audio_start.emit(False)
 
-    def model_to_circuit(self, model_dc):
+    def model_to_circuit(self, model_dc: AppFileDataClass | ModelDataClass) -> list[str]:
         if isinstance(model_dc, AppFileDataClass):
             # Loaded model
             dc = ModelDataClass.from_app_file_dc(model_dc)
@@ -186,14 +190,14 @@ class AppModel(QThread):
             return exception_str_list
         return exception_str_list
 
-    def circuit_to_model(self):
+    def circuit_to_model(self) -> ModelDataClass:
         model_dc = ModelDataClass(
             circuit=self.objects.circuit.to_dataclass(self._circuit_folder),
             gui=self.objects.components.get_gui_dict(),
         )
         return model_dc
 
-    def save_circuit(self, path):
+    def save_circuit(self, path: str | Path) -> None:
         """Save the circuit with GUI information"""
         self._circuit_folder = str(Path(path).parent)
         model_dataclass = self.circuit_to_model()
@@ -207,7 +211,7 @@ class AppModel(QThread):
         self._changed = False
         self.sig_control_notify.emit()
 
-    def load_circuit(self, path):
+    def load_circuit(self, path: str | Path) -> None:
         """Load a circuit with GUI information"""
         self._model_clear()
         app_file_dc = AppFileDataClass.load(path)
@@ -225,17 +229,17 @@ class AppModel(QThread):
         if len(exception_str_list) > 0:
             self.sig_warning_log.emit("Load Circuit Warning", "\n".join(exception_str_list))
 
-    def clear_circuit(self):
+    def clear_circuit(self) -> None:
         """Clear the circuit"""
         self.objects.push_undo_state()
         self._model_clear()
         self.sig_synchronize_gui.emit()
         self.sig_control_notify.emit()
 
-    def zoom_in(self):
+    def zoom_in(self) -> None:
         """Send zoom in signal to GUI"""
         self.sig_zoom_in_gui.emit()
 
-    def zoom_out(self):
+    def zoom_out(self) -> None:
         """Send zoom out signal to GUI"""
         self.sig_zoom_out_gui.emit()

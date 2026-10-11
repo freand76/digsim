@@ -3,10 +3,21 @@
 
 """A label component placed in the GUI"""
 
-from PySide6.QtCore import QPoint, QRect, Qt
-from PySide6.QtGui import QPen, QPolygon
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from PySide6.QtCore import QPoint, QRect, QRectF, QSize, Qt
+from PySide6.QtGui import QPainter, QPen, QPolygon
+
+from digsim.circuit.components import LabelWireIn, LabelWireOut
+from digsim.circuit.components.atoms import Component
 
 from ._component_object import ComponentObject
+
+
+if TYPE_CHECKING:
+    from digsim.app.model import AppModel
 
 
 class LabelObject(ComponentObject):
@@ -14,9 +25,11 @@ class LabelObject(ComponentObject):
 
     _LABEL_PEN = QPen(Qt.GlobalColor.black)
 
-    def __init__(self, app_model, component, xpos, ypos):
+    def __init__(
+        self, app_model: AppModel, component: Component, xpos: float, ypos: float
+    ) -> None:
         super().__init__(app_model, component, xpos, ypos)
-        label = component.label()
+        label = self.component.label()
         label_w, label_h = self.get_string_metrics(label)
         self.width = 2 * self.PORT_SIDE + label_w
         self.height = self.PORT_SIDE + label_h
@@ -27,16 +40,24 @@ class LabelObject(ComponentObject):
         else:
             xpos = self.width - self.PORT_SIDE - 1
         rect = QRect(
-            self.object_pos.x() + xpos,
-            self.object_pos.y() + self.height / 2 - self.PORT_SIDE / 2,
+            int(self.object_pos.x() + xpos),
+            int(self.object_pos.y() + self.height / 2 - self.PORT_SIDE / 2),
             self.PORT_SIDE,
             self.PORT_SIDE,
         )
         port = self.component.port(label)
         self.set_port_rect(port, rect)
 
+    @property
+    def component(self) -> LabelWireIn | LabelWireOut:
+        component = self._component
+        assert isinstance(component, (LabelWireIn, LabelWireOut))
+        return component
+
     @classmethod
-    def _paint_label(cls, painter, comp_rect, name, selected=False):
+    def _paint_label(
+        cls, painter: QPainter, comp_rect: QRect | QRectF, name: str, selected: bool = False
+    ) -> None:
         pen = cls._LABEL_PEN
         if selected:
             pen.setWidth(4)
@@ -49,49 +70,60 @@ class LabelObject(ComponentObject):
         if "in" in name.lower():
             points = QPolygon(
                 [
-                    QPoint(comp_rect.x(), comp_rect.y() + comp_rect.height() / 2),
-                    QPoint(comp_rect.x() + comp_rect.height() / 2, comp_rect.y()),
-                    QPoint(comp_rect.x() + comp_rect.width(), comp_rect.y()),
-                    QPoint(comp_rect.x() + comp_rect.width(), comp_rect.y() + comp_rect.height()),
+                    QPoint(int(comp_rect.x()), int(comp_rect.y() + comp_rect.height() / 2)),
+                    QPoint(int(comp_rect.x() + comp_rect.height() / 2), int(comp_rect.y())),
+                    QPoint(int(comp_rect.x() + comp_rect.width()), int(comp_rect.y())),
                     QPoint(
-                        comp_rect.x() + comp_rect.height() / 2, comp_rect.y() + comp_rect.height()
+                        int(comp_rect.x() + comp_rect.width()),
+                        int(comp_rect.y() + comp_rect.height()),
                     ),
-                    QPoint(comp_rect.x(), comp_rect.y() + comp_rect.height() / 2),
+                    QPoint(
+                        int(comp_rect.x() + comp_rect.height() / 2),
+                        int(comp_rect.y() + comp_rect.height()),
+                    ),
+                    QPoint(int(comp_rect.x()), int(comp_rect.y() + comp_rect.height() / 2)),
                 ]
             )
         else:
             points = QPolygon(
                 [
-                    QPoint(comp_rect.x(), comp_rect.y()),
+                    QPoint(int(comp_rect.x()), int(comp_rect.y())),
                     QPoint(
-                        comp_rect.x() + comp_rect.width() - comp_rect.height() / 2, comp_rect.y()
+                        int(comp_rect.x() + comp_rect.width() - comp_rect.height() / 2),
+                        int(comp_rect.y()),
                     ),
                     QPoint(
-                        comp_rect.x() + comp_rect.width(), comp_rect.y() + comp_rect.height() / 2
+                        int(comp_rect.x() + comp_rect.width()),
+                        int(comp_rect.y() + comp_rect.height() / 2),
                     ),
                     QPoint(
-                        comp_rect.x() + comp_rect.width() - comp_rect.height() / 2,
-                        comp_rect.y() + comp_rect.height(),
+                        int(comp_rect.x() + comp_rect.width() - comp_rect.height() / 2),
+                        int(comp_rect.y() + comp_rect.height()),
                     ),
-                    QPoint(comp_rect.x(), comp_rect.y() + comp_rect.height()),
-                    QPoint(comp_rect.x(), comp_rect.y()),
+                    QPoint(int(comp_rect.x()), int(comp_rect.y() + comp_rect.height())),
+                    QPoint(int(comp_rect.x()), int(comp_rect.y())),
                 ]
             )
         painter.drawPolygon(points)
 
-    def paint_component(self, painter):
+    def paint_component(self, painter: QPainter) -> None:
         if self._input:
             self._paint_label(painter, self.rect(), "sink", self.selected)
         else:
             self._paint_label(painter, self.rect(), "source", self.selected)
 
     @classmethod
-    def paint_selectable_component(cls, painter, size, name):
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         width = 40
         height = 15
         cls._paint_label(
             painter,
-            QRect(size.width() / 2 - width / 2, size.height() / 2 - height / 2, width, height),
+            QRect(
+                int(size.width() / 2 - width / 2),
+                int(size.height() / 2 - height / 2),
+                width,
+                height,
+            ),
             name,
         )
         cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)

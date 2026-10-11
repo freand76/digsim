@@ -39,7 +39,7 @@ def _create_app_icon(image_path: Path) -> QIcon:
     return QIcon(icon_pixmap)
 
 
-def setup_wayland_desktop_entry(icon_resource_path: Path):
+def setup_wayland_desktop_entry(icon_resource_path: Path) -> None:
     """Generates the .desktop file and places the icon in user data locations on first run."""
     # Ensure this runs primarily on Linux/Wayland environments
     if not sys.platform.startswith("linux"):
@@ -80,7 +80,7 @@ def setup_wayland_desktop_entry(icon_resource_path: Path):
         desktop_file.write_text(content, encoding="utf-8")
 
 
-def _start(args, package_version):
+def _start(args: argparse.Namespace, package_version: str) -> int:
     # Ensure system files are created for Wayland compositors
     main_path = Path(__file__).parent
     image_path = main_path / "images/app_icon.png"
@@ -105,7 +105,7 @@ def _start(args, package_version):
     return app.exec()
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--version", "-v", action="store_true", help="Print the version of digsim.app"

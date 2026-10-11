@@ -3,14 +3,30 @@
 
 """A hexdigit component placed in the GUI"""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QPainter
+
+from digsim.circuit.components import HexDigit
+from digsim.circuit.components.atoms import Component
+
 from ._component_object import ComponentObject
 from ._seven_segment_object import SevenSegmentObject
+
+
+if TYPE_CHECKING:
+    from digsim.app.model import AppModel
 
 
 class HexDigitObject(SevenSegmentObject):
     """The class for a hexdigit component placed in the GUI"""
 
-    def __init__(self, app_model, component, xpos, ypos):
+    def __init__(
+        self, app_model: AppModel, component: Component, xpos: float, ypos: float
+    ) -> None:
         super().__init__(
             app_model,
             component,
@@ -19,7 +35,13 @@ class HexDigitObject(SevenSegmentObject):
             port_distance=ComponentObject.DEFAULT_PORT_TO_PORT_DISTANCE,
         )
 
-    def setup_size(self):
+    @property
+    def component(self) -> HexDigit:
+        component = self._component
+        assert isinstance(component, HexDigit)
+        return component
+
+    def setup_size(self) -> None:
         """Setup the size of the component"""
         self.digits = self.component.get_digits()
         str_pixels_w, _ = self.get_string_metrics(f"val[{4 * self.digits - 1}:0]")
@@ -31,7 +53,7 @@ class HexDigitObject(SevenSegmentObject):
         self.height = 2 * self.RECT_TO_DIGIT_RECT_MARGIN + self.DIGIT_HEIGHT
         self.update_ports()
 
-    def paint_component(self, painter):
+    def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter)
         self.paint_digit_rect(
             painter,
@@ -49,5 +71,5 @@ class HexDigitObject(SevenSegmentObject):
             )
 
     @classmethod
-    def paint_selectable_component(cls, painter, size, name):
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         cls.paint_selectable_digit(painter, size, name, "ABDEG")

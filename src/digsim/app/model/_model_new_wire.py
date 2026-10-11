@@ -3,33 +3,45 @@
 
 """Handle new wire object in the model"""
 
-from digsim.circuit.components.atoms import PortConnectionError
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from PySide6.QtCore import QPointF
+
+from digsim.circuit.components.atoms import Component, Port, PortConnectionError
+
+
+if TYPE_CHECKING:
+    from ._model import AppModel
 
 
 class NewWire:
     """Class to handle functionality for making a new wire"""
 
-    def __init__(self, app_model):
+    def __init__(self, app_model: AppModel) -> None:
         self._app_model = app_model
-        self._start_port = None
-        self._end_pos = None
+        self._start_port: Port | None = None
+        self._end_pos: QPointF | None = None
 
-    def start_port(self):
+    def start_port(self) -> Port | None:
         """Get start port for unfinished new wire object"""
         return self._start_port
 
-    def end_pos(self):
+    def end_pos(self) -> QPointF | None:
         """Get end point for unfinished new wire object"""
         return self._end_pos
 
-    def start(self, component, portname):
+    def start(self, component: Component, portname: str) -> None:
         """Start new wire object"""
         if component.port(portname).can_add_wire():
             self._start_port = component.port(portname)
 
-    def end(self, component, portname):
+    def end(self, component: Component, portname: str) -> None:
         """End new wire object"""
         end_port = component.port(portname)
+        if self._start_port is None:
+            raise PortConnectionError("No wire started")
         if self._start_port.is_output() and end_port.is_input():
             self._app_model.objects.push_undo_state()
             self._start_port.wire = end_port
@@ -43,15 +55,15 @@ class NewWire:
         self._start_port = None
         self._end_pos = None
 
-    def abort(self):
+    def abort(self) -> None:
         """Abort new wire object"""
         self._start_port = None
         self._end_pos = None
 
-    def set_end_pos(self, pos):
+    def set_end_pos(self, pos: QPointF) -> None:
         """Update end point for unfinished new wire object"""
         self._end_pos = pos
 
-    def ongoing(self):
+    def ongoing(self) -> bool:
         """Return True if an unfinished new wire object is active"""
         return self._start_port is not None

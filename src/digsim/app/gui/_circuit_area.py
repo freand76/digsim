@@ -3,19 +3,45 @@
 
 """The circuit area and component widget"""
 
-from functools import partial
+from __future__ import annotations
 
-from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, Qt, QTimer
-from PySide6.QtGui import QBrush, QColor, QPainterPath, QPen
+from functools import partial
+from typing import TYPE_CHECKING, Any
+
+from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, QRectF, Qt, QTimer
+from PySide6.QtGui import (
+    QBrush,
+    QColor,
+    QDragEnterEvent,
+    QDragLeaveEvent,
+    QDragMoveEvent,
+    QDropEvent,
+    QKeyEvent,
+    QMouseEvent,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QWheelEvent,
+)
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsPathItem,
     QGraphicsRectItem,
     QGraphicsScene,
+    QGraphicsSceneMouseEvent,
     QGraphicsView,
+    QStyleOptionGraphicsItem,
+    QWidget,
 )
 
+from digsim.app.gui_objects import ComponentObject
+from digsim.app.gui_objects._component_port_item import PortGraphicsItem
 from digsim.app.settings import ComponentSettingsDialog
+from digsim.circuit.components.atoms import VALUE_TYPE, Port
+
+
+if TYPE_CHECKING:
+    from digsim.app.model import AppModel
 
 
 class WirePartGraphicsItem(QGraphicsRectItem):
@@ -23,7 +49,13 @@ class WirePartGraphicsItem(QGraphicsRectItem):
 
     CLOSE_TO_WIRE_MARGIN = 10
 
-    def __init__(self, app_model, src_port, parent, point_pair):
+    def __init__(
+        self,
+        app_model: AppModel,
+        src_port: Port,
+        parent: WireGraphicsItem,
+        point_pair: tuple[QPointF, QPointF],
+    ) -> None:
         src, dst = point_pair
         x_low, x_high = (src.x(), dst.x()) if src.x() < dst.x() else (dst.x(), src.x())
         y_low, y_high = (src.y(), dst.y()) if src.y() < dst.y() else (dst.y(), src.y())
@@ -42,21 +74,22 @@ class WirePartGraphicsItem(QGraphicsRectItem):
         super().__init__(rect, parent)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
 
-    def wire_selected(self, selected):
+    def wire_selected(self, selected: bool) -> None:
         """Set Wire Selected"""
         self._selected = selected
 
-    def itemChange(self, change, value):
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         """QT event callback function"""
         if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:
             self._parent.select(self.isSelected())
         return super().itemChange(change, value)
 
-    def _get_wire_color(self, port_value, bus_width):
+    def _get_wire_color(self, port_value: VALUE_TYPE, bus_width: int) -> QColor | Qt.GlobalColor:
         if port_value == "X":
             return Qt.GlobalColor.red
         if port_value == 0:
             return Qt.GlobalColor.darkGray
+        assert isinstance(port_value, int)
 
         max_value = 2**bus_width - 1
         # Start with dark gray
@@ -65,7 +98,12 @@ class WirePartGraphicsItem(QGraphicsRectItem):
         green += int(127 * port_value / max_value)
         return QColor(128, green, 128)
 
-    def paint(self, painter, option, widget=None):
+    def paint(
+        self,
+        painter: QPainter,
+        option: QStyleOptionGraphicsItem,
+        widget: QWidget | None = None,
+    ) -> None:
         """QT function"""
         pen = QPen(Qt.GlobalColor.darkGray)
         bus_width = self._src_port.width
@@ -90,22 +128,28 @@ class WireGraphicsItem(QGraphicsPathItem):
     WIRE_TO_COMPONENT_DIST = 5
     X_OFFSET = 10
 
-    def __init__(self, app_model, connection, src_port_item, dst_port_item):
+    def __init__(
+        self,
+        app_model: AppModel,
+        connection: tuple[Port, Port],
+        src_port_item: PortGraphicsItem,
+        dst_port_item: PortGraphicsItem,
+    ) -> None:
         super().__init__()
         self._app_model = app_model
         self._src_port, self._dst_port = connection
         self._src_port_item = src_port_item
         self._dst_port_item = dst_port_item
-        self._part_items = []
+        self._part_items: list[WirePartGraphicsItem] = []
         self.setZValue(-1)
         self.update_wire()
         self._selected = False
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Disconnect (delete) the wire"""
         self._src_port.disconnect(self._dst_port)
 
-    def select(self, selected):
+    def select(self, selected: bool) -> None:
         """Select all parts of the wiregrapgicsitem"""
         for item in self._part_items:
             item.wire_selected(selected)
@@ -115,12 +159,12 @@ class WireGraphicsItem(QGraphicsPathItem):
             self.setZValue(-1)
         self._selected = selected
 
-    def is_selected(self):
+    def is_selected(self) -> bool:
         """Is the wire selected"""
         return self._selected
 
     @classmethod
-    def create_points(cls, source, dest, rect):
+    def create_points(cls, source: QPointF, dest: QPointF, rect: QRectF) -> list[QPointF]:
         """Create a wire path"""
         points = []
         points.append(source)
@@ -147,7 +191,7 @@ class WireGraphicsItem(QGraphicsPathItem):
         return points
 
     @classmethod
-    def create_path(cls, source, dest, rect):
+    def create_path(cls, source: QPointF, dest: QPointF, rect: QRectF) -> QPainterPath:
         """Create a wire path"""
         path = QPainterPath()
         points = cls.create_points(source, dest, rect)
@@ -156,7 +200,7 @@ class WireGraphicsItem(QGraphicsPathItem):
             path.lineTo(point)
         return path
 
-    def update_wire(self):
+    def update_wire(self) -> None:
         """Update the wire path"""
         source = self._src_port_item.portPos()
         dest = self._dst_port_item.portPos()
@@ -172,11 +216,16 @@ class WireGraphicsItem(QGraphicsPathItem):
 class NewWireGraphicsItem(QGraphicsPathItem):
     """A new wire graphics item"""
 
-    def __init__(self, app_model):
+    def __init__(self, app_model: AppModel) -> None:
         super().__init__()
         self._app_model = app_model
 
-    def paint(self, painter, option, widget=None):
+    def paint(
+        self,
+        painter: QPainter,
+        option: QStyleOptionGraphicsItem,
+        widget: QWidget | None = None,
+    ) -> None:
         """QT function"""
         end_pos = None
         start_port = self._app_model.objects.new_wire.start_port()
@@ -202,7 +251,9 @@ class NewWireGraphicsItem(QGraphicsPathItem):
 class _CircuitAreaScene(QGraphicsScene):
     """The circuit area graphics scene"""
 
-    def __init__(self, app_model, view):
+    _selection_rect_item: QGraphicsRectItem
+
+    def __init__(self, app_model: AppModel, view: QGraphicsView) -> None:
         super().__init__()
         self._app_model = app_model
         self._view = view
@@ -211,15 +262,14 @@ class _CircuitAreaScene(QGraphicsScene):
         self._app_model.sig_update_wires.connect(self._update_wires)
         self._app_model.sig_delete_component.connect(self._delete_component)
         self._app_model.sig_delete_wires.connect(self._delete_wires)
-        self._wire_items = []
-        self._select_start_pos = None
-        self._selection_rect_item = None
+        self._wire_items: list[WireGraphicsItem] = []
+        self._select_start_pos: QPointF | None = None
         self._synchronize_gui()
 
-    def _repaint(self):
+    def _repaint(self) -> None:
         self.update()
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """QT event callback function"""
         super().mousePressEvent(event)
         pos = event.scenePos()
@@ -228,17 +278,17 @@ class _CircuitAreaScene(QGraphicsScene):
             self._select_start_pos = pos
         self._repaint()
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """QT event callback function"""
         super().mouseMoveEvent(event)
         pos = event.scenePos()
         if self._select_start_pos is not None:
             path = QPainterPath()
             rect = QRect(
-                self._select_start_pos.x(),
-                self._select_start_pos.y(),
-                pos.x() - self._select_start_pos.x(),
-                pos.y() - self._select_start_pos.y(),
+                int(self._select_start_pos.x()),
+                int(self._select_start_pos.y()),
+                int(pos.x() - self._select_start_pos.x()),
+                int(pos.y() - self._select_start_pos.y()),
             )
             self._selection_rect_item.setRect(rect)
             self._selection_rect_item.setVisible(True)
@@ -254,18 +304,18 @@ class _CircuitAreaScene(QGraphicsScene):
         if has_moved_component:
             self._app_model.sig_update_wires.emit()
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """QT event callback function"""
         super().mouseReleaseEvent(event)
         self._select_start_pos = None
         self._selection_rect_item.setVisible(False)
         self._repaint()
 
-    def _delete_component(self, component_object):
+    def _delete_component(self, component_object: ComponentObject) -> None:
         self.removeItem(component_object)
         self._update_wires()
 
-    def _delete_wires(self):
+    def _delete_wires(self) -> None:
         change = False
         for item in self._wire_items:
             if item.is_selected():
@@ -275,7 +325,7 @@ class _CircuitAreaScene(QGraphicsScene):
             self._update_wires()
             self._app_model.model_changed()
 
-    def _update_wires(self):
+    def _update_wires(self) -> None:
         for item in self._wire_items:
             self.removeItem(item)
 
@@ -295,14 +345,16 @@ class _CircuitAreaScene(QGraphicsScene):
                     self.addItem(item)
                     self._wire_items.append(item)
 
-    def add_scene_component(self, component_object, update_wires=False):
+    def add_scene_component(
+        self, component_object: ComponentObject, update_wires: bool = False
+    ) -> None:
         """Add component to scene"""
         self.addItem(component_object)
         component_object.set_parent_widget(self._view)
         if update_wires:
             self._update_wires()
 
-    def _synchronize_gui(self):
+    def _synchronize_gui(self) -> None:
         """Remove everything from scene"""
         self.clear()
         self._wire_items = []
@@ -326,7 +378,7 @@ class CircuitArea(QGraphicsView):
     ZOOM_IN_FACTOR = 1.25
     ZOOM_OUT_FACTOR = 0.8
 
-    def __init__(self, app_model, parent):
+    def __init__(self, app_model: AppModel, parent: QWidget) -> None:
         super().__init__(parent=parent)
         self._app_model = app_model
         self._app_model.sig_zoom_in_gui.connect(self._zoom_in)
@@ -339,21 +391,21 @@ class CircuitArea(QGraphicsView):
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
         self._mouse_pos = QPoint(0, 0)
 
-    def has_selection(self):
+    def has_selection(self) -> bool:
         """Return true if items are selected"""
         return len(self._scene.selectedItems()) > 0
 
-    def _zoom_in(self):
+    def _zoom_in(self) -> None:
         self.scale(self.ZOOM_IN_FACTOR, self.ZOOM_IN_FACTOR)
 
-    def _zoom_out(self):
+    def _zoom_out(self) -> None:
         self.scale(self.ZOOM_OUT_FACTOR, self.ZOOM_OUT_FACTOR)
 
-    def _repaint(self):
+    def _repaint(self) -> None:
         """Make scene repaint for component update"""
         self._app_model.sig_repaint.emit()
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         """QT event callback function"""
         super().keyPressEvent(event)
         if event.isAutoRepeat():
@@ -367,7 +419,7 @@ class CircuitArea(QGraphicsView):
             self._wheel_zoom_mode = True
             event.accept()
 
-    def keyReleaseEvent(self, event):
+    def keyReleaseEvent(self, event: QKeyEvent) -> None:
         """QT event callback function"""
         super().keyReleaseEvent(event)
         if event.isAutoRepeat():
@@ -381,19 +433,19 @@ class CircuitArea(QGraphicsView):
             self._wheel_zoom_mode = False
             event.accept()
 
-    def dragEnterEvent(self, event):
+    def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         """QT event callback function"""
         event.accept()
 
-    def dragLeaveEvent(self, event):
+    def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
         """QT event callback function"""
         event.accept()
 
-    def dragMoveEvent(self, event):
+    def dragMoveEvent(self, event: QDragMoveEvent) -> None:
         """QT event callback function"""
         event.accept()
 
-    def dropEvent(self, event):
+    def dropEvent(self, event: QDropEvent) -> None:
         """QT event callback function"""
         event.setDropAction(Qt.DropAction.IgnoreAction)
         event.accept()
@@ -404,20 +456,20 @@ class CircuitArea(QGraphicsView):
         component_name = event.mimeData().text()
         QTimer.singleShot(0, partial(self.add_component, component_name, scene_pos))
 
-    def enterEvent(self, event):
+    def enterEvent(self, event: QEvent) -> None:
         """QT event callback function"""
         self.setFocus()
         event.accept()
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         """QT event callback function"""
         super().mousePressEvent(event)
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
         """QT event callback function"""
         super().mouseReleaseEvent(event)
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """QT event callback function"""
         super().mouseMoveEvent(event)
         self._mouse_pos = event.pos()
@@ -427,7 +479,7 @@ class CircuitArea(QGraphicsView):
             self._app_model.objects.new_wire.set_end_pos(scene_pos)
             self._repaint()
 
-    def wheelEvent(self, event):
+    def wheelEvent(self, event: QWheelEvent) -> None:
         """QT event callback function"""
         # Zoom on wheel
         if not self._wheel_zoom_mode:
@@ -447,7 +499,7 @@ class CircuitArea(QGraphicsView):
             self.translate(translation.x(), translation.y())
         event.accept()
 
-    def add_component(self, name, position):
+    def add_component(self, name: str, position: QPointF | None) -> None:
         """
         Add component to circuit area
         Used be drag'n'drop into Circuit area or double click in SelectableComponentWidget

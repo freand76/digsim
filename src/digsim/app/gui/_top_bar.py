@@ -3,7 +3,10 @@
 
 """The top bar of the main window/gui application"""
 
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import qtawesome as qta
 
@@ -16,11 +19,18 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QStyle,
+    QWidget,
 )
 
 from digsim.app.settings import GuiSettingsDialog
 
 from ._utils import are_you_sure_destroy_circuit
+
+
+if TYPE_CHECKING:
+    from digsim.app.model import AppModel
+
+    from ._main_window import CircuitEditor
 
 
 class SimControlWidget(QFrame):
@@ -30,30 +40,31 @@ class SimControlWidget(QFrame):
 
     CONTROL_WIDGET_WIDTH = 120
 
-    def __init__(self, app_model, parent):
+    def __init__(self, app_model: AppModel, parent: QWidget) -> None:
         super().__init__(parent)
-        self._time_s = 0
+        self._time_s: float = 0
         self._app_model = app_model
-        self.setLayout(QHBoxLayout(self))
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().setSpacing(5)
+        layout = QHBoxLayout(self)
+        self.setLayout(layout)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(5)
         self._start_button = QPushButton("Start Simulation", self)
         self._start_button.clicked.connect(self._start_stop)
         self._start_button.setMinimumWidth(self.CONTROL_WIDGET_WIDTH)
-        self.layout().addWidget(self._start_button)
+        layout.addWidget(self._start_button)
         self._single_step_button = QPushButton("Single Step", self)
         self._single_step_button.clicked.connect(self._single_step)
         self._single_step_button.setMinimumWidth(self.CONTROL_WIDGET_WIDTH)
-        self.layout().addWidget(self._single_step_button)
+        layout.addWidget(self._single_step_button)
         self._reset_button = QPushButton("Reset Simulation", self)
         self._reset_button.clicked.connect(self._reset)
         self._reset_button.setEnabled(False)
         self._reset_button.setMinimumWidth(self.CONTROL_WIDGET_WIDTH)
-        self.layout().addWidget(self._reset_button)
+        layout.addWidget(self._reset_button)
         self._app_model.sig_control_notify.connect(self._control_notify)
         self._app_model.sig_sim_time_notify.connect(self._sim_time_notify)
 
-    def _start_stop(self):
+    def _start_stop(self) -> None:
         """Button action: Start/Stop"""
         if not self._app_model.is_running:
             self._start_button.setEnabled(False)
@@ -62,17 +73,17 @@ class SimControlWidget(QFrame):
             self._start_button.setEnabled(False)
             self._app_model.model_stop()
 
-    def _single_step(self):
+    def _single_step(self) -> None:
         """Button action: Reset"""
         self._start_button.setEnabled(False)
         self._single_step_button.setEnabled(False)
         self._app_model.model_single_step()
 
-    def _reset(self):
+    def _reset(self) -> None:
         """Button action: Reset"""
         self._app_model.model_reset()
 
-    def _control_notify(self):
+    def _control_notify(self) -> None:
         if self._app_model.is_running:
             self._start_button.setText("Stop Similation")
             self._start_button.setEnabled(True)
@@ -84,7 +95,7 @@ class SimControlWidget(QFrame):
             if self._time_s > 0:
                 self._reset_button.setEnabled(True)
 
-    def _sim_time_notify(self, time_s):
+    def _sim_time_notify(self, time_s: float) -> None:
         self._time_s = time_s
         if self._time_s and not self._app_model.is_running:
             self._reset_button.setEnabled(True)
@@ -97,24 +108,25 @@ class SimTimeWidget(QFrame):
     The widget showing simulation time in the opt bar
     """
 
-    def __init__(self, app_model, parent):
+    def __init__(self, app_model: AppModel, parent: QWidget) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setFrameShadow(QFrame.Shadow.Sunken)
-        self.setLayout(QHBoxLayout(self))
-        self.layout().setContentsMargins(5, 1, 5, 1)
-        self.layout().setSpacing(5)
+        layout = QHBoxLayout(self)
+        self.setLayout(layout)
+        layout.setContentsMargins(5, 1, 5, 1)
+        layout.setSpacing(5)
         self._app_model = app_model
         sim_time_desc = QLabel("Simulation time:")
         sim_time_desc.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.layout().addWidget(sim_time_desc)
+        layout.addWidget(sim_time_desc)
         self._sim_time = QLabel("0 s")
         self._sim_time.setMinimumWidth(60)
         self._sim_time.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.layout().addWidget(self._sim_time)
+        layout.addWidget(self._sim_time)
         self._app_model.sig_sim_time_notify.connect(self._sim_time_notify)
 
-    def _sim_time_notify(self, time_s):
+    def _sim_time_notify(self, time_s: float) -> None:
         self._sim_time.setText(f"{time_s:.2f} s")
 
 
@@ -123,21 +135,22 @@ class VcdFilenameWidget(QFrame):
     The widget showing the vcd filename
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setFrameShadow(QFrame.Shadow.Sunken)
-        self.setLayout(QHBoxLayout(self))
-        self.layout().setContentsMargins(5, 1, 5, 1)
-        self.layout().setSpacing(5)
+        layout = QHBoxLayout(self)
+        self.setLayout(layout)
+        layout.setContentsMargins(5, 1, 5, 1)
+        layout.setSpacing(5)
         self._vcd_filename = QLabel("<vcd file>")
         self._vcd_filename.setAlignment(
             Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
         )
         self._vcd_filename.setMinimumWidth(200)
-        self.layout().addWidget(self._vcd_filename)
+        layout.addWidget(self._vcd_filename)
 
-    def set_filename(self, filename):
+    def set_filename(self, filename: str) -> None:
         """Set filename in VcdFilenameWdiget"""
         self._vcd_filename.setText(filename)
 
@@ -147,13 +160,14 @@ class VcdControlWidget(QFrame):
     The widget for controlling the vcd output file
     """
 
-    def __init__(self, app_model, parent):
+    def __init__(self, app_model: AppModel, parent: QWidget) -> None:
         super().__init__(parent)
         self._app_model = app_model
-        self._vcd_filename = None
-        self.setLayout(QHBoxLayout(self))
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().setSpacing(5)
+        self._vcd_filename: str | None = None
+        layout = QHBoxLayout(self)
+        self.setLayout(layout)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(5)
         self._enable_vcd = QCheckBox("VCD output", self)
         self._enable_vcd.stateChanged.connect(self._enable)
         self._vcd_path = QPushButton("", self)
@@ -161,35 +175,35 @@ class VcdControlWidget(QFrame):
         self._vcd_path.clicked.connect(self._change_vcd_file)
         self._vcd_path.setToolTip("Select VCD output")
         self._filename_widget = VcdFilenameWidget(self)
-        self.layout().addWidget(self._enable_vcd)
-        self.layout().addWidget(self._vcd_path)
-        self.layout().addWidget(self._filename_widget)
+        layout.addWidget(self._enable_vcd)
+        layout.addWidget(self._vcd_path)
+        layout.addWidget(self._filename_widget)
         self._enable_buttons(False)
         self._app_model.sig_control_notify.connect(self._control_notify)
 
-    def _enable_buttons(self, enable):
+    def _enable_buttons(self, enable: bool) -> None:
         self._vcd_path.setEnabled(enable)
         self._filename_widget.setEnabled(enable)
 
-    def _control_notify(self):
+    def _control_notify(self) -> None:
         self._enable_vcd.setEnabled(not self._app_model.is_running)
         self._enable_buttons(not self._app_model.is_running and self._enable_vcd.isChecked())
 
-    def _disable_vcd_selection(self):
+    def _disable_vcd_selection(self) -> None:
         self._enable_vcd.setChecked(False)
         self._enable_buttons(False)
 
-    def _start_vcd(self, filename):
+    def _start_vcd(self, filename: str) -> None:
         self._vcd_filename = filename
-        display_filename = Path(self._vcd_filename).name
+        display_filename = Path(filename).name
         self._filename_widget.set_filename(display_filename)
         self._enable_buttons(True)
         # Close old vcd (if any)
         self._app_model.objects.circuit.vcd_close()
         # Enable VCD in the model
-        self._app_model.objects.circuit.vcd(self._vcd_filename)
+        self._app_model.objects.circuit.vcd(filename)
 
-    def _open_filedialog(self):
+    def _open_filedialog(self) -> str | None:
         default_filename = self._vcd_filename
         if default_filename is None:
             default_filename = "vcd_file.vcd"
@@ -200,12 +214,12 @@ class VcdControlWidget(QFrame):
             return None
         return path[0]
 
-    def _change_vcd_file(self):
+    def _change_vcd_file(self) -> None:
         filename = self._open_filedialog()
         if filename is not None:
             self._start_vcd(filename)
 
-    def _enable(self, _):
+    def _enable(self, _: int) -> None:
         is_checked = self._enable_vcd.isChecked()
         if is_checked:
             if self._vcd_filename is not None:
@@ -229,13 +243,16 @@ class LoadSaveWidget(QFrame):
     The widget with load/save buttons in the top bar
     """
 
-    def __init__(self, app_model, circuit_editor, parent):
+    def __init__(
+        self, app_model: AppModel, circuit_editor: CircuitEditor, parent: QWidget
+    ) -> None:
         super().__init__(parent)
         self._app_model = app_model
         self._circuit_editor = circuit_editor
-        self.setLayout(QHBoxLayout(self))
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().setSpacing(5)
+        layout = QHBoxLayout(self)
+        self.setLayout(layout)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(5)
         self._zoom_in_button = QPushButton("", self)
         self._zoom_in_button.setIcon(qta.icon("msc.zoom-in"))
         self._zoom_in_button.clicked.connect(self._app_model.zoom_in)
@@ -243,48 +260,48 @@ class LoadSaveWidget(QFrame):
         self._zoom_out_button.setIcon(qta.icon("msc.zoom-out"))
         self._zoom_out_button.clicked.connect(self._app_model.zoom_out)
         self._zoom_out_button.setToolTip("Zoom out")
-        self.layout().addWidget(self._zoom_in_button)
-        self.layout().addWidget(self._zoom_out_button)
+        layout.addWidget(self._zoom_in_button)
+        layout.addWidget(self._zoom_out_button)
         self._delete_button = QPushButton("", self)
         self._delete_button.setIcon(qta.icon("mdi.delete-forever"))
         self._delete_button.clicked.connect(self._app_model.objects.delete_selected)
         self._delete_button.setToolTip("Delete")
-        self.layout().addWidget(self._delete_button)
+        layout.addWidget(self._delete_button)
         self._undo_button = QPushButton("", self)
         self._undo_button.setIcon(qta.icon("mdi.undo"))
         self._undo_button.setToolTip("Undo")
         self._undo_button.clicked.connect(self._app_model.objects.undo)
-        self.layout().addWidget(self._undo_button)
+        layout.addWidget(self._undo_button)
         self._redo_button = QPushButton("", self)
         self._redo_button.setIcon(qta.icon("mdi.redo"))
         self._redo_button.clicked.connect(self._app_model.objects.redo)
         self._redo_button.setToolTip("Redo")
-        self.layout().addWidget(self._redo_button)
+        layout.addWidget(self._redo_button)
         self._settings_button = QPushButton("", self)
         self._settings_button.setIcon(qta.icon("mdi.cog"))
         self._settings_button.clicked.connect(self._settings_dialog)
         self._settings_button.setToolTip("Settings")
-        self.layout().addWidget(self._settings_button)
+        layout.addWidget(self._settings_button)
         self._load_button = QPushButton("Load Circuit", self)
         self._load_button.clicked.connect(self._load)
-        self.layout().addWidget(self._load_button)
+        layout.addWidget(self._load_button)
         self._save_button = QPushButton("Save Circuit", self)
         self._save_button.clicked.connect(self._save)
-        self.layout().addWidget(self._save_button)
+        layout.addWidget(self._save_button)
         self._clear_button = QPushButton("Clear Circuit", self)
         self._clear_button.clicked.connect(self._clear)
-        self.layout().addWidget(self._clear_button)
+        layout.addWidget(self._clear_button)
         self._app_model.sig_control_notify.connect(self._control_notify)
         self._control_notify()
 
-    def _settings_dialog(self):
+    def _settings_dialog(self) -> None:
         settings_dialog = GuiSettingsDialog(self, self._app_model)
         settings_dialog.start()
 
-    def _load(self):
+    def _load(self) -> None:
         """Button action: Load"""
         if self._app_model.is_changed and not are_you_sure_destroy_circuit(
-            self.parent(), "Load circuit"
+            self.parentWidget(), "Load circuit"
         ):
             return
         path = QFileDialog.getOpenFileName(
@@ -294,7 +311,7 @@ class LoadSaveWidget(QFrame):
             return
         self._app_model.load_circuit(path[0])
 
-    def _save(self):
+    def _save(self) -> None:
         """Button action: Save"""
         path = QFileDialog.getSaveFileName(
             self, "Save Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
@@ -303,11 +320,11 @@ class LoadSaveWidget(QFrame):
             return
         self._app_model.save_circuit(path[0])
 
-    def _clear(self):
+    def _clear(self) -> None:
         """Button action: Save"""
         self._app_model.clear_circuit()
 
-    def _control_notify(self):
+    def _control_notify(self) -> None:
         if self._app_model.is_running:
             self._load_button.setEnabled(False)
             self._save_button.setEnabled(False)
@@ -331,11 +348,14 @@ class TopBar(QFrame):
     The top widget with the control and status widgets
     """
 
-    def __init__(self, app_model, circuit_editor, parent):
+    def __init__(
+        self, app_model: AppModel, circuit_editor: CircuitEditor, parent: QWidget
+    ) -> None:
         super().__init__(parent)
-        self.setLayout(QHBoxLayout(self))
-        self.layout().addWidget(SimControlWidget(app_model, self))
-        self.layout().addWidget(SimTimeWidget(app_model, self))
-        self.layout().addStretch(1)
-        self.layout().addWidget(VcdControlWidget(app_model, self))
-        self.layout().addWidget(LoadSaveWidget(app_model, circuit_editor, self))
+        layout = QHBoxLayout(self)
+        self.setLayout(layout)
+        layout.addWidget(SimControlWidget(app_model, self))
+        layout.addWidget(SimTimeWidget(app_model, self))
+        layout.addStretch(1)
+        layout.addWidget(VcdControlWidget(app_model, self))
+        layout.addWidget(LoadSaveWidget(app_model, circuit_editor, self))

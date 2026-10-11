@@ -3,16 +3,33 @@
 
 """A component placed in the GUI"""
 
+from __future__ import annotations
+
 import abc
+from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import QPoint, QRect, QSize, Qt
-from PySide6.QtGui import QFont, QFontMetrics, QPen
-from PySide6.QtWidgets import QGraphicsItem, QGraphicsRectItem
+from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, QSize, Qt
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen
+from PySide6.QtWidgets import (
+    QGraphicsItem,
+    QGraphicsRectItem,
+    QGraphicsSceneContextMenuEvent,
+    QGraphicsSceneHoverEvent,
+    QGraphicsSceneMouseEvent,
+    QMenu,
+    QStyleOptionGraphicsItem,
+    QWidget,
+)
 
+from digsim.circuit.components.atoms import Component, Port
 from digsim.storage_model import GuiPositionDataClass
 
 from ._component_context_menu import ComponentContextMenu
 from ._component_port_item import PortGraphicsItem
+
+
+if TYPE_CHECKING:
+    from digsim.app.model import AppModel
 
 
 class ComponentObject(QGraphicsRectItem):
@@ -30,9 +47,14 @@ class ComponentObject(QGraphicsRectItem):
     _SELECTABLE_COMPONENT_NAME_FONT = QFont("Arial", 8)
 
     def __init__(
-        self, app_model, component, xpos, ypos, port_distance=DEFAULT_PORT_TO_PORT_DISTANCE
-    ):
-        super().__init__(QRect(xpos, ypos, self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT))
+        self,
+        app_model: AppModel,
+        component: Component,
+        xpos: float,
+        ypos: float,
+        port_distance: int = DEFAULT_PORT_TO_PORT_DISTANCE,
+    ) -> None:
+        super().__init__(QRect(int(xpos), int(ypos), self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT))
         self._app_model = app_model
         self._component = component
         self._port_distance = port_distance
@@ -41,12 +63,12 @@ class ComponentObject(QGraphicsRectItem):
         self._app_model.sig_control_notify.connect(self._control_notify)
 
         # Class variables
-        self._port_dict = {}
-        self._parent_widget = None
-        self._mouse_press_pos = None
+        self._port_dict: dict[Port, dict[str, Any]] = {}
+        self._parent_widget: QWidget | None = None
+        self._mouse_press_pos: QPoint | None = None
         self._moved = False
         self._paint_port_names = True
-        self._save_pos = self.rect().topLeft()
+        self._save_pos: QPointF | QPoint = self.rect().topLeft()
 
         # Create ports
         self.create_ports()
@@ -57,7 +79,7 @@ class ComponentObject(QGraphicsRectItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
         self.setAcceptHoverEvents(True)
 
-    def _control_notify(self):
+    def _control_notify(self) -> None:
         if self._app_model.is_running:
             self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
             self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, False)
@@ -65,11 +87,11 @@ class ComponentObject(QGraphicsRectItem):
             self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
             self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Disconnect signals (before removal)"""
         self._app_model.sig_control_notify.disconnect(self._control_notify)
 
-    def itemChange(self, change, value):
+    def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         """QT event callback function"""
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             self._moved = True
@@ -80,21 +102,21 @@ class ComponentObject(QGraphicsRectItem):
             self.repaint()
         return super().itemChange(change, value)
 
-    def hoverEnterEvent(self, _):
+    def hoverEnterEvent(self, _: QGraphicsSceneHoverEvent) -> None:
         """QT event callback function"""
         if self._app_model.is_running and self.component.has_action:
             self.setCursor(Qt.CursorShape.PointingHandCursor)
 
-    def hoverLeaveEvent(self, _):
+    def hoverLeaveEvent(self, _: QGraphicsSceneHoverEvent) -> None:
         """QT event callback function"""
         self.setCursor(Qt.CursorShape.ArrowCursor)
 
-    def hoverMoveEvent(self, event):
+    def hoverMoveEvent(self, event: QGraphicsSceneHoverEvent) -> None:
         """QT event callback function"""
         self.mouse_position(event.scenePos())
         super().hoverMoveEvent(event)
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """QT event callback function"""
         super().mousePressEvent(event)
         if event.button() == Qt.MouseButton.LeftButton:
@@ -104,7 +126,7 @@ class ComponentObject(QGraphicsRectItem):
                 self._mouse_press_pos = event.screenPos()
                 self.setCursor(Qt.CursorShape.ClosedHandCursor)
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """QT event callback function"""
         super().mouseReleaseEvent(event)
         if event.button() == Qt.MouseButton.LeftButton:
@@ -122,37 +144,42 @@ class ComponentObject(QGraphicsRectItem):
                         self.single_click_action()
         self._mouse_press_pos = None
 
-    def contextMenuEvent(self, event):
+    def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent) -> None:
         """QT event callback function"""
         if self._app_model.is_running:
             return
         if self._app_model.objects.new_wire.ongoing():
             self._app_model.objects.new_wire.abort()
         context_menu = ComponentContextMenu(self._parent_widget, self._app_model, self)
-        context_menu.create(event.screenPos())
+        context_menu.open_at(event.screenPos())
 
-    def paint(self, painter, option, widget=None):
+    def paint(
+        self,
+        painter: QPainter,
+        option: QStyleOptionGraphicsItem,
+        widget: QWidget | None = None,
+    ) -> None:
         """QT function"""
         self.paint_component(painter)
         if self._paint_port_names:
             self.paint_portnames(painter)
 
     @property
-    def component(self):
+    def component(self) -> Component:
         """Get component"""
         return self._component
 
-    def paint_port_names(self, enable):
+    def paint_port_names(self, enable: bool) -> None:
         """Enable/Disable paint port names"""
         self._paint_port_names = enable
 
-    def has_moved(self):
+    def has_moved(self) -> bool:
         """True if the component has moved since last call"""
         moved = self._moved
         self._moved = False
         return moved
 
-    def create_ports(self):
+    def create_ports(self) -> None:
         """Create ports for component object"""
         for port in self._component.ports:
             self._port_dict[port] = {}
@@ -164,7 +191,7 @@ class ComponentObject(QGraphicsRectItem):
             self._port_dict[port]["item"] = item
         self.update_ports()
 
-    def update_ports(self):
+    def update_ports(self) -> None:
         """Update port positions for the placed component"""
 
         # Make sure all ports are fit in the hieght of the component
@@ -192,19 +219,19 @@ class ComponentObject(QGraphicsRectItem):
             self._component.outports(), self.RECT_TO_BORDER + self.width - self.PORT_SIDE - 1
         )
 
-    def get_port_item(self, port):
+    def get_port_item(self, port: Port) -> PortGraphicsItem:
         """Get port item"""
         return self._port_dict[port]["item"]
 
-    def set_port_rect(self, port, rect):
+    def set_port_rect(self, port: Port, rect: QRect | QRectF) -> None:
         """Set port rect"""
         self.get_port_item(port).setRect(rect)
 
-    def _set_port_rects(self, ports, xpos):
+    def _set_port_rects(self, ports: list[Port], xpos: float) -> None:
         if len(ports) == 1:
             rect = QRect(
-                self.object_pos.x() + xpos,
-                self.object_pos.y() + self.height / 2 - self.PORT_SIDE / 2,
+                int(self.object_pos.x() + xpos),
+                int(self.object_pos.y() + self.height / 2 - self.PORT_SIDE / 2),
                 self.PORT_SIDE,
                 self.PORT_SIDE,
             )
@@ -213,30 +240,32 @@ class ComponentObject(QGraphicsRectItem):
             top_to_port = (self.height - self._port_distance * (len(ports) - 1)) / 2
             for idx, port in enumerate(ports):
                 rect = QRect(
-                    self.object_pos.x() + xpos,
-                    self.object_pos.y()
-                    + top_to_port
-                    + idx * self._port_distance
-                    - self.PORT_SIDE / 2,
+                    int(self.object_pos.x() + xpos),
+                    int(
+                        self.object_pos.y()
+                        + top_to_port
+                        + idx * self._port_distance
+                        - self.PORT_SIDE / 2
+                    ),
                     self.PORT_SIDE,
                     self.PORT_SIDE,
                 )
                 self.get_port_item(port).setRect(rect)
 
-    def set_parent_widget(self, parent):
+    def set_parent_widget(self, parent: QWidget) -> None:
         """Set the parent"""
         self._parent_widget = parent
 
     @property
-    def selected(self):
+    def selected(self) -> bool:
         """Get the selected variable for the current object"""
         return self.isSelected()
 
-    def repaint(self):
+    def repaint(self) -> None:
         """Update GUI for this component object"""
         self._app_model.sig_repaint.emit()
 
-    def get_string_metrics(self, port_str, font=None):
+    def get_string_metrics(self, port_str: str, font: QFont | None = None) -> tuple[int, int]:
         """Get the port display name (including bits if available)"""
         if font is None:
             font = self._PORT_NAME_FONT
@@ -245,7 +274,7 @@ class ComponentObject(QGraphicsRectItem):
         str_pixels_h = fm.height()
         return str_pixels_w, str_pixels_h
 
-    def paint_component_name(self, painter):
+    def paint_component_name(self, painter: QPainter) -> None:
         """Paint the component name"""
         painter.setFont(self._COMPONENT_NAME_FONT)
         fm = QFontMetrics(self._COMPONENT_NAME_FONT)
@@ -253,12 +282,14 @@ class ComponentObject(QGraphicsRectItem):
         str_pixels_w = fm.horizontalAdvance(display_name_str)
         str_pixels_h = fm.height()
         painter.drawText(
-            self.rect().x() + self.rect().width() / 2 - str_pixels_w / 2,
-            self.rect().y() + str_pixels_h,
+            int(self.rect().x() + self.rect().width() / 2 - str_pixels_w / 2),
+            int(self.rect().y() + str_pixels_h),
             display_name_str,
         )
 
-    def paint_component_base(self, painter, color=Qt.GlobalColor.gray):
+    def paint_component_base(
+        self, painter: QPainter, color: QColor | Qt.GlobalColor = Qt.GlobalColor.gray
+    ) -> None:
         """Paint component base rect"""
         comp_rect = self.rect()
         pen = QPen()
@@ -273,19 +304,21 @@ class ComponentObject(QGraphicsRectItem):
         painter.drawRoundedRect(comp_rect, 5, 5)
 
     @abc.abstractmethod
-    def paint_component(self, painter):
+    def paint_component(self, painter: QPainter) -> None:
         """Paint component"""
 
     @classmethod
     @abc.abstractmethod
-    def paint_selectable_component(cls, painter, size, name):
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         """
         Paint selectable component
         use width x width (square) to paint component image
         """
 
     @classmethod
-    def paint_selectable_component_name(cls, painter, point, size, name):
+    def paint_selectable_component_name(
+        cls, painter: QPainter, point: QPoint | QPointF, size: QSize, name: str
+    ) -> None:
         """Paint the name for the selectable component"""
         painter.setFont(cls._SELECTABLE_COMPONENT_NAME_FONT)
         fm = QFontMetrics(cls._SELECTABLE_COMPONENT_NAME_FONT)
@@ -293,16 +326,18 @@ class ComponentObject(QGraphicsRectItem):
         str_pixels_h = fm.height()
         painter.setPen(Qt.GlobalColor.black)
         painter.drawText(
-            point.x() + size.width() / 2 - str_pixels_w / 2,
-            point.y() + size.height() - str_pixels_h,
+            int(point.x() + size.width() / 2 - str_pixels_w / 2),
+            int(point.y() + size.height() - str_pixels_h),
             name,
         )
 
-    def inport_x_pos(self):
+    def inport_x_pos(self) -> float:
         """Get the X position left of the input port"""
         return 1.5 * self.PORT_SIDE
 
-    def paint_portnames(self, painter, color=Qt.GlobalColor.black):
+    def paint_portnames(
+        self, painter: QPainter, color: QColor | Qt.GlobalColor = Qt.GlobalColor.black
+    ) -> None:
         """Paint component ports"""
         painter.setPen(color)
         painter.setFont(self._PORT_NAME_FONT)
@@ -312,69 +347,69 @@ class ComponentObject(QGraphicsRectItem):
             str_pixels_w, str_pixels_h = self.get_string_metrics(port_str, self._PORT_NAME_FONT)
             text_y = rect.y() + str_pixels_h - self.PORT_SIDE / 2
             if rect.x() < self.object_pos.x():
-                text_pos = QPoint(rect.x() + self.inport_x_pos(), text_y)
+                text_pos = QPoint(int(rect.x() + self.inport_x_pos()), int(text_y))
             else:
-                text_pos = QPoint(rect.x() - str_pixels_w - self.PORT_SIDE / 2, text_y)
+                text_pos = QPoint(int(rect.x() - str_pixels_w - self.PORT_SIDE / 2), int(text_y))
             painter.drawText(text_pos, port_str)
 
-    def get_port_pos(self, portname):
+    def get_port_pos(self, portname: str) -> QPointF:
         """Get component port pos"""
         port = self.component.port(portname)
         return self.get_port_item(port).rect().center()
 
-    def mouse_position(self, pos):
+    def mouse_position(self, pos: QPointF) -> None:
         """Component function: called for mouse position update"""
 
-    def single_click_action(self):
+    def single_click_action(self) -> None:
         """Component function:: called for mouse single click"""
 
-    def add_context_menu_action(self, menu, parent):
+    def add_context_menu_action(self, menu: QMenu, parent: QWidget | None) -> None:
         """Component function:: called when context menu is created"""
 
-    def update_size(self):
+    def update_size(self) -> None:
         """Component function: called when the component can update its size"""
 
     @property
-    def size(self):
+    def size(self) -> QSize:
         """Get size"""
-        return QSize(self.width, self.height)
+        return QSize(int(self.width), int(self.height))
 
     @property
-    def object_pos(self):
+    def object_pos(self) -> QPointF:
         """Get position"""
         return self.rect().topLeft()
 
     @property
-    def width(self):
+    def width(self) -> float:
         """Get width"""
         return self.rect().width()
 
     @width.setter
-    def width(self, width):
+    def width(self, width: float) -> None:
         """Set width"""
         self.setRect(self.rect().x(), self.rect().y(), width, self.rect().height())
 
     @property
-    def height(self):
+    def height(self) -> float:
         """Get height"""
         return self.rect().height()
 
     @height.setter
-    def height(self, height):
+    def height(self, height: float) -> None:
         """Set height"""
         self.setRect(self.rect().x(), self.rect().y(), self.rect().width(), height)
 
     @property
-    def zlevel(self):
+    def zlevel(self) -> float:
         """Get zlevel"""
         return self.zValue()
 
     @zlevel.setter
-    def zlevel(self, level):
+    def zlevel(self, level: float) -> None:
         """Set zlevel"""
         self.setZValue(level)
 
-    def to_gui_dataclass(self):
+    def to_gui_dataclass(self) -> GuiPositionDataClass:
         return GuiPositionDataClass(
             x=int(self._save_pos.x()), y=int(self._save_pos.y()), z=int(self.zlevel)
         )

@@ -3,22 +3,35 @@
 
 """A component context menu"""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from PySide6.QtCore import QPoint
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QMenu
+from PySide6.QtWidgets import QMenu, QWidget
 
 from digsim.app.settings import ComponentSettingsDialog
+
+
+if TYPE_CHECKING:
+    from digsim.app.model import AppModel
+
+    from ._component_object import ComponentObject
 
 
 class ComponentContextMenu(QMenu):
     """The component contextmenu class"""
 
-    def __init__(self, parent, app_model, component_object):
+    def __init__(
+        self, parent: QWidget | None, app_model: AppModel, component_object: ComponentObject
+    ) -> None:
         super().__init__(parent)
         self._parent = parent
         self._app_model = app_model
         self._component_object = component_object
         self._component = self._component_object.component
-        self._reconfigurable_parameters = {}
+        self._reconfigurable_parameters: dict[str, dict[str, Any]] = {}
         # Title
         titleAction = QAction(self._component.display_name(), self)
         titleAction.setEnabled(False)
@@ -40,34 +53,34 @@ class ComponentContextMenu(QMenu):
         deleteAction = QAction("Delete", self)
         self.addAction(deleteAction)
         deleteAction.triggered.connect(self._delete)
-        self._menu_action = None
+        self._menu_action: QAction | None = None
 
-    def _add_settings(self):
+    def _add_settings(self) -> None:
         self._reconfigurable_parameters = self._component.get_reconfigurable_parameters()
         if len(self._reconfigurable_parameters) > 0:
             settingsAction = QAction("Settings", self)
             self.addAction(settingsAction)
             settingsAction.triggered.connect(self._settings)
 
-    def create(self, position):
+    def open_at(self, position: QPoint) -> None:
         """Create context menu for component"""
         self._menu_action = self.exec_(position)
 
-    def get_action(self):
+    def get_action(self) -> str:
         """Get context menu action"""
         return self._menu_action.text() if self._menu_action is not None else ""
 
-    def _delete(self):
+    def _delete(self) -> None:
         self._component_object.setSelected(True)
         self._app_model.objects.delete_selected()
 
-    def _raise(self):
+    def _raise(self) -> None:
         self._app_model.objects.components.bring_to_front(self._component_object)
 
-    def _lower(self):
+    def _lower(self) -> None:
         self._app_model.objects.components.send_to_back(self._component_object)
 
-    def _settings(self):
+    def _settings(self) -> None:
         """Start the settings dialog for reconfiguration"""
         ok, settings = ComponentSettingsDialog.start(
             self._parent,

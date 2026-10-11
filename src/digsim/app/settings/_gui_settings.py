@@ -3,17 +3,34 @@
 
 """The GUI settings dialog"""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QCheckBox, QComboBox, QDialog, QDialogButtonBox, QGridLayout, QLabel
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QDialog,
+    QDialogButtonBox,
+    QGridLayout,
+    QLabel,
+    QWidget,
+)
+
+
+if TYPE_CHECKING:
+    from digsim.app.model import AppModel
 
 
 class GuiSettingsDialog(QDialog):
     """GUI Settings Dialog"""
 
-    def __init__(self, parent, app_model):
+    def __init__(self, parent: QWidget | None, app_model: AppModel) -> None:
         super().__init__(parent)
         self._app_model = app_model
-        self.setLayout(QGridLayout(self))
+        layout = QGridLayout(self)
+        self.setLayout(layout)
         self.setWindowTitle("Application Settings")
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
@@ -34,18 +51,16 @@ class GuiSettingsDialog(QDialog):
 
         # Layout
         row = 0
-        self.layout().addWidget(QLabel("GUI Update Frequency", self), row, 0, 1, 1)
-        self.layout().addWidget(self._update_frequency, row, 1, 1, 1)
+        layout.addWidget(QLabel("GUI Update Frequency", self), row, 0, 1, 1)
+        layout.addWidget(self._update_frequency, row, 1, 1, 1)
         row += 1
-        self.layout().addWidget(QLabel("Slow down sim to 'Real Time'", self), row, 0, 1, 1)
-        self.layout().addWidget(self._slow_to_real_time, row, 1, 1, 1)
+        layout.addWidget(QLabel("Slow down sim to 'Real Time'", self), row, 0, 1, 1)
+        layout.addWidget(self._slow_to_real_time, row, 1, 1, 1)
         row += 1
-        self.layout().addWidget(QLabel("Show Wire Value", self), row, 0, 1, 1)
-        self.layout().addWidget(self._show_wire_value, row, 1, 1, 1)
+        layout.addWidget(QLabel("Show Wire Value", self), row, 0, 1, 1)
+        layout.addWidget(self._show_wire_value, row, 1, 1, 1)
         row += 1
-        self.layout().addWidget(
-            self.buttonBox, row, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter
-        )
+        layout.addWidget(self.buttonBox, row, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._settings = self._app_model.settings.get_all()
         self._slow_to_real_time.setChecked(self._settings["real_time"])
@@ -55,7 +70,7 @@ class GuiSettingsDialog(QDialog):
         self._update_frequency.setCurrentIndex(index)
 
     @classmethod
-    def default_settings(cls):
+    def default_settings(cls) -> dict[str, Any]:
         """Default settings"""
         return {
             "real_time": True,
@@ -63,7 +78,7 @@ class GuiSettingsDialog(QDialog):
             "update_frequency": 20,
         }
 
-    def start(self):
+    def start(self) -> None:
         """Start Dialog"""
         result = self.exec_()
         if result == QDialog.DialogCode.Accepted:

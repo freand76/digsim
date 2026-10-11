@@ -3,8 +3,12 @@
 
 """The main window and widgets of the digsim gui application"""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtGui import QCloseEvent, QKeyEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
@@ -22,19 +26,24 @@ from ._utils import are_you_sure_destroy_circuit
 from ._warning_dialog import WarningDialog
 
 
+if TYPE_CHECKING:
+    from digsim.app.model import AppModel
+
+
 class CircuitEditor(QSplitter):
     """
     The circuit editor, the component selction widget and the circuit area widget.
     """
 
-    def __init__(self, app_model, parent):
+    def __init__(self, app_model: AppModel, parent: QWidget) -> None:
         super().__init__(parent)
         self._app_model = app_model
         self._app_model.sig_control_notify.connect(self._control_notify)
 
-        self.setLayout(QHBoxLayout(self))
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().setSpacing(0)
+        layout = QHBoxLayout(self)
+        self.setLayout(layout)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
         self._selection_area = QScrollArea(self)
         self._selection_area.setFixedWidth(106)
@@ -44,18 +53,18 @@ class CircuitEditor(QSplitter):
         self._circuit_area = CircuitArea(app_model, self)
         selection_panel = ComponentSelection(app_model, self._circuit_area, self)
 
-        self.layout().addWidget(self._circuit_area)
+        layout.addWidget(self._circuit_area)
         self._selection_area.setWidget(selection_panel)
 
-        self.layout().addWidget(self._selection_area)
-        self.layout().setStretchFactor(self._selection_area, 0)
+        layout.addWidget(self._selection_area)
+        layout.setStretchFactor(self._selection_area, 0)
         self._circuit_area.setFocus()
 
-    def _control_notify(self):
+    def _control_notify(self) -> None:
         self._selection_area.setEnabled(not self._app_model.is_running)
 
     @property
-    def circuit_area(self):
+    def circuit_area(self) -> CircuitArea:
         """Get the circuit area"""
         return self._circuit_area
 
@@ -65,21 +74,22 @@ class CentralWidget(QWidget):
     The central widget with the top widget and circuit editor widget.
     """
 
-    def __init__(self, app_model, parent):
+    def __init__(self, app_model: AppModel, parent: QWidget) -> None:
         super().__init__(parent)
         self._app_model = app_model
 
-        self.setLayout(QVBoxLayout(self))
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().setSpacing(0)
+        layout = QVBoxLayout(self)
+        self.setLayout(layout)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
         circuit_editor = CircuitEditor(app_model, self)
         top_bar = TopBar(app_model, circuit_editor, self)
-        self.layout().addWidget(top_bar)
-        self.layout().setStretchFactor(top_bar, 0)
+        layout.addWidget(top_bar)
+        layout.setStretchFactor(top_bar, 0)
 
-        self.layout().addWidget(circuit_editor)
-        self.layout().setStretchFactor(circuit_editor, 1)
+        layout.addWidget(circuit_editor)
+        layout.setStretchFactor(circuit_editor, 1)
 
 
 class MainWindow(QMainWindow):
@@ -87,7 +97,7 @@ class MainWindow(QMainWindow):
     The main window for the applicaton.
     """
 
-    def __init__(self, app_model, package_version):
+    def __init__(self, app_model: AppModel, package_version: str) -> None:
         super().__init__()
 
         self._app_model = app_model
@@ -105,7 +115,7 @@ class MainWindow(QMainWindow):
         QShortcut(QKeySequence("Ctrl+-"), self, self._app_model.zoom_out)
         QShortcut(QKeySequence("Del"), self, self._app_model.objects.delete_selected)
 
-    def keyPressEvent(self, event):
+    def keyPressEvent(self, event: QKeyEvent) -> None:
         """QT event callback function"""
         super().keyPressEvent(event)
         if event.isAutoRepeat():
@@ -129,7 +139,7 @@ class MainWindow(QMainWindow):
             self._app_model.model_abort_wire()
             event.accept()
 
-    def keyReleaseEvent(self, event):
+    def keyReleaseEvent(self, event: QKeyEvent) -> None:
         """QT event callback function"""
         super().keyReleaseEvent(event)
         if event.isAutoRepeat():
@@ -139,22 +149,24 @@ class MainWindow(QMainWindow):
             self._app_model.shortcuts.release(event.key())
             event.accept()
 
-    def _undo_shortcut(self):
+    def _undo_shortcut(self) -> None:
         self._app_model.objects.undo()
 
-    def error_dialog(self, error_message):
+    def error_dialog(self, error_message: str) -> None:
         """Execute Error dialog"""
-        QMessageBox.critical(self.parent(), "Error!", error_message, QMessageBox.StandardButton.Ok)
+        QMessageBox.critical(
+            self.parentWidget(), "Error!", error_message, QMessageBox.StandardButton.Ok
+        )
 
-    def warning_log_dialog(self, title, warning_message):
+    def warning_log_dialog(self, title: str, warning_message: str) -> None:
         """Execute warning log dialog"""
         warning_dialog = WarningDialog(self, title, warning_message)
         warning_dialog.exec_()
 
-    def closeEvent(self, event):
+    def closeEvent(self, event: QCloseEvent) -> None:
         """QT event callback function"""
         if not self._app_model.is_changed or are_you_sure_destroy_circuit(
-            self.parent(), "Close Application"
+            self.parentWidget(), "Close Application"
         ):
             self._app_model.model_stop()
             self._app_model.wait()

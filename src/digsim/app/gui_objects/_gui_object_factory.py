@@ -7,6 +7,7 @@ from digsim.circuit.components.atoms import DigsimException
 
 from ._bus_bit_object import BitsBusObject, BusBitsObject
 from ._buzzer_object import BuzzerObject
+from ._component_object import ComponentObject
 from ._dip_switch_object import DipSwitchObject
 from ._gui_note_object import GuiNoteObject
 from ._hexdigit_object import HexDigitObject
@@ -36,7 +37,7 @@ class ComponentObjectFactoryError(DigsimException):
     """ComponentObjectFactoryError"""
 
 
-CLASS_NAME_TO_COMPONENT_OBJECT = {
+CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "AND": ImageObjectAND,
     "Bus2Wires": BusBitsObject,
     "Wires2Bus": BitsBusObject,
@@ -70,7 +71,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT = {
 }
 
 
-def class_factory(component_class_name):
+def class_factory(component_class_name: str) -> type[ComponentObject]:
     """A function that returns the GUI for a component class (str or class)"""
 
     if component_class_name in CLASS_NAME_TO_COMPONENT_OBJECT:

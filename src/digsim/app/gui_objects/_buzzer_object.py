@@ -3,20 +3,30 @@
 
 """A buzzer component object"""
 
+from __future__ import annotations
+
 from math import pi, sin
 from struct import pack
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QByteArray, QIODevice
 from PySide6.QtMultimedia import QAudioFormat, QAudioSink, QMediaDevices
 
+from digsim.circuit.components import Buzzer
+from digsim.circuit.components.atoms import Component
+
 from ._image_objects import ImageObjectWithActiveRect
 
 
+if TYPE_CHECKING:
+    from digsim.app.model import AppModel
+
+
 class _AudioOutput(QIODevice):
-    def __init__(self, audio_format, tone_hz):
+    def __init__(self, audio_format: QAudioFormat, tone_hz: float) -> None:
         super().__init__()
 
-        self.pos = 0
+        self._pos = 0
         self.audio_buffer = QByteArray()
         self.audio_buffer.clear()
 
@@ -34,23 +44,23 @@ class _AudioOutput(QIODevice):
             sample_index += 1
         self.open(QIODevice.OpenModeFlag.ReadOnly)
 
-    def readData(self, maxlen):
+    def readData(self, maxlen: int) -> bytes | bytearray | memoryview:
         """Read function"""
         data = QByteArray()
         total = 0
         while maxlen > total:
-            chunk = min(self.audio_buffer.size() - self.pos, maxlen - total)
-            data.append(self.audio_buffer.mid(self.pos, chunk))
-            self.pos = (self.pos + chunk) % self.audio_buffer.size()
+            chunk = min(self.audio_buffer.size() - self._pos, maxlen - total)
+            data.append(self.audio_buffer.mid(self._pos, chunk))
+            self._pos = (self._pos + chunk) % self.audio_buffer.size()
             total += chunk
 
         return data.data()
 
-    def writeData(self, _):
+    def writeData(self, _data: bytes | bytearray | memoryview, _len: int = 0) -> int:
         """Write function"""
         return 0
 
-    def bytesAvailable(self):
+    def bytesAvailable(self) -> int:
         """Byteas available function"""
         return self.audio_buffer.size() + super().bytesAvailable()
 
@@ -61,9 +71,11 @@ class BuzzerObject(ImageObjectWithActiveRect):
     IMAGE_FILENAME = "images/Buzzer.png"
     DATA_SAMPLE_RATE_HZ = 44100
 
-    def __init__(self, app_model, component, xpos, ypos):
+    def __init__(
+        self, app_model: AppModel, component: Component, xpos: float, ypos: float
+    ) -> None:
         super().__init__(app_model, component, xpos, ypos)
-        self.audio_sink = None
+        self.audio_sink: QAudioSink | None = None
         self._app_model.sig_audio_start.connect(self._audio_start)
         self._app_model.sig_audio_notify.connect(self._audio_notify)
         self.device = QMediaDevices.defaultAudioOutput()
@@ -73,23 +85,30 @@ class BuzzerObject(ImageObjectWithActiveRect):
         self.audio_format.setSampleFormat(QAudioFormat.SampleFormat.Int16)
         self.audio_output = _AudioOutput(self.audio_format, self.component.tone_frequency())
 
-    def _audio_start(self, enable):
+    @property
+    def component(self) -> Buzzer:
+        component = self._component
+        assert isinstance(component, Buzzer)
+        return component
+
+    def _audio_start(self, enable: bool) -> None:
         if enable:
             self._play(self.component.active)
         else:
             self._play(False)
 
-    def _audio_notify(self, component):
+    def _audio_notify(self, component: Component) -> None:
         if component == self.component:
             self._play(component.active)
 
-    def _play(self, active):
+    def _play(self, active: bool) -> None:
         if self.device is None:
             return
         if active:
             if self.audio_sink is None:
-                self.audio_sink = QAudioSink(self.device, self.audio_format)
-                self.audio_sink.setVolume(0.1)
+                audio_sink = QAudioSink(self.device, self.audio_format)
+                audio_sink.setVolume(0.1)
+                self.audio_sink = audio_sink
             self.audio_sink.start(self.audio_output)
         else:
             if self.audio_sink is not None:

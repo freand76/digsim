@@ -3,10 +3,22 @@
 
 """A hexdigit component placed in the GUI"""
 
-from PySide6.QtCore import QPoint, QRect, Qt
-from PySide6.QtGui import QFont, QPen
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from PySide6.QtCore import QPoint, QPointF, QRect, Qt
+from PySide6.QtGui import QFont, QPainter, QPen
+from PySide6.QtWidgets import QStyleOptionGraphicsItem, QWidget
+
+from digsim.circuit.components import DipSwitch
+from digsim.circuit.components.atoms import Component, Port
 
 from ._image_objects import ImageObject
+
+
+if TYPE_CHECKING:
+    from digsim.app.model import AppModel
 
 
 class DipSwitchObject(ImageObject):
@@ -18,28 +30,36 @@ class DipSwitchObject(ImageObject):
 
     _DIP_SWITCH_FONT = QFont("Arial", 8)
 
-    def __init__(self, app_model, component, xpos, ypos):
+    def __init__(
+        self, app_model: AppModel, component: Component, xpos: float, ypos: float
+    ) -> None:
         super().__init__(app_model, component, xpos, ypos, port_distance=self.DIP_SWITCH_HEIGHT)
         self.width = 2.5 * self.DIP_SWITCH_WIDTH
         self.height = self.component.bits() * self.DIP_SWITCH_HEIGHT
-        self._rects = []
+        self._rects: list[QRect] = []
         self.update_ports()
 
-    def update_ports(self):
+    @property
+    def component(self) -> DipSwitch:
+        component = self._component
+        assert isinstance(component, DipSwitch)
+        return component
+
+    def update_ports(self) -> None:
         super().update_ports()
         self._rects = []
         for idx in range(self.component.bits()):
             port_pos = self.get_port_pos(f"{idx}")
             self._rects.append(
                 QRect(
-                    self.object_pos.x() + self.rect().width() / 2 - self.DIP_SWITCH_WIDTH / 2,
-                    port_pos.y() - self.DIP_SWITCH_HEIGHT / 2,
+                    int(self.object_pos.x() + self.rect().width() / 2 - self.DIP_SWITCH_WIDTH / 2),
+                    int(port_pos.y() - self.DIP_SWITCH_HEIGHT / 2),
                     self.DIP_SWITCH_WIDTH,
                     self.DIP_SWITCH_HEIGHT,
                 )
             )
 
-    def mouse_position(self, pos):
+    def mouse_position(self, pos: QPointF) -> None:
         """update component according to on mouse move"""
         select = None
         pos = pos - self.pos()
@@ -55,11 +75,11 @@ class DipSwitchObject(ImageObject):
         self.component.select(select)
         self.repaint()
 
-    def single_click_action(self):
+    def single_click_action(self) -> None:
         self.component.toggle()
         self.repaint()
 
-    def _paint_dip_switch(self, painter):
+    def _paint_dip_switch(self, painter: QPainter) -> None:
         pen = QPen()
         pen.setColor(Qt.GlobalColor.black)
         pen.setWidth(1)
@@ -74,14 +94,14 @@ class DipSwitchObject(ImageObject):
                 painter.setBrush(Qt.GlobalColor.white)
             if self.component.is_set(idx):
                 painter.drawRect(
-                    rect.x() + rect.width() / 2 + 1,
+                    int(rect.x() + rect.width() / 2 + 1),
                     rect.y() + 1,
-                    rect.width() / 2 - 2,
+                    int(rect.width() / 2 - 2),
                     rect.height() - 2,
                 )
             else:
                 painter.drawRect(
-                    rect.x() + 1, rect.y() + 1, rect.width() / 2 - 2, rect.height() - 2
+                    rect.x() + 1, rect.y() + 1, int(rect.width() / 2 - 2), rect.height() - 2
                 )
         painter.setFont(self._DIP_SWITCH_FONT)
         painter.setPen(Qt.GlobalColor.white)
@@ -94,15 +114,20 @@ class DipSwitchObject(ImageObject):
 
         _, str_h = self.get_string_metrics("ON", self._DIP_SWITCH_FONT)
         painter.drawText(
-            self.rect().x() + self.rect().width() / 2,
-            self.rect().y() + self.BORDER_TO_PORT - str_h,
+            int(self.rect().x() + self.rect().width() / 2),
+            int(self.rect().y() + self.BORDER_TO_PORT - str_h),
             "ON",
         )
 
-    def _portlist(self):
+    def _portlist(self) -> list[Port]:
         return self.component.outports()
 
-    def paint(self, painter, option, widget=None):
+    def paint(
+        self,
+        painter: QPainter,
+        option: QStyleOptionGraphicsItem,
+        widget: QWidget | None = None,
+    ) -> None:
         """QT function"""
         self.paint_component_base(painter, color=Qt.GlobalColor.red)
         self._paint_dip_switch(painter)
