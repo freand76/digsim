@@ -134,6 +134,8 @@ Read more in the documentation:
   testbenches
 - [Verilog and Yosys](https://freand76.github.io/digsim/synthesis/): synthesizing your own
   designs
+- [Examples](https://freand76.github.io/digsim/examples/): every example with circuit
+  diagrams, expected output and waveforms
 
 ## Development
 

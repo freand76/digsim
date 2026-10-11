@@ -170,6 +170,10 @@ pytest examples/pytest_tb
 
 ## More examples
 
+See [Examples](examples.md) for a walkthrough of every example, with circuit diagrams,
+expected output and waveforms.
+
+
 | Example | Shows |
 | --- | --- |
 | [`example_sr.py`](https://github.com/freand76/digsim/blob/main/examples/example_sr.py) | Buttons, an SR latch, an LED callback and VCD output |

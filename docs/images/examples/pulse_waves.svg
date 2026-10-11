@@ -1,0 +1,36 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='216' viewBox='0 0 900 216' font-family='Helvetica, Arial, sans-serif' font-size='12'>
+<rect x='0.5' y='0.5' width='899' height='215' rx='6' fill='#ffffff' stroke='#d0d7de'/>
+<text x='10' y='204' fill='#59636e' font-size='11'>t = 10 ms +</text>
+<line x1='140.0' y1='12' x2='140.0' y2='188' stroke='#eaeef2'/>
+<text x='140.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>0 ns</text>
+<line x1='214.0' y1='12' x2='214.0' y2='188' stroke='#eaeef2'/>
+<text x='214.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>1 ns</text>
+<line x1='288.0' y1='12' x2='288.0' y2='188' stroke='#eaeef2'/>
+<text x='288.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>2 ns</text>
+<line x1='362.0' y1='12' x2='362.0' y2='188' stroke='#eaeef2'/>
+<text x='362.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>3 ns</text>
+<line x1='436.0' y1='12' x2='436.0' y2='188' stroke='#eaeef2'/>
+<text x='436.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>4 ns</text>
+<line x1='510.0' y1='12' x2='510.0' y2='188' stroke='#eaeef2'/>
+<text x='510.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>5 ns</text>
+<line x1='584.0' y1='12' x2='584.0' y2='188' stroke='#eaeef2'/>
+<text x='584.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>6 ns</text>
+<line x1='658.0' y1='12' x2='658.0' y2='188' stroke='#eaeef2'/>
+<text x='658.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>7 ns</text>
+<line x1='732.0' y1='12' x2='732.0' y2='188' stroke='#eaeef2'/>
+<text x='732.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>8 ns</text>
+<line x1='806.0' y1='12' x2='806.0' y2='188' stroke='#eaeef2'/>
+<text x='806.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>9 ns</text>
+<line x1='880.0' y1='12' x2='880.0' y2='188' stroke='#eaeef2'/>
+<text x='880.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>10 ns</text>
+<text x='10' y='33.0' fill='#1f2328'>Button</text>
+<polyline points='140.0,40.0 288.0,40.0 288.0,18.0 880.0,18.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+<text x='10' y='67.0' fill='#1f2328'>not1.Y</text>
+<polyline points='140.0,52.0 362.0,52.0 362.0,74.0 880.0,74.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+<text x='10' y='101.0' fill='#1f2328'>not2.Y</text>
+<polyline points='140.0,108.0 436.0,108.0 436.0,86.0 880.0,86.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+<text x='10' y='135.0' fill='#1f2328'>not3.Y</text>
+<polyline points='140.0,120.0 510.0,120.0 510.0,142.0 880.0,142.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+<text x='10' y='169.0' fill='#1f2328'>AND.Y</text>
+<polyline points='140.0,176.0 362.0,176.0 362.0,154.0 584.0,154.0 584.0,176.0 880.0,176.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+</svg>

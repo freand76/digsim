@@ -1,0 +1,21 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='114' viewBox='0 0 900 114' font-family='Helvetica, Arial, sans-serif' font-size='12'>
+<rect x='0.5' y='0.5' width='899' height='113' rx='6' fill='#ffffff' stroke='#d0d7de'/>
+<line x1='140.0' y1='12' x2='140.0' y2='86' stroke='#eaeef2'/>
+<text x='140.0' y='102' text-anchor='middle' fill='#59636e' font-size='11'>0 ms</text>
+<line x1='263.3' y1='12' x2='263.3' y2='86' stroke='#eaeef2'/>
+<text x='263.3' y='102' text-anchor='middle' fill='#59636e' font-size='11'>50 ms</text>
+<line x1='386.7' y1='12' x2='386.7' y2='86' stroke='#eaeef2'/>
+<text x='386.7' y='102' text-anchor='middle' fill='#59636e' font-size='11'>100 ms</text>
+<line x1='510.0' y1='12' x2='510.0' y2='86' stroke='#eaeef2'/>
+<text x='510.0' y='102' text-anchor='middle' fill='#59636e' font-size='11'>150 ms</text>
+<line x1='633.3' y1='12' x2='633.3' y2='86' stroke='#eaeef2'/>
+<text x='633.3' y='102' text-anchor='middle' fill='#59636e' font-size='11'>200 ms</text>
+<line x1='756.7' y1='12' x2='756.7' y2='86' stroke='#eaeef2'/>
+<text x='756.7' y='102' text-anchor='middle' fill='#59636e' font-size='11'>250 ms</text>
+<line x1='880.0' y1='12' x2='880.0' y2='86' stroke='#eaeef2'/>
+<text x='880.0' y='102' text-anchor='middle' fill='#59636e' font-size='11'>300 ms</text>
+<text x='10' y='33.0' fill='#1f2328'>Clock</text>
+<polyline points='140.0,40.0 201.7,40.0 201.7,18.0 263.3,18.0 263.3,40.0 325.0,40.0 325.0,18.0 386.7,18.0 386.7,40.0 448.3,40.0 448.3,18.0 510.0,18.0 510.0,40.0 571.7,40.0 571.7,18.0 633.3,18.0 633.3,40.0 695.0,40.0 695.0,18.0 756.7,18.0 756.7,40.0 818.3,40.0 818.3,18.0 880.0,18.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+<text x='10' y='67.0' fill='#1f2328'>D1 (LED)</text>
+<polyline points='140.0,74.0 201.7,74.0 201.7,52.0 263.3,52.0 263.3,74.0 325.0,74.0 325.0,52.0 386.7,52.0 386.7,74.0 448.3,74.0 448.3,52.0 510.0,52.0 510.0,74.0 571.7,74.0 571.7,52.0 633.3,52.0 633.3,74.0 695.0,74.0 695.0,52.0 756.7,52.0 756.7,74.0 818.3,74.0 818.3,52.0 880.0,52.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+</svg>

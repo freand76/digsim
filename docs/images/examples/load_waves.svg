@@ -1,0 +1,28 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='216' viewBox='0 0 900 216' font-family='Helvetica, Arial, sans-serif' font-size='12'>
+<rect x='0.5' y='0.5' width='899' height='215' rx='6' fill='#ffffff' stroke='#d0d7de'/>
+<line x1='140.0' y1='12' x2='140.0' y2='188' stroke='#eaeef2'/>
+<text x='140.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>0 ms</text>
+<line x1='288.0' y1='12' x2='288.0' y2='188' stroke='#eaeef2'/>
+<text x='288.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>5 ms</text>
+<line x1='436.0' y1='12' x2='436.0' y2='188' stroke='#eaeef2'/>
+<text x='436.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>10 ms</text>
+<line x1='584.0' y1='12' x2='584.0' y2='188' stroke='#eaeef2'/>
+<text x='584.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>15 ms</text>
+<line x1='732.0' y1='12' x2='732.0' y2='188' stroke='#eaeef2'/>
+<text x='732.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>20 ms</text>
+<line x1='880.0' y1='12' x2='880.0' y2='188' stroke='#eaeef2'/>
+<text x='880.0' y='204' text-anchor='middle' fill='#59636e' font-size='11'>25 ms</text>
+<text x='10' y='33.0' fill='#1f2328'>button1</text>
+<polyline points='140.0,40.0 288.0,40.0 288.0,18.0 436.0,18.0 436.0,40.0 584.0,40.0 584.0,18.0 880.0,18.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+<text x='10' y='67.0' fill='#1f2328'>button2</text>
+<polyline points='140.0,74.0 732.0,74.0 732.0,52.0 880.0,52.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+<text x='10' y='101.0' fill='#1f2328'>and_led</text>
+<rect x='140.0' y='86.0' width='0.0' height='22' fill='#cf222e' fill-opacity='0.15'/>
+<polyline points='140.0,108.0 732.0,108.0 732.0,86.0 880.0,86.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+<text x='10' y='135.0' fill='#1f2328'>not_led</text>
+<rect x='140.0' y='120.0' width='0.0' height='22' fill='#cf222e' fill-opacity='0.15'/>
+<polyline points='140.0,120.0 288.0,120.0 288.0,142.0 436.0,142.0 436.0,120.0 584.0,120.0 584.0,142.0 880.0,142.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+<text x='10' y='169.0' fill='#1f2328'>xor_led</text>
+<rect x='140.0' y='154.0' width='0.0' height='22' fill='#cf222e' fill-opacity='0.15'/>
+<polyline points='140.0,176.0 288.0,176.0 288.0,154.0 436.0,154.0 436.0,176.0 584.0,176.0 584.0,154.0 732.0,154.0 732.0,176.0 880.0,176.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
+</svg>

@@ -1,0 +1,39 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='770' height='180' viewBox='0 0 770 180' font-family='Helvetica, Arial, sans-serif' font-size='12'>
+<rect x='0.5' y='0.5' width='769' height='179' rx='6' fill='#ffffff' stroke='#d0d7de'/>
+<polyline points='120.0,120.0 140.0,120.0 140.0,50.0 170.0,50.0' fill='none' stroke='#1f2328' stroke-width='1.5'/>
+<polyline points='120.0,120.0 140.0,120.0 140.0,110.0 540.0,110.0 540.0,110.0' fill='none' stroke='#1f2328' stroke-width='1.5'/>
+<polyline points='240.0,50.0 265.0,50.0 265.0,50.0 290.0,50.0' fill='none' stroke='#1f2328' stroke-width='1.5'/>
+<polyline points='360.0,50.0 385.0,50.0 385.0,50.0 410.0,50.0' fill='none' stroke='#1f2328' stroke-width='1.5'/>
+<polyline points='480.0,50.0 510.0,50.0 510.0,130.0 540.0,130.0' fill='none' stroke='#1f2328' stroke-width='1.5'/>
+<polyline points='610.0,120.0 640.0,120.0 640.0,120.0 670.0,120.0' fill='none' stroke='#1f2328' stroke-width='1.5'/>
+<circle cx='140' cy='120' r='3.2' fill='#1f2328'/>
+<rect x='20' y='100' width='100' height='40' rx='5' fill='#f6f8fa' stroke='#1f2328' stroke-width='1.3'/>
+<text x='70.0' y='94' text-anchor='middle' fill='#59636e' font-size='11'>Button</text>
+<text x='70.0' y='124.0' text-anchor='middle' fill='#1f2328' font-weight='bold'>PushButton</text>
+<text x='115' y='124.0' text-anchor='end' fill='#1f2328' font-size='10'>O</text>
+<rect x='170' y='30' width='70' height='40' rx='5' fill='#f6f8fa' stroke='#1f2328' stroke-width='1.3'/>
+<text x='205.0' y='24' text-anchor='middle' fill='#59636e' font-size='11'>not1</text>
+<text x='205.0' y='54.0' text-anchor='middle' fill='#1f2328' font-weight='bold'>NOT</text>
+<text x='175' y='54.0' fill='#1f2328' font-size='10'>A</text>
+<text x='235' y='54.0' text-anchor='end' fill='#1f2328' font-size='10'>Y</text>
+<rect x='290' y='30' width='70' height='40' rx='5' fill='#f6f8fa' stroke='#1f2328' stroke-width='1.3'/>
+<text x='325.0' y='24' text-anchor='middle' fill='#59636e' font-size='11'>not2</text>
+<text x='325.0' y='54.0' text-anchor='middle' fill='#1f2328' font-weight='bold'>NOT</text>
+<text x='295' y='54.0' fill='#1f2328' font-size='10'>A</text>
+<text x='355' y='54.0' text-anchor='end' fill='#1f2328' font-size='10'>Y</text>
+<rect x='410' y='30' width='70' height='40' rx='5' fill='#f6f8fa' stroke='#1f2328' stroke-width='1.3'/>
+<text x='445.0' y='24' text-anchor='middle' fill='#59636e' font-size='11'>not3</text>
+<text x='445.0' y='54.0' text-anchor='middle' fill='#1f2328' font-weight='bold'>NOT</text>
+<text x='415' y='54.0' fill='#1f2328' font-size='10'>A</text>
+<text x='475' y='54.0' text-anchor='end' fill='#1f2328' font-size='10'>Y</text>
+<rect x='540' y='90' width='70' height='60' rx='5' fill='#f6f8fa' stroke='#1f2328' stroke-width='1.3'/>
+<text x='575.0' y='84' text-anchor='middle' fill='#59636e' font-size='11'>AND</text>
+<text x='575.0' y='124.0' text-anchor='middle' fill='#1f2328' font-weight='bold'>AND</text>
+<text x='545' y='114.0' fill='#1f2328' font-size='10'>A</text>
+<text x='545' y='134.0' fill='#1f2328' font-size='10'>B</text>
+<text x='605' y='124.0' text-anchor='end' fill='#1f2328' font-size='10'>Y</text>
+<rect x='670' y='100' width='70' height='40' rx='5' fill='#f6f8fa' stroke='#1f2328' stroke-width='1.3'/>
+<text x='705.0' y='94' text-anchor='middle' fill='#59636e' font-size='11'>D</text>
+<text x='705.0' y='124.0' text-anchor='middle' fill='#1f2328' font-weight='bold'>Led</text>
+<text x='675' y='124.0' fill='#1f2328' font-size='10'>I</text>
+</svg>

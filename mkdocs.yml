@@ -11,9 +11,11 @@ nav:
   - GUI Application: gui.md
   - Python Circuits: python.md
   - Verilog and Yosys: synthesis.md
+  - Examples: examples.md
 
 exclude_docs: |
   documentation.md
+  scripts/
 
 theme:
   name: material

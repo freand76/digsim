@@ -1,0 +1,19 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='560' height='170' viewBox='0 0 560 170' font-family='Helvetica, Arial, sans-serif' font-size='12'>
+<rect x='0.5' y='0.5' width='559' height='169' rx='6' fill='#ffffff' stroke='#d0d7de'/>
+<polyline points='150.0,76.7 190.0,76.7 190.0,76.7 230.0,76.7' fill='none' stroke='#1f2328' stroke-width='1.5'/>
+<polyline points='150.0,103.3 190.0,103.3 190.0,103.3 230.0,103.3' fill='none' stroke='#1f2328' stroke-width='1.5'/>
+<rect x='20' y='50' width='130' height='80' rx='5' fill='#f6f8fa' stroke='#1f2328' stroke-width='1.3'/>
+<text x='85.0' y='44' text-anchor='middle' fill='#59636e' font-size='11'>script</text>
+<text x='85.0' y='94.0' text-anchor='middle' fill='#1f2328' font-weight='bold'>Python script</text>
+<text x='145' y='80.66666666666667' text-anchor='end' fill='#1f2328' font-size='10'>clk</text>
+<text x='145' y='107.33333333333334' text-anchor='end' fill='#1f2328' font-size='10'>reset</text>
+<rect x='230' y='50' width='160' height='80' rx='5' fill='#f6f8fa' stroke='#1f2328' stroke-width='1.3'/>
+<text x='310.0' y='44' text-anchor='middle' fill='#59636e' font-size='11'>fibonacci</text>
+<text x='310.0' y='118' text-anchor='middle' fill='#1f2328' font-weight='bold'>fibonacci (Yosys)</text>
+<text x='235' y='80.66666666666667' fill='#1f2328' font-size='10'>clk</text>
+<text x='235' y='107.33333333333334' fill='#1f2328' font-size='10'>reset</text>
+<text x='385' y='80.66666666666667' text-anchor='end' fill='#1f2328' font-size='10'>index</text>
+<text x='385' y='107.33333333333334' text-anchor='end' fill='#1f2328' font-size='10'>value</text>
+<text x='400' y='80' fill='#59636e' font-size='11' font-style='italic'>index[15:0] → printed</text>
+<text x='400' y='110' fill='#59636e' font-size='11' font-style='italic'>value[15:0] → printed</text>
+</svg>
