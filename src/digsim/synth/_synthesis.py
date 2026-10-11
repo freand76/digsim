@@ -3,6 +3,8 @@
 
 """Helper module for yosys synthesis"""
 
+from __future__ import annotations
+
 import json
 import os
 import pathlib
@@ -10,7 +12,7 @@ import shutil
 import site
 import sys
 from collections.abc import Sequence
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pexpect
 import pexpect.popen_spawn
@@ -18,7 +20,10 @@ import pexpect.popen_spawn
 from digsim.circuit.components.atoms import DigsimException
 
 
-YosysProcess = pexpect.spawn | pexpect.popen_spawn.PopenSpawn
+if TYPE_CHECKING:
+    # pexpect.spawn does not exist on Windows, only refer to it when type checking
+    YosysProcess = pexpect.spawn | pexpect.popen_spawn.PopenSpawn
+
 VerilogFiles = str | os.PathLike[str] | Sequence[str | os.PathLike[str]]
 
 
