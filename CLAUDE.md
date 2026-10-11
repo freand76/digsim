@@ -15,7 +15,8 @@ Verilog into simulatable netlists.
 - `src/digsim/utils/` — Yosys netlist parsing
 - `tests/` — pytest suite; `examples/` — runnable examples, incl. pytest testbenches
   in `examples/pytest_tb/`; `example_circuits/` — circuits for the GUI
-- `docs/documentation.md` — user documentation
+- `docs/` — user documentation, published to https://freand76.github.io/digsim/ with
+  MkDocs Material (`mkdocs.yml`). `docs/documentation.md` is only a pointer to the site.
 
 Python >= 3.10 is supported (CI tests 3.10–3.14), so don't use newer-only syntax.
 Dependencies in `pyproject.toml` are pinned to exact versions.
@@ -29,11 +30,15 @@ uv tool run ruff format          # format
 uv tool run ruff check           # lint (add --fix for autofixes)
 uv run --with pytest pytest      # run all tests (tests/ and examples/pytest_tb/)
 uv run -m digsim.app             # start the GUI
+uv tool run --with mkdocs-material mkdocs build --strict   # check the docs build
 ```
 
 The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test.sh`,
 `uv_run_app.sh`). Run ruff format + check and pytest before committing; CI runs both
-(`.github/workflows/`) and also runs `examples/yosys_counter/*.py`.
+(`.github/workflows/`) and also runs `examples/yosys_counter/*.py`. The docs site is
+rebuilt and deployed by `.github/workflows/docs.yaml` on every push to `main` that touches
+`docs/` or `mkdocs.yml`. Component images in `docs/images/components/` are copies of
+`src/digsim/app/gui_objects/images/`.
 
 Ruff config is in `pyproject.toml`: line length 99, isort with PySide6 imports in their
 own section and two blank lines after imports, no relative imports from parent packages.
