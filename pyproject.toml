@@ -38,6 +38,17 @@ scripts = { digsim-logic-simulator = "digsim.app.cli:main" }
 
 keywords = ["educational", "simulation", "digital"]
 
+[tool.mypy]
+python_version = "3.10"
+files = ["src"]
+disallow_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = ["qtawesome"]
+ignore_missing_imports = true
+
 [tool.ruff]
 line-length = 99
 target-version = "py310"

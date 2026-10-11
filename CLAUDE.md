@@ -29,13 +29,14 @@ Use `uv` for everything. Ruff runs via `uv tool run`, not as a project dependenc
 uv tool run ruff format          # format
 uv tool run ruff check           # lint (add --fix for autofixes)
 uv run --with pytest pytest      # run all tests (tests/ and examples/pytest_tb/)
+uv run --with mypy --with types-pexpect mypy   # type check (config in pyproject.toml)
 uv run -m digsim.app             # start the GUI
 uv tool run --with mkdocs-material mkdocs build --strict   # check the docs build
 ```
 
 The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test.sh`,
-`uv_run_app.sh`). Run ruff format + check and pytest before committing; CI runs both
-(`.github/workflows/`) and also runs `examples/yosys_counter/*.py`. The docs site is
+`uv_run_app.sh`). Run ruff format + check, mypy and pytest before committing. CI runs ruff
+and pytest (`.github/workflows/`), plus `examples/yosys_counter/*.py`; mypy is local only. The docs site is
 rebuilt and deployed by `.github/workflows/docs.yaml` on every push to `main` that touches
 `docs/` or `mkdocs.yml`. Component images in `docs/images/components/` are copies of
 `src/digsim/app/gui_objects/images/`, and `docs/images/app_icon.png` of
@@ -50,6 +51,11 @@ own section and two blank lines after imports, no relative imports from parent p
   `# Copyright (c) Fredrik Andersson, 2023-2025` / `# All rights reserved`, followed by a
   module docstring.
 - Private modules are prefixed `_` and re-exported through the package `__init__.py`.
+- Everything is type annotated; mypy runs with `disallow_untyped_defs`, so new functions need
+  full signatures. Component ports are attached at runtime and typed via
+  `Component.__getattr__`; GUI objects narrow their `component` property to the concrete type.
+- Use fully qualified Qt enums (`Qt.GlobalColor.red`, not `Qt.red`), and pass `int()` to Qt
+  APIs that only take ints.
 
 ## Releases
 

@@ -140,6 +140,7 @@ Read more in the documentation:
 ```sh
 uv tool run ruff format && uv tool run ruff check   # format and lint
 uv run --with pytest pytest                         # run the tests
+uv run --with mypy --with types-pexpect mypy        # type check
 uv tool run --with mkdocs-material mkdocs serve     # preview the documentation
 ```
 
