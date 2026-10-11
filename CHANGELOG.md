@@ -20,6 +20,7 @@
  - Faster VCD output (2.3x faster simulation of the 6502 example with VCD)
  - Faster simulation (1.8x on the 6502 example)
  - 6502 example: VCD output is optional, enabled with --vcd [FILE]
+ - Run Yosys in-process instead of through an interactive terminal (pexpect), about 3x faster synthesis
 
 ## v1.1.0
  - Update python packages

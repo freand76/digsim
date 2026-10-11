@@ -5,37 +5,59 @@
 
 from __future__ import annotations
 
+import gc
 import json
 import os
 import pathlib
 import shutil
-import site
+import subprocess
 import sys
-from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any
+import tempfile
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
+from typing import Any
 
-import pexpect
-import pexpect.popen_spawn
+import platformdirs
+import yowasp_yosys
 
 from digsim.circuit.components.atoms import DigsimException
 
 
-if TYPE_CHECKING:
-    # pexpect.spawn does not exist on Windows, only refer to it when type checking
-    YosysProcess = pexpect.spawn | pexpect.popen_spawn.PopenSpawn
-
 VerilogFiles = str | os.PathLike[str] | Sequence[str | os.PathLike[str]]
-
-# Max time to wait for Yosys output. The WebAssembly build (YoWASP) is compiled
-# the first time it starts, which can take longer than pexpect's default 30 s,
-# as can synthesis of large designs.
-YOSYS_TIMEOUT_S = 600
 
 
 def _file_list(verilog_files: VerilogFiles) -> list[str]:
     if isinstance(verilog_files, (str, os.PathLike)):
         return [str(verilog_files)]
     return [str(verilog_file) for verilog_file in verilog_files]
+
+
+def _script_path(path: pathlib.Path) -> str:
+    """A path for a Yosys script: forward slashes, quoted in case it contains spaces"""
+    return f'"{path.as_posix()}"'
+
+
+@contextmanager
+def _console_to_file(console_file: pathlib.Path) -> Iterator[None]:
+    """
+    Send this process's console output (file descriptors 1 and 2) to a file.
+    The WebAssembly Yosys runs in this process and writes warnings and errors directly
+    to the console, also with '-qq'. They are in the log file as well, but the console
+    output is kept for errors that happen before the log file is opened.
+    """
+    sys.stdout.flush()
+    sys.stderr.flush()
+    saved = [os.dup(1), os.dup(2)]
+    console = os.open(console_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+    try:
+        os.dup2(console, 1)
+        os.dup2(console, 2)
+        yield
+    finally:
+        os.dup2(saved[0], 1)
+        os.dup2(saved[1], 2)
+        for fd in (*saved, console):
+            os.close(fd)
 
 
 class SynthesisException(DigsimException):
@@ -45,82 +67,70 @@ class SynthesisException(DigsimException):
 class Synthesis:
     """Helper class for yosys synthesis"""
 
-    @classmethod
-    def _pexpect_wait_for_prompt(cls, pexp: YosysProcess) -> list[str]:
-        index = pexp.expect(["yosys>", pexpect.EOF])
-        before = pexp.before
-        assert isinstance(before, bytes)
-        before_lines = before.decode("utf8").replace("\r", "").split("\n")
-        if index == 0:
-            pass
-        elif index == 1:
-            # Unexpected EOF means ERROR
-            errorline = "ERROR"
-            for line in before_lines:
-                if "ERROR" in line:
-                    errorline = line
-                    break
-            raise SynthesisException(errorline)
-
-        # Remove escape sequence in output
-        out_lines = []
-        for line in before_lines:
-            if line.startswith("\x1b"):
-                continue
-            out_lines.append(line)
-        return out_lines
+    @staticmethod
+    @contextmanager
+    def _work_dir() -> Iterator[pathlib.Path]:
+        """
+        A temporary folder for the files written by Yosys.
+        It is created in the user cache folder, not the system temp folder: the
+        WebAssembly Yosys (YoWASP) maps '/tmp' to a private folder of its own.
+        """
+        cache_dir = pathlib.Path(platformdirs.user_cache_dir("digsim", appauthor=False))
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        # Cleanup errors are ignored: on Windows a file still open by Yosys cannot be deleted
+        with tempfile.TemporaryDirectory(dir=cache_dir, ignore_cleanup_errors=True) as work_dir:
+            yield pathlib.Path(work_dir)
 
     @staticmethod
-    def _find_win_yowasp_yosys_binary() -> str | None:
-        try:
-            # Use getusersitepackages if this is present, as it ensures that the
-            # value is initialised properly.
-            user_site = site.getusersitepackages()
-        except AttributeError:
-            if site.USER_SITE is None:
-                return None
-            user_site = site.USER_SITE
-        scripts_path = pathlib.Path(user_site).parent / "Scripts"
-        yowasp_yosys_path = scripts_path / "yowasp-yosys.exe"
-        if yowasp_yosys_path.is_file():
-            return str(yowasp_yosys_path)
-        return None
-
-    @classmethod
-    def _pexpect_spawn_yosys(cls) -> YosysProcess:
-        # Find linux binary
-        yosys_exe = shutil.which("yosys") or shutil.which("yowasp-yosys")
-
-        # No binary found
-        if yosys_exe is None:
-            # Try to find windows binary
-            yosys_exe = cls._find_win_yowasp_yosys_binary()
-
-        if yosys_exe is None:
-            raise SynthesisException("Yosys executable not found")
-
-        if sys.platform == "win32":
-            return pexpect.popen_spawn.PopenSpawn(yosys_exe, timeout=YOSYS_TIMEOUT_S)
-
-        return pexpect.spawn(yosys_exe, timeout=YOSYS_TIMEOUT_S)
+    def _run_yosys(script: str, work_dir: pathlib.Path, log: list[str]) -> None:
+        """
+        Run a Yosys script, with a native Yosys if one is installed and otherwise with
+        the WebAssembly Yosys in this process. The Yosys log is added to 'log'.
+        """
+        log_file = work_dir / "yosys.log"
+        console_file = work_dir / "console.txt"
+        # Everything Yosys writes goes to the log file. The WebAssembly Yosys only
+        # understands absolute paths with forward slashes, also on Windows (C:/...).
+        args = ["-qq", "-l", log_file.as_posix(), "-p", script]
+        native_yosys = shutil.which("yosys")
+        if native_yosys is not None:
+            with open(console_file, mode="w", encoding="utf-8") as console:
+                returncode = subprocess.run(
+                    [native_yosys, *args], stdout=console, stderr=console, check=False
+                ).returncode
+        else:
+            with _console_to_file(console_file):
+                returncode = yowasp_yosys.run_yosys(args)
+            if returncode != 0:
+                # When Yosys fails, the WebAssembly instance is kept alive by a reference
+                # cycle (in yowasp-runtime) and keeps its files open; on Windows the
+                # work folder can then not be removed. Collect it to close the files.
+                gc.collect()
+        if log_file.exists():
+            log.extend(log_file.read_text(encoding="utf-8").splitlines())
+        if returncode != 0:
+            error = next((line for line in log if "ERROR" in line), None)
+            if error is None:
+                # No error in the log, for example if the log file could not be written
+                output = console_file.read_text(encoding="utf-8", errors="replace").strip()
+                error = f"Yosys failed with exit code {returncode}"
+                if output:
+                    error += ": " + " ".join(output.splitlines()[-3:])
+            raise SynthesisException(error)
 
     @classmethod
     def list_modules(cls, verilog_files: VerilogFiles) -> list[str]:
         """List available modules in verilog files"""
-        verilog_files = _file_list(verilog_files)
-
-        pexp = cls._pexpect_spawn_yosys()
-        cls._pexpect_wait_for_prompt(pexp)
-        pexp.sendline(f"read -sv {' '.join(verilog_files)}")
-        cls._pexpect_wait_for_prompt(pexp)
-        pexp.sendline("ls")
-        pexp.expect("\n")
-        ls_response = cls._pexpect_wait_for_prompt(pexp)
-        pexp.sendline("exit")
+        files = " ".join(_file_list(verilog_files))
+        with cls._work_dir() as work_dir:
+            modules_file = work_dir / "modules.txt"
+            script = f"read -sv {files}; tee -q -o {_script_path(modules_file)} ls"
+            cls._run_yosys(script, work_dir, [])
+            ls_response = modules_file.read_text(encoding="utf-8").splitlines()
 
         modules = []
         for line in ls_response:
-            if len(line) == 0:
+            if len(line.strip()) == 0:
                 continue
             if "modules:" in line:
                 continue
@@ -141,21 +151,18 @@ class Synthesis:
         script += "proc; opt; techmap; opt; "
         script += f"synth -noabc -top {self._verilog_top_module}; "
 
-        pexp = self._pexpect_spawn_yosys()
-        self._pexpect_wait_for_prompt(pexp)
-        pexp.sendline(script)
-        yosys_log = self._pexpect_wait_for_prompt(pexp)
-        for line in yosys_log:
-            self._yosys_log.append(line)
-            if silent:
-                continue
-            print("Yosys:", line)
-        pexp.sendline("write_json")
-        pexp.expect("Executing JSON backend.")
-        json_lines = self._pexpect_wait_for_prompt(pexp)
-        pexp.sendline("exit")
-
-        return "\n".join(json_lines)
+        self._yosys_log = []
+        with self._work_dir() as work_dir:
+            json_file = work_dir / "netlist.json"
+            try:
+                self._run_yosys(
+                    script + f"write_json {_script_path(json_file)}", work_dir, self._yosys_log
+                )
+            finally:
+                if not silent:
+                    for line in self._yosys_log:
+                        print("Yosys:", line)
+            return json_file.read_text(encoding="utf-8")
 
     def synth_to_dict(self, silent: bool = False) -> dict[str, Any]:
         """Execute yosys with generated synthesis script and return python dict"""
@@ -169,8 +176,6 @@ class Synthesis:
     def synth_to_json_file(self, filename: str | pathlib.Path, silent: bool = False) -> None:
         """Execute yosys with generated synthesis script and write to file"""
         yosys_json = self.synth_to_json(silent)
-        if yosys_json is None:
-            raise SynthesisException("Yosys synthesis failed")
         with open(filename, mode="w", encoding="utf-8") as json_file:
             json_file.write(yosys_json)
 

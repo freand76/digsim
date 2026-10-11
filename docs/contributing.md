@@ -60,7 +60,7 @@ Run the same checks as the continuous integration, from the repository root:
 ```sh
 uv tool run ruff format                        # format the code
 uv tool run ruff check                         # lint
-uv run --with mypy --with types-pexpect mypy   # type check
+uv run --with mypy mypy                        # type check
 uv run --with pytest pytest                    # run the tests
 ```
 

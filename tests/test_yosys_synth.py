@@ -3,6 +3,8 @@
 
 """Pystest module to test functionality of yosys synthesis"""
 
+import os
+import sys
 from pathlib import Path
 
 import pytest
@@ -93,3 +95,17 @@ def test_yosys_path_objects(verilog_path):
     synthesis = Synthesis([verilog_path / "one_module.v"], "module_one")
     netlist_dict = synthesis.synth_to_dict()
     assert "module_one" in netlist_dict["modules"]
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="uses /proc to list open files")
+def test_yosys_error_closes_files(verilog_path):
+    """Yosys files are closed after an error (on Windows, open files cannot be deleted)"""
+    with pytest.raises(SynthesisException):
+        Synthesis.list_modules([str(verilog_path / "module_with_error.v")])
+    open_files = []
+    for fd in os.listdir("/proc/self/fd"):
+        try:
+            open_files.append(os.readlink(f"/proc/self/fd/{fd}"))
+        except OSError:
+            continue
+    assert not [name for name in open_files if "yosys.log" in name]

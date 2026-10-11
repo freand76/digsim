@@ -29,7 +29,7 @@ Use `uv` for everything. Ruff runs via `uv tool run`, not as a project dependenc
 uv tool run ruff format          # format
 uv tool run ruff check           # lint (add --fix for autofixes)
 uv run --with pytest pytest      # run all tests (tests/ and examples/pytest_tb/)
-uv run --with mypy --with types-pexpect mypy   # type check (config in pyproject.toml)
+uv run --with mypy mypy                        # type check (config in pyproject.toml)
 uv run -m digsim.app             # start the GUI
 uv tool run --with mkdocs-material mkdocs build --strict   # check the docs build
 ```
