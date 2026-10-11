@@ -170,6 +170,7 @@ class AppModel(QThread):
         else:
             dc = model_dc
 
+        exception_str_list: list[str] = []
         try:
             # Create circuit
             exception_str_list = self.objects.circuit.from_dataclass(
@@ -181,7 +182,7 @@ class AppModel(QThread):
             # Add component positions
             self.objects.components.add_gui_positions(dc.gui)
         except DigsimException as exc:
-            self._app_model.sig_error.emit(f"Circuit error: {exc!s}")
+            self.sig_error.emit(f"Circuit error: {exc!s}")
             return exception_str_list
         return exception_str_list
 
