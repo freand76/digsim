@@ -58,7 +58,8 @@ class LabelObject(ComponentObject):
     def _paint_label(
         cls, painter: QPainter, comp_rect: QRect | QRectF, name: str, selected: bool = False
     ) -> None:
-        pen = cls._LABEL_PEN
+        # A copy: the class pen is shared by all instances
+        pen = QPen(cls._LABEL_PEN)
         if selected:
             pen.setWidth(4)
         else:

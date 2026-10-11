@@ -255,7 +255,8 @@ class ImageObjectWithActiveRect(ImageObject):
         if self.component.active:
             xpos = self.object_pos.x() + self.size.width() / 2 - self._image().width() / 2
             ypos = self.object_pos.y() + self.size.height() / 2 - self._image().height() / 2
-            pen = self._ACTIVE_RECT_PEN
+            # A copy: the class pen is shared by all instances
+            pen = QPen(self._ACTIVE_RECT_PEN)
             pen.setWidth(4)
             painter.setPen(pen)
             painter.setBrush(Qt.BrushStyle.NoBrush)

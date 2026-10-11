@@ -61,7 +61,8 @@ class ButtonObject(ImageObject):
     def paint_component(self, painter: QPainter) -> None:
         super().paint_component(painter)
         if self.component.active:
-            pen = self._BUTTON_ACTIVE_PEN
+            # A copy: the class pen is shared by all instances
+            pen = QPen(self._BUTTON_ACTIVE_PEN)
             pen.setWidth(4)
             painter.setPen(pen)
             painter.setBrush(Qt.BrushStyle.NoBrush)

@@ -60,7 +60,8 @@ class LogicAnalyzerObject(ImageObject):
             5,
         )
 
-        pen = self._ANALYZER_PEN
+        # A copy: the class pen is shared by all instances
+        pen = QPen(self._ANALYZER_PEN)
         pen.setWidth(2)
         painter.setPen(pen)
         signal_data_dict = self.component.signal_data()

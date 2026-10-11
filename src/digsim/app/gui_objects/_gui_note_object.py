@@ -55,7 +55,8 @@ class GuiNoteObject(ComponentObject):
         """Paint note rectangle"""
         fm = QFontMetrics(self._NOTE_FONT)
         lines = self._get_lines()
-        pen = self._NOTE_PEN
+        # A copy: the class pen is shared by all instances
+        pen = QPen(self._NOTE_PEN)
         if self.selected:
             pen.setWidth(4)
         else:
@@ -80,7 +81,8 @@ class GuiNoteObject(ComponentObject):
             size.width() - 2 * cls.NOTE_BORDER,
             size.width() - 2 * cls.NOTE_BORDER,
         )
-        pen = cls._NOTE_PEN
+        # A copy: the class pen is shared by all instances
+        pen = QPen(cls._NOTE_PEN)
         pen.setWidth(1)
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.SolidPattern)
