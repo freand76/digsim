@@ -26,6 +26,11 @@ if TYPE_CHECKING:
 
 VerilogFiles = str | os.PathLike[str] | Sequence[str | os.PathLike[str]]
 
+# Max time to wait for Yosys output. The WebAssembly build (YoWASP) is compiled
+# the first time it starts, which can take longer than pexpect's default 30 s,
+# as can synthesis of large designs.
+YOSYS_TIMEOUT_S = 600
+
 
 def _file_list(verilog_files: VerilogFiles) -> list[str]:
     if isinstance(verilog_files, (str, os.PathLike)):
@@ -95,9 +100,9 @@ class Synthesis:
             raise SynthesisException("Yosys executable not found")
 
         if sys.platform == "win32":
-            return pexpect.popen_spawn.PopenSpawn(yosys_exe)
+            return pexpect.popen_spawn.PopenSpawn(yosys_exe, timeout=YOSYS_TIMEOUT_S)
 
-        return pexpect.spawn(yosys_exe)
+        return pexpect.spawn(yosys_exe, timeout=YOSYS_TIMEOUT_S)
 
     @classmethod
     def list_modules(cls, verilog_files: VerilogFiles) -> list[str]:
