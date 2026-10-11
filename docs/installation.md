@@ -151,6 +151,20 @@ install the missing XCB cursor library. On Ubuntu and Debian:
 sudo apt install libxcb-cursor0
 ```
 
+This error mostly appears in X11 sessions. In a Wayland session Qt normally uses its
+Wayland plugin instead, unless `QT_QPA_PLATFORM=xcb` is set.
+
+On minimal systems, such as containers or WSL, other `libxcb-*` libraries can be missing
+too. Start DigSim with plugin debugging enabled to see exactly which library failed to
+load:
+
+```sh
+QT_DEBUG_PLUGINS=1 digsim-logic-simulator
+```
+
+Look for a line like `Cannot load library ... libqxcb.so: (libxcb-....so.0: cannot open
+shared object file)` and install the package that provides that library.
+
 ### Viewing waveforms
 
 DigSim writes waveforms as VCD files but has no built-in viewer. Install

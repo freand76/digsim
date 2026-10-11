@@ -99,6 +99,10 @@ library (Ubuntu/Debian):
 sudo apt install libxcb-cursor0
 ```
 
+If that doesn't help, see
+[troubleshooting](https://freand76.github.io/digsim/installation/#troubleshooting) for how
+to find other missing libraries.
+
 ## Using DigSim
 
 The commands below are run from the repository root (Option 4).
