@@ -154,9 +154,7 @@ class MainWindow(QMainWindow):
 
     def error_dialog(self, error_message: str) -> None:
         """Execute Error dialog"""
-        QMessageBox.critical(
-            self.parentWidget(), "Error!", error_message, QMessageBox.StandardButton.Ok
-        )
+        QMessageBox.critical(self, "Error!", error_message, QMessageBox.StandardButton.Ok)
 
     def warning_log_dialog(self, title: str, warning_message: str) -> None:
         """Execute warning log dialog"""
@@ -166,7 +164,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         """QT event callback function"""
         if not self._app_model.is_changed or are_you_sure_destroy_circuit(
-            self.parentWidget(), "Close Application"
+            self, "Close Application"
         ):
             self._app_model.model_stop()
             self._app_model.wait()

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## vx.x.x
+ - Bugfix: Error and close dialogs were not attached to the main window
+
 ## v1.2.0
  - Update pyside6 to 6.12.0
  - Add Application icon for Wayland
