@@ -11,6 +11,7 @@
  - Bugfix: Crash instead of error dialog when a loaded circuit cannot be built
  - Bugfix: Synthesis crashed when given a pathlib.Path
  - Bugfix: Wire Source/Sink (label wires) lost their connections
+ - Bugfix: Desktop menu entry started nothing and pointed at a stale interpreter
 
 ## v1.1.0
  - Update python packages
