@@ -6,6 +6,7 @@
  - Dragging from the component selector starts when the mouse moves, not on every click
  - Use the Qt 6 exec() instead of the Qt 5 exec_() for dialogs, menus and drags
  - Painting components no longer changes pens shared by all components of a type
+ - Add the changelog to the documentation site
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

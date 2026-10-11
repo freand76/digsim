@@ -41,7 +41,8 @@ The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test
 CI (`.github/workflows/`) runs ruff, and pytest plus `examples/yosys_counter/*.py` on Linux
 (Python 3.10–3.14) and Windows; the test workflows run on push only, not on pull requests.
 mypy is local only. The docs site is rebuilt and deployed by `docs.yaml` on every push to
-`main` that touches `docs/` or `mkdocs.yml`.
+`main` that touches `docs/`, `mkdocs.yml` or `CHANGELOG.md` (included in the site's
+Changelog page).
 
 - CI runners can't load Qt's GUI libraries (no `libEGL`): tests must not import `QtGui` or
   `QtWidgets`. Keep testable logic in Qt-free modules (like `app/_desktop_entry.py`). The
