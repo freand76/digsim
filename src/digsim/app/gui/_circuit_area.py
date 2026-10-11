@@ -532,10 +532,10 @@ class CircuitArea(QGraphicsView):
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """QT event callback function"""
         super().mouseMoveEvent(event)
-        self._mouse_pos = event.pos()
+        self._mouse_pos = event.position().toPoint()
         # Draw unfinished wire
         if self._app_model.objects.new_wire.ongoing():
-            scene_pos = self.mapToScene(event.pos())
+            scene_pos = self.mapToScene(self._mouse_pos)
             self._app_model.objects.new_wire.set_end_pos(scene_pos)
             self._repaint()
 
