@@ -59,9 +59,6 @@ class ComponentObject(QGraphicsRectItem):
         self._component = component
         self._port_distance = port_distance
 
-        # Signals
-        self._app_model.sig_control_notify.connect(self._control_notify)
-
         # Class variables
         self._port_dict: dict[Port, dict[str, Any]] = {}
         self._parent_widget: QWidget | None = None
@@ -79,7 +76,8 @@ class ComponentObject(QGraphicsRectItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
         self.setAcceptHoverEvents(True)
 
-    def _control_notify(self) -> None:
+    def control_notify(self) -> None:
+        """Called when the simulation is started or stopped"""
         if self._app_model.is_running:
             self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
             self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, False)
@@ -88,8 +86,12 @@ class ComponentObject(QGraphicsRectItem):
             self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
 
     def disconnect(self) -> None:
-        """Disconnect signals (before removal)"""
-        self._app_model.sig_control_notify.disconnect(self._control_notify)
+        """
+        Called before the component object is removed.
+        GUI objects don't connect to the model's signals themselves: the signals are
+        often queued (sent from the simulation thread), and a queued call to a removed
+        object would run on freed memory. The circuit area forwards them instead.
+        """
 
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         """QT event callback function"""

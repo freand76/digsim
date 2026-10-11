@@ -35,9 +35,10 @@ from PySide6.QtWidgets import (
 )
 
 from digsim.app.gui_objects import ComponentObject
+from digsim.app.gui_objects._buzzer_object import BuzzerObject
 from digsim.app.gui_objects._component_port_item import PortGraphicsItem
 from digsim.app.settings import ComponentSettingsDialog
-from digsim.circuit.components.atoms import VALUE_TYPE, Port
+from digsim.circuit.components.atoms import VALUE_TYPE, Component, Port
 
 
 if TYPE_CHECKING:
@@ -262,12 +263,31 @@ class _CircuitAreaScene(QGraphicsScene):
         self._app_model.sig_update_wires.connect(self._update_wires)
         self._app_model.sig_delete_component.connect(self._delete_component)
         self._app_model.sig_delete_wires.connect(self._delete_wires)
+        # Forwarded to the current GUI objects, see ComponentObject.disconnect()
+        self._app_model.sig_control_notify.connect(self._control_notify)
+        self._app_model.sig_audio_start.connect(self._audio_start)
+        self._app_model.sig_audio_notify.connect(self._audio_notify)
         self._wire_items: list[WireGraphicsItem] = []
         self._select_start_pos: QPointF | None = None
         self._synchronize_gui()
 
     def _repaint(self) -> None:
         self.update()
+
+    def _control_notify(self) -> None:
+        for component_object in self._app_model.objects.get_list():
+            component_object.control_notify()
+
+    def _audio_start(self, enable: bool) -> None:
+        for component_object in self._app_model.objects.get_list():
+            if isinstance(component_object, BuzzerObject):
+                component_object.audio_start(enable)
+
+    def _audio_notify(self, component: Component) -> None:
+        # The component may already be gone, if the circuit changed after the signal was sent
+        component_object = self._app_model.objects.components.get_dict().get(component)
+        if isinstance(component_object, BuzzerObject):
+            component_object.audio_notify()
 
     def mousePressEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """QT event callback function"""

@@ -21,6 +21,7 @@
  - Faster simulation (1.8x on the 6502 example)
  - 6502 example: VCD output is optional, enabled with --vcd [FILE]
  - Run Yosys in-process instead of through an interactive terminal (pexpect), about 3x faster synthesis
+ - Bugfix: Crash when loading or changing a circuit right after stopping a simulation
 
 ## v1.1.0
  - Update python packages

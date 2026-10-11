@@ -76,8 +76,6 @@ class BuzzerObject(ImageObjectWithActiveRect):
     ) -> None:
         super().__init__(app_model, component, xpos, ypos)
         self.audio_sink: QAudioSink | None = None
-        self._app_model.sig_audio_start.connect(self._audio_start)
-        self._app_model.sig_audio_notify.connect(self._audio_notify)
         self.device = QMediaDevices.defaultAudioOutput()
         self.audio_format = QAudioFormat()
         self.audio_format.setSampleRate(self.DATA_SAMPLE_RATE_HZ)
@@ -91,15 +89,20 @@ class BuzzerObject(ImageObjectWithActiveRect):
         assert isinstance(component, Buzzer)
         return component
 
-    def _audio_start(self, enable: bool) -> None:
+    def disconnect(self) -> None:
+        self._play(False)
+        super().disconnect()
+
+    def audio_start(self, enable: bool) -> None:
+        """Called when the simulation is started or stopped"""
         if enable:
             self._play(self.component.active)
         else:
             self._play(False)
 
-    def _audio_notify(self, component: Component) -> None:
-        if component == self.component:
-            self._play(component.active)
+    def audio_notify(self) -> None:
+        """Called when the buzzer component has changed"""
+        self._play(self.component.active)
 
     def _play(self, active: bool) -> None:
         if self.device is None:
