@@ -51,7 +51,7 @@ class ShortcutDialog(QDialog):
 
     def start(self) -> str | None:
         """Start Dialog"""
-        result = self.exec_()
+        result = self.exec()
         if result == QDialog.DialogCode.Rejected:
             return None
         return self._key_selector.currentData()

@@ -80,7 +80,7 @@ class SelectableComponentWidget(QPushButton):
         self.render(pixmap)
         drag.setPixmap(pixmap)
         drag.setHotSpot(hot_spot)
-        drag.exec_(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction)
+        drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction)
 
     def mouseDoubleClickEvent(self, _: QMouseEvent) -> None:
         """QT event callback function"""

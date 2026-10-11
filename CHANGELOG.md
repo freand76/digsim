@@ -4,6 +4,7 @@
  - Bugfix: Error and close dialogs were not attached to the main window
  - Use the Qt 6 mouse event API (no DeprecationWarning from QMouseEvent.pos())
  - Dragging from the component selector starts when the mouse moves, not on every click
+ - Use the Qt 6 exec() instead of the Qt 5 exec_() for dialogs, menus and drags
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

@@ -80,7 +80,7 @@ class GuiSettingsDialog(QDialog):
 
     def start(self) -> None:
         """Start Dialog"""
-        result = self.exec_()
+        result = self.exec()
         if result == QDialog.DialogCode.Accepted:
             self._settings["real_time"] = self._slow_to_real_time.isChecked()
             self._settings["color_wires"] = self._show_wire_value.isChecked()

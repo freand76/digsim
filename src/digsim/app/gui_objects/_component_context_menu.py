@@ -64,7 +64,7 @@ class ComponentContextMenu(QMenu):
 
     def open_at(self, position: QPoint) -> None:
         """Create context menu for component"""
-        self._menu_action = self.exec_(position)
+        self._menu_action = self.exec(position)
 
     def get_action(self) -> str:
         """Get context menu action"""

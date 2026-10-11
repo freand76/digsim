@@ -418,7 +418,7 @@ class ComponentSettingsDialog(QDialog):
 
         try:
             dialog = ComponentSettingsDialog(parent, app_model, name, parameters)
-            result = dialog.exec_()
+            result = dialog.exec()
             if result == QDialog.DialogCode.Rejected:
                 return False, {}
             return True, dialog.get_settings()

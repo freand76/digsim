@@ -159,7 +159,7 @@ class MainWindow(QMainWindow):
     def warning_log_dialog(self, title: str, warning_message: str) -> None:
         """Execute warning log dialog"""
         warning_dialog = WarningDialog(self, title, warning_message)
-        warning_dialog.exec_()
+        warning_dialog.exec()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """QT event callback function"""
