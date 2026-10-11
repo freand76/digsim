@@ -131,7 +131,7 @@ class Port(abc.ABC):
             return
         self._value = value
         for port in self._wired_ports:
-            port.value = self._value
+            port.set_value(value)
 
     def get_wired_ports_recursive(self, processed_ports: set[Port] | None = None) -> list[Port]:
         """Get all connected ports (iterative), avoiding duplicates."""
@@ -233,7 +233,7 @@ class PortWire(Port):
         self._port_driver: Port | None = None  # The port that drives this port
 
     def set_value(self, value: VALUE_TYPE) -> None:
-        if value != self.value:
+        if value != self._value:
             self.update_wires(value)
 
     def set_driver(self, port: Port | None) -> None:
@@ -259,8 +259,10 @@ class PortIn(PortWire):
         super().__init__(parent, name, width, output=False)
 
     def set_value(self, value: VALUE_TYPE) -> None:
-        super().set_value(value)
-        self.parent().update()
+        # The same as PortWire.set_value(), inlined since it is called for every event
+        if value != self._value:
+            self.update_wires(value)
+        self._parent.update()
 
 
 class PortOutDelta(Port):
@@ -284,17 +286,20 @@ class PortOutDelta(Port):
         self._delay_ns = delay_ns
 
     def set_value(self, value: VALUE_TYPE) -> None:
-        self.parent().add_event(self, value, self._delay_ns)
+        self._parent.add_event(self, value, self._delay_ns)
 
     def update_port(self, value: VALUE_TYPE) -> None:
         """Update the port output and the connected wires"""
         self.update_wires(value)
         if self._update_parent:
-            self.parent().update()
+            self._parent.update()
 
     def delta_cycle(self, value: VALUE_TYPE) -> None:
         """Handle the delta cycle event from the circuit"""
-        self.update_port(value)
+        # The same as update_port(), inlined since it is called for every event
+        self.update_wires(value)
+        if self._update_parent:
+            self._parent.update()
 
     def set_driver(self, port: Port | None) -> NoReturn:
         raise PortConnectionError(f"The port {self.path()}.{self.name()} cannot be driven")

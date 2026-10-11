@@ -37,6 +37,8 @@ class CircuitEvent:
     delta events in the simulation.
     """
 
+    __slots__ = ("_port", "_time_ns", "_value")
+
     def __init__(self, time_ns: int, port: EventPort, value: VALUE_TYPE) -> None:
         self._time_ns: int = time_ns
         self._port: EventPort = port
@@ -67,7 +69,8 @@ class CircuitEvent:
         self._value = value
 
     def __lt__(self, other: CircuitEvent) -> bool:
-        return other.time_ns > self.time_ns
+        # Called for every comparison in the event queue, so read the attributes directly
+        return self._time_ns < other._time_ns
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -205,40 +208,28 @@ class Circuit:
     def process_single_event(self, stop_time_ns: int | None = None) -> tuple[bool, bool]:
         """
         Process one simulation event
-        Return False if ther are now events of if the stop_time has passed
+        Return False if there are no events or if the stop_time has passed
         """
-        while self._circuit_events:
-            event = heapq.heappop(self._circuit_events)
-
-            # Check if this is the latest event for this port
-            if event != self._events_by_port.get(event.port):
-                # This is a stale event, ignore it
+        events = self._circuit_events
+        events_by_port = self._events_by_port
+        while events:
+            event = heapq.heappop(events)
+            port = event._port
+            latest = events_by_port.get(port)
+            if latest is not event and latest != event:
+                # A stale event, a later event for the same port replaced it
                 continue
-
-            if stop_time_ns is not None and event.time_ns > stop_time_ns:
+            if stop_time_ns is not None and event._time_ns > stop_time_ns:
                 # Put the event back if it's after the stop time
-                heapq.heappush(self._circuit_events, event)
+                heapq.heappush(events, event)
                 return False, False
-
-            del self._events_by_port[event.port]
-            # print(
-            #     f"Execute event {event.port.path()}.{event.port.name()}"
-            #     f" {event.time_ns} {event.value}"
-            # )
-            self._time_ns = event.time_ns
-            event.port.delta_cycle(event.value)
-            toplevel = event.port.parent().is_toplevel()
+            del events_by_port[port]
+            self._time_ns = event._time_ns
+            port.delta_cycle(event._value)
             if self._vcd is not None:
-                self._vcd.write(event.port, self._time_ns)
-            return True, toplevel
-
+                self._vcd.write(port, self._time_ns)
+            return True, port.parent().is_toplevel()
         return False, False
-
-    def _is_toplevel_event(self) -> bool:
-        if len(self._circuit_events) == 0:
-            return False
-        event = self._circuit_events[0]
-        return event.port.parent().is_toplevel()
 
     def run(
         self,
@@ -251,16 +242,35 @@ class Circuit:
         """Run simulation for a period of time"""
         stop_time_ns = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
         single_step_stop = False
-        while len(self._circuit_events) > 0 and self._time_ns <= stop_time_ns:
-            more_events, top_level_event = self.process_single_event(stop_time_ns)
-            if not more_events:
+        # The loop in process_single_event(), inlined since it runs for every event
+        events = self._circuit_events
+        events_by_port = self._events_by_port
+        heappop = heapq.heappop
+        vcd = self._vcd
+        while events and self._time_ns <= stop_time_ns:
+            event = heappop(events)
+            port = event._port
+            latest = events_by_port.get(port)
+            if latest is not event and latest != event:
+                # A stale event, a later event for the same port replaced it
+                continue
+            time_ns = event._time_ns
+            if time_ns > stop_time_ns:
+                # Put the event back if it's after the stop time
+                heapq.heappush(events, event)
                 break
-            if single_step and top_level_event:
-                stop_time_ns = self._time_ns
+            del events_by_port[port]
+            self._time_ns = time_ns
+            port.delta_cycle(event._value)
+            if vcd is not None:
+                vcd.write(port, time_ns)
+            if single_step and port.parent().is_toplevel():
+                # Finish the events at this time, then stop
+                stop_time_ns = time_ns
                 single_step_stop = True
         self._time_ns = max(self._time_ns, stop_time_ns)
-        if self._vcd is not None:
-            self._vcd.flush()
+        if vcd is not None:
+            vcd.flush()
         return single_step_stop
 
     def run_until(

@@ -18,6 +18,7 @@
  - Add XNOR gate (2 to 8 inputs)
  - Add LED bar component, a row of LEDs showing the bits of a bus
  - Faster VCD output (2.3x faster simulation of the 6502 example with VCD)
+ - Faster simulation (1.8x on the 6502 example)
 
 ## v1.1.0
  - Update python packages

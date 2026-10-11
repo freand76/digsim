@@ -184,7 +184,7 @@ class Component(abc.ABC):
         self, port: PortOutDelta | PortMultiBitWire, value: VALUE_TYPE, delay_ns: int
     ) -> None:
         """Add delta cycle event"""
-        self.circuit.add_event(port, value, delay_ns)
+        self._circuit.add_event(port, value, delay_ns)
 
     def __str__(self) -> str:
         comp_str = f"{self.display_name()}"
