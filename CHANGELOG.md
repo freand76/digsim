@@ -14,6 +14,7 @@
  - Bugfix: Desktop menu entry started nothing and pointed at a stale interpreter
  - Fix "Similation" typo on the simulation start/stop button
  - Document all examples with circuit diagrams, expected output and waveforms
+ - Add guides for creating components and for contributing
 
 ## v1.1.0
  - Update python packages

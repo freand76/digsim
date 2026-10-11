@@ -44,6 +44,7 @@ dedicated simulators, but fast enough to be useful.
 3. Script circuits and testbenches with the [Python API](python.md).
 4. Bring your own [Verilog designs](synthesis.md).
 5. Try the [examples](examples.md).
+6. [Create your own components](components.md), and [contribute](contributing.md) them.
 
 DigSim is open source and developed on
 [GitHub](https://github.com/freand76/digsim). Bug reports and ideas are welcome as

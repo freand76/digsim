@@ -12,6 +12,8 @@ nav:
   - Python Circuits: python.md
   - Verilog and Yosys: synthesis.md
   - Examples: examples.md
+  - Creating Components: components.md
+  - Contributing: contributing.md
 
 exclude_docs: |
   documentation.md
