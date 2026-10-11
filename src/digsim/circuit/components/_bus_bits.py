@@ -3,19 +3,31 @@
 
 """Module with the bus/bit <=> bus/bit components"""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from .atoms import Component, PortMultiBitWire
+
+
+if TYPE_CHECKING:
+    from digsim.circuit import Circuit
 
 
 class Bus2Wires(Component):
     """Bus to Bits splitter"""
 
-    def __init__(self, circuit, name=None, width=1, enable=None):
+    def __init__(
+        self,
+        circuit: Circuit,
+        name: str | None = None,
+        width: int = 1,
+        enable: list[int] | None = None,
+    ) -> None:
         super().__init__(circuit, name)
         self._bus = PortMultiBitWire(self, "bus", width=width)
         self.add_port(self._bus)
-        self._enable = enable
-        if self._enable is None:
-            self._enable = list(range(width))
+        self._enable = enable if enable is not None else list(range(width))
 
         for bit_id in range(width):
             if bit_id in self._enable:
@@ -26,7 +38,7 @@ class Bus2Wires(Component):
         self.parameter_set("enable", enable)
 
     @classmethod
-    def get_parameters(cls):
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
         return {
             "width": {
                 "type": "int",
@@ -46,7 +58,7 @@ class Bus2Wires(Component):
 class Wires2Bus(Component):
     """Bits to Bus merger"""
 
-    def __init__(self, circuit, name=None, width=1):
+    def __init__(self, circuit: Circuit, name: str | None = None, width: int = 1) -> None:
         super().__init__(circuit, name)
         self._bus = PortMultiBitWire(self, "bus", width=width, output=True)
         self.add_port(self._bus)
@@ -56,7 +68,7 @@ class Wires2Bus(Component):
         self.parameter_set("width", width)
 
     @classmethod
-    def get_parameters(cls):
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
         return {
             "width": {
                 "type": "int",

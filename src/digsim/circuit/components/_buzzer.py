@@ -3,9 +3,16 @@
 
 """Module with the Buzzer component"""
 
+from __future__ import annotations
+
 import typing
+from typing import TYPE_CHECKING, Any
 
 from .atoms import CallbackComponent, PortIn
+
+
+if TYPE_CHECKING:
+    from digsim.circuit import Circuit
 
 
 class Buzzer(CallbackComponent):
@@ -21,21 +28,21 @@ class Buzzer(CallbackComponent):
         "G": 1567.98,
     }
 
-    def __init__(self, circuit, name=None, tone="A"):
+    def __init__(self, circuit: Circuit, name: str | None = None, tone: str = "A") -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "I"))
         self.parameter_set("tone", tone)
 
     @property
-    def active(self):
+    def active(self) -> bool:
         return self.I.has_driver() and self.I.value == 1
 
-    def tone_frequency(self):
+    def tone_frequency(self) -> float:
         """Get frequency for tone"""
         return self.TONE_TO_FREQUENCY[self.parameter_get("tone")]
 
     @classmethod
-    def get_parameters(cls):
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
         return {
             "tone": {
                 "type": "list",

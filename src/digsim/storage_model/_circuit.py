@@ -10,9 +10,16 @@ from __future__ import annotations
 import importlib
 import json
 from dataclasses import asdict
+from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
+
+
+if TYPE_CHECKING:
+    from digsim.circuit import Circuit
+    from digsim.circuit.components.atoms import Component, Port
 
 
 @dataclass
@@ -20,7 +27,7 @@ class WireDataClass:
     src: str
     dst: str
 
-    def connect(self, circuit):
+    def connect(self, circuit: Circuit) -> None:
         src_comp_name, src_port_name = self.src.split(".")
         dst_comp_name, dst_port_name = self.dst.split(".")
         src_comp = circuit.get_component(src_comp_name)
@@ -28,7 +35,7 @@ class WireDataClass:
         src_comp.port(src_port_name).wire = dst_comp.port(dst_port_name)
 
     @classmethod
-    def list_from_port(cls, src_port):
+    def list_from_port(cls, src_port: Port) -> list[WireDataClass]:
         wires = []
         for port in src_port.wired_ports:
             # Only add port on top-level components
@@ -51,7 +58,7 @@ class ComponentDataClass:
     display_name: str = Field(default="")
     settings: dict = Field(default_factory=dict)
 
-    def create(self, circuit):
+    def create(self, circuit: Circuit) -> Component:
         """Factory: Create a component from a dict"""
         if "path" in self.settings:
             self.settings["path"] = circuit.load_path(self.settings["path"])
@@ -68,7 +75,7 @@ class ComponentDataClass:
         return component
 
     @staticmethod
-    def from_component(component):
+    def from_component(component: Component) -> ComponentDataClass:
         """Return the component information as a dict, used when storing a circuit"""
         module_split = type(component).__module__.split(".")
         type_str = ""
@@ -92,8 +99,8 @@ class CircuitDataClass:
     wires: list[WireDataClass] = Field(default_factory=list)
 
     @staticmethod
-    def from_circuit(circuit):
-        dc = CircuitDataClass(name=circuit.name)
+    def from_circuit(circuit: Circuit) -> CircuitDataClass:
+        dc = CircuitDataClass(name=circuit.name or "unnamed")
         toplevel_components = circuit.get_toplevel_components()
         for comp in toplevel_components:
             dc.components.append(ComponentDataClass.from_component(comp))
@@ -110,7 +117,7 @@ class CircuitFileDataClass:
     circuit: CircuitDataClass
 
     @staticmethod
-    def load(filename):
+    def load(filename: str | Path) -> CircuitFileDataClass:
         try:
             with open(filename, mode="r", encoding="utf-8") as json_file:
                 dc = CircuitFileDataClass(**json.load(json_file))
@@ -120,7 +127,7 @@ class CircuitFileDataClass:
             raise FileNotFoundError(f"File not found: {filename}") from exc
         return dc
 
-    def save(self, filename):
+    def save(self, filename: str | Path) -> None:
         json_object = json.dumps(asdict(self), indent=4)
         with open(filename, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)

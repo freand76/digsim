@@ -10,11 +10,21 @@ from __future__ import annotations
 import heapq
 import os
 from pathlib import Path
+from types import TracebackType
 
 from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
 
 from ._waves_writer import WavesWriter
-from .components.atoms import VALUE_TYPE, Component, DigsimException, PortOutDelta
+from .components.atoms import (
+    VALUE_TYPE,
+    Component,
+    DigsimException,
+    PortMultiBitWire,
+    PortOutDelta,
+)
+
+
+EventPort = PortOutDelta | PortMultiBitWire
 
 
 class CircuitError(DigsimException):
@@ -27,9 +37,9 @@ class CircuitEvent:
     delta events in the simulation.
     """
 
-    def __init__(self, time_ns: int, port: PortOutDelta, value: VALUE_TYPE):
+    def __init__(self, time_ns: int, port: EventPort, value: VALUE_TYPE) -> None:
         self._time_ns: int = time_ns
-        self._port: PortOutDelta = port
+        self._port: EventPort = port
         self._value: VALUE_TYPE = value
 
     @property
@@ -38,7 +48,7 @@ class CircuitEvent:
         return self._time_ns
 
     @property
-    def port(self) -> PortOutDelta:
+    def port(self) -> EventPort:
         """Get the port of this event"""
         return self._port
 
@@ -47,19 +57,19 @@ class CircuitEvent:
         """Get the delta cycle value of this event"""
         return self._value
 
-    def is_same_event(self, port: PortOutDelta):
+    def is_same_event(self, port: EventPort) -> bool:
         """Return True if the in the event is the same as"""
         return port == self._port
 
-    def update(self, time_ns: int, value: VALUE_TYPE):
+    def update(self, time_ns: int, value: VALUE_TYPE) -> None:
         """Update the event with a new time (ns) and a new value"""
         self._time_ns = time_ns
         self._value = value
 
-    def __lt__(self, other) -> bool:
+    def __lt__(self, other: CircuitEvent) -> bool:
         return other.time_ns > self.time_ns
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             isinstance(other, CircuitEvent)
             and self._port == other._port
@@ -71,10 +81,10 @@ class CircuitEvent:
 class Circuit:
     """Class thay handles the circuit simulation"""
 
-    def __init__(self, name: str | None = None, vcd: str | None = None):
+    def __init__(self, name: str | None = None, vcd: str | None = None) -> None:
         self._components: dict[str, Component] = {}
         self._circuit_events: list[CircuitEvent] = []
-        self._events_by_port: dict[PortOutDelta, CircuitEvent] = {}
+        self._events_by_port: dict[EventPort, CircuitEvent] = {}
         self._name: str | None = name
         self._time_ns: int = 0
         self._folder: str = "."
@@ -98,14 +108,14 @@ class Circuit:
         """Get the components in this circuit"""
         return list(self._components.values())
 
-    def load_path(self, path) -> str:
+    def load_path(self, path: str | Path) -> str:
         """Get the load path relative to the circuit path"""
         load_path = Path(path)
         if not load_path.is_absolute():
             load_path = Path(self._folder) / load_path
         return str(load_path)
 
-    def store_path(self, path) -> str:
+    def store_path(self, path: str | Path) -> str:
         """Get the store path relative to the circuit path"""
 
         store_path = Path(path).resolve(strict=False)
@@ -116,7 +126,7 @@ class Circuit:
             """If relative path is impossible"""
         return str(store_path)
 
-    def delete_component(self, component: Component):
+    def delete_component(self, component: Component) -> None:
         """Delete a component from the circuit"""
         del self._components[component.name()]
         component.remove_connections()
@@ -125,7 +135,7 @@ class Circuit:
         """Get toplevel components in the circuit"""
         return [comp for comp in self._components.values() if comp.is_toplevel()]
 
-    def init(self):
+    def init(self) -> None:
         """Initialize circuit and components (and ports)"""
         self._time_ns = 0
         self._circuit_events = []
@@ -138,26 +148,28 @@ class Circuit:
             comp.default_state()
         self.run_until(ns=0)  # Handle all time zero events
 
-    def clear(self):
+    def clear(self) -> None:
         """Remove all components"""
         for comp in self._components.values():
             comp.clear()
         self._components = {}
 
-    def vcd(self, filename):
+    def vcd(self, filename: str) -> None:
         """Start wave collecting in a gtkwave .vcd file"""
         if self._vcd is not None:
             raise CircuitError("VCD already started")
         self._vcd = WavesWriter(filename=filename)
         self._vcd_init()
 
-    def vcd_close(self):
+    def vcd_close(self) -> None:
         """Close gtkwave .vcd file"""
         if self._vcd is not None:
             self._vcd.close()
             self._vcd = None
 
-    def _vcd_init(self):
+    def _vcd_init(self) -> None:
+        if self._vcd is None:
+            return
         port_info = []
         for comp in self._components.values():
             for port in comp.ports:
@@ -169,18 +181,29 @@ class Circuit:
             for port in comp.ports:
                 self._vcd.write(port, self._time_ns)
 
-    def _time_to_ns(self, s=None, ms=None, us=None, ns=None) -> int:
-        time_ns = 0
+    def _time_to_ns(
+        self,
+        s: float | None = None,
+        ms: float | None = None,
+        us: float | None = None,
+        ns: float | None = None,
+    ) -> int:
+        time_ns: float = 0
         time_ns += s * 1e9 if s is not None else 0
         time_ns += ms * 1e6 if ms is not None else 0
         time_ns += us * 1e3 if us is not None else 0
         time_ns += ns if ns is not None else 0
         return int(time_ns)
 
-    def __exit__(self, exc_type, exc_value, exc_traceback):
-        self._vcd.close()
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_traceback: TracebackType | None,
+    ) -> None:
+        self.vcd_close()
 
-    def process_single_event(self, stop_time_ns=None) -> tuple[bool, bool]:
+    def process_single_event(self, stop_time_ns: int | None = None) -> tuple[bool, bool]:
         """
         Process one simulation event
         Return False if ther are now events of if the stop_time has passed
@@ -245,13 +268,13 @@ class Circuit:
         ms: int | None = None,
         us: int | None = None,
         ns: int | None = None,
-    ):
+    ) -> None:
         """Run simulation until a specified time"""
         stop_time_ns = self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
         if stop_time_ns >= self._time_ns:
             self.run(ns=stop_time_ns - self._time_ns)
 
-    def add_event(self, port: PortOutDelta, value: VALUE_TYPE, propagation_delay_ns: int):
+    def add_event(self, port: EventPort, value: VALUE_TYPE, propagation_delay_ns: int) -> None:
         """Add delta cycle event, this will also write values to .vcd file"""
         event_time_ns = self._time_ns + propagation_delay_ns
         # print(f"Add event {port.parent().name()}:{port.name()} => {value}")
@@ -259,7 +282,7 @@ class Circuit:
         self._events_by_port[port] = event
         heapq.heappush(self._circuit_events, event)
 
-    def add_component(self, component: Component):
+    def add_component(self, component: Component) -> None:
         """Add component to circuit"""
         name_id = 1
         namebase = component.name()
@@ -268,7 +291,7 @@ class Circuit:
             name_id += 1
         self._components[component.name()] = component
 
-    def change_component_name(self, component: Component, name: str):
+    def change_component_name(self, component: Component, name: str) -> None:
         """Change component name"""
         comp = self._components[component.name()]
         del self._components[component.name()]
@@ -322,12 +345,12 @@ class Circuit:
 
         return exception_str_list
 
-    def to_json_file(self, filename: str):
+    def to_json_file(self, filename: str) -> None:
         """Store circuit in json file"""
         circuitfile_dc = CircuitFileDataClass(circuit=self.to_dataclass())
         circuitfile_dc.save(filename)
 
-    def from_json_file(self, filename: str, folder: str = "."):
+    def from_json_file(self, filename: str, folder: str = ".") -> None:
         """Load circuit from json file"""
         file_dc = CircuitFileDataClass.load(filename)
         self.from_dataclass(file_dc.circuit, folder)

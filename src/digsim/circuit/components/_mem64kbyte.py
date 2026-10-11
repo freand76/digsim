@@ -8,31 +8,50 @@ It cam be prefilled with binary data from 'rom_filename'
 starting at 'rom_address'.
 """
 
-from digsim.circuit.components.atoms import Component, PortIn, PortOutDelta, PortWire
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+from digsim.circuit.components.atoms import (
+    VALUE_TYPE,
+    Component,
+    PortIn,
+    PortOutDelta,
+    PortWire,
+)
+
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from digsim.circuit import Circuit
 
 
 class Mem64kByte(Component):
     """64kByte synchronous memory class"""
 
-    def __init__(self, circuit, rom_filename=None, rom_address=0):
+    def __init__(
+        self, circuit: Circuit, rom_filename: str | Path | None = None, rom_address: int = 0
+    ) -> None:
         super().__init__(circuit, "Memory")
         self.add_port(PortIn(self, "clk"))
         self.add_port(PortWire(self, "Address", width=16))
         self.add_port(PortWire(self, "DataIn", width=8))
         self.add_port(PortWire(self, "WE"))
         self.add_port(PortOutDelta(self, "DataOut", width=8))
-        self._mem_array = [0] * 65536
+        self._mem_array: list[VALUE_TYPE] = [0] * 65536
         if rom_filename is not None:
             with open(rom_filename, mode="rb") as rom:
                 romdata = rom.read()
                 for idx, byte in enumerate(romdata):
                     self._mem_array[rom_address + idx] = byte
 
-    def update(self):
+    def update(self) -> None:
         rising_edge = self.clk.is_rising_edge()
         if not rising_edge or self.Address.value == "X":
             return
         addr = self.Address.value
+        assert isinstance(addr, int)
         we = self.WE.value
         if we == 1:
             datain = self.DataIn.value

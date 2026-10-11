@@ -3,9 +3,16 @@
 
 """Module with Logic Analyzer component"""
 
+from __future__ import annotations
+
 import typing
+from typing import TYPE_CHECKING, Any
 
 from .atoms import CallbackComponent, PortOutDelta, PortWire
+
+
+if TYPE_CHECKING:
+    from digsim.circuit import Circuit
 
 
 class LogicAnalyzer(CallbackComponent):
@@ -13,9 +20,9 @@ class LogicAnalyzer(CallbackComponent):
 
     PORTLIST: typing.ClassVar = ["A", "B", "C", "D", "E", "F", "G", "H"]
 
-    def __init__(self, circuit, name=None, sample_rate=100):
+    def __init__(self, circuit: Circuit, name: str | None = None, sample_rate: int = 100) -> None:
         super().__init__(circuit, name)
-        self.data_dict = {}
+        self.data_dict: dict[str, list[int]] = {}
         for portname in self.PORTLIST:
             self.add_port(PortWire(self, portname))
             self.data_dict[portname] = [0] * 100
@@ -24,10 +31,10 @@ class LogicAnalyzer(CallbackComponent):
         self.parameter_set("sample_rate", sample_rate)
         self.reconfigure()
 
-    def default_state(self):
+    def default_state(self) -> None:
         self._feedback.value = 1
 
-    def update(self):
+    def update(self) -> None:
         if self._feedback.value == 1:
             self._feedback.value = 0
         else:
@@ -39,17 +46,17 @@ class LogicAnalyzer(CallbackComponent):
             self.data_dict[portname].append(value)
         super().update()
 
-    def reconfigure(self):
+    def reconfigure(self) -> None:
         sample_rate = self.parameter_get("sample_rate")
         period_ns = int(1000000000 / sample_rate)
         self._feedback.set_delay_ns(period_ns)
 
-    def signal_data(self):
+    def signal_data(self) -> dict[str, list[int]]:
         """Get the logic analyzer signal data"""
         return self.data_dict
 
     @classmethod
-    def get_parameters(cls):
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
         return {
             "sample_rate": {
                 "type": "int",

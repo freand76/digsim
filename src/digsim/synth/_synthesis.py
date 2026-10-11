@@ -8,11 +8,15 @@ import pathlib
 import shutil
 import site
 import sys
+from typing import Any
 
 import pexpect
 import pexpect.popen_spawn
 
 from digsim.circuit.components.atoms import DigsimException
+
+
+YosysProcess = pexpect.spawn | pexpect.popen_spawn.PopenSpawn
 
 
 class SynthesisException(DigsimException):
@@ -23,9 +27,11 @@ class Synthesis:
     """Helper class for yosys synthesis"""
 
     @classmethod
-    def _pexpect_wait_for_prompt(cls, pexp):
+    def _pexpect_wait_for_prompt(cls, pexp: YosysProcess) -> list[str]:
         index = pexp.expect(["yosys>", pexpect.EOF])
-        before_lines = pexp.before.decode("utf8").replace("\r", "").split("\n")
+        before = pexp.before
+        assert isinstance(before, bytes)
+        before_lines = before.decode("utf8").replace("\r", "").split("\n")
         if index == 0:
             pass
         elif index == 1:
@@ -46,12 +52,14 @@ class Synthesis:
         return out_lines
 
     @staticmethod
-    def _find_win_yowasp_yosys_binary():
+    def _find_win_yowasp_yosys_binary() -> str | None:
         try:
             # Use getusersitepackages if this is present, as it ensures that the
             # value is initialised properly.
             user_site = site.getusersitepackages()
         except AttributeError:
+            if site.USER_SITE is None:
+                return None
             user_site = site.USER_SITE
         scripts_path = pathlib.Path(user_site).parent / "Scripts"
         yowasp_yosys_path = scripts_path / "yowasp-yosys.exe"
@@ -60,7 +68,7 @@ class Synthesis:
         return None
 
     @classmethod
-    def _pexpect_spawn_yosys(cls):
+    def _pexpect_spawn_yosys(cls) -> YosysProcess:
         # Find linux binary
         yosys_exe = shutil.which("yosys") or shutil.which("yowasp-yosys")
 
@@ -78,7 +86,7 @@ class Synthesis:
         return pexpect.spawn(yosys_exe)
 
     @classmethod
-    def list_modules(cls, verilog_files):
+    def list_modules(cls, verilog_files: str | list[str]) -> list[str]:
         """List available modules in verilog files"""
         if isinstance(verilog_files, str):
             verilog_files = [verilog_files]
@@ -101,15 +109,15 @@ class Synthesis:
             modules.append(line.replace("$abstract\\", "").strip())
         return modules
 
-    def __init__(self, verilog_files, verilog_top_module):
+    def __init__(self, verilog_files: str | list[str], verilog_top_module: str) -> None:
         if isinstance(verilog_files, str):
             self._verilog_files = [verilog_files]
         else:
             self._verilog_files = verilog_files
         self._verilog_top_module = verilog_top_module
-        self._yosys_log = []
+        self._yosys_log: list[str] = []
 
-    def synth_to_json(self, silent=False):
+    def synth_to_json(self, silent: bool = False) -> str:
         """Execute yosys with generated synthesis script"""
         script = f"read -sv {' '.join(self._verilog_files)}; "
         script += f"hierarchy -top {self._verilog_top_module}; "
@@ -134,7 +142,7 @@ class Synthesis:
 
         return "\n".join(json_lines)
 
-    def synth_to_dict(self, silent=False):
+    def synth_to_dict(self, silent: bool = False) -> dict[str, Any]:
         """Execute yosys with generated synthesis script and return python dict"""
         yosys_json = self.synth_to_json(silent)
         try:
@@ -143,7 +151,7 @@ class Synthesis:
             raise SynthesisException(f"Malformed JSON output from Yosys: {exc}") from exc
         return netlist_dict
 
-    def synth_to_json_file(self, filename, silent=False):
+    def synth_to_json_file(self, filename: str | pathlib.Path, silent: bool = False) -> None:
         """Execute yosys with generated synthesis script and write to file"""
         yosys_json = self.synth_to_json(silent)
         if yosys_json is None:
@@ -151,6 +159,6 @@ class Synthesis:
         with open(filename, mode="w", encoding="utf-8") as json_file:
             json_file.write(yosys_json)
 
-    def get_log(self):
+    def get_log(self) -> list[str]:
         """Get the yosys output"""
         return self._yosys_log

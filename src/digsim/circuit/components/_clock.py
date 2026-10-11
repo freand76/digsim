@@ -3,13 +3,21 @@
 
 """Clock component module"""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from .atoms import CallbackComponent, PortOutDelta, PortOutImmediate
+
+
+if TYPE_CHECKING:
+    from digsim.circuit import Circuit
 
 
 class Clock(CallbackComponent):
     """Clock component class"""
 
-    def __init__(self, circuit, name=None, frequency=1):
+    def __init__(self, circuit: Circuit, name: str | None = None, frequency: int = 1) -> None:
         super().__init__(circuit, name)
         self._feedback = PortOutDelta(self, "feedback")
         portout = PortOutImmediate(self, "O")
@@ -18,11 +26,11 @@ class Clock(CallbackComponent):
         self.parameter_set("frequency", frequency)
         self.reconfigure()
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.O.value = 0
         self._feedback.value = 1
 
-    def update(self):
+    def update(self) -> None:
         if self._feedback.value == 1:
             self.O.value = 1
             self._feedback.value = 0
@@ -31,17 +39,17 @@ class Clock(CallbackComponent):
             self._feedback.value = 1
         super().update()
 
-    def reconfigure(self):
+    def reconfigure(self) -> None:
         frequency = self.parameter_get("frequency")
         half_period_ns = int(1000000000 / (frequency * 2))
         self._feedback.set_delay_ns(half_period_ns)
 
     @property
-    def active(self):
+    def active(self) -> bool:
         return self.O.value == 1
 
     @classmethod
-    def get_parameters(cls):
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
         return {
             "frequency": {
                 "type": "int",

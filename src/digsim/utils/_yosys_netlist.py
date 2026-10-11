@@ -13,7 +13,8 @@ from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 
-BIT_TYPE = list[Literal["X", "x", "0", "1"] | int]
+NET_TYPE = Literal["X", "x", "0", "1"] | int
+BIT_TYPE = list[NET_TYPE]
 
 
 @dataclass
@@ -26,8 +27,8 @@ class NetPort:
 
 @dataclass
 class Nets:
-    source: dict[int, NetPort] = Field(default_factory=dict)
-    sinks: dict[int, list[NetPort]] = Field(default_factory=dict)
+    source: dict[NET_TYPE, NetPort] = Field(default_factory=dict)
+    sinks: dict[NET_TYPE, list[NetPort]] = Field(default_factory=dict)
 
 
 @dataclass
@@ -36,10 +37,10 @@ class YosysPort:
     bits: BIT_TYPE
 
     @property
-    def is_output(self):
+    def is_output(self) -> bool:
         return self.direction == "output"
 
-    def is_same(self, compare_port):
+    def is_same(self, compare_port: YosysPort) -> bool:
         return (compare_port.direction == self.direction) and (
             len(compare_port.bits) == len(self.bits)
         )
@@ -54,7 +55,7 @@ class YosysCell:
     parameters: dict[str, Any] = Field(default_factory=dict)
     attributes: dict[str, Any] = Field(default_factory=dict)
 
-    def get_nets(self, name, nets):
+    def get_nets(self, name: str, nets: Nets) -> None:
         for port_name, net_list in self.connections.items():
             if not net_list:
                 # Handle empty net_list, e.g., by skipping or raising an error
@@ -68,11 +69,11 @@ class YosysCell:
             else:
                 nets.source[net] = port
 
-    def component_name(self, name):
+    def component_name(self, name: str) -> str:
         """Return a friendly name for a netlist cell"""
         return f"{name.split('$')[-1]}_{self.component_type()}"
 
-    def component_type(self):
+    def component_type(self) -> str:
         """Return a friendly type for a netlist cell"""
         return f"_{self.type[2:-1]}_"
 
@@ -92,7 +93,7 @@ class YosysModule:
     cells: dict[str, YosysCell] = Field(default_factory=dict)
     netnames: dict[str, YosysNetName] = Field(default_factory=dict)
 
-    def is_same_interface(self, netlist):
+    def is_same_interface(self, netlist: YosysModule) -> bool:
         is_same = True
         if len(netlist.ports) == len(self.ports):
             for netlist_port_name, netlist_port in netlist.ports.items():
@@ -106,7 +107,7 @@ class YosysModule:
             is_same = False
         return is_same
 
-    def get_nets(self):
+    def get_nets(self) -> Nets:
         nets = Nets()
 
         for port_name, port_item in self.ports.items():
@@ -130,5 +131,5 @@ class YosysNetlist:
     creator: str | None = None
     modules: dict[str, YosysModule] = Field(default_factory=dict)
 
-    def get_modules(self):
+    def get_modules(self) -> dict[str, YosysModule]:
         return self.modules

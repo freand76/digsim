@@ -3,9 +3,16 @@
 
 """HexDigit component module"""
 
-import typing
+from __future__ import annotations
 
-from .atoms import CallbackComponent, PortIn
+import typing
+from typing import TYPE_CHECKING, Any
+
+from .atoms import VALUE_TYPE, CallbackComponent, PortIn
+
+
+if TYPE_CHECKING:
+    from digsim.circuit import Circuit
 
 
 class HexDigit(CallbackComponent):
@@ -30,7 +37,9 @@ class HexDigit(CallbackComponent):
         15: "AEFG",
     }
 
-    def __init__(self, circuit, name=None, digits=1, dot=True):
+    def __init__(
+        self, circuit: Circuit, name: str | None = None, digits: int = 1, dot: bool = True
+    ) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "val", width=4 * digits))
         self.parameter_set("digits", digits)
@@ -38,36 +47,38 @@ class HexDigit(CallbackComponent):
         if dot:
             self.add_port(PortIn(self, "dot", width=digits))
 
-    def get_digits(self):
+    def get_digits(self) -> int:
         """Get the number of digits"""
         return self.parameter_get("digits")
 
-    def value(self):
+    def value(self) -> VALUE_TYPE:
         """Get value"""
         return self.val.value
 
-    def dot_active(self, digit_id=1):
+    def dot_active(self, digit_id: int = 1) -> bool:
         """Is the dot active for the selected digit_id?"""
         if not self.parameter_get("dot"):
             return False
-        if self.dot.value == "X":
+        dot = self.dot.value
+        if dot == "X":
             return False
-        dot_value = self.dot.value >> (self.dot.width - (digit_id + 1)) & 1
+        dot_value = dot >> (self.dot.width - (digit_id + 1)) & 1
         return dot_value == 1
 
-    def segments(self, digit_id=0):
+    def segments(self, digit_id: int = 0) -> str:
         """Which segments are active for the selected digit_id?"""
-        if self.value() == "X":
+        value = self.value()
+        if value == "X":
             segments = ""
         else:
-            digit_value = (self.value() >> (self.val.width - (digit_id + 1) * 4)) & 0xF
+            digit_value = (value >> (self.val.width - (digit_id + 1) * 4)) & 0xF
             segments = self.VAL_TO_SEGMENTS.get(digit_value, "")
         if self.dot_active(digit_id):
             segments += "."
         return segments
 
     @classmethod
-    def get_parameters(cls):
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
         return {
             "digits": {
                 "type": "int",

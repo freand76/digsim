@@ -8,7 +8,15 @@ All components are implemented from the specification in:
 https://github.com/YosysHQ/yosys/blob/master/techlibs/common/simcells.v
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from .atoms import Component, DigsimException, PortIn, PortOutDelta, PortWire
+
+
+if TYPE_CHECKING:
+    from digsim.circuit import Circuit
 
 
 class YosysNotImplementedException(DigsimException):
@@ -20,7 +28,7 @@ class ClassNameParameterComponent(Component):
     Helper class to get active level and edges from class name
     """
 
-    def name_to_level(self, index):
+    def name_to_level(self, index: int) -> int:
         """
         Helper function to convert a specific position in the class name
         to a logic level:
@@ -40,24 +48,24 @@ class ClassNameParameterComponent(Component):
 class _BUF_(Component):
     """module _BUF_ (A, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         self.Y.value = self.A.value
 
 
 class _NOT_(Component):
     """module _NOT_ (A, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.A.value == 1:
             self.Y.value = 0
         else:
@@ -67,13 +75,13 @@ class _NOT_(Component):
 class _AND_(Component):
     """module _AND_ (A, B, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.A.value == 1 and self.B.value == 1:
             self.Y.value = 1
         else:
@@ -83,13 +91,13 @@ class _AND_(Component):
 class _NAND_(Component):
     """module _NAND_ (A, B, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.A.value == 1 and self.B.value == 1:
             self.Y.value = 0
         else:
@@ -99,13 +107,13 @@ class _NAND_(Component):
 class _OR_(Component):
     """module _OR_ (A, B, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.A.value == 1 or self.B.value == 1:
             self.Y.value = 1
         else:
@@ -115,13 +123,13 @@ class _OR_(Component):
 class _NOR_(Component):
     """module _NOR_ (A, B, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.A.value == 1 or self.B.value == 1:
             self.Y.value = 0
         else:
@@ -131,13 +139,13 @@ class _NOR_(Component):
 class _XOR_(Component):
     """module _XOR_ (A, B, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if (self.A.value == 1 and self.B.value == 0) or (self.A.value == 0 and self.B.value == 1):
             self.Y.value = 1
         else:
@@ -147,13 +155,13 @@ class _XOR_(Component):
 class _XNOR_(Component):
     """module _XNOR_ (A, B, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if (self.A.value == 1 and self.B.value == 0) or (self.A.value == 0 and self.B.value == 1):
             self.Y.value = 0
         else:
@@ -163,13 +171,13 @@ class _XNOR_(Component):
 class _ANDNOT_(Component):
     """module _ANDNOT_ (A, B, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.A.value == 1 and self.B.value == 0:
             self.Y.value = 1
         else:
@@ -179,13 +187,13 @@ class _ANDNOT_(Component):
 class _ORNOT_(Component):
     """module _ORNOT_ (A, B, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.A.value == 1 or self.B.value == 0:
             self.Y.value = 1
         else:
@@ -195,14 +203,14 @@ class _ORNOT_(Component):
 class _MUX_(Component):
     """module _MUX_ (A, B, S, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortIn(self, "S"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.S.value == 0:
             self.Y.value = self.A.value
         else:
@@ -212,14 +220,14 @@ class _MUX_(Component):
 class _NMUX_(Component):
     """module _NMUX_ (A, B, S, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortIn(self, "S"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.S.value == 0:
             self.Y.value = 1 if self.A.value == 0 else 0
         else:
@@ -229,7 +237,7 @@ class _NMUX_(Component):
 class _MUX4_(Component):
     """module _MUX4_ (A, B, C, D, S, T, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -239,7 +247,7 @@ class _MUX4_(Component):
         self.add_port(PortIn(self, "T"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.S.value == 0 and self.T.value == 0:
             self.Y.value = self.A.value
         elif self.S.value == 1 and self.T.value == 0:
@@ -253,7 +261,7 @@ class _MUX4_(Component):
 class _MUX8_(Component):
     """module _MUX8_ (A, B, C, D, E, F, G, H, S, T, U, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -268,7 +276,7 @@ class _MUX8_(Component):
         self.add_port(PortIn(self, "U"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.S.value == 0 and self.T.value == 0 and self.U.value == 0:
             self.Y.value = self.A.value
         elif self.S.value == 1 and self.T.value == 0 and self.U.value == 0:
@@ -290,7 +298,7 @@ class _MUX8_(Component):
 class _MUX16_(Component):
     """module _MUX16_ (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, S, T, U, V, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -314,7 +322,7 @@ class _MUX16_(Component):
         self.add_port(PortIn(self, "V"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.S.value == 0 and self.T.value == 0 and self.U.value == 0 and self.V.value == 0:
             self.Y.value = self.A.value
         elif self.S.value == 1 and self.T.value == 0 and self.U.value == 0 and self.V.value == 0:
@@ -352,14 +360,14 @@ class _MUX16_(Component):
 class _AOI3_(Component):
     """module _AOI3_ (A, B, C, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortIn(self, "C"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if (self.A.value == 1 and self.B.value == 1) or self.C.value == 1:
             self.Y.value = 0
         else:
@@ -369,14 +377,14 @@ class _AOI3_(Component):
 class _OAI3_(Component):
     """module _OAI3_ (A, B, C, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
         self.add_port(PortIn(self, "C"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if (self.A.value == 1 or self.B.value == 1) and self.C.value == 1:
             self.Y.value = 0
         else:
@@ -386,7 +394,7 @@ class _OAI3_(Component):
 class _AOI4_(Component):
     """module _AOI4_ (A, B, C, D, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -394,7 +402,7 @@ class _AOI4_(Component):
         self.add_port(PortIn(self, "D"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if (self.A.value == 1 and self.B.value == 1) or (self.C.value == 1 and self.D.value == 1):
             self.Y.value = 0
         else:
@@ -404,7 +412,7 @@ class _AOI4_(Component):
 class _OAI4_(Component):
     """module _OAI4_ (A, B, C, D, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortIn(self, "B"))
@@ -412,7 +420,7 @@ class _OAI4_(Component):
         self.add_port(PortIn(self, "D"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if (self.A.value == 1 or self.B.value == 1) and (self.C.value == 1 or self.D.value == 1):
             self.Y.value = 0
         else:
@@ -422,7 +430,7 @@ class _OAI4_(Component):
 class _TBUF_(Component):
     """module _TBUF_ (A, E, Y)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         raise YosysNotImplementedException("NOT IMPLEMENTED: Tri-state buffer")
 
@@ -430,7 +438,7 @@ class _TBUF_(Component):
 class _SR_(ClassNameParameterComponent):
     """Set-reset latch"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._set_level = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -438,10 +446,10 @@ class _SR_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "R"))
         self.add_port(PortOutDelta(self, "Q"))
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.R.value == self._reset_level:
             self.Q.value = 0
         elif self.S.value == self._set_level:
@@ -467,7 +475,7 @@ class _SR_PP_(_SR_):
 class _FF_(Component):
     """module module _FF_ (D, Q)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         raise YosysNotImplementedException(
             "NOT IMPLEMENTED: D-type flip-flop that is clocked from the implicit global clock"
@@ -477,7 +485,7 @@ class _FF_(Component):
 class _DFF_(ClassNameParameterComponent):
     """D-type flip-flop"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self.add_port(PortIn(self, "C"))
@@ -485,10 +493,10 @@ class _DFF_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.C.value != self._old_C_level and self.C.value == self._clock_edge:
             self.Q.value = self.D.value
         self._old_C_level = self.C.value
@@ -505,7 +513,7 @@ class _DFF_P_(_DFF_):
 class _DFFE2_(ClassNameParameterComponent):
     """D-type flip-flop with clock enable"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._enable_level = self.name_to_level(1)
@@ -515,10 +523,10 @@ class _DFFE2_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if (
             self.C.value != self._old_C_level
             and self.C.value == self._clock_edge
@@ -547,7 +555,7 @@ class _DFFE_PP_(_DFFE2_):
 class _DFF3_(ClassNameParameterComponent):
     """D-type flip-flop with reset"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -558,10 +566,10 @@ class _DFF3_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.R.value == self._reset_level:
             self.Q.value = self._reset_value
         elif self.C.value != self._old_C_level and self.C.value == self._clock_edge:
@@ -604,7 +612,7 @@ class _DFF_PP1_(_DFF3_):
 class _DFFE4_(ClassNameParameterComponent):
     """D-type flip-flop with reset and clock enable"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -617,10 +625,10 @@ class _DFFE4_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.R.value == self._reset_level:
             self.Q.value = self._reset_value
         elif (
@@ -699,7 +707,7 @@ class _DFFE_PP1P_(_DFFE4_):
 class _ALDFF_(ClassNameParameterComponent):
     """D-type flip-flop with async load"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._load_level = self.name_to_level(1)
@@ -710,10 +718,10 @@ class _ALDFF_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.L.value == self._load_level:
             self.Q.value = self.AD.value
         elif self.C.value != self._old_C_level and self.C.value == self._clock_edge:
@@ -740,7 +748,7 @@ class _ALDFF_PP_(_ALDFF_):
 class _ALDFFE_(ClassNameParameterComponent):
     """D-type flip-flop with async load and clock enable"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._load_level = self.name_to_level(1)
@@ -753,10 +761,10 @@ class _ALDFFE_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.L.value == self._load_level:
             self.Q.value = self.AD.value
         elif (
@@ -803,7 +811,7 @@ class _ALDFFE_PPP_(_ALDFFE_):
 class _DFFSR_(ClassNameParameterComponent):
     """D-type flip-flop with with set and reset"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._set_level = self.name_to_level(1)
@@ -815,10 +823,10 @@ class _DFFSR_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.R.value == self._reset_level:
             self.Q.value = 0
         elif self.S.value == self._set_level:
@@ -863,7 +871,7 @@ class _DFFSR_PPP_(_DFFSR_):
 class _DFFSRE_(ClassNameParameterComponent):
     """D-type flip-flop with with set, reset and clock enable"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._set_level = self.name_to_level(1)
@@ -877,10 +885,10 @@ class _DFFSRE_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.R.value == self._reset_level:
             self.Q.value = 0
         elif self.S.value == self._set_level:
@@ -961,7 +969,7 @@ class _DFFSRE_PPPP_(_DFFSRE_):
 class _SDFF_(ClassNameParameterComponent):
     """D-type flip-flop with sync reset"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -972,10 +980,10 @@ class _SDFF_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.C.value != self._old_C_level and self.C.value == self._clock_edge:
             if self.R.value == self._reset_level:
                 self.Q.value = self._reset_value
@@ -1019,7 +1027,7 @@ class _SDFF_PP1_(_SDFF_):
 class _SDFFE_(ClassNameParameterComponent):
     """D-type flip-flop with sync reset and clock enable (with reset having priority)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -1032,10 +1040,10 @@ class _SDFFE_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.C.value != self._old_C_level and self.C.value == self._clock_edge:
             if self.R.value == self._reset_level:
                 self.Q.value = self._reset_value
@@ -1111,7 +1119,7 @@ class _SDFFE_PP1P_(_SDFFE_):
 class _SDFFCE_(ClassNameParameterComponent):
     """D-type flip-flop with sync reset and clock enable (with clock enable having priority)"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -1124,10 +1132,10 @@ class _SDFFCE_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
         self._old_C_level = self.C.value
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if (
             self.C.value != self._old_C_level
             and self.C.value == self._clock_edge
@@ -1207,17 +1215,17 @@ class _SDFFCE_PP1P_(_SDFFCE_):
 class _DLATCH_(ClassNameParameterComponent):
     """D-type latch"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._enable_level = self.name_to_level(0)
         self.add_port(PortIn(self, "E"))
         self.add_port(PortIn(self, "D"))
         self.add_port(PortOutDelta(self, "Q"))
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.E.value == self._enable_level:
             self.Q.value = self.D.value
 
@@ -1233,7 +1241,7 @@ class _DLATCH_P_(_DLATCH_):
 class _DLATCH3_(ClassNameParameterComponent):
     """D-type latch with reset"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._enable_level = self.name_to_level(0)
         self._reset_level = self.name_to_level(1)
@@ -1243,10 +1251,10 @@ class _DLATCH3_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "D"))
         self.add_port(PortOutDelta(self, "Q"))
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.R.value == self._reset_level:
             self.Q.value = self._reset_value
         elif self.E.value == self._enable_level:
@@ -1288,7 +1296,7 @@ class _DLATCH_PP1_(_DLATCH3_):
 class _DLATCHSR_(ClassNameParameterComponent):
     """D-type latch with set and reset"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._enable_level = self.name_to_level(0)
         self._set_level = self.name_to_level(1)
@@ -1299,10 +1307,10 @@ class _DLATCHSR_(ClassNameParameterComponent):
         self.add_port(PortIn(self, "D"))
         self.add_port(PortOutDelta(self, "Q"))
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.Q.value = 0
 
-    def update(self):
+    def update(self) -> None:
         if self.R.value == self._reset_level:
             self.Q.value = 0
         elif self.S.value == self._set_level:
@@ -1346,11 +1354,11 @@ class _DLATCHSR_PPP_(_DLATCHSR_):
 class _StaticLevel_(Component):
     """Yosys component for static logic levels"""
 
-    def __init__(self, circuit, name):
+    def __init__(self, circuit: Circuit, name: str | None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortOutDelta(self, "L"))
         self.add_port(PortOutDelta(self, "H"))
 
-    def default_state(self):
+    def default_state(self) -> None:
         self.L.value = 0
         self.H.value = 1

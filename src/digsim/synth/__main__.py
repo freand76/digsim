@@ -10,7 +10,7 @@ import time
 from . import Synthesis, SynthesisException
 
 
-def _synth_modules(args):
+def _synth_modules(args: argparse.Namespace) -> int:
     print("Synthesis started...")
     for infile in args.input_files:
         print(f" - Reading {infile}")
@@ -26,7 +26,7 @@ def _synth_modules(args):
     return 0
 
 
-def _list_modules(args):
+def _list_modules(args: argparse.Namespace) -> int:
     try:
         modules = Synthesis.list_modules(args.input_files)
         print("Modules:")

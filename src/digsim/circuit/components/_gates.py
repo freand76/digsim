@@ -3,20 +3,27 @@
 
 """Module with the basic logic gates"""
 
+from __future__ import annotations
+
 import math
+from typing import TYPE_CHECKING, Any
 
 from .atoms import Component, ComponentException, MultiComponent, PortIn, PortOutDelta, PortWire
+
+
+if TYPE_CHECKING:
+    from digsim.circuit import Circuit
 
 
 class NOT(Component):
     """NOT logic gate"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
         self.add_port(PortOutDelta(self, "Y"))
 
-    def update(self):
+    def update(self) -> None:
         if self.A.value == 0:
             self.Y.value = 1
         elif self.A.value == 1:
@@ -28,9 +35,9 @@ class NOT(Component):
 class ConfigPortsComponent(Component):
     """Base class for components with configurable input ports"""
 
-    def __init__(self, circuit, name, ports):
+    def __init__(self, circuit: Circuit, name: str | None, ports: int) -> None:
         super().__init__(circuit, name)
-        self._inports = []
+        self._inports: list[PortIn] = []
         portname = "A"
         for _ in range(ports):
             port = PortIn(self, portname)
@@ -41,7 +48,7 @@ class ConfigPortsComponent(Component):
         self.parameter_set("ports", ports)
 
     @classmethod
-    def get_parameters(cls):
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
         return {
             "ports": {
                 "type": "int",
@@ -56,10 +63,10 @@ class ConfigPortsComponent(Component):
 class OR(ConfigPortsComponent):
     """OR logic gate"""
 
-    def __init__(self, circuit, name=None, ports=2):
+    def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
         super().__init__(circuit, name, ports)
 
-    def update(self):
+    def update(self) -> None:
         if any(port.value == 1 for port in self._inports):
             self.Y.value = 1
         elif all(port.value == 0 for port in self._inports):
@@ -71,10 +78,10 @@ class OR(ConfigPortsComponent):
 class AND(ConfigPortsComponent):
     """AND logic gate"""
 
-    def __init__(self, circuit, name=None, ports=2):
+    def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
         super().__init__(circuit, name, ports)
 
-    def update(self):
+    def update(self) -> None:
         if all(port.value == 1 for port in self._inports):
             self.Y.value = 1
         elif any(port.value == 0 for port in self._inports):
@@ -86,26 +93,28 @@ class AND(ConfigPortsComponent):
 class XOR(ConfigPortsComponent):
     """XOR logic gate"""
 
-    def __init__(self, circuit, name=None, ports=2):
+    def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
         super().__init__(circuit, name, ports)
 
-    def update(self):
+    def update(self) -> None:
         if any(port.value == "X" for port in self._inports):
             self.Y.value = "X"
         else:
             count = 0
             for port in self._inports:
-                count += port.value
+                value = port.value
+                assert value != "X"
+                count += value
             self.Y.value = count % 2
 
 
 class NAND(ConfigPortsComponent):
     """NAND logic gate"""
 
-    def __init__(self, circuit, name=None, ports=2):
+    def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
         super().__init__(circuit, name, ports)
 
-    def update(self):
+    def update(self) -> None:
         if all(port.value == 1 for port in self._inports):
             self.Y.value = 0
         elif any(port.value == 0 for port in self._inports):
@@ -117,10 +126,10 @@ class NAND(ConfigPortsComponent):
 class NOR(ConfigPortsComponent):
     """NOR logic gate"""
 
-    def __init__(self, circuit, name=None, ports=2):
+    def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
         super().__init__(circuit, name, ports)
 
-    def update(self):
+    def update(self) -> None:
         if any(port.value == 1 for port in self._inports):
             self.Y.value = 0
         elif all(port.value == 0 for port in self._inports):
@@ -132,7 +141,14 @@ class NOR(ConfigPortsComponent):
 class DFF(Component):
     """D-FlipFlop"""
 
-    def __init__(self, circuit, name=None, async_reset=False, clock_enable=False, width=1):
+    def __init__(
+        self,
+        circuit: Circuit,
+        name: str | None = None,
+        async_reset: bool = False,
+        clock_enable: bool = False,
+        width: int = 1,
+    ) -> None:
         super().__init__(circuit, name)
         self._async_reset = async_reset
         self._clock_enable = clock_enable
@@ -147,7 +163,7 @@ class DFF(Component):
         self.parameter_set("async_reset", async_reset)
         self.parameter_set("clock_enable", clock_enable)
 
-    def update(self):
+    def update(self) -> None:
         rising_edge = self.C.is_rising_edge()
         if self._async_reset and self.R.value == 1:
             self.Q.value = 0
@@ -158,7 +174,7 @@ class DFF(Component):
             self.Q.value = self.D.value
 
     @classmethod
-    def get_parameters(cls):
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
         return {
             "async_reset": {
                 "type": "bool",
@@ -183,11 +199,13 @@ class DFF(Component):
 class MUX(Component):
     """MUX"""
 
-    def __init__(self, circuit, name=None, ports=2, width=1):
+    def __init__(
+        self, circuit: Circuit, name: str | None = None, ports: int = 2, width: int = 1
+    ) -> None:
         super().__init__(circuit, name)
         if ports not in [2, 4, 8]:
             raise ComponentException(f"Mux cannot have {ports} number of ports")
-        self._inports = []
+        self._inports: list[PortIn] = []
         portname = "A"
         for _ in range(ports):
             port = PortIn(self, portname, width=width)
@@ -199,14 +217,15 @@ class MUX(Component):
         self.parameter_set("ports", ports)
         self.parameter_set("width", width)
 
-    def update(self):
-        if self.S.value == "X":
+    def update(self) -> None:
+        select = self.S.value
+        if select == "X":
             self.Y.value = "X"
             return
-        self.Y.value = self._inports[self.S.value].value
+        self.Y.value = self._inports[select].value
 
     @classmethod
-    def get_parameters(cls):
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
         return {
             "ports": {
                 "type": "intrange",
@@ -227,7 +246,7 @@ class MUX(Component):
 class SR(MultiComponent):
     """SR logic gate composed of two NAND gates"""
 
-    def __init__(self, circuit, name=None):
+    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         _nands = NOR(circuit)
         _nandr = NOR(circuit)

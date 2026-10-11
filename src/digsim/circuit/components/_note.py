@@ -3,18 +3,26 @@
 
 """Components that only exist in the model"""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
 from .atoms import Component
+
+
+if TYPE_CHECKING:
+    from digsim.circuit import Circuit
 
 
 class Note(Component):
     """Note component"""
 
-    def __init__(self, circuit, name=None, text=""):
+    def __init__(self, circuit: Circuit, name: str | None = None, text: str = "") -> None:
         super().__init__(circuit, name)
         self.parameter_set("text", text)
 
     @classmethod
-    def get_parameters(cls):
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
         return {
             "text": {
                 "type": "str",

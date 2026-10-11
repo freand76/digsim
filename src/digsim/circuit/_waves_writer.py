@@ -16,13 +16,13 @@ from .components.atoms import Port
 class WavesWriter:
     """Class that handles the creation of vcd files"""
 
-    def __init__(self, filename: str):
+    def __init__(self, filename: str) -> None:
         self._vcd_name: str = filename
         self._vcd_file: io.TextIOWrapper | None = None
         self._vcd_writer: VCDWriter | None = None
         self._vcd_dict: dict[str, Any] = {}
 
-    def init(self, port_info: list[tuple[str, str, int]]):
+    def init(self, port_info: list[tuple[str, str, int]]) -> None:
         """Initialize vcd writer"""
         if self._vcd_file is not None or self._vcd_writer is not None:
             self.close()
@@ -35,7 +35,7 @@ class WavesWriter:
             self._vcd_dict[f"{port_path}.{port_name}"] = var
         self._vcd_file.flush()
 
-    def write(self, port: Port, time_ns: int):
+    def write(self, port: Port, time_ns: int) -> None:
         """Write port value to vcd file"""
         if self._vcd_file is None:
             raise RuntimeError("VCD file is None")
@@ -48,7 +48,7 @@ class WavesWriter:
             self._vcd_writer.change(var, timestamp=time_ns, value=wired_port.value)
         self._vcd_file.flush()
 
-    def close(self):
+    def close(self) -> None:
         """Close vcd file"""
         if self._vcd_writer is not None:
             self._vcd_writer.close()

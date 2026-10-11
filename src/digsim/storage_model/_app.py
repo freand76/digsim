@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
+from pathlib import Path
 from typing import Any
 
 from pydantic import Field
@@ -32,7 +33,7 @@ class AppFileDataClass:
     settings: dict[str, Any] = Field(default_factory=dict)
 
     @staticmethod
-    def load(filename):
+    def load(filename: str | Path) -> AppFileDataClass:
         try:
             with open(filename, mode="r", encoding="utf-8") as json_file:
                 app_filedata_class = AppFileDataClass(**json.load(json_file))
@@ -42,7 +43,7 @@ class AppFileDataClass:
             raise FileNotFoundError(f"File not found: {filename}") from exc
         return app_filedata_class
 
-    def save(self, filename):
+    def save(self, filename: str | Path) -> None:
         json_object = json.dumps(asdict(self), indent=4)
         with open(filename, mode="w", encoding="utf-8") as json_file:
             json_file.write(json_object)
@@ -54,5 +55,5 @@ class ModelDataClass:
     gui: dict[str, GuiPositionDataClass]
 
     @staticmethod
-    def from_app_file_dc(app_file_dc):
+    def from_app_file_dc(app_file_dc: AppFileDataClass) -> ModelDataClass:
         return ModelDataClass(circuit=app_file_dc.circuit, gui=app_file_dc.gui)
