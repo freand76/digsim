@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## vx.x.x
+## v1.2.0
  - Update pyside6 to 6.12.0
  - Add Application icon for Wayland
  - Publish documentation at https://freand76.github.io/digsim/
@@ -24,6 +24,9 @@
  - Bugfix: Crash when loading or changing a circuit right after stopping a simulation
  - Bugfix: Dropped components land centered under the mouse pointer
  - Show a preview of the component while dragging it into the circuit area
+ - Silence harmless Qt Wayland text-input warnings in the terminal
+ - Running from source with `uvx .` always uses the current code
+ - Bugfix: Garbled package description on PyPI
 
 ## v1.1.0
  - Update python packages
