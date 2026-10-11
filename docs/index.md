@@ -28,7 +28,7 @@ dedicated simulators, but fast enough to be useful.
 ## Features
 
 - **Interactive GUI**: build and simulate circuits with buttons, switches, clocks, LEDs,
-  hex digits, 7-segment displays, a buzzer and a logic analyzer.
+  LED bars, hex digits, 7-segment displays, a buzzer and a logic analyzer.
 - **Python API**: create and simulate circuits in plain Python code, for scripts or
   pytest testbenches.
 - **Verilog support**: turn Verilog into simulatable components using a bundled

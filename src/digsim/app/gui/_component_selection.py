@@ -130,6 +130,9 @@ class ComponentSelection(QWidget):
         layout.addWidget(DescriptionText(self, "Output"))
         layout.addWidget(SelectableComponentWidget("Led", self, circuit_area))
         layout.addWidget(
+            SelectableComponentWidget("LedBar", self, circuit_area, display_name="LED bar")
+        )
+        layout.addWidget(
             SelectableComponentWidget("HexDigit", self, circuit_area, display_name="Hex-digit")
         )
         layout.addWidget(

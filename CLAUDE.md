@@ -39,7 +39,8 @@ The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test
 and pytest (`.github/workflows/`), plus `examples/yosys_counter/*.py`; mypy is local only. The docs site is
 rebuilt and deployed by `.github/workflows/docs.yaml` on every push to `main` that touches
 `docs/` or `mkdocs.yml`. Component images in `docs/images/components/` are copies of
-`src/digsim/app/gui_objects/images/`, and `docs/images/app_icon.png` of
+`src/digsim/app/gui_objects/images/` (except `LedBar.png`, a screenshot of the drawn
+component), and `docs/images/app_icon.png` of
 `src/digsim/app/images/app_icon.png`.
 
 Ruff config is in `pyproject.toml`: line length 99, isort with PySide6 imports in their

@@ -28,6 +28,7 @@ from ._image_objects import (
     ImageObjectXOR,
 )
 from ._label_object import LabelObject
+from ._led_bar_object import LedBarObject
 from ._logic_analyzer_object import LogicAnalyzerObject
 from ._seven_segment_object import SevenSegmentObject
 from ._shortcut_objects import ButtonObject, OnOffSwitchObject
@@ -61,6 +62,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "StaticValue": ImageObjectStaticValue,
     "XOR": ImageObjectXOR,
     "XNOR": ImageObjectXNOR,
+    "LedBar": LedBarObject,
     "IntegratedCircuit": ImageObjectIC,
     "YosysComponent": YosysObject,
     "Note": GuiNoteObject,

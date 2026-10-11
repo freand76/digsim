@@ -135,6 +135,7 @@ presses the button or toggles the switch.
 | Component | Description |
 | --- | --- |
 | ![LED](images/components/LED_ON.png) | **LED**: lights up when driven by a logic high. |
+| ![LED bar](images/components/LedBar.png) | **LED Bar**: a row of 1–16 LEDs showing the bits of a bus, the most significant bit to the left. |
 | ![Hex digit](images/HexDigit.png) | **Hex Digit**: shows a bus value in hexadecimal, with 1–8 digits (4 bits each) and an optional decimal point. |
 | ![7-segment](images/SevenSegment.png) | **7-Segment Display**: like a hex digit, but each segment is controlled individually. |
 | ![Buzzer](images/components/Buzzer.png) | **Buzzer**: plays a tone, with a selectable note, when its input is high. |

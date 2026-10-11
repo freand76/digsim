@@ -25,7 +25,7 @@ displays, and play with it right away. It is even fast enough to run a synthesiz
 ## Features
 
 - **Interactive GUI**: build and simulate circuits with buttons, switches, clocks, LEDs,
-  hex digits, 7-segment displays, a buzzer and a logic analyzer.
+  LED bars, hex digits, 7-segment displays, a buzzer and a logic analyzer.
 - **Python API**: create and simulate circuits in Python, for scripts or pytest
   testbenches.
 - **Verilog support**: turn Verilog into components with a bundled WebAssembly build of

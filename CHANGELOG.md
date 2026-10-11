@@ -16,6 +16,7 @@
  - Document all examples with circuit diagrams, expected output and waveforms
  - Add guides for creating components and for contributing
  - Add XNOR gate (2 to 8 inputs)
+ - Add LED bar component, a row of LEDs showing the bits of a bus
 
 ## v1.1.0
  - Update python packages
