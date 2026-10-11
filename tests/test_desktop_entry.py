@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from digsim.app import cli
+from digsim.app import _desktop_entry as cli
 
 
 ICON = b"\x89PNG fake icon"
