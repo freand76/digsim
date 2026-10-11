@@ -254,7 +254,7 @@ class _CircuitAreaScene(QGraphicsScene):
 
     _selection_rect_item: QGraphicsRectItem
 
-    def __init__(self, app_model: AppModel, view: QGraphicsView) -> None:
+    def __init__(self, app_model: AppModel, view: CircuitArea) -> None:
         super().__init__()
         self._app_model = app_model
         self._view = view
@@ -329,6 +329,8 @@ class _CircuitAreaScene(QGraphicsScene):
         super().mouseReleaseEvent(event)
         self._select_start_pos = None
         self._selection_rect_item.setVisible(False)
+        # Components may have been moved outside the scene
+        self._view.grow_scene_rect()
         self._repaint()
 
     def _delete_component(self, component_object: ComponentObject) -> None:
@@ -377,6 +379,8 @@ class _CircuitAreaScene(QGraphicsScene):
     def _synchronize_gui(self) -> None:
         """Remove everything from scene"""
         self.clear()
+        # Let the scene size follow the new circuit
+        self.setSceneRect(QRectF())
         self._wire_items = []
         # Add new wire item
         self.addItem(NewWireGraphicsItem(self._app_model))
@@ -471,7 +475,7 @@ class CircuitArea(QGraphicsView):
         event.accept()
         self.setFocus()
 
-        scene_pos = self.mapToScene(event.pos())
+        scene_pos = self.mapToScene(event.position().toPoint())
 
         component_name = event.mimeData().text()
         QTimer.singleShot(0, partial(self.add_component, component_name, scene_pos))
@@ -522,8 +526,10 @@ class CircuitArea(QGraphicsView):
     def add_component(self, name: str, position: QPointF | None) -> None:
         """
         Add component to circuit area
-        Used be drag'n'drop into Circuit area or double click in SelectableComponentWidget
+        Used by drag'n'drop into Circuit area (centered at 'position')
+        or double click in SelectableComponentWidget (position is None)
         """
+        centered = position is not None
         if position is None:
             position = self.mapToScene(0, 0) + QPoint(100, 100)
 
@@ -537,4 +543,19 @@ class CircuitArea(QGraphicsView):
             component_object = self._app_model.objects.components.add_object_by_name(
                 name, position, settings
             )
+            if centered:
+                component_object.move_center_to(position)
+            self.grow_scene_rect()
             self._scene.add_scene_component(component_object, True)
+            self.grow_scene_rect()
+
+    def grow_scene_rect(self) -> None:
+        """
+        Grow the scene to include all components and the visible area. Otherwise the
+        scene follows the components, and when a component makes it larger the view
+        re-centers and everything on screen moves.
+        """
+        visible = self.mapToScene(self.viewport().rect()).boundingRect()
+        self._scene.setSceneRect(
+            self._scene.sceneRect().united(self._scene.itemsBoundingRect()).united(visible)
+        )

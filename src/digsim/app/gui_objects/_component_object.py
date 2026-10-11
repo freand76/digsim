@@ -411,6 +411,12 @@ class ComponentObject(QGraphicsRectItem):
         """Set zlevel"""
         self.setZValue(level)
 
+    def move_center_to(self, scene_pos: QPointF) -> None:
+        """Move the component so that its center is at 'scene_pos'"""
+        center = self.mapRectToScene(self.rect()).center()
+        self.moveBy(scene_pos.x() - center.x(), scene_pos.y() - center.y())
+        self._save_pos = (self.rect().topLeft() + self.pos()).toPoint()
+
     def to_gui_dataclass(self) -> GuiPositionDataClass:
         return GuiPositionDataClass(
             x=int(self._save_pos.x()), y=int(self._save_pos.y()), z=int(self.zlevel)
