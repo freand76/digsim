@@ -160,3 +160,29 @@ def test_yosys_aldffe_xxx_(test_class, c_edge, l_level, e_level):
     _dut.L.value = l_level
     circuit.run(ms=1)
     assert _dut.Q.value == 1
+
+
+@pytest.mark.parametrize(
+    "test_class",
+    [
+        _ALDFF_NN_,
+        _ALDFF_NP_,
+        _ALDFF_PN_,
+        _ALDFF_PP_,
+        _ALDFFE_NNN_,
+        _ALDFFE_NNP_,
+        _ALDFFE_NPN_,
+        _ALDFFE_NPP_,
+        _ALDFFE_PNN_,
+        _ALDFFE_PNP_,
+        _ALDFFE_PPN_,
+        _ALDFFE_PPP_,
+    ],
+)
+def test_yosys_aldff_default_state(test_class):
+    """Test that the _ALDFF_/_ALDFFE_ output is low after circuit init"""
+    circuit = Circuit()
+    _dut = test_class(circuit, "DUT")
+    circuit.init()
+    circuit.run(ms=1)
+    assert _dut.Q.value == 0

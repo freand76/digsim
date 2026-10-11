@@ -754,7 +754,7 @@ class _ALDFFE_(ClassNameParameterComponent):
         self._old_C_level = self.C.value
 
     def default_state(self):
-        self.Q.value = self._reset_level
+        self.Q.value = 0
 
     def update(self):
         if self.L.value == self._load_level:
