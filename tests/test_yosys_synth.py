@@ -81,3 +81,15 @@ def test_yosys_synth_module_with_error(verilog_path):
 
     with pytest.raises(SynthesisException):
         synthesis.synth_to_dict()
+
+
+def test_yosys_path_objects(verilog_path):
+    """test that pathlib.Path arguments are accepted, not only strings"""
+    modules = Synthesis.list_modules(verilog_path / "one_module.v")
+    assert modules == ["module_one"]
+    synthesis = Synthesis(verilog_path / "one_module.v", "module_one")
+    netlist_dict = synthesis.synth_to_dict()
+    assert "module_one" in netlist_dict["modules"]
+    synthesis = Synthesis([verilog_path / "one_module.v"], "module_one")
+    netlist_dict = synthesis.synth_to_dict()
+    assert "module_one" in netlist_dict["modules"]

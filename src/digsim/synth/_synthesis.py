@@ -4,10 +4,12 @@
 """Helper module for yosys synthesis"""
 
 import json
+import os
 import pathlib
 import shutil
 import site
 import sys
+from collections.abc import Sequence
 from typing import Any
 
 import pexpect
@@ -17,6 +19,13 @@ from digsim.circuit.components.atoms import DigsimException
 
 
 YosysProcess = pexpect.spawn | pexpect.popen_spawn.PopenSpawn
+VerilogFiles = str | os.PathLike[str] | Sequence[str | os.PathLike[str]]
+
+
+def _file_list(verilog_files: VerilogFiles) -> list[str]:
+    if isinstance(verilog_files, (str, os.PathLike)):
+        return [str(verilog_files)]
+    return [str(verilog_file) for verilog_file in verilog_files]
 
 
 class SynthesisException(DigsimException):
@@ -86,10 +95,9 @@ class Synthesis:
         return pexpect.spawn(yosys_exe)
 
     @classmethod
-    def list_modules(cls, verilog_files: str | list[str]) -> list[str]:
+    def list_modules(cls, verilog_files: VerilogFiles) -> list[str]:
         """List available modules in verilog files"""
-        if isinstance(verilog_files, str):
-            verilog_files = [verilog_files]
+        verilog_files = _file_list(verilog_files)
 
         pexp = cls._pexpect_spawn_yosys()
         cls._pexpect_wait_for_prompt(pexp)
@@ -109,11 +117,8 @@ class Synthesis:
             modules.append(line.replace("$abstract\\", "").strip())
         return modules
 
-    def __init__(self, verilog_files: str | list[str], verilog_top_module: str) -> None:
-        if isinstance(verilog_files, str):
-            self._verilog_files = [verilog_files]
-        else:
-            self._verilog_files = verilog_files
+    def __init__(self, verilog_files: VerilogFiles, verilog_top_module: str) -> None:
+        self._verilog_files = _file_list(verilog_files)
         self._verilog_top_module = verilog_top_module
         self._yosys_log: list[str] = []
 
