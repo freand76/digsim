@@ -70,7 +70,7 @@ gtkwave sr.vcd
 | `get_component(name)` | Look up a component by name |
 | `vcd(filename)` / `vcd_close()` | Start or finish writing a VCD file |
 | `to_json_file(filename)` | Save the circuit |
-| `from_json_file(filename, folder)` | Load a circuit; relative paths in it are resolved from `folder` |
+| `from_json_file(filename, folder=".")` | Load a circuit; relative paths in it are resolved from `folder` |
 
 ### Components and ports
 

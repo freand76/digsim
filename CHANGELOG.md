@@ -5,6 +5,7 @@
  - Add Application icon for Wayland
  - Publish documentation at https://freand76.github.io/digsim/
  - Rewrite README and documentation with separate install/run options
+ - Bugfix: Circuit.from_json_file() no longer requires a folder argument
 
 ## v1.1.0
  - Update python packages
