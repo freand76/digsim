@@ -170,11 +170,10 @@ class Circuit:
     def _vcd_init(self) -> None:
         if self._vcd is None:
             return
-        port_info = []
+        ports = []
         for comp in self._components.values():
-            for port in comp.ports:
-                port_info.append((port.path(), port.name(), port.width))
-        self._vcd.init(port_info)
+            ports.extend(comp.ports)
+        self._vcd.init(ports)
 
         # Dump initial state in vcd
         for comp in self._components.values():
@@ -260,6 +259,8 @@ class Circuit:
                 stop_time_ns = self._time_ns
                 single_step_stop = True
         self._time_ns = max(self._time_ns, stop_time_ns)
+        if self._vcd is not None:
+            self._vcd.flush()
         return single_step_stop
 
     def run_until(

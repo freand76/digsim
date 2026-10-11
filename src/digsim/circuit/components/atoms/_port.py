@@ -22,6 +22,23 @@ class PortConnectionError(DigsimException):
     """Exception for illegal connections"""
 
 
+class ConnectionGeneration:
+    """
+    A counter increased on every connection change, lets callers cache results that
+    depend on the wiring. It is kept outside the Port class: changing a class
+    attribute thousands of times (while wiring a large circuit) makes CPython stop
+    optimizing attribute access on that class.
+    """
+
+    __slots__ = ("value",)
+
+    def __init__(self) -> None:
+        self.value = 0
+
+
+connection_generation = ConnectionGeneration()
+
+
 class Port(abc.ABC):
     """The abstract base class for all ports"""
 
@@ -86,6 +103,7 @@ class Port(abc.ABC):
             raise PortConnectionError("Cannot connect ports with different widths")
         port.set_driver(self)
         self._wired_ports.append(port)
+        connection_generation.value += 1
         port.value = self._value  # Update wires when port is connected
 
     def remove_wires(self) -> None:
@@ -93,6 +111,7 @@ class Port(abc.ABC):
         for port in self._wired_ports:
             port.set_driver(None)
         self._wired_ports = []
+        connection_generation.value += 1
 
     def name(self) -> str:
         """Get port name"""
@@ -189,6 +208,7 @@ class Port(abc.ABC):
             index = self._wired_ports.index(port)
             del self._wired_ports[index]
         port.set_driver(None)
+        connection_generation.value += 1
 
     def strval(self) -> str:
         """Return value as string"""
