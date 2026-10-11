@@ -29,19 +29,30 @@ Use `uv` for everything. Ruff runs via `uv tool run`, not as a project dependenc
 uv tool run ruff format          # format
 uv tool run ruff check           # lint (add --fix for autofixes)
 uv run --with pytest pytest      # run all tests (tests/ and examples/pytest_tb/)
-uv run --with mypy mypy                        # type check (config in pyproject.toml)
+uv run --with mypy mypy          # type check (config in pyproject.toml)
 uv run -m digsim.app             # start the GUI
 uv tool run --with mkdocs-material mkdocs build --strict   # check the docs build
+uv run --with pytest python docs/scripts/generate_examples.py  # regenerate example images
 ```
 
 The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test.sh`,
-`uv_run_app.sh`). Run ruff format + check, mypy and pytest before committing. CI runs ruff
-and pytest (`.github/workflows/`), plus `examples/yosys_counter/*.py`; mypy is local only. The docs site is
-rebuilt and deployed by `.github/workflows/docs.yaml` on every push to `main` that touches
-`docs/` or `mkdocs.yml`. Component images in `docs/images/components/` are copies of
-`src/digsim/app/gui_objects/images/` (except `LedBar.png`, a screenshot of the drawn
-component), and `docs/images/app_icon.png` of
-`src/digsim/app/images/app_icon.png`.
+`uv_run_app.sh`). Run ruff format + check, mypy and pytest before committing.
+
+CI (`.github/workflows/`) runs ruff, and pytest plus `examples/yosys_counter/*.py` on Linux
+(Python 3.10–3.14) and Windows; the test workflows run on push only, not on pull requests.
+mypy is local only. The docs site is rebuilt and deployed by `docs.yaml` on every push to
+`main` that touches `docs/` or `mkdocs.yml`.
+
+- CI runners can't load Qt's GUI libraries (no `libEGL`): tests must not import `QtGui` or
+  `QtWidgets`. Keep testable logic in Qt-free modules (like `app/_desktop_entry.py`). The
+  GUI has no automated tests; check GUI changes by running the app (offscreen with
+  `QT_QPA_PLATFORM=offscreen` for scripted checks).
+- Ruff 0.17 also formats Python code blocks in Markdown files, and CI checks that.
+- Component images in `docs/images/components/` are copies of
+  `src/digsim/app/gui_objects/images/` (except `LedBar.png`, a screenshot of the drawn
+  component), and `docs/images/app_icon.png` of `src/digsim/app/images/app_icon.png`.
+- `docs/components.md` walks through the real `XNOR` and `LedBar` code; keep it in sync
+  when changing them. Regenerate the example images when an example changes.
 
 Ruff config is in `pyproject.toml`: line length 99, isort with PySide6 imports in their
 own section and two blank lines after imports, no relative imports from parent packages.
@@ -57,6 +68,23 @@ own section and two blank lines after imports, no relative imports from parent p
   `Component.__getattr__`; GUI objects narrow their `component` property to the concrete type.
 - Use fully qualified Qt enums (`Qt.GlobalColor.red`, not `Qt.red`), and pass `int()` to Qt
   APIs that only take ints.
+
+## Things that have bitten before
+
+- **Simulation core**: changes to `circuit/` (events, ports, VCD) must keep every example's
+  output and VCD files byte-identical, including the order of events at the same time:
+  Yosys gate-level designs have races where that order is visible. Compare before/after.
+  Don't change class attributes of hot classes (like `Port`) repeatedly at runtime: after
+  enough changes CPython stops optimizing attribute access on that class.
+- **GUI threading**: the model's signals are emitted from the simulation thread, so they are
+  queued. GUI objects must not connect to model signals themselves (a queued call to a
+  removed object runs on freed memory); the circuit area receives them and forwards them to
+  the current objects.
+- **Yosys** runs in-process (`yowasp_yosys.run_yosys`, WebAssembly) unless a native `yosys`
+  is on `PATH`. In the sandbox `/tmp` is a private folder, so work files go in a temp
+  folder in the user cache; paths given to Yosys must use forward slashes (`C:/...` on
+  Windows); after a failed run, Yosys keeps its files open until garbage collection, which
+  breaks cleanup on Windows. Things like this only show up in the Windows CI.
 
 ## Releases
 
