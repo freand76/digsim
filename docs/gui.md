@@ -37,8 +37,9 @@ A typical circuit consists of:
 ## Working with components
 
 Add a component by **double-clicking** it in the component selection, or by **dragging**
-it into the circuit area. Components with options open a settings dialog when they are
-added.
+it into the circuit area. While you drag, a see-through preview shows where the component
+will be placed: centered under the mouse pointer. Components with options open a settings
+dialog when they are added.
 
 Right-click a component to open its context menu:
 

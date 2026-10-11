@@ -26,6 +26,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsPathItem,
+    QGraphicsPixmapItem,
     QGraphicsRectItem,
     QGraphicsScene,
     QGraphicsSceneMouseEvent,
@@ -39,6 +40,8 @@ from digsim.app.gui_objects._buzzer_object import BuzzerObject
 from digsim.app.gui_objects._component_port_item import PortGraphicsItem
 from digsim.app.settings import ComponentSettingsDialog
 from digsim.circuit.components.atoms import VALUE_TYPE, Component, Port
+
+from ._drag_preview import drag_preview
 
 
 if TYPE_CHECKING:
@@ -414,6 +417,7 @@ class CircuitArea(QGraphicsView):
         self.setAcceptDrops(True)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
         self._mouse_pos = QPoint(0, 0)
+        self._drag_preview: QGraphicsPixmapItem | None = None
 
     def has_selection(self) -> bool:
         """Return true if items are selected"""
@@ -460,20 +464,52 @@ class CircuitArea(QGraphicsView):
     def dragEnterEvent(self, event: QDragEnterEvent) -> None:
         """QT event callback function"""
         event.accept()
+        self._show_drag_preview(event.mimeData().text(), event.position().toPoint())
 
     def dragLeaveEvent(self, event: QDragLeaveEvent) -> None:
         """QT event callback function"""
         event.accept()
+        self._remove_drag_preview()
 
     def dragMoveEvent(self, event: QDragMoveEvent) -> None:
         """QT event callback function"""
         event.accept()
+        if self._drag_preview is not None:
+            self._drag_preview.setPos(self.mapToScene(event.position().toPoint()))
+
+    def _show_drag_preview(self, name: str, view_pos: QPoint) -> None:
+        """
+        Show a see-through preview of the component where it will be dropped. The drag
+        image, drawn by the window system, is missing in some Wayland sessions.
+        """
+        self._remove_drag_preview()
+        preview_image = drag_preview(self._app_model, name)
+        if preview_image is None:
+            # Not a component, for example text dragged from another application
+            return
+        pixmap, center = preview_image
+        # Keep the view still when the preview is added to the scene
+        self.grow_scene_rect()
+        preview = QGraphicsPixmapItem(pixmap)
+        preview.setOffset(-center)
+        preview.setOpacity(0.5)
+        preview.setZValue(1e9)
+        preview.setPos(self.mapToScene(view_pos))
+        self._scene.addItem(preview)
+        self._drag_preview = preview
+
+    def _remove_drag_preview(self) -> None:
+        if self._drag_preview is not None:
+            if self._drag_preview.scene() is not None:
+                self._scene.removeItem(self._drag_preview)
+            self._drag_preview = None
 
     def dropEvent(self, event: QDropEvent) -> None:
         """QT event callback function"""
         event.setDropAction(Qt.DropAction.IgnoreAction)
         event.accept()
         self.setFocus()
+        self._remove_drag_preview()
 
         scene_pos = self.mapToScene(event.position().toPoint())
 

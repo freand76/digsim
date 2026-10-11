@@ -23,6 +23,7 @@
  - Run Yosys in-process instead of through an interactive terminal (pexpect), about 3x faster synthesis
  - Bugfix: Crash when loading or changing a circuit right after stopping a simulation
  - Bugfix: Dropped components land centered under the mouse pointer
+ - Show a preview of the component while dragging it into the circuit area
 
 ## v1.1.0
  - Update python packages
