@@ -8,9 +8,9 @@ from __future__ import annotations
 from functools import partial
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QMimeData, QSize, Qt, QTimer
+from PySide6.QtCore import QMimeData, QPoint, QSize, Qt, QTimer
 from PySide6.QtGui import QDrag, QMouseEvent, QPainter, QPaintEvent, QPixmap
-from PySide6.QtWidgets import QFrame, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QFrame, QLabel, QPushButton, QVBoxLayout, QWidget
 
 import digsim.app.gui_objects
 
@@ -38,6 +38,7 @@ class SelectableComponentWidget(QPushButton):
         self._name = name
         self._circuit_area = circuit_area
         self._paint_class = digsim.app.gui_objects.class_factory(name)
+        self._press_pos: QPoint | None = None
         if display_name is not None:
             self._display_name = display_name
         else:
@@ -49,20 +50,37 @@ class SelectableComponentWidget(QPushButton):
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         """QT event callback function"""
-        if event.buttons() == Qt.MouseButton.LeftButton:
-            drag = QDrag(self)
-            mime = QMimeData()
-            mime.setText(self._name)
-            drag.setMimeData(mime)
-            drag.setHotSpot(event.position().toPoint() - self.rect().topLeft())
-            # Create a square pixmap for dragging, using the widget's width for both dimensions.
-            # This is intentional to maintain a consistent visual representation during drag operations.
-            pixmap = QPixmap(self.size().width(), self.size().width())
-            self.render(pixmap)
-            drag.setPixmap(pixmap)
-            drag.exec_(
-                Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction
-            )
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._press_pos = event.position().toPoint()
+
+    def mouseReleaseEvent(self, _: QMouseEvent) -> None:
+        """QT event callback function"""
+        self._press_pos = None
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        """QT event callback function"""
+        # Start dragging when the mouse has moved a bit with the button pressed, a click
+        # (or the first click of a double click) doesn't start a drag
+        if self._press_pos is None or not event.buttons() & Qt.MouseButton.LeftButton:
+            return
+        pos = event.position().toPoint()
+        if (pos - self._press_pos).manhattanLength() < QApplication.startDragDistance():
+            return
+        hot_spot = self._press_pos
+        self._press_pos = None
+        drag = QDrag(self)
+        mime = QMimeData()
+        mime.setText(self._name)
+        drag.setMimeData(mime)
+        # A transparent image of the whole widget, sharp on high-DPI screens
+        ratio = self.devicePixelRatioF()
+        pixmap = QPixmap(self.size() * ratio)
+        pixmap.setDevicePixelRatio(ratio)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        self.render(pixmap)
+        drag.setPixmap(pixmap)
+        drag.setHotSpot(hot_spot)
+        drag.exec_(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction)
 
     def mouseDoubleClickEvent(self, _: QMouseEvent) -> None:
         """QT event callback function"""
