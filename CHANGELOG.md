@@ -12,6 +12,7 @@
  - Bugfix: Synthesis crashed when given a pathlib.Path
  - Bugfix: Wire Source/Sink (label wires) lost their connections
  - Bugfix: Desktop menu entry started nothing and pointed at a stale interpreter
+ - Fix "Similation" typo on the simulation start/stop button
 
 ## v1.1.0
  - Update python packages

@@ -85,11 +85,11 @@ class SimControlWidget(QFrame):
 
     def _control_notify(self) -> None:
         if self._app_model.is_running:
-            self._start_button.setText("Stop Similation")
+            self._start_button.setText("Stop Simulation")
             self._start_button.setEnabled(True)
             self._single_step_button.setEnabled(False)
         else:
-            self._start_button.setText("Start Similation")
+            self._start_button.setText("Start Simulation")
             self._start_button.setEnabled(True)
             self._single_step_button.setEnabled(True)
             if self._time_s > 0:
