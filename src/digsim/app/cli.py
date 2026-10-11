@@ -10,7 +10,7 @@ import sys
 import textwrap
 from pathlib import Path
 
-from PySide6.QtCore import QCoreApplication, Qt
+from PySide6.QtCore import QCoreApplication, QLoggingCategory, Qt
 from PySide6.QtGui import QGuiApplication, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QApplication
 
@@ -85,6 +85,11 @@ def _start(args: argparse.Namespace, package_version: str) -> int:
     main_path = Path(__file__).parent
     image_path = main_path / "images/app_icon.png"
     setup_wayland_desktop_entry(image_path)
+
+    # Qt's Wayland text-input support logs a warning on focus changes when no
+    # surface is focused; it is harmless and floods the terminal.
+    # A QT_LOGGING_RULES environment variable still overrides this rule.
+    QLoggingCategory.setFilterRules("qt.qpa.wayland.textinput=false")
 
     # Wayland critical step: links the PySide6 app window to the .desktop entry
     QCoreApplication.setApplicationName("digsim")
