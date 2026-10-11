@@ -38,6 +38,17 @@ scripts = { digsim-logic-simulator = "digsim.app.cli:main" }
 
 keywords = ["educational", "simulation", "digital"]
 
+[tool.uv]
+# Rebuild the cached package when the sources change, not only pyproject.toml,
+# so that "uvx ." and "uv tool run ." run the current code
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "MANIFEST.in" },
+  { file = "src/**/*.py" },
+  { file = "src/**/*.json" },
+  { file = "src/**/*.png" },
+]
+
 [tool.mypy]
 python_version = "3.10"
 files = ["src"]
