@@ -3,110 +3,141 @@
 ![Python Version from PEP 621 TOML](https://img.shields.io/python/required-version-toml?tomlFilePath=https%3A%2F%2Fraw.githubusercontent.com%2Ffreand76%2Fdigsim%2Fmain%2Fpyproject.toml)
 ![PyPI - Version](https://img.shields.io/pypi/v/digsim-logic-simulator)
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/digsim-logic-simulator)
+[![Documentation](https://img.shields.io/badge/docs-freand76.github.io%2Fdigsim-blue)](https://freand76.github.io/digsim/)
 
 <p align="center">
   <img alt="The DigSim Application" src="https://raw.githubusercontent.com/freand76/digsim/af1bf95eb16d1af19f26159a4c1e1b88565703d7/docs/images/screenshot_digsim_app.png" width=85%>
 </p>
 
-## Introduction
+DigSim is an interactive digital logic simulator written in Python. It is made for
+learning and experimenting with digital logic, from single gates to complete Verilog
+designs: build a circuit on the canvas, start the simulation, and press buttons, flip
+switches and watch LEDs and hex displays react in real time.
 
-DigSim is a python based framework for digital circuit simulation.
-The main purpose of the software is to, in an educational way, play around with digital logic (simple gates and verilog designs).
+Simulating Verilog normally means writing test stimuli and reading waveforms afterwards.
+Testing on an FPGA is interactive, but every change means a slow synthesis and
+programming cycle. DigSim sits in between: load a Verilog module, wire it to buttons and
+displays, and play with it right away. It is even fast enough to run a synthesized
+[6502 CPU](https://en.wikipedia.org/wiki/MOS_Technology_6502).
 
-When working with block design in Verilog/VHDL the simulation tools are normally fed with test stimuli (a very non-interactive way of working...)
-A block design can be synthesized and tested on an FPGA (where there are possibilities for interactivity if buttons and LED/Hex digits are available),
-but that often has a great cost in time (and sometimes money) leading to long turnaround time.
+**📖 Documentation: <https://freand76.github.io/digsim/>**
 
-I started developing DigSim to make it easy to implement and visualize the functionality of simple verlog modules.
-During development I tried to synthesize larger verilog designs, such as the classic [6502 CPU](https://en.wikipedia.org/wiki/MOS_Technology_6502),
-and even if it is slower than many other simulators it is not entirely useless.
+## Features
 
-### Features
- * Create and simulate a circuit using python code
- * Create and simulate a circuit **interactively** using the GUI
- * Create new components using synthesized verilog code
- * Save simulation results in VCD files, which can be opened in for example GTKWave.
+- **Interactive GUI**: build and simulate circuits with buttons, switches, clocks, LEDs,
+  hex digits, 7-segment displays, a buzzer and a logic analyzer.
+- **Python API**: create and simulate circuits in Python, for scripts or pytest
+  testbenches.
+- **Verilog support**: turn Verilog into components with a bundled WebAssembly build of
+  [Yosys](https://github.com/YosysHQ/yosys). Nothing extra to install.
+- **Waveforms**: save simulation results as VCD files and view them in
+  [GTKWave](https://gtkwave.sourceforge.net/).
 
-## Quickstart
+## Installation and running
 
-### Install from PyPi (Option 1)
-```
-pip3 install digsim-logic-simulator
-```
+DigSim requires Python 3.10 or newer and is published on PyPI as
+[`digsim-logic-simulator`](https://pypi.org/project/digsim-logic-simulator/). Choose the
+option that fits what you want to do. See the
+[installation guide](https://freand76.github.io/digsim/installation/) for more details.
 
-### Install from GitHub (Option 2)
-```
-> git clone https://github.com/freand76/digsim.git
-> cd digsim
-> python3 -m pip install .
-```
+### Option 1: Run without installing (uvx)
 
-### Start Interactive GUI
+With [uv](https://docs.astral.sh/uv/) installed, this downloads and starts DigSim in a
+temporary environment:
 
-**Prerequisites:** Install by using *Option 1* or *Option 2* above.
-
-```
-> python3 -m digsim.app
-```
-
-or
-
-```
-> digsim-logic-simulator
+```sh
+uvx digsim-logic-simulator
 ```
 
-### Start using uv
+### Option 2: Install as an application
 
-**Prerequisites:** Download and install [uv](https://docs.astral.sh/uv/)
+Installs DigSim in its own isolated environment and adds the `digsim-logic-simulator`
+command to your `PATH`:
 
-```
-> uvx digsim-logic-simulator
-```
-
-**Note: Ubuntu**
-
-If your Ubuntu installation gives the folloing error message:
-
-*qt.qpa.plugin: Could not load the Qt platform plugin "xcb" in "" even though it was found.*
-*This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.*
-
-*Available platform plugins are: vnc, wayland, wayland-egl, eglfs, offscreen, xcb, minimal, linuxfb, vkkhrdisplay, minimalegl.*
-
-Then the following package must be installed:
-```
-> apt install libxcb-cursor0
+```sh
+uv tool install digsim-logic-simulator    # or: pipx install digsim-logic-simulator
+digsim-logic-simulator
 ```
 
-### Start with example circuit (example circuits are available in the github repository)
-```
-> python3 -m digsim.app --load example_circuits/counter_yosys_netlist.circuit
+### Option 3: Install as a Python package
+
+Use this to `import digsim` in your own scripts and tests. Install it into a virtual
+environment:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate                 # Windows: .venv\Scripts\activate
+pip install digsim-logic-simulator
+python -m digsim.app                      # start the GUI
 ```
 
-### Run example (examples are available in the github repository)
-```
-> python3 examples/example_sr.py
+### Option 4: Run from source
+
+Clone the repository to get the example circuits and Python examples, or to work on
+DigSim itself:
+
+```sh
+git clone https://github.com/freand76/digsim.git
+cd digsim
+uv sync                                   # or: pip install -e . (in a virtual environment)
+uv run -m digsim.app
 ```
 
-### Look at waveforms
-```
-> python3 examples/example_sr.py
-> gtkwave sr.vcd
+### Command-line options
+
+```sh
+digsim-logic-simulator --load example_circuits/counter_yosys_netlist.circuit   # open a circuit
+digsim-logic-simulator --version                                               # show version
 ```
 
-### Examples of writing pytest/python test benches for synthesized verilog code
-```
-> pytest examples/pytest_tb
-```
+### Linux: Qt "xcb" plugin error
 
-## Yosys synthesis helper tool
+If startup fails with *Could not load the Qt platform plugin "xcb"*, install the missing
+library (Ubuntu/Debian):
 
-```
-> python3 -m digsim.synth synth -i <verilog file 1> <optional verilog file 2> -o <output_file.json> -t <verilog top_module>
+```sh
+sudo apt install libxcb-cursor0
 ```
 
-## Documentation
+## Using DigSim
 
-[Documentation](https://github.com/freand76/digsim/blob/main/docs/documentation.md) on GitHub
+The commands below are run from the repository root (Option 4).
+
+**Simulate a circuit in Python and view the waveforms:**
+
+```sh
+uv run python examples/example_sr.py
+gtkwave sr.vcd
+```
+
+**Test a Verilog design with pytest:**
+
+```sh
+uv run --with pytest pytest examples/pytest_tb
+```
+
+**Synthesize Verilog into a netlist for DigSim:**
+
+```sh
+uv run -m digsim.synth synth -i <file1.v> [<file2.v> ...] -o <netlist.json> -t <top_module>
+```
+
+Read more in the documentation:
+
+- [GUI Application](https://freand76.github.io/digsim/gui/): the circuit editor,
+  components, simulation and shortcuts
+- [Python Circuits](https://freand76.github.io/digsim/python/): the Python API and
+  testbenches
+- [Verilog and Yosys](https://freand76.github.io/digsim/synthesis/): synthesizing your own
+  designs
+
+## Development
+
+```sh
+uv tool run ruff format && uv tool run ruff check   # format and lint
+uv run --with pytest pytest                         # run the tests
+uv tool run --with mkdocs-material mkdocs serve     # preview the documentation
+```
 
 ## Star History
 

@@ -3,6 +3,8 @@
 ## vx.x.x
  - Update pyside6 to 6.12.0
  - Add Application icon for Wayland
+ - Publish documentation at https://freand76.github.io/digsim/
+ - Rewrite README and documentation with separate install/run options
 
 ## v1.1.0
  - Update python packages

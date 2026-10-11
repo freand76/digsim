@@ -10,7 +10,7 @@ authors = [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 maintainers =  [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 readme = "README.md"
 license-files = ["LICENSE.md"]
-urls = { homepage = "https://github.com/freand76/digsim" }
+urls = { homepage = "https://github.com/freand76/digsim", documentation = "https://freand76.github.io/digsim/" }
 
 classifiers = [
   "Development Status :: 5 - Production/Stable",
