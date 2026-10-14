@@ -53,6 +53,7 @@
  - Yosys gate cells propagate undefined inputs ("X") as in Verilog, instead of treating them as 0. The simulation results are the same, but VCD files show X until a design has settled after the start.
  - The Fibonacci synthesis example starts with clock and reset low, so they are not undefined at the start of its waveforms
  - Drop support for Python 3.10, which has reached its end of life. DigSim requires Python 3.11 or newer.
+ - Simpler documentation image script, using contextlib.chdir from Python 3.11
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

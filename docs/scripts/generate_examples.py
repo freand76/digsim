@@ -21,6 +21,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from contextlib import chdir
 from dataclasses import dataclass, field
 from html import escape
 from pathlib import Path
@@ -794,9 +795,7 @@ def screenshots() -> None:
         else:
             spin(1000)
 
-    cwd = os.getcwd()
-    os.chdir(ROOT)
-    try:
+    with chdir(ROOT):
         for path in sorted((ROOT / "example_circuits").glob("*.circuit")):
             model.load_circuit(str(path.relative_to(ROOT)))
             spin(300)
@@ -817,8 +816,6 @@ def screenshots() -> None:
             spin(200)
             view_rect = area.mapFromScene(rect).boundingRect()
             area.viewport().grab(view_rect).save(str(OUT / f"{path.stem}.png"))
-    finally:
-        os.chdir(cwd)
 
 
 def main() -> None:
