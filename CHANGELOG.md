@@ -17,6 +17,7 @@
  - Bugfix: The logic analyzer could draw a signal one sample short
  - Simpler on/off switch code, which no longer sets its output twice at init
  - Bugfix: HexDigit.dot_active() without a digit failed for a single digit
+ - Bugfix: A label wire with a label already in use was left in the circuit
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

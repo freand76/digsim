@@ -8,6 +8,7 @@ import pytest
 from digsim.circuit import Circuit
 from digsim.circuit.components import LabelWireIn, LabelWireOut, Led, PushButton
 from digsim.circuit.components._label_wire import _LabelWireStorage
+from digsim.circuit.components.atoms import DigsimException
 
 
 @pytest.fixture(autouse=True)
@@ -54,3 +55,12 @@ def test_label_wire_clear():
     LabelWireIn(circuit, "wire_in", label="A")
     circuit.clear()
     assert LabelWireIn.get_parameters()["label"]["invalid_list"] == []
+
+
+def test_label_wire_duplicate_driver_not_added():
+    """A LabelWireIn with a label that is already driven is not added to the circuit"""
+    circuit = Circuit()
+    LabelWireIn(circuit, "wire_in", label="A")
+    with pytest.raises(DigsimException):
+        LabelWireIn(circuit, "other_in", label="A")
+    assert [comp.name() for comp in circuit.components] == ["wire_in"]

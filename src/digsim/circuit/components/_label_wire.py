@@ -43,10 +43,14 @@ class _LabelWireStorage:
             return None
         return driver_port.width
 
-    def add_driver(self, label: str, driver_port: PortWire) -> None:
-        """Add driver port with label"""
+    def check_new_driver(self, label: str) -> None:
+        """Raise an exception if label already has a driver"""
         if label in self._wire_drivers:
             raise DigsimException(f"Wire Driver '{label}' already added")
+
+    def add_driver(self, label: str, driver_port: PortWire) -> None:
+        """Add driver port with label"""
+        self.check_new_driver(label)
         self._wire_drivers[label] = driver_port
 
     def _get_driver(self, label: str) -> PortWire:
@@ -89,13 +93,15 @@ class LabelWireIn(Component):
     def __init__(
         self, circuit: Circuit, name: str | None = None, label: str = "", width: int = 1
     ) -> None:
+        self._label_wires = _LabelWireStorage()
+        # Check before the component is added to the circuit
+        self._label_wires.check_new_driver(label)
         super().__init__(circuit, name)
         self._label = label
         self._port_in = PortWire(self, self._label, width=width)
         self.add_port(self._port_in)
         self.parameter_set("label", self._label)
         self.parameter_set("width", width)
-        self._label_wires = _LabelWireStorage()
         self._label_wires.add_driver(self._label, self._port_in)
 
     def clear(self) -> None:
