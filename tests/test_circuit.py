@@ -49,3 +49,27 @@ def test_context_manager_closes_vcd(tmp_path):
         circuit.run(ms=1)
     # Without closing, the VCD writer would still hold the values in its buffer
     assert "$dumpvars" in vcd_path.read_text()
+
+
+def test_reload_yosys_component():
+    """Reloading a Yosys component replaces its gates, and the counter still counts"""
+    circuit = Circuit()
+    counter = YosysComponent(circuit, path="examples/yosys_counter/counter.json")
+    clock = PushButton(circuit, "clock")
+    clock.O.wire = counter.clk
+    component_count = len(circuit.components)
+    counter.reload_file()
+    assert len(circuit.components) == component_count
+
+    circuit.init()
+    counter.up.value = 1
+    counter.reset.value = 1
+    circuit.run(ms=1)
+    counter.reset.value = 0
+    circuit.run(ms=1)
+    for expected in range(1, 4):
+        clock.push()
+        circuit.run(ms=1)
+        clock.release()
+        circuit.run(ms=1)
+        assert counter.cnt.value == expected

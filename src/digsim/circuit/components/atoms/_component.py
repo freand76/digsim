@@ -261,7 +261,9 @@ class MultiComponent(Component):
             component.init()
 
     def remove_all_components(self) -> None:
-        """Remove all sub components from multicomponent"""
+        """Remove all sub components, from this component and from the circuit"""
+        for component in self._components:
+            self.circuit.delete_component(component)
         self._components = []
 
     def default_state(self) -> None:

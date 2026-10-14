@@ -10,6 +10,7 @@
  - Simpler sentences in the documentation
  - Bugfix: Deleting a component left the components it is built from in the circuit
  - Circuit can be used in a with statement, which closes its VCD file at the end
+ - Bugfix: Reloading a Yosys component kept its old gates in the circuit
 
 ## v1.2.0
  - Update pyside6 to 6.12.0
