@@ -55,7 +55,7 @@ class HexDigit(CallbackComponent):
         """Get value"""
         return self.val.value
 
-    def dot_active(self, digit_id: int = 1) -> bool:
+    def dot_active(self, digit_id: int = 0) -> bool:
         """Is the dot active for the selected digit_id?"""
         if not self.parameter_get("dot"):
             return False

@@ -16,6 +16,7 @@
  - Bugfix: Initializing a circuit again did not reset the T flip-flop output
  - Bugfix: The logic analyzer could draw a signal one sample short
  - Simpler on/off switch code, which no longer sets its output twice at init
+ - Bugfix: HexDigit.dot_active() without a digit failed for a single digit
 
 ## v1.2.0
  - Update pyside6 to 6.12.0
