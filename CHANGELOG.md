@@ -6,6 +6,7 @@
  - Bugfix: Circuits saved on Windows stored file paths with backslashes and could not be loaded on Linux or macOS. Paths are now stored with "/", and old files with backslashes load on all systems.
  - Circuit.to_json_file() stores file paths relative to the JSON file, and from_json_file() reads them from the file's folder by default, so a saved circuit loads from any working directory. Files saved by older versions with such paths load with folder=".".
  - More tests for how Yosys components are wired from a netlist
+ - The Yosys netlist model only reads the parts of a netlist that DigSim uses. Net names, attributes and cell parameters are no longer stored.
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

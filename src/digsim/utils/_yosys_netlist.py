@@ -2,12 +2,14 @@
 # All rights reserved
 
 """
-Module with classes to parse a yosys netlist
+Module with classes to parse a yosys netlist.
+Only the parts of the netlist that are used to build a component are read, pydantic
+ignores the rest (for example net names, attributes and cell parameters).
 """
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
@@ -51,9 +53,6 @@ class YosysCell:
     type: str
     port_directions: dict[str, str] = Field(default_factory=dict)
     connections: dict[str, BIT_TYPE] = Field(default_factory=dict)
-    hide_name: int = 0
-    parameters: dict[str, Any] = Field(default_factory=dict)
-    attributes: dict[str, Any] = Field(default_factory=dict)
 
     def get_nets(self, name: str, nets: Nets) -> None:
         for port_name, net_list in self.connections.items():
@@ -79,19 +78,9 @@ class YosysCell:
 
 
 @dataclass
-class YosysNetName:
-    bits: BIT_TYPE
-    attributes: dict[str, Any] = Field(default_factory=dict)
-    hide_name: int = 0
-
-
-@dataclass
 class YosysModule:
-    attributes: dict[str, Any] = Field(default_factory=dict)
-    parameter_default_values: dict[str, Any] = Field(default_factory=dict)
     ports: dict[str, YosysPort] = Field(default_factory=dict)
     cells: dict[str, YosysCell] = Field(default_factory=dict)
-    netnames: dict[str, YosysNetName] = Field(default_factory=dict)
 
     def is_same_interface(self, netlist: YosysModule) -> bool:
         """Same port names, with the same directions and bitwidths"""
@@ -123,7 +112,6 @@ class YosysModule:
 
 @dataclass
 class YosysNetlist:
-    creator: str | None = None
     modules: dict[str, YosysModule] = Field(default_factory=dict)
 
     def get_modules(self) -> dict[str, YosysModule]:
