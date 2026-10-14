@@ -99,6 +99,16 @@ def test_label_wire_sink_without_driver():
     wire_out = LabelWireOut(circuit, "wire_out", label="A")
     circuit.init()
     circuit.delete_component(wire_in)
-    circuit.init()
+    with pytest.warns(UserWarning, match="no LabelWireIn with the label 'A'"):
+        circuit.init()
     circuit.run(ms=1)
     assert wire_out.A.value == "X"
+
+
+def test_label_wire_mistyped_label_warns():
+    """A LabelWireOut with a label that no LabelWireIn has gives a warning"""
+    circuit = Circuit()
+    LabelWireIn(circuit, "wire_in", label="CLOCK")
+    LabelWireOut(circuit, "wire_out", label="CLOKC")
+    with pytest.warns(UserWarning, match="'CLOKC'"):
+        circuit.init()

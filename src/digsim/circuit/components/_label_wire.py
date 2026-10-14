@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import TYPE_CHECKING, Any
 
 from .atoms import Component, DigsimException, PortWire
@@ -112,11 +113,17 @@ class LabelWireOut(Component):
 
     def init(self) -> None:
         if not self._port_out.has_driver():
-            # Without a LabelWireIn (deleted in the GUI) the output is undefined, like an
-            # unconnected input
             driver = _drivers(self.circuit).get(self._label)
             if driver is not None:
                 driver.port_in.wire = self._port_out
+            else:
+                # Not an error: the LabelWireIn can have been deleted in the GUI. The output
+                # is then undefined, like an unconnected input.
+                warnings.warn(
+                    f"LabelWireOut '{self.name()}': no LabelWireIn with the label "
+                    f"'{self._label}', the output is undefined",
+                    stacklevel=2,
+                )
         super().init()
 
     def remove_connections(self) -> None:

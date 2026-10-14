@@ -48,6 +48,7 @@
  - Bugfix: A button press or release just before the simulation stopped was handled at the next start, also after a reset
  - Bugfix: Saving a Yosys component created from a netlist object stored the path "None". It now gives an error.
  - Bugfix: A new component could take over the shortcut key of a deleted component with the same name
+ - A label wire output without a matching label wire input gives a warning when the circuit is initialized
 
 ## v1.2.0
  - Update pyside6 to 6.12.0
