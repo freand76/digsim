@@ -25,6 +25,7 @@
  - Bugfix: Yosys flip-flops could miss the first clock edge after the circuit was reset
  - Fix a typo in the error message for an unknown Yosys cell level
  - Bugfix: Loading a circuit changed the stored component paths, so a second load failed
+ - Bugfix: Synthesis failed for Verilog files in a folder with a space in its name
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

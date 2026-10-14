@@ -37,6 +37,11 @@ def _script_path(path: pathlib.Path) -> str:
     return f'"{path.as_posix()}"'
 
 
+def _script_files(verilog_files: VerilogFiles) -> str:
+    """The verilog files as arguments in a Yosys script"""
+    return " ".join(_script_path(pathlib.Path(file)) for file in _file_list(verilog_files))
+
+
 @contextmanager
 def _console_to_file(console_file: pathlib.Path) -> Iterator[None]:
     """
@@ -121,7 +126,7 @@ class Synthesis:
     @classmethod
     def list_modules(cls, verilog_files: VerilogFiles) -> list[str]:
         """List available modules in verilog files"""
-        files = " ".join(_file_list(verilog_files))
+        files = _script_files(verilog_files)
         with cls._work_dir() as work_dir:
             modules_file = work_dir / "modules.txt"
             script = f"read -sv {files}; tee -q -o {_script_path(modules_file)} ls"
@@ -144,7 +149,7 @@ class Synthesis:
 
     def synth_to_json(self, silent: bool = False) -> str:
         """Execute yosys with generated synthesis script"""
-        script = f"read -sv {' '.join(self._verilog_files)}; "
+        script = f"read -sv {_script_files(self._verilog_files)}; "
         script += f"hierarchy -top {self._verilog_top_module}; "
         script += "proc; flatten; "
         script += "memory_dff; "

@@ -109,3 +109,16 @@ def test_yosys_error_closes_files(verilog_path):
         except OSError:
             continue
     assert not [name for name in open_files if "yosys.log" in name]
+
+
+def test_yosys_path_with_space(verilog_path):
+    """Verilog files in a folder with a space in the name can be read"""
+    # Not in tmp_path: the WebAssembly Yosys can't read the system temp folder
+    with Synthesis._work_dir() as work_dir:
+        folder = work_dir / "my designs"
+        folder.mkdir()
+        verilog_file = folder / "one_module.v"
+        verilog_file.write_text((verilog_path / "one_module.v").read_text())
+        assert Synthesis.list_modules(verilog_file) == ["module_one"]
+        netlist_dict = Synthesis(verilog_file, "module_one").synth_to_dict(silent=True)
+        assert "module_one" in netlist_dict["modules"]
