@@ -49,7 +49,7 @@ class YosysComponent(MultiComponent):
         nets: bool = True,
     ) -> None:
         super().__init__(circuit, name)
-        self._path = str(path)
+        self._path = str(path) if path is not None else None
         self._net_comp: Component | None = None
         self._netlist_module: YosysModule | None = None
         self._netlist_nets: Nets | None = None
@@ -213,31 +213,40 @@ class YosysComponent(MultiComponent):
         # Connect external input ports
         self._connect_external_input(components_dict)
 
-    def _synth_verilog(self) -> dict[str, Any]:
+    def _file_path(self) -> str:
+        """The Verilog or netlist file of the component"""
+        if self._path is None:
+            raise YosysComponentException(
+                f"Yosys component '{self.name()}' has no file, it was created from a netlist"
+            )
+        return self._path
+
+    def _synth_verilog(self, path: str) -> dict[str, Any]:
         """Synthesize verilog to netlist"""
-        modules = Synthesis.list_modules(self._path)
+        modules = Synthesis.list_modules(path)
         if len(modules) == 1:
             toplevel = modules[0]
         else:
             raise YosysComponentException("Current only one module per verilog file is supported")
 
-        synthesis = Synthesis(self._path, toplevel)
+        synthesis = Synthesis(path, toplevel)
         return synthesis.synth_to_dict(silent=True)
 
     def _load_netlist_dict(self) -> YosysNetlist:
         """Load yosys netlist dict"""
+        path = self._file_path()
         try:
-            if self._path.endswith(".json"):
-                with open(self._path, encoding="utf-8") as json_file:
+            if path.endswith(".json"):
+                with open(path, encoding="utf-8") as json_file:
                     netlist_dict = json.load(json_file)
-            elif self._path.endswith(".v"):
-                netlist_dict = self._synth_verilog()
+            elif path.endswith(".v"):
+                netlist_dict = self._synth_verilog(path)
             else:
-                raise YosysComponentException(f"Unknown file extension '{self._path}'")
+                raise YosysComponentException(f"Unknown file extension '{path}'")
             yosys_netlist = YosysNetlist(**netlist_dict)
         except ValueError as exc:
             # Malformed JSON, or JSON that is not a Yosys netlist (pydantic ValidationError)
-            raise YosysComponentException(f"Not a Yosys netlist: '{self._path}'") from exc
+            raise YosysComponentException(f"Not a Yosys netlist: '{path}'") from exc
         modules = yosys_netlist.get_modules()
 
         if len(modules) > 1:
@@ -267,7 +276,7 @@ class YosysComponent(MultiComponent):
                 bit_port.set_driver(None)
 
     def settings_to_dict(self) -> dict[str, ParameterValue]:
-        path = self.circuit.store_path(self._path)
+        path = self.circuit.store_path(self._file_path())
         return {"path": path}
 
     @classmethod

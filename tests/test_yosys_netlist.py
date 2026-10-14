@@ -297,3 +297,16 @@ def test_yosys_component_malformed_netlist(tmp_path, content):
     netlist_file.write_text(content)
     with pytest.raises(YosysComponentException):
         YosysComponent(Circuit(), path=netlist_file)
+
+
+def test_yosys_component_from_netlist_has_no_file():
+    """A component created from a netlist object can't be saved or reloaded from a file"""
+    netlist_file = Path(__file__).parent.parent / "examples" / "yosys_counter" / "counter.json"
+    netlist = YosysNetlist(**json.loads(netlist_file.read_text()))
+    circuit = Circuit(name="counter")
+    counter = YosysComponent(circuit)
+    counter.create_from_netlist(netlist)
+    with pytest.raises(YosysComponentException, match="no file"):
+        circuit.to_dataclass()
+    with pytest.raises(YosysComponentException, match="no file"):
+        counter.reload_file()
