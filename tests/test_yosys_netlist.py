@@ -11,6 +11,7 @@ import pytest
 from digsim.circuit import Circuit
 from digsim.circuit.components import YosysComponent, YosysComponentException
 from digsim.utils import YosysNetlist
+from digsim.utils._yosys_netlist import YosysModule, YosysPort
 
 
 netlist_dict_if_one = {
@@ -268,3 +269,22 @@ def test_yosys_complex_netlist():
     with open(comlex_json_netlist_file, encoding="utf-8") as json_file:
         netlist_dict = json.load(json_file)
     YosysNetlist(**netlist_dict)
+
+
+def _module(**ports):
+    return YosysModule(
+        ports={
+            name: YosysPort(direction=direction, bits=list(range(width)))
+            for name, (direction, width) in ports.items()
+        }
+    )
+
+
+def test_yosys_module_same_interface():
+    """Modules have the same interface with the same port names, directions and widths"""
+    module = _module(a=("input", 2), y=("output", 1))
+    assert module.is_same_interface(_module(y=("output", 1), a=("input", 2)))
+    assert not module.is_same_interface(_module(a=("input", 2)))
+    assert not module.is_same_interface(_module(a=("input", 2), z=("output", 1)))
+    assert not module.is_same_interface(_module(a=("input", 3), y=("output", 1)))
+    assert not module.is_same_interface(_module(a=("output", 2), y=("output", 1)))

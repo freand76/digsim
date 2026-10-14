@@ -94,18 +94,13 @@ class YosysModule:
     netnames: dict[str, YosysNetName] = Field(default_factory=dict)
 
     def is_same_interface(self, netlist: YosysModule) -> bool:
-        is_same = True
-        if len(netlist.ports) == len(self.ports):
-            for netlist_port_name, netlist_port in netlist.ports.items():
-                module_port = self.ports.get(netlist_port_name)
-                if module_port is None or not module_port.is_same(netlist_port):
-                    # Port does not exist or has a different bitwidth
-                    is_same = False
-                    break
-        else:
-            # The number of ports does not match
-            is_same = False
-        return is_same
+        """Same port names, with the same directions and bitwidths"""
+        if len(netlist.ports) != len(self.ports):
+            return False
+        return all(
+            name in self.ports and self.ports[name].is_same(port)
+            for name, port in netlist.ports.items()
+        )
 
     def get_nets(self) -> Nets:
         nets = Nets()
