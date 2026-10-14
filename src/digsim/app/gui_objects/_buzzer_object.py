@@ -5,13 +5,13 @@
 
 from __future__ import annotations
 
-from math import pi, sin
 from struct import pack
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QByteArray, QIODevice
 from PySide6.QtMultimedia import QAudioFormat, QAudioSink, QMediaDevices
 
+from digsim.app._tone import tone_samples
 from digsim.circuit.components import Buzzer
 from digsim.circuit.components.atoms import Component
 
@@ -30,18 +30,10 @@ class _AudioOutput(QIODevice):
         self.audio_buffer = QByteArray()
         self.audio_buffer.clear()
 
-        factor = 2 * pi * tone_hz / audio_format.sampleRate()
-        channel_bytes = audio_format.bytesPerSample()
-        length = audio_format.sampleRate() * audio_format.channelCount() * channel_bytes
-
-        sample_index = 0
-        while length > 0:
-            x = 32767 * sin((sample_index % audio_format.sampleRate()) * factor)
-            packed = pack("<h", int(x))
+        for sample in tone_samples(tone_hz, audio_format.sampleRate()):
+            packed = pack("<h", sample)
             for _ in range(audio_format.channelCount()):
                 self.audio_buffer.append(packed)
-                length -= channel_bytes
-            sample_index += 1
         self.open(QIODevice.OpenModeFlag.ReadOnly)
 
     def readData(self, maxlen: int) -> bytes | bytearray | memoryview:

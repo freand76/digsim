@@ -41,6 +41,7 @@
  - Components built from other components no longer initialize their parts a second time. This only changes the first nanoseconds of the VCD files of Yosys designs.
  - Remove the unused Port.width setter, which did not resize the bits of a bus port
  - The IC selector lists the ICs sorted by name
+ - Bugfix: The buzzer clicked once a second for all tones except A
 
 ## v1.2.0
  - Update pyside6 to 6.12.0
