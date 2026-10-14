@@ -130,8 +130,13 @@ class Circuit:
         return str(store_path)
 
     def delete_component(self, component: Component) -> None:
-        """Delete a component from the circuit"""
-        del self._components[component.name()]
+        """Delete a component, and the components it is built from, from the circuit"""
+        for comp in list(self._components.values()):
+            part: Component | None = comp
+            while part is not None and part is not component:
+                part = part.parent
+            if part is component:
+                del self._components[comp.name()]
         component.remove_connections()
 
     def get_toplevel_components(self) -> list[Component]:

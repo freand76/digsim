@@ -8,6 +8,7 @@
  - Painting components no longer changes pens shared by all components of a type
  - Add the changelog to the documentation site
  - Simpler sentences in the documentation
+ - Bugfix: Deleting a component left the components it is built from in the circuit
 
 ## v1.2.0
  - Update pyside6 to 6.12.0
