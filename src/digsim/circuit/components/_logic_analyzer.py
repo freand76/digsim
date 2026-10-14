@@ -40,10 +40,10 @@ class LogicAnalyzer(CallbackComponent):
         else:
             self._feedback.value = 1
 
+        # Replace the lists instead of changing them, the GUI thread reads them while painting
         for portname in self.PORTLIST:
-            self.data_dict[portname].pop(0)
             value = 1 if self.port(portname).value == 1 else 0
-            self.data_dict[portname].append(value)
+            self.data_dict[portname] = [*self.data_dict[portname][1:], value]
         super().update()
 
     def reconfigure(self) -> None:

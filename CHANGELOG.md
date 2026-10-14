@@ -14,6 +14,7 @@
  - Bugfix: The SR latch outputs Q and nQ were treated as inputs
  - Bugfix: The JK flip-flop toggled when K was undefined
  - Bugfix: Initializing a circuit again did not reset the T flip-flop output
+ - Bugfix: The logic analyzer could draw a signal one sample short
 
 ## v1.2.0
  - Update pyside6 to 6.12.0
