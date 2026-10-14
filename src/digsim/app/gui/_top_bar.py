@@ -223,7 +223,8 @@ class VcdControlWidget(QFrame):
         is_checked = self._enable_vcd.isChecked()
         if is_checked:
             if self._vcd_filename is not None:
-                self._enable_buttons(True)
+                # The VCD was closed when the checkbox was unchecked, start it again
+                self._start_vcd(self._vcd_filename)
             else:
                 filename = self._open_filedialog()
 
