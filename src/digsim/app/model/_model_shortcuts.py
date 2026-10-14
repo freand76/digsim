@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 
-from digsim.circuit.components.atoms import Component
+from digsim.circuit.components.atoms import Component, DigsimException
 
 
 if TYPE_CHECKING:
@@ -35,7 +35,8 @@ class ModelShortcuts:
 
     def __init__(self, app_model: AppModel) -> None:
         self._app_model = app_model
-        self._shortcut_component: dict[str, Component] = {}
+        # Component names: undo and redo replace the components with new ones
+        self._shortcut_component: dict[str, str] = {}
 
     def clear(self) -> None:
         """Clear shortcuts"""
@@ -43,11 +44,17 @@ class ModelShortcuts:
 
     def set_component(self, key: str, component: Component) -> None:
         """Set shortcut"""
-        self._shortcut_component[key] = component
+        self._shortcut_component[key] = component.name()
 
     def get_component(self, key: str) -> Component | None:
-        """Get shortcut"""
-        return self._shortcut_component.get(key)
+        """Get shortcut, None if its component is not in the circuit (anymore)"""
+        component_name = self._shortcut_component.get(key)
+        if component_name is None:
+            return None
+        try:
+            return self._app_model.objects.circuit.get_component(component_name)
+        except DigsimException:
+            return None
 
     def press(self, qtkey: int) -> None:
         """Handle shortcut keypress"""
@@ -70,14 +77,14 @@ class ModelShortcuts:
     def to_dict(self) -> dict[str, str]:
         """Generate dict from shortcuts"""
         shortcuts_dict = {}
-        for key, component in self._shortcut_component.items():
-            shortcuts_dict[key] = component.name()
+        for key in self._shortcut_component:
+            component = self.get_component(key)
+            if component is not None:
+                shortcuts_dict[key] = component.name()
         return shortcuts_dict
 
     def from_dict(self, shortcuts_dict: dict[str, str] | None) -> None:
         """Generate shortcuts from dict"""
         self.clear()
         if shortcuts_dict is not None:
-            for key, component_name in shortcuts_dict.items():
-                component = self._app_model.objects.circuit.get_component(component_name)
-                self.set_component(key, component)
+            self._shortcut_component = dict(shortcuts_dict)
