@@ -38,6 +38,7 @@
  - Bugfix: A VCD file that could not be opened left the circuit unable to run or start another VCD
  - Bugfix: Choosing a VCD file that cannot be written raised an exception instead of showing an error
  - Bugfix: Saving to a folder that cannot be written raised an exception instead of showing an error
+ - Components built from other components no longer initialize their parts a second time. This only changes the first nanoseconds of the VCD files of Yosys designs.
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

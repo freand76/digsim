@@ -249,27 +249,20 @@ class Component(abc.ABC):
 
 
 class MultiComponent(Component):
-    """A component that holds one or several sub components"""
+    """
+    A component that holds one or several sub components.
+    The sub components are in the circuit too, so the circuit initializes them.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self._components: list[Component] = []
-
-    def init(self) -> None:
-        super().init()
-        for component in self._components:
-            component.init()
 
     def remove_all_components(self) -> None:
         """Remove all sub components, from this component and from the circuit"""
         for component in self._components:
             self.circuit.delete_component(component)
         self._components = []
-
-    def default_state(self) -> None:
-        super().default_state()
-        for component in self._components:
-            component.default_state()
 
     def add(self, component: Component) -> None:
         """Add sub-component to MultiComponent"""

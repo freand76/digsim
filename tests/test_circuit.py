@@ -134,3 +134,23 @@ def test_vcd_that_cannot_be_opened(tmp_path):
     circuit.vcd(str(tmp_path / "waves.vcd"))
     circuit.vcd_close()
     assert (tmp_path / "waves.vcd").exists()
+
+
+def test_sub_components_initialized_once():
+    """The circuit initializes each component once, also the parts of a component"""
+    calls = []
+
+    class CountingAND(AND):
+        def init(self):
+            calls.append("init")
+            super().init()
+
+        def default_state(self):
+            calls.append("default_state")
+            super().default_state()
+
+    circuit = Circuit()
+    latch = SR(circuit, "latch")
+    latch.add(CountingAND(circuit, "part"))
+    circuit.init()
+    assert calls == ["init", "default_state"]
