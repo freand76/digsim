@@ -223,6 +223,14 @@ class Component(abc.ABC):
         """Return parameters"""
         return {}
 
+    @classmethod
+    def get_circuit_parameters(cls, circuit: Circuit) -> dict[str, dict[str, Any]]:
+        """
+        Return parameters for a new component in 'circuit',
+        for components whose parameters depend on the other components (like label wires)
+        """
+        return cls.get_parameters()
+
     def update_settings(self, settings: dict[str, ParameterValue]) -> None:
         """Update parameters from settings dict"""
         for setting, value in settings.items():

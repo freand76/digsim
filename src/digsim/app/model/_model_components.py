@@ -111,7 +111,7 @@ class ModelComponents:
 
     def get_object_parameters(self, name: str) -> dict[str, dict[str, Any]]:
         """Get parameters for a component"""
-        return self._get_component_class(name).get_parameters()
+        return self._get_component_class(name).get_circuit_parameters(self._circuit)
 
     def _add_object(self, component: Component, xpos: float, ypos: float) -> ComponentObject:
         """Add component object in position"""

@@ -14,112 +14,52 @@ if TYPE_CHECKING:
     from digsim.circuit import Circuit
 
 
-class _LabelWireStorage:
-    """Singleton class with label wires"""
+def _drivers(circuit: Circuit) -> dict[str, LabelWireIn]:
+    """The label wire drivers in the circuit, by label"""
+    return {comp.label(): comp for comp in circuit.components if isinstance(comp, LabelWireIn)}
 
-    _instance: _LabelWireStorage | None = None
-    _wire_drivers: dict[str, PortWire]
-    _wire_sinks: dict[PortWire, str]
 
-    def __new__(cls) -> _LabelWireStorage:  # noqa: PYI034 (singleton)
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._instance.clear()
-        return cls._instance
-
-    def clear(self) -> None:
-        """Remove all wires"""
-        self._wire_drivers = {}
-        self._wire_sinks = {}
-
-    def get_labels(self) -> list[str]:
-        """Get label list"""
-        return list(self._wire_drivers.keys())
-
-    def get_wire_width(self, label: str) -> int | None:
-        """Get width of wire"""
-        driver_port = self._wire_drivers.get(label)
-        if driver_port is None:
-            return None
-        return driver_port.width
-
-    def check_new_driver(self, label: str) -> None:
-        """Raise an exception if label already has a driver"""
-        if label in self._wire_drivers:
-            raise DigsimException(f"Wire Driver '{label}' already added")
-
-    def add_driver(self, label: str, driver_port: PortWire) -> None:
-        """Add driver port with label"""
-        self.check_new_driver(label)
-        self._wire_drivers[label] = driver_port
-
-    def _get_driver(self, label: str) -> PortWire:
-        driver_port = self._wire_drivers.get(label)
-        if driver_port is None:
-            raise DigsimException(f"Wire Driver '{label}' not found")
-        return driver_port
-
-    def remove_driver(self, label: str) -> None:
-        """Remove driver"""
-        driver_port = self._get_driver(label)
-        for sink_port, sink_label in self._wire_sinks.items():
-            if label == sink_label:
-                driver_port.disconnect(sink_port)
-        del self._wire_drivers[label]
-
-    def add_sink(self, label: str, sink_port: PortWire) -> None:
-        """Add driver port with label"""
-        if sink_port in self._wire_sinks:
-            raise DigsimException(f"Wire Sink '{label}' already added")
-        self._wire_sinks[sink_port] = label
-
-    def remove_sink(self, sink_port: PortWire) -> None:
-        """Remove sink"""
-        del self._wire_sinks[sink_port]
-
-    def connect(self, sink_port: PortWire) -> None:
-        """Connect sink port if needed"""
-        if not sink_port.has_driver():
-            label = self._wire_sinks.get(sink_port)
-            if label is None:
-                raise DigsimException("Wire Sink not found")
-            driver_port = self._get_driver(label)
-            driver_port.wire = sink_port
+def _sinks(circuit: Circuit, label: str) -> list[LabelWireOut]:
+    """The label wire sinks in the circuit with the label"""
+    return [
+        comp
+        for comp in circuit.components
+        if isinstance(comp, LabelWireOut) and comp.label() == label
+    ]
 
 
 class LabelWireIn(Component):
-    """LabelWireIn component class"""
+    """LabelWireIn component class, drives the LabelWireOut components with the same label"""
 
     def __init__(
         self, circuit: Circuit, name: str | None = None, label: str = "", width: int = 1
     ) -> None:
-        self._label_wires = _LabelWireStorage()
         # Check before the component is added to the circuit
-        self._label_wires.check_new_driver(label)
+        if label in _drivers(circuit):
+            raise DigsimException(f"Wire Driver '{label}' already added")
         super().__init__(circuit, name)
         self._label = label
         self._port_in = PortWire(self, self._label, width=width)
         self.add_port(self._port_in)
         self.parameter_set("label", self._label)
         self.parameter_set("width", width)
-        self._label_wires.add_driver(self._label, self._port_in)
-
-    def clear(self) -> None:
-        self._label_wires.clear()
 
     def label(self) -> str:
         """Return Label"""
         return self._label
 
+    @property
+    def port_in(self) -> PortWire:
+        """The port that drives the sinks"""
+        return self._port_in
+
     def remove_connections(self) -> None:
-        self._label_wires.remove_driver(self._label)
+        for sink in _sinks(self.circuit, self._label):
+            self._port_in.disconnect(sink.port_out)
         super().remove_connections()
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
-        label_wires = _LabelWireStorage()
-        label_list = label_wires.get_labels()
-
+    def _label_parameters(cls, label_list: list[str]) -> dict[str, dict[str, Any]]:
         return {
             "label": {
                 "type": "str",
@@ -137,44 +77,55 @@ class LabelWireIn(Component):
             },
         }
 
+    @classmethod
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+        return cls._label_parameters([])
+
+    @classmethod
+    def get_circuit_parameters(cls, circuit: Circuit) -> dict[str, dict[str, Any]]:
+        return cls._label_parameters(list(_drivers(circuit)))
+
 
 class LabelWireOut(Component):
-    """LabelWireOut component class"""
+    """LabelWireOut component class, driven by the LabelWireIn with the same label"""
 
     def __init__(
         self, circuit: Circuit, name: str | None = None, label: str = "", width: int = 1
     ) -> None:
+        driver = _drivers(circuit).get(label)
+        width = driver.port_in.width if driver is not None else width
         super().__init__(circuit, name)
-        self._label_wires = _LabelWireStorage()
-        label_width = self._label_wires.get_wire_width(label)
-        width = label_width if label_width is not None else width
         self._label = label
         self._port_out = PortWire(self, self._label, width=width, output=True)
         self.add_port(self._port_out)
         self.parameter_set("label", self._label)
         self.parameter_set("width", width)
-        self._label_wires.add_sink(self._label, self._port_out)
-
-    def clear(self) -> None:
-        self._label_wires.clear()
 
     def label(self) -> str:
         """Return Label"""
         return self._label
 
+    @property
+    def port_out(self) -> PortWire:
+        """The port driven by the LabelWireIn"""
+        return self._port_out
+
     def init(self) -> None:
-        self._label_wires.connect(self._port_out)
+        if not self._port_out.has_driver():
+            driver = _drivers(self.circuit).get(self._label)
+            if driver is None:
+                raise DigsimException(f"Wire Driver '{self._label}' not found")
+            driver.port_in.wire = self._port_out
         super().init()
 
     def remove_connections(self) -> None:
-        self._label_wires.remove_sink(self._port_out)
+        driver = self._port_out.get_driver()
+        if driver is not None:
+            driver.disconnect(self._port_out)
         super().remove_connections()
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
-        label_wires = _LabelWireStorage()
-        label_list = label_wires.get_labels()
-
+    def _label_parameters(cls, label_list: list[str]) -> dict[str, dict[str, Any]]:
         return {
             "label": {
                 "type": "list",
@@ -182,3 +133,11 @@ class LabelWireOut(Component):
                 "description": "Select label",
             }
         }
+
+    @classmethod
+    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+        return cls._label_parameters([])
+
+    @classmethod
+    def get_circuit_parameters(cls, circuit: Circuit) -> dict[str, dict[str, Any]]:
+        return cls._label_parameters(list(_drivers(circuit)))

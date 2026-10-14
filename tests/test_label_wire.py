@@ -7,14 +7,7 @@ import pytest
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import LabelWireIn, LabelWireOut, Led, PushButton
-from digsim.circuit.components._label_wire import _LabelWireStorage
 from digsim.circuit.components.atoms import DigsimException
-
-
-@pytest.fixture(autouse=True)
-def clear_labels():
-    """The label storage is shared, start each test without labels"""
-    _LabelWireStorage().clear()
 
 
 def test_label_wire_connects_driver_to_sink():
@@ -43,8 +36,9 @@ def test_label_wire_parameters_keep_labels():
     """Listing parameters (as the GUI settings dialog does) must not forget labels"""
     circuit = Circuit()
     LabelWireIn(circuit, "wire_in", label="A")
-    parameters = LabelWireIn.get_parameters()
+    parameters = LabelWireIn.get_circuit_parameters(circuit)
     assert parameters["label"]["invalid_list"] == ["A"]
+    assert LabelWireOut.get_circuit_parameters(circuit)["label"]["items"] == ["A"]
     LabelWireOut(circuit, "wire_out", label="A")
     circuit.init()
 
@@ -54,7 +48,7 @@ def test_label_wire_clear():
     circuit = Circuit()
     LabelWireIn(circuit, "wire_in", label="A")
     circuit.clear()
-    assert LabelWireIn.get_parameters()["label"]["invalid_list"] == []
+    assert LabelWireIn.get_circuit_parameters(circuit)["label"]["invalid_list"] == []
 
 
 def test_label_wire_duplicate_driver_not_added():
@@ -64,3 +58,35 @@ def test_label_wire_duplicate_driver_not_added():
     with pytest.raises(DigsimException):
         LabelWireIn(circuit, "other_in", label="A")
     assert [comp.name() for comp in circuit.components] == ["wire_in"]
+
+
+def test_label_wire_same_label_in_two_circuits():
+    """Each circuit has its own labels"""
+    first = Circuit()
+    LabelWireIn(first, "wire_in", label="A")
+    second = Circuit()
+    LabelWireIn(second, "wire_in", label="A")
+    assert LabelWireIn.get_circuit_parameters(second)["label"]["invalid_list"] == ["A"]
+    assert LabelWireIn.get_circuit_parameters(Circuit())["label"]["invalid_list"] == []
+
+
+def test_label_wire_delete_sink():
+    """A deleted LabelWireOut is disconnected from its driver"""
+    circuit = Circuit()
+    wire_in = LabelWireIn(circuit, "wire_in", label="A")
+    wire_out = LabelWireOut(circuit, "wire_out", label="A")
+    circuit.init()
+    assert wire_in.A.wired_ports == [wire_out.A]
+    circuit.delete_component(wire_out)
+    assert wire_in.A.wired_ports == []
+
+
+def test_label_wire_delete_driver():
+    """A deleted LabelWireIn is disconnected from its sinks, and its label is free again"""
+    circuit = Circuit()
+    wire_in = LabelWireIn(circuit, "wire_in", label="A")
+    wire_out = LabelWireOut(circuit, "wire_out", label="A")
+    circuit.init()
+    circuit.delete_component(wire_in)
+    assert not wire_out.A.has_driver()
+    LabelWireIn(circuit, "new_in", label="A")
