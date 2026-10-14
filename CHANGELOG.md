@@ -29,6 +29,7 @@
  - Simpler Yosys netlist code
  - Bugfix: Shortcut keys stopped working after undo, and a shortcut to a missing component stopped the circuit from loading
  - Bugfix: Loading a missing or broken circuit file crashed the application instead of showing an error
+ - Bugfix: A buzzer kept its old tone after the tone was changed in its settings
 
 ## v1.2.0
  - Update pyside6 to 6.12.0
