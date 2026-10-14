@@ -99,6 +99,7 @@ class ClockedTFF(Component):
         self.add_port(PortOutDelta(self, "Q"))
 
     def init(self) -> None:
+        super().init()
         self.T.value = 0
 
     def update(self) -> None:

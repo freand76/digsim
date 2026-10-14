@@ -4,7 +4,7 @@
 """Pytest module to test the flip-flop components"""
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import SRFF, ClockedJKFF, ClockedSRFF
+from digsim.circuit.components import SRFF, ClockedJKFF, ClockedSRFF, ClockedTFF
 
 
 def _clock(circuit, flip_flop):
@@ -72,3 +72,30 @@ def test_clocked_jkff_undefined_k():
     flip_flop.K.value = "X"
     _clock(circuit, flip_flop)
     assert flip_flop.Q.value == 1
+
+
+def test_clocked_tff():
+    """T toggles the output on a rising clock edge"""
+    circuit = Circuit()
+    flip_flop = ClockedTFF(circuit)
+    circuit.init()
+    flip_flop.C.value = 0
+    _clock(circuit, flip_flop)
+    assert flip_flop.Q.value == "X"
+    flip_flop.T.value = 1
+    for expected in [0, 1, 0]:
+        _clock(circuit, flip_flop)
+        assert flip_flop.Q.value == expected
+
+
+def test_clocked_tff_reinit():
+    """Initializing the circuit again resets the output"""
+    circuit = Circuit()
+    flip_flop = ClockedTFF(circuit)
+    circuit.init()
+    flip_flop.C.value = 0
+    flip_flop.T.value = 1
+    _clock(circuit, flip_flop)
+    assert flip_flop.Q.value == 0
+    circuit.init()
+    assert flip_flop.Q.value == "X"
