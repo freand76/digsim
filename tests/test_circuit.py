@@ -120,3 +120,17 @@ def test_adding_components_removes_on_error():
     with circuit.adding_components():
         Led(circuit, "led")
     assert [component.name() for component in circuit.components] == ["button", "led"]
+
+
+def test_vcd_that_cannot_be_opened(tmp_path):
+    """A VCD file that can't be opened is not left half started"""
+    circuit = Circuit()
+    button = PushButton(circuit, "button")
+    circuit.init()
+    with pytest.raises(OSError):
+        circuit.vcd(str(tmp_path / "missing" / "waves.vcd"))
+    button.push()
+    circuit.run(ms=1)
+    circuit.vcd(str(tmp_path / "waves.vcd"))
+    circuit.vcd_close()
+    assert (tmp_path / "waves.vcd").exists()

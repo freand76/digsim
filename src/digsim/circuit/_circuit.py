@@ -163,7 +163,12 @@ class Circuit:
         if self._vcd is not None:
             raise CircuitError("VCD already started")
         self._vcd = WavesWriter(filename=filename)
-        self._vcd_init()
+        try:
+            self._vcd_init()
+        except BaseException:
+            # The file could not be opened, don't keep a writer without a file
+            self._vcd = None
+            raise
 
     def vcd_close(self) -> None:
         """Close gtkwave .vcd file"""

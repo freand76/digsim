@@ -35,6 +35,7 @@
  - Circuit.adding_components() removes the components a failing block added
  - Bugfix: A dropped component that failed to build, like a Verilog file with errors, raised an exception and left parts of it in the circuit
  - Bugfix: Turning VCD output off and on again in the GUI did not write the VCD file anymore
+ - Bugfix: A VCD file that could not be opened left the circuit unable to run or start another VCD
 
 ## v1.2.0
  - Update pyside6 to 6.12.0
