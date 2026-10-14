@@ -22,6 +22,7 @@
  - Bugfix: MemStdOut printed characters while its write enable was undefined
  - Bugfix: A component that failed to load was left in the circuit
  - Simpler Yosys component code
+ - Bugfix: Yosys flip-flops could miss the first clock edge after the circuit was reset
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

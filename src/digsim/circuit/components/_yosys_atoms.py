@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .atoms import Component, DigsimException, PortIn, PortOutDelta, PortWire
+from .atoms import VALUE_TYPE, Component, DigsimException, PortIn, PortOutDelta, PortWire
 
 
 if TYPE_CHECKING:
@@ -43,6 +43,19 @@ class ClassNameParameterComponent(Component):
         if level in ["P", "1"]:
             return 1
         raise ValueError(f"Unknown value ä{level}'")
+
+
+class ClockedComponent(ClassNameParameterComponent):
+    """
+    Helper class for flip-flops that detect edges on the clock port 'C'
+    """
+
+    _old_C_level: VALUE_TYPE
+
+    def init(self) -> None:
+        super().init()
+        # Detect the first clock edge after every init, not only after the first
+        self._old_C_level = "X"
 
 
 class _BUF_(Component):
@@ -482,7 +495,7 @@ class _FF_(Component):
         )
 
 
-class _DFF_(ClassNameParameterComponent):
+class _DFF_(ClockedComponent):
     """D-type flip-flop"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
@@ -510,7 +523,7 @@ class _DFF_P_(_DFF_):
     """module _DFF_P_ (D, C, Q)"""
 
 
-class _DFFE2_(ClassNameParameterComponent):
+class _DFFE2_(ClockedComponent):
     """D-type flip-flop with clock enable"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
@@ -552,7 +565,7 @@ class _DFFE_PP_(_DFFE2_):
     """module _DFFE_PP_ (D, C, E, Q)"""
 
 
-class _DFF3_(ClassNameParameterComponent):
+class _DFF3_(ClockedComponent):
     """D-type flip-flop with reset"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
@@ -609,7 +622,7 @@ class _DFF_PP1_(_DFF3_):
     """module _DFF_PP1_ (D, C, R, Q)"""
 
 
-class _DFFE4_(ClassNameParameterComponent):
+class _DFFE4_(ClockedComponent):
     """D-type flip-flop with reset and clock enable"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
@@ -704,7 +717,7 @@ class _DFFE_PP1P_(_DFFE4_):
     """module _DFFE_PP1P_ (D, C, R, E, Q)"""
 
 
-class _ALDFF_(ClassNameParameterComponent):
+class _ALDFF_(ClockedComponent):
     """D-type flip-flop with async load"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
@@ -745,7 +758,7 @@ class _ALDFF_PP_(_ALDFF_):
     """module _ALDFF_PP_ (D, C, L, AD, Q)"""
 
 
-class _ALDFFE_(ClassNameParameterComponent):
+class _ALDFFE_(ClockedComponent):
     """D-type flip-flop with async load and clock enable"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
@@ -808,7 +821,7 @@ class _ALDFFE_PPP_(_ALDFFE_):
     """module _ALDFFE_PPP_ (D, C, L, AD, E, Q)"""
 
 
-class _DFFSR_(ClassNameParameterComponent):
+class _DFFSR_(ClockedComponent):
     """D-type flip-flop with with set and reset"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
@@ -868,7 +881,7 @@ class _DFFSR_PPP_(_DFFSR_):
     """module _DFFSR_PPP_ (C, S, R, D, Q)"""
 
 
-class _DFFSRE_(ClassNameParameterComponent):
+class _DFFSRE_(ClockedComponent):
     """D-type flip-flop with with set, reset and clock enable"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
@@ -966,7 +979,7 @@ class _DFFSRE_PPPP_(_DFFSRE_):
     """module _DFFSRE_PPPP_ (C, S, R, E, D, Q)"""
 
 
-class _SDFF_(ClassNameParameterComponent):
+class _SDFF_(ClockedComponent):
     """D-type flip-flop with sync reset"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
@@ -1024,7 +1037,7 @@ class _SDFF_PP1_(_SDFF_):
     """module _SDFF_PP1_ (D, C, R, Q)"""
 
 
-class _SDFFE_(ClassNameParameterComponent):
+class _SDFFE_(ClockedComponent):
     """D-type flip-flop with sync reset and clock enable (with reset having priority)"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
@@ -1116,7 +1129,7 @@ class _SDFFE_PP1P_(_SDFFE_):
     """module _SDFFE_PP1P_ (D, C, R, E, Q)"""
 
 
-class _SDFFCE_(ClassNameParameterComponent):
+class _SDFFCE_(ClockedComponent):
     """D-type flip-flop with sync reset and clock enable (with clock enable having priority)"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:

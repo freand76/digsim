@@ -234,3 +234,28 @@ def test_yosys_dffe_xxxx_(test_class, c_edge, r_level, r_value, e_level):
     _dut.R.value = r_level
     circuit.run(ms=1)
     assert _dut.Q.value == r_value
+
+
+def test_dff_first_edge_after_reinit():
+    """The first clock edge after a new init is detected, as after the first init"""
+    circuit = Circuit()
+    dff = _DFF_P_(circuit)
+    for _ in range(2):
+        circuit.init()
+        dff.D.value = 1
+        dff.C.value = 1
+        circuit.run(ms=1)
+        assert dff.Q.value == 1
+
+
+def test_dffe_first_edge_after_reinit():
+    """The clock enable flip-flop also detects the first edge after a new init"""
+    circuit = Circuit()
+    dff = _DFFE_PP_(circuit)
+    for _ in range(2):
+        circuit.init()
+        dff.D.value = 1
+        dff.E.value = 1
+        dff.C.value = 1
+        circuit.run(ms=1)
+        assert dff.Q.value == 1
