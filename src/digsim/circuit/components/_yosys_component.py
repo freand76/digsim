@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 import digsim.circuit.components._yosys_atoms
 from digsim.synth import Synthesis
-from digsim.utils import NetPort, Nets, YosysModule, YosysNetlist, YosysPort
+from digsim.utils import NetPort, Nets, YosysModule, YosysNetlist
 
 from ._static_level import GND, VDD
 from .atoms import (
@@ -39,8 +39,6 @@ class YosysComponentException(DigsimException):
 class YosysComponent(MultiComponent):
     """Class to create a yosys component from a yosys json netlist"""
 
-    _gates_comp: MultiComponent
-
     def __init__(
         self,
         circuit: Circuit,
@@ -50,15 +48,12 @@ class YosysComponent(MultiComponent):
         super().__init__(circuit, name)
         self._path = str(path) if path is not None else None
         self._netlist_module: YosysModule | None = None
-        self._netlist_nets: Nets | None = None
-        self._setup_base()
+        # The cells of the netlist, as components
+        self._gates_comp = MultiComponent(self._circuit, "gates")
+        self.add(self._gates_comp)
 
         if path is not None:
             self._load_file()
-
-    def _setup_base(self) -> None:
-        self._gates_comp = MultiComponent(self._circuit, "gates")
-        self.add(self._gates_comp)
 
     @staticmethod
     def _first_module(netlist_object: YosysNetlist) -> tuple[str, YosysModule]:
@@ -68,7 +63,6 @@ class YosysComponent(MultiComponent):
         """Create component from netlist object"""
         module_name, netlist_module = self._first_module(netlist_object)
         self._netlist_module = netlist_module
-        self._netlist_nets = netlist_module.get_nets()
 
         # Set Name
         self.set_name(module_name)
@@ -85,7 +79,6 @@ class YosysComponent(MultiComponent):
     def reload_from_netlist(self, netlist_object: YosysNetlist) -> None:
         """Reload netlist from netlist object"""
         _, reload_module = self._first_module(netlist_object)
-        reload_nets = reload_module.get_nets()
 
         if self._netlist_module is None or not self._netlist_module.is_same_interface(
             reload_module
@@ -98,7 +91,6 @@ class YosysComponent(MultiComponent):
         self._gates_comp.remove_all_components()
         # Setup netlist
         self._netlist_module = reload_module
-        self._netlist_nets = reload_nets
         # Create component
         self._create_component()
 
@@ -106,11 +98,6 @@ class YosysComponent(MultiComponent):
         if self._netlist_module is None:
             raise YosysComponentException("No netlist loaded")
         return self._netlist_module
-
-    def _nets(self) -> Nets:
-        if self._netlist_nets is None:
-            raise YosysComponentException("No netlist loaded")
-        return self._netlist_nets
 
     def _bus_port(self, portname: str) -> PortMultiBitWire:
         port = self.port(portname)
@@ -155,9 +142,8 @@ class YosysComponent(MultiComponent):
                 dst_comp = components_dict[sink_port.cell]
                 src_comp_port.wire = dst_comp.port(sink_port.name)
 
-    def _connect_cells(self, components_dict: dict[str, Component]) -> None:
+    def _connect_cells(self, components_dict: dict[str, Component], nets: Nets) -> None:
         """Connect all cells"""
-        nets = self._nets()
         for net, source in nets.source.items():
             if source.cell is None:
                 # Only connect cells here
@@ -172,38 +158,26 @@ class YosysComponent(MultiComponent):
         vdd_sinks = nets.sinks.get("1", [])
         self._connect_sinks(components_dict, components_dict["VDD"].port("O"), vdd_sinks)
 
-    def _connect_external_input_port(
-        self, components_dict: dict[str, Component], portname: str, port_dict: YosysPort
-    ) -> None:
-        """Connect external input port"""
-        for bit_idx, net in enumerate(port_dict.bits):
-            for sink_port in self._nets().sinks.get(net, []):
-                if sink_port.cell is None:
-                    # Connect module input to module output
-                    assert sink_port.bit_index is not None
-                    dst_port = self._bus_port(sink_port.name).get_bit(sink_port.bit_index)
-                    self._bus_port(portname).get_bit(bit_idx).wire = dst_port
-                else:
-                    # Connect module input to cell input
-                    self._connect_sinks(
-                        components_dict, self._bus_port(portname).get_bit(bit_idx), [sink_port]
-                    )
-
-    def _connect_external_input(self, components_dict: dict[str, Component]) -> None:
-        """Connect all external input ports"""
-        for portname, port_dict in self._module().ports.items():
-            if port_dict.direction == "output":
+    def _connect_external_input(self, components_dict: dict[str, Component], nets: Nets) -> None:
+        """Connect each bit of the input ports to the cell inputs and module outputs it drives"""
+        for portname, port in self._module().ports.items():
+            if port.is_output:
                 continue
-            self._connect_external_input_port(components_dict, portname, port_dict)
+            bus_port = self._bus_port(portname)
+            for bit_index, net in enumerate(port.bits):
+                self._connect_sinks(
+                    components_dict, bus_port.get_bit(bit_index), nets.sinks.get(net, [])
+                )
 
     def _create_component(self) -> None:
         """Create yosys component"""
+        nets = self._module().get_nets()
         # Create cells
         components_dict = self._create_cells()
         # Connect cells
-        self._connect_cells(components_dict)
+        self._connect_cells(components_dict, nets)
         # Connect external input ports
-        self._connect_external_input(components_dict)
+        self._connect_external_input(components_dict, nets)
 
     def _file_path(self) -> str:
         """The Verilog or netlist file of the component"""
@@ -259,13 +233,13 @@ class YosysComponent(MultiComponent):
     def _disconnect_external_ports(self) -> None:
         """Disconnect external ports before reload"""
         for port in self.inports():
-            for bit_id in range(port.width):
-                bit_port = self._bus_port(port.name()).get_bit(bit_id)
-                bit_port.remove_wires()
+            bus_port = self._bus_port(port.name())
+            for bit_id in range(bus_port.width):
+                bus_port.get_bit(bit_id).remove_wires()
         for port in self.outports():
-            for bit_id in range(port.width):
-                bit_port = self._bus_port(port.name()).get_bit(bit_id)
-                bit_port.set_driver(None)
+            bus_port = self._bus_port(port.name())
+            for bit_id in range(bus_port.width):
+                bus_port.get_bit(bit_id).set_driver(None)
 
     def settings_to_dict(self) -> dict[str, ParameterValue]:
         path = self.circuit.store_path(self._file_path())
