@@ -31,12 +31,9 @@ class OnOffSwitch(CallbackComponent):
     def default_state(self) -> None:
         self._set(False)
 
-        self.turn_off()
-
     def turn_on(self) -> None:
         """Turn on the switch"""
-        self.O.value = 1
-        self._on = True
+        self._set(True)
 
     def turn_off(self) -> None:
         """Turn off the switch"""
