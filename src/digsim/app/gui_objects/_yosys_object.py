@@ -35,6 +35,7 @@ class YosysObject(ImageObject):
     def _reload(self) -> None:
         try:
             self.component.reload_file()
-        except DigsimException as exc:
+        except (DigsimException, OSError) as exc:
+            # OSError: the file has been moved or can't be read
             self._app_model.sig_warning_log.emit("Reload Yosys Warning", str(exc))
         self._app_model.model_reset()
