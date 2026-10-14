@@ -153,7 +153,6 @@ class LabelWireOut(Component):
         self.add_port(self._port_out)
         self.parameter_set("label", self._label)
         self.parameter_set("width", width)
-        self._label_wires = _LabelWireStorage()
         self._label_wires.add_sink(self._label, self._port_out)
 
     def clear(self) -> None:
