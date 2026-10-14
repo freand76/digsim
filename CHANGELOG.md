@@ -19,6 +19,7 @@
  - Bugfix: HexDigit.dot_active() without a digit failed for a single digit
  - Bugfix: A label wire with a label already in use was left in the circuit
  - Simpler label wire code
+ - Bugfix: MemStdOut printed characters while its write enable was undefined
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

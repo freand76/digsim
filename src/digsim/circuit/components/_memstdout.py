@@ -32,7 +32,7 @@ class MemStdOut(Component):
 
     def update(self) -> None:
         rising_edge = self.clk.is_rising_edge()
-        if self.WE.value == 0 or self.Address.value != self._address:
+        if self.WE.value != 1 or self.Address.value != self._address:
             return
         if rising_edge:
             datain = self.DataIn.value
