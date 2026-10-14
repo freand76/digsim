@@ -37,3 +37,15 @@ def test_delete_yosys_component():
     assert len(circuit.components) > 2
     circuit.delete_component(counter)
     assert [component.name() for component in circuit.components] == ["led"]
+
+
+def test_context_manager_closes_vcd(tmp_path):
+    """A circuit used in a with statement closes its VCD file at the end"""
+    vcd_path = tmp_path / "with.vcd"
+    with Circuit(vcd=str(vcd_path)) as circuit:
+        button = PushButton(circuit, "button")
+        circuit.init()
+        button.push()
+        circuit.run(ms=1)
+    # Without closing, the VCD writer would still hold the values in its buffer
+    assert "$dumpvars" in vcd_path.read_text()

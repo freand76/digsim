@@ -11,6 +11,7 @@ import heapq
 import os
 from pathlib import Path
 from types import TracebackType
+from typing import TYPE_CHECKING
 
 from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
 
@@ -23,6 +24,9 @@ from .components.atoms import (
     PortOutDelta,
 )
 
+
+if TYPE_CHECKING:
+    from typing_extensions import Self
 
 EventPort = PortOutDelta | PortMultiBitWire
 
@@ -43,30 +47,6 @@ class CircuitEvent:
         self._time_ns: int = time_ns
         self._port: EventPort = port
         self._value: VALUE_TYPE = value
-
-    @property
-    def time_ns(self) -> int:
-        """Get the simulation time (ns) of this event"""
-        return self._time_ns
-
-    @property
-    def port(self) -> EventPort:
-        """Get the port of this event"""
-        return self._port
-
-    @property
-    def value(self) -> VALUE_TYPE:
-        """Get the delta cycle value of this event"""
-        return self._value
-
-    def is_same_event(self, port: EventPort) -> bool:
-        """Return True if the in the event is the same as"""
-        return port == self._port
-
-    def update(self, time_ns: int, value: VALUE_TYPE) -> None:
-        """Update the event with a new time (ns) and a new value"""
-        self._time_ns = time_ns
-        self._value = value
 
     def __lt__(self, other: CircuitEvent) -> bool:
         # Called for every comparison in the event queue, so read the attributes directly
@@ -126,7 +106,7 @@ class Circuit:
         try:
             store_path = Path(os.path.relpath(store_path, folder_path))
         except ValueError:
-            """If relative path is impossible"""
+            pass  # No relative path (another drive on Windows), keep the absolute path
         return str(store_path)
 
     def delete_component(self, component: Component) -> None:
@@ -201,6 +181,9 @@ class Circuit:
         time_ns += us * 1e3 if us is not None else 0
         time_ns += ns if ns is not None else 0
         return int(time_ns)
+
+    def __enter__(self) -> Self:
+        return self
 
     def __exit__(
         self,
@@ -343,14 +326,10 @@ class Circuit:
         for component in circuit_dc.components:
             try:
                 component.create(self)
-            except DigsimException as exc:
+            except (DigsimException, FileNotFoundError) as exc:
                 if component_exceptions:
                     raise
-                exception_str_list.append(f"{exc.__class__.__name__!s}:{exc!s}")
-            except FileNotFoundError as exc:
-                if component_exceptions:
-                    raise
-                exception_str_list.append(f"{exc.__class__.__name__!s}:{exc!s}")
+                exception_str_list.append(f"{exc.__class__.__name__}:{exc!s}")
         for wire in circuit_dc.wires:
             try:
                 wire.connect(self)
