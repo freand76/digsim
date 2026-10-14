@@ -213,8 +213,13 @@ class AppModel(QThread):
 
     def load_circuit(self, path: str | Path) -> None:
         """Load a circuit with GUI information"""
+        try:
+            app_file_dc = AppFileDataClass.load(path)
+        except (ValueError, FileNotFoundError) as exc:
+            # Malformed or missing file (pydantic's ValidationError is a ValueError)
+            self.sig_error.emit(f"Could not load circuit: {exc!s}")
+            return
         self._model_clear()
-        app_file_dc = AppFileDataClass.load(path)
         self._circuit_folder = str(Path(path).parent)
         if len(self._circuit_folder) == 0:
             self._circuit_folder = "."
