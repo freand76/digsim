@@ -24,6 +24,7 @@
  - Simpler Yosys component code
  - Bugfix: Yosys flip-flops could miss the first clock edge after the circuit was reset
  - Fix a typo in the error message for an unknown Yosys cell level
+ - Bugfix: Loading a circuit changed the stored component paths, so a second load failed
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

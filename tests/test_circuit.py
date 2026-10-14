@@ -92,3 +92,16 @@ def test_failed_component_not_left_in_circuit(tmp_path):
     exceptions = circuit.from_dataclass(circuit_dc, component_exceptions=False)
     assert len(exceptions) == 1
     assert [component.name() for component in circuit.components] == ["led"]
+
+
+def test_load_same_dataclass_twice():
+    """Loading a component keeps its stored relative path unchanged"""
+    component_dc = ComponentDataClass(
+        name="counter",
+        type="digsim.circuit.components.YosysComponent",
+        settings={"path": "counter.json"},
+    )
+    circuit_dc = CircuitDataClass(components=[component_dc])
+    for _ in range(2):
+        Circuit().from_dataclass(circuit_dc, folder="examples/yosys_counter")
+    assert component_dc.settings == {"path": "counter.json"}

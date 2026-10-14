@@ -60,15 +60,16 @@ class ComponentDataClass:
 
     def create(self, circuit: Circuit) -> Component:
         """Factory: Create a component from a dict"""
-        if "path" in self.settings:
-            self.settings["path"] = circuit.load_path(self.settings["path"])
+        settings = dict(self.settings)
+        if "path" in settings:
+            settings["path"] = circuit.load_path(settings["path"])
 
         py_module_name = ".".join(self.type.split(".")[0:-1])
         py_class_name = self.type.split(".")[-1]
 
         module = importlib.import_module(py_module_name)
         class_ = getattr(module, py_class_name)
-        component = class_(circuit=circuit, **self.settings)
+        component = class_(circuit=circuit, **settings)
         component.set_name(self.name)
         if self.display_name is not None:
             component.set_display_name(self.display_name)
