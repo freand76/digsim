@@ -8,7 +8,9 @@ edit_uri: edit/main/docs/
 nav:
   - Home: index.md
   - Installation: installation.md
-  - GUI Application: gui.md
+  - GUI Application:
+      - Your First Circuit: first-circuit.md
+      - GUI Reference: gui.md
   - Python Circuits: python.md
   - Verilog and Yosys: synthesis.md
   - Examples: examples.md

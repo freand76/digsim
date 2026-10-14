@@ -1,8 +1,10 @@
-# GUI Application
+# GUI Reference
 
 The DigSim application is a circuit editor and simulator in one window. You place
 components, connect them with wires, and start the simulation to interact with the
 circuit live.
+
+New to DigSim? [Your First Circuit](first-circuit.md) builds a small circuit step by step.
 
 Start it with `digsim-logic-simulator` (or `python -m digsim.app`). See
 [Installation](installation.md) for all ways to install and run it. To open a saved

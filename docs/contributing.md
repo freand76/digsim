@@ -79,6 +79,13 @@ If you change an example, regenerate the images on the [Examples](examples.md) p
 uv run --with pytest python docs/scripts/generate_examples.py
 ```
 
+If you change how the GUI looks or works, regenerate the screenshots in
+[Your First Circuit](first-circuit.md):
+
+```sh
+uv run python docs/scripts/generate_tutorial.py
+```
+
 ## Guidelines
 
 - **Keep changes focused.** One fix or feature per pull request, and one purpose per

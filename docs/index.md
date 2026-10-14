@@ -40,11 +40,12 @@ dedicated simulators, but fast enough to be useful.
 ## Get started
 
 1. [Install DigSim](installation.md), or run it directly with `uvx digsim-logic-simulator`.
-2. Learn the [GUI application](gui.md).
-3. Script circuits and testbenches with the [Python API](python.md).
-4. Bring your own [Verilog designs](synthesis.md).
-5. Try the [examples](examples.md).
-6. [Create your own components](components.md), and [contribute](contributing.md) them.
+2. Build [your first circuit](first-circuit.md) in the GUI, step by step.
+3. Look up components and controls in the [GUI reference](gui.md).
+4. Script circuits and testbenches with the [Python API](python.md).
+5. Bring your own [Verilog designs](synthesis.md).
+6. Try the [examples](examples.md).
+7. [Create your own components](components.md), and [contribute](contributing.md) them.
 
 DigSim is open source and developed on
 [GitHub](https://github.com/freand76/digsim). Bug reports and ideas are welcome as

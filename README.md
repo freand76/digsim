@@ -128,7 +128,9 @@ uv run -m digsim.synth synth -i <file1.v> [<file2.v> ...] -o <netlist.json> -t <
 
 Read more in the documentation:
 
-- [GUI Application](https://freand76.github.io/digsim/gui/): the circuit editor,
+- [Your First Circuit](https://freand76.github.io/digsim/first-circuit/): build and
+  simulate a small circuit in the GUI, step by step
+- [GUI Reference](https://freand76.github.io/digsim/gui/): the circuit editor,
   components, simulation and shortcuts
 - [Python Circuits](https://freand76.github.io/digsim/python/): the Python API and
   testbenches
