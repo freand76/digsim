@@ -163,7 +163,9 @@ class YosysComponent(MultiComponent):
                 # Only connect cells here
                 continue
             src_comp = components_dict[source.cell]
-            self._connect_sinks(components_dict, src_comp.port(source.name), nets.sinks[net])
+            self._connect_sinks(
+                components_dict, src_comp.port(source.name), nets.sinks.get(net, [])
+            )
 
         gnd_sinks = nets.sinks.get("0", [])
         self._connect_sinks(components_dict, components_dict["GND"].port("O"), gnd_sinks)
@@ -175,7 +177,7 @@ class YosysComponent(MultiComponent):
     ) -> None:
         """Connect external input port"""
         for bit_idx, net in enumerate(port_dict.bits):
-            for sink_port in self._nets().sinks[net]:
+            for sink_port in self._nets().sinks.get(net, []):
                 if sink_port.cell is None:
                     # Connect module input to module output
                     assert sink_port.bit_index is not None

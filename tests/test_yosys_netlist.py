@@ -346,3 +346,54 @@ def test_yosys_component_wiring():
         comp.a.value = a
         circuit.run(ms=1)
         assert comp.y.value == expected
+
+
+def test_yosys_component_unused_input():
+    """An input that the design does not use (like 'b' in 'assign y = a') is allowed"""
+    netlist_dict = {
+        "modules": {
+            "unused_input": {
+                "ports": {
+                    "a": {"direction": "input", "bits": [2]},
+                    "b": {"direction": "input", "bits": [3]},
+                    "y": {"direction": "output", "bits": [2]},
+                },
+                "cells": {},
+            }
+        }
+    }
+    circuit = Circuit()
+    comp = YosysComponent(circuit)
+    comp.create_from_netlist(YosysNetlist(**netlist_dict))
+    circuit.init()
+    comp.a.value = 1
+    circuit.run(ms=1)
+    assert comp.y.value == 1
+
+
+def test_yosys_component_unused_cell_output():
+    """A cell output that drives nothing is allowed"""
+    netlist_dict = {
+        "modules": {
+            "unused_output": {
+                "ports": {
+                    "a": {"direction": "input", "bits": [2]},
+                    "y": {"direction": "output", "bits": [2]},
+                },
+                "cells": {
+                    "not_gate": {
+                        "type": "$_NOT_",
+                        "port_directions": {"A": "input", "Y": "output"},
+                        "connections": {"A": [2], "Y": [5]},
+                    }
+                },
+            }
+        }
+    }
+    circuit = Circuit()
+    comp = YosysComponent(circuit)
+    comp.create_from_netlist(YosysNetlist(**netlist_dict))
+    circuit.init()
+    comp.a.value = 1
+    circuit.run(ms=1)
+    assert comp.y.value == 1
