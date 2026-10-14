@@ -49,7 +49,6 @@ class YosysComponent(MultiComponent):
         nets: bool = True,
     ) -> None:
         super().__init__(circuit, name)
-        self._circuit = circuit
         self._path = str(path)
         self._net_comp: Component | None = None
         self._netlist_module: YosysModule | None = None
@@ -67,11 +66,13 @@ class YosysComponent(MultiComponent):
         self._gates_comp = MultiComponent(self._circuit, "gates")
         self.add(self._gates_comp)
 
+    @staticmethod
+    def _first_module(netlist_object: YosysNetlist) -> tuple[str, YosysModule]:
+        return next(iter(netlist_object.get_modules().items()))
+
     def create_from_netlist(self, netlist_object: YosysNetlist) -> None:
         """Create component from netlist object"""
-        modules = netlist_object.get_modules()
-        module_name = next(iter(modules.keys()))
-        netlist_module = netlist_object.get_modules()[module_name]
+        module_name, netlist_module = self._first_module(netlist_object)
         self._netlist_module = netlist_module
         self._netlist_nets = netlist_module.get_nets()
 
@@ -89,9 +90,7 @@ class YosysComponent(MultiComponent):
 
     def reload_from_netlist(self, netlist_object: YosysNetlist) -> None:
         """Reload netlist from netlist object"""
-        modules = netlist_object.get_modules()
-        module_name = next(iter(modules.keys()))
-        reload_module = netlist_object.get_modules()[module_name]
+        _, reload_module = self._first_module(netlist_object)
         reload_nets = reload_module.get_nets()
 
         if self._netlist_module is None or not self._netlist_module.is_same_interface(
