@@ -199,6 +199,8 @@ class AppModel(QThread):
 
     def save_circuit(self, path: str | Path) -> None:
         """Save the circuit with GUI information"""
+        old_circuit_folder = self._circuit_folder
+        # Paths in the circuit are stored relative to the circuit file
         self._circuit_folder = str(Path(path).parent)
         model_dataclass = self.circuit_to_model()
         appfile_dataclass = AppFileDataClass(
@@ -207,7 +209,12 @@ class AppModel(QThread):
             shortcuts=self.shortcuts.to_dict(),
             settings=self.settings.get_all(),
         )
-        appfile_dataclass.save(path)
+        try:
+            appfile_dataclass.save(path)
+        except OSError as exc:
+            self._circuit_folder = old_circuit_folder
+            self.sig_error.emit(f"Could not save circuit: {exc!s}")
+            return
         self._changed = False
         self.sig_control_notify.emit()
 

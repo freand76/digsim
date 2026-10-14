@@ -37,6 +37,7 @@
  - Bugfix: Turning VCD output off and on again in the GUI did not write the VCD file anymore
  - Bugfix: A VCD file that could not be opened left the circuit unable to run or start another VCD
  - Bugfix: Choosing a VCD file that cannot be written raised an exception instead of showing an error
+ - Bugfix: Saving to a folder that cannot be written raised an exception instead of showing an error
 
 ## v1.2.0
  - Update pyside6 to 6.12.0
