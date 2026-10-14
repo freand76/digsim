@@ -112,10 +112,11 @@ class LabelWireOut(Component):
 
     def init(self) -> None:
         if not self._port_out.has_driver():
+            # Without a LabelWireIn (deleted in the GUI) the output is undefined, like an
+            # unconnected input
             driver = _drivers(self.circuit).get(self._label)
-            if driver is None:
-                raise DigsimException(f"Wire Driver '{self._label}' not found")
-            driver.port_in.wire = self._port_out
+            if driver is not None:
+                driver.port_in.wire = self._port_out
         super().init()
 
     def remove_connections(self) -> None:

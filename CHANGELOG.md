@@ -43,6 +43,7 @@
  - The IC selector lists the ICs sorted by name
  - Bugfix: The buzzer clicked once a second for all tones except A
  - Bugfix: Label wires were shared by all circuits in a program, so two circuits could not use the same label. The labels in use are now read with Component.get_circuit_parameters(circuit).
+ - Bugfix: Deleting a label wire driver in the GUI made the next reset or start fail
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

@@ -90,3 +90,15 @@ def test_label_wire_delete_driver():
     circuit.delete_component(wire_in)
     assert not wire_out.A.has_driver()
     LabelWireIn(circuit, "new_in", label="A")
+
+
+def test_label_wire_sink_without_driver():
+    """A LabelWireOut whose LabelWireIn has been deleted is undefined, the circuit still runs"""
+    circuit = Circuit()
+    wire_in = LabelWireIn(circuit, "wire_in", label="A")
+    wire_out = LabelWireOut(circuit, "wire_out", label="A")
+    circuit.init()
+    circuit.delete_component(wire_in)
+    circuit.init()
+    circuit.run(ms=1)
+    assert wire_out.A.value == "X"
