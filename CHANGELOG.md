@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## vx.x.x
+ - Add a script that takes the screenshots for a GUI tutorial in the real application
+
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window
  - Use the Qt 6 mouse event API (no DeprecationWarning from QMouseEvent.pos())

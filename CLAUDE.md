@@ -34,6 +34,7 @@ uv run --with mypy mypy          # type check (config in pyproject.toml)
 uv run -m digsim.app             # start the GUI
 uv tool run --with mkdocs-material mkdocs build --strict   # check the docs build
 uv run --with pytest python docs/scripts/generate_examples.py  # regenerate example images
+uv run python docs/scripts/generate_tutorial.py  # regenerate GUI tutorial screenshots
 ```
 
 The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test.sh`,
