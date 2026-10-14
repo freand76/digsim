@@ -4,6 +4,7 @@
  - Add a script that takes the screenshots for a GUI tutorial in the real application
  - Add "Your First Circuit", a step by step guide with screenshots to building and simulating a circuit in the GUI, and group the GUI pages in the documentation
  - Bugfix: Circuits saved on Windows stored file paths with backslashes and could not be loaded on Linux or macOS. Paths are now stored with "/", and old files with backslashes load on all systems.
+ - Circuit.to_json_file() stores file paths relative to the JSON file, and from_json_file() reads them from the file's folder by default, so a saved circuit loads from any working directory. Files saved by older versions with such paths load with folder=".".
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

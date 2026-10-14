@@ -198,3 +198,45 @@ def test_load_path_stored_on_windows(tmp_path):
         _yosys_circuit_dc("..\\designs\\counter.json"), str(tmp_path / "circuits")
     )
     assert len(loaded.components) > 1
+
+
+def _counter_project(tmp_path):
+    """A project folder with a netlist in 'designs' and a circuit saved in 'circuits'"""
+    netlist = Path(__file__).parent.parent / "examples" / "yosys_counter" / "counter.json"
+    (tmp_path / "designs").mkdir()
+    (tmp_path / "circuits").mkdir()
+    (tmp_path / "designs" / "counter.json").write_text(netlist.read_text())
+
+
+def test_json_file_paths_relative_to_file(tmp_path, monkeypatch):
+    """A saved circuit file loads from any working directory"""
+    _counter_project(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    circuit = Circuit(name="circuit")
+    YosysComponent(circuit, path="designs/counter.json")
+    circuit.to_json_file("circuits/counter_circuit.json")
+    stored = (tmp_path / "circuits" / "counter_circuit.json").read_text()
+    assert '"path": "../designs/counter.json"' in stored
+    for working_dir, filename in [
+        (tmp_path, "circuits/counter_circuit.json"),
+        (tmp_path / "circuits", "counter_circuit.json"),
+        (tmp_path / "designs", "../circuits/counter_circuit.json"),
+    ]:
+        monkeypatch.chdir(working_dir)
+        loaded = Circuit()
+        loaded.from_json_file(filename)
+        assert len(loaded.components) > 1
+
+
+def test_json_file_explicit_folder(tmp_path, monkeypatch):
+    """A file with paths relative to another folder loads with that folder"""
+    _counter_project(tmp_path)
+    (tmp_path / "circuits" / "old.json").write_text(
+        '{"circuit": {"name": "c", "components": [{"name": "counter", '
+        '"type": "digsim.circuit.components.YosysComponent", '
+        '"settings": {"path": "designs/counter.json"}}], "wires": []}}'
+    )
+    monkeypatch.chdir(tmp_path)
+    loaded = Circuit()
+    loaded.from_json_file("circuits/old.json", folder=".")
+    assert len(loaded.components) > 1

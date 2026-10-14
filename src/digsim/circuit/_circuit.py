@@ -363,12 +363,19 @@ class Circuit:
 
         return exception_str_list
 
-    def to_json_file(self, filename: str) -> None:
-        """Store circuit in json file"""
-        circuitfile_dc = CircuitFileDataClass(circuit=self.to_dataclass())
+    def to_json_file(self, filename: str | Path) -> None:
+        """Store circuit in json file, with file paths relative to the file's folder"""
+        circuitfile_dc = CircuitFileDataClass(
+            circuit=self.to_dataclass(str(Path(filename).parent))
+        )
         circuitfile_dc.save(filename)
 
-    def from_json_file(self, filename: str, folder: str = ".") -> None:
-        """Load circuit from json file"""
+    def from_json_file(self, filename: str | Path, folder: str | None = None) -> None:
+        """
+        Load circuit from json file. Relative file paths in it are read from 'folder', by
+        default the file's folder (where to_json_file stores them relative to).
+        """
         file_dc = CircuitFileDataClass.load(filename)
+        if folder is None:
+            folder = str(Path(filename).parent)
         self.from_dataclass(file_dc.circuit, folder)
