@@ -613,3 +613,77 @@ def test_yosys_mux16(test_vector):
     assert _dut.Y.value == "X"
     circuit.run(ms=1)
     assert _dut.Y.value == test_vector[20]
+
+
+def _mux16_inputs(value_a, value_rest):
+    inputs = {port: value_rest for port in "ABCDEFGHIJKLMNOP"}
+    inputs["A"] = value_a
+    return inputs
+
+
+@pytest.mark.parametrize(
+    "cell, inputs, expected",
+    [
+        # A 0 on one input decides AND, a 1 decides OR, whatever the other input is
+        (_AND_, {"A": _X, "B": _L}, _L),
+        (_AND_, {"A": _X, "B": _H}, _X),
+        (_NAND_, {"A": _L, "B": _X}, _H),
+        (_NAND_, {"A": _H, "B": _X}, _X),
+        (_OR_, {"A": _X, "B": _H}, _H),
+        (_OR_, {"A": _X, "B": _L}, _X),
+        (_NOR_, {"A": _H, "B": _X}, _L),
+        (_NOR_, {"A": _L, "B": _X}, _X),
+        (_XOR_, {"A": _X, "B": _L}, _X),
+        (_XNOR_, {"A": _H, "B": _X}, _X),
+        (_ANDNOT_, {"A": _L, "B": _X}, _L),
+        (_ANDNOT_, {"A": _X, "B": _H}, _L),
+        (_ANDNOT_, {"A": _H, "B": _X}, _X),
+        (_ORNOT_, {"A": _H, "B": _X}, _H),
+        (_ORNOT_, {"A": _X, "B": _L}, _H),
+        (_ORNOT_, {"A": _L, "B": _X}, _X),
+        (_NOT_, {"A": _X}, _X),
+        (_BUF_, {"A": _X}, _X),
+        (_AOI3_, {"A": _X, "B": _L, "C": _L}, _H),
+        (_AOI3_, {"A": _X, "B": _H, "C": _H}, _L),
+        (_AOI3_, {"A": _X, "B": _H, "C": _L}, _X),
+        (_OAI3_, {"A": _X, "B": _H, "C": _H}, _L),
+        (_OAI3_, {"A": _X, "B": _X, "C": _L}, _H),
+        (_OAI3_, {"A": _X, "B": _L, "C": _H}, _X),
+        (_AOI4_, {"A": _X, "B": _L, "C": _H, "D": _H}, _L),
+        (_AOI4_, {"A": _X, "B": _H, "C": _L, "D": _X}, _X),
+        (_OAI4_, {"A": _X, "B": _H, "C": _X, "D": _H}, _L),
+        (_OAI4_, {"A": _X, "B": _L, "C": _H, "D": _L}, _X),
+        # An undefined select gives the value that the selectable inputs agree on
+        (_MUX_, {"A": _H, "B": _H, "S": _X}, _H),
+        (_MUX_, {"A": _L, "B": _H, "S": _X}, _X),
+        (_MUX_, {"A": _X, "B": _H, "S": _H}, _H),
+        (_NMUX_, {"A": _L, "B": _L, "S": _X}, _H),
+        (_NMUX_, {"A": _L, "B": _H, "S": _X}, _X),
+        (_MUX4_, {"A": _L, "B": _H, "C": _L, "D": _H, "S": _H, "T": _X}, _H),
+        (_MUX4_, {"A": _L, "B": _H, "C": _L, "D": _L, "S": _H, "T": _X}, _X),
+        (_MUX4_, {"A": _L, "B": _L, "C": _H, "D": _H, "S": _X, "T": _L}, _L),
+        (
+            _MUX8_,
+            {"A": _H, "B": _H, "C": _H, "D": _H, "E": _H, "F": _H, "G": _H, "H": _H}
+            | {"S": _X, "T": _X, "U": _X},
+            _H,
+        ),
+        (
+            _MUX8_,
+            {"A": _H, "B": _H, "C": _H, "D": _H, "E": _L, "F": _H, "G": _H, "H": _H}
+            | {"S": _L, "T": _L, "U": _X},
+            _X,
+        ),
+        (_MUX16_, _mux16_inputs(_L, _L) | {"S": _X, "T": _X, "U": _X, "V": _X}, _L),
+        (_MUX16_, _mux16_inputs(_H, _L) | {"S": _X, "T": _L, "U": _L, "V": _L}, _X),
+        (_MUX16_, _mux16_inputs(_H, _L) | {"S": _H, "T": _X, "U": _X, "V": _X}, _L),
+    ],
+)
+def test_yosys_undefined_inputs(cell, inputs, expected):
+    """Undefined inputs give an undefined output unless the other inputs decide it"""
+    circuit = Circuit()
+    _dut = cell(circuit, "DUT")
+    for port, value in inputs.items():
+        _dut.port(port).value = value
+    circuit.run(ms=1)
+    assert _dut.Y.value == expected

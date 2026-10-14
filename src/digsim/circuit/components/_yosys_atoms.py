@@ -58,6 +58,56 @@ class ClockedComponent(ClassNameParameterComponent):
         self._old_C_level = "X"
 
 
+# Three-valued logic for the combinational cells, as in Verilog: a value that is not
+# decided by the other inputs ("X", for example an unconnected input) gives "X".
+
+
+def _not(a: VALUE_TYPE) -> VALUE_TYPE:
+    if a == 0:
+        return 1
+    if a == 1:
+        return 0
+    return "X"
+
+
+def _and(a: VALUE_TYPE, b: VALUE_TYPE) -> VALUE_TYPE:
+    if a == 0 or b == 0:
+        return 0
+    if a == 1 and b == 1:
+        return 1
+    return "X"
+
+
+def _or(a: VALUE_TYPE, b: VALUE_TYPE) -> VALUE_TYPE:
+    if a == 1 or b == 1:
+        return 1
+    if a == 0 and b == 0:
+        return 0
+    return "X"
+
+
+def _xor(a: VALUE_TYPE, b: VALUE_TYPE) -> VALUE_TYPE:
+    if a == "X" or b == "X":
+        return "X"
+    return 0 if a == b else 1
+
+
+def _mux(s: VALUE_TYPE, a: VALUE_TYPE, b: VALUE_TYPE) -> VALUE_TYPE:
+    """'a' if s is 0, 'b' if s is 1, and with an undefined s the value they agree on"""
+    if s == 0:
+        return a
+    if s == 1:
+        return b
+    return a if a == b else "X"
+
+
+def _mux4(
+    s: VALUE_TYPE, t: VALUE_TYPE, a: VALUE_TYPE, b: VALUE_TYPE, c: VALUE_TYPE, d: VALUE_TYPE
+) -> VALUE_TYPE:
+    """A 4-input mux as a tree of 2-input muxes, s is the low select bit"""
+    return _mux(t, _mux(s, a, b), _mux(s, c, d))
+
+
 class _BUF_(Component):
     """module _BUF_ (A, Y)"""
 
@@ -79,10 +129,7 @@ class _NOT_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.A.value == 1:
-            self.Y.value = 0
-        else:
-            self.Y.value = 1
+        self.Y.value = _not(self.A.value)
 
 
 class _AND_(Component):
@@ -95,10 +142,7 @@ class _AND_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.A.value == 1 and self.B.value == 1:
-            self.Y.value = 1
-        else:
-            self.Y.value = 0
+        self.Y.value = _and(self.A.value, self.B.value)
 
 
 class _NAND_(Component):
@@ -111,10 +155,7 @@ class _NAND_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.A.value == 1 and self.B.value == 1:
-            self.Y.value = 0
-        else:
-            self.Y.value = 1
+        self.Y.value = _not(_and(self.A.value, self.B.value))
 
 
 class _OR_(Component):
@@ -127,10 +168,7 @@ class _OR_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.A.value == 1 or self.B.value == 1:
-            self.Y.value = 1
-        else:
-            self.Y.value = 0
+        self.Y.value = _or(self.A.value, self.B.value)
 
 
 class _NOR_(Component):
@@ -143,10 +181,7 @@ class _NOR_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.A.value == 1 or self.B.value == 1:
-            self.Y.value = 0
-        else:
-            self.Y.value = 1
+        self.Y.value = _not(_or(self.A.value, self.B.value))
 
 
 class _XOR_(Component):
@@ -159,10 +194,7 @@ class _XOR_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if (self.A.value == 1 and self.B.value == 0) or (self.A.value == 0 and self.B.value == 1):
-            self.Y.value = 1
-        else:
-            self.Y.value = 0
+        self.Y.value = _xor(self.A.value, self.B.value)
 
 
 class _XNOR_(Component):
@@ -175,10 +207,7 @@ class _XNOR_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if (self.A.value == 1 and self.B.value == 0) or (self.A.value == 0 and self.B.value == 1):
-            self.Y.value = 0
-        else:
-            self.Y.value = 1
+        self.Y.value = _not(_xor(self.A.value, self.B.value))
 
 
 class _ANDNOT_(Component):
@@ -191,10 +220,7 @@ class _ANDNOT_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.A.value == 1 and self.B.value == 0:
-            self.Y.value = 1
-        else:
-            self.Y.value = 0
+        self.Y.value = _and(self.A.value, _not(self.B.value))
 
 
 class _ORNOT_(Component):
@@ -207,10 +233,7 @@ class _ORNOT_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.A.value == 1 or self.B.value == 0:
-            self.Y.value = 1
-        else:
-            self.Y.value = 0
+        self.Y.value = _or(self.A.value, _not(self.B.value))
 
 
 class _MUX_(Component):
@@ -224,10 +247,7 @@ class _MUX_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.S.value == 0:
-            self.Y.value = self.A.value
-        else:
-            self.Y.value = self.B.value
+        self.Y.value = _mux(self.S.value, self.A.value, self.B.value)
 
 
 class _NMUX_(Component):
@@ -241,10 +261,7 @@ class _NMUX_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.S.value == 0:
-            self.Y.value = 1 if self.A.value == 0 else 0
-        else:
-            self.Y.value = 1 if self.B.value == 0 else 0
+        self.Y.value = _not(_mux(self.S.value, self.A.value, self.B.value))
 
 
 class _MUX4_(Component):
@@ -261,14 +278,9 @@ class _MUX4_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.S.value == 0 and self.T.value == 0:
-            self.Y.value = self.A.value
-        elif self.S.value == 1 and self.T.value == 0:
-            self.Y.value = self.B.value
-        elif self.S.value == 0 and self.T.value == 1:
-            self.Y.value = self.C.value
-        else:
-            self.Y.value = self.D.value
+        self.Y.value = _mux4(
+            self.S.value, self.T.value, self.A.value, self.B.value, self.C.value, self.D.value
+        )
 
 
 class _MUX8_(Component):
@@ -290,22 +302,12 @@ class _MUX8_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.S.value == 0 and self.T.value == 0 and self.U.value == 0:
-            self.Y.value = self.A.value
-        elif self.S.value == 1 and self.T.value == 0 and self.U.value == 0:
-            self.Y.value = self.B.value
-        elif self.S.value == 0 and self.T.value == 1 and self.U.value == 0:
-            self.Y.value = self.C.value
-        elif self.S.value == 1 and self.T.value == 1 and self.U.value == 0:
-            self.Y.value = self.D.value
-        elif self.S.value == 0 and self.T.value == 0 and self.U.value == 1:
-            self.Y.value = self.E.value
-        elif self.S.value == 1 and self.T.value == 0 and self.U.value == 1:
-            self.Y.value = self.F.value
-        elif self.S.value == 0 and self.T.value == 1 and self.U.value == 1:
-            self.Y.value = self.G.value
-        else:
-            self.Y.value = self.H.value
+        s, t = self.S.value, self.T.value
+        self.Y.value = _mux(
+            self.U.value,
+            _mux4(s, t, self.A.value, self.B.value, self.C.value, self.D.value),
+            _mux4(s, t, self.E.value, self.F.value, self.G.value, self.H.value),
+        )
 
 
 class _MUX16_(Component):
@@ -336,38 +338,20 @@ class _MUX16_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if self.S.value == 0 and self.T.value == 0 and self.U.value == 0 and self.V.value == 0:
-            self.Y.value = self.A.value
-        elif self.S.value == 1 and self.T.value == 0 and self.U.value == 0 and self.V.value == 0:
-            self.Y.value = self.B.value
-        elif self.S.value == 0 and self.T.value == 1 and self.U.value == 0 and self.V.value == 0:
-            self.Y.value = self.C.value
-        elif self.S.value == 1 and self.T.value == 1 and self.U.value == 0 and self.V.value == 0:
-            self.Y.value = self.D.value
-        elif self.S.value == 0 and self.T.value == 0 and self.U.value == 1 and self.V.value == 0:
-            self.Y.value = self.E.value
-        elif self.S.value == 1 and self.T.value == 0 and self.U.value == 1 and self.V.value == 0:
-            self.Y.value = self.F.value
-        elif self.S.value == 0 and self.T.value == 1 and self.U.value == 1 and self.V.value == 0:
-            self.Y.value = self.G.value
-        elif self.S.value == 1 and self.T.value == 1 and self.U.value == 1 and self.V.value == 0:
-            self.Y.value = self.H.value
-        elif self.S.value == 0 and self.T.value == 0 and self.U.value == 0 and self.V.value == 1:
-            self.Y.value = self.I.value
-        elif self.S.value == 1 and self.T.value == 0 and self.U.value == 0 and self.V.value == 1:
-            self.Y.value = self.J.value
-        elif self.S.value == 0 and self.T.value == 1 and self.U.value == 0 and self.V.value == 1:
-            self.Y.value = self.K.value
-        elif self.S.value == 1 and self.T.value == 1 and self.U.value == 0 and self.V.value == 1:
-            self.Y.value = self.L.value
-        elif self.S.value == 0 and self.T.value == 0 and self.U.value == 1 and self.V.value == 1:
-            self.Y.value = self.M.value
-        elif self.S.value == 1 and self.T.value == 0 and self.U.value == 1 and self.V.value == 1:
-            self.Y.value = self.N.value
-        elif self.S.value == 0 and self.T.value == 1 and self.U.value == 1 and self.V.value == 1:
-            self.Y.value = self.O.value
-        else:
-            self.Y.value = self.P.value
+        s, t, u = self.S.value, self.T.value, self.U.value
+        self.Y.value = _mux(
+            self.V.value,
+            _mux(
+                u,
+                _mux4(s, t, self.A.value, self.B.value, self.C.value, self.D.value),
+                _mux4(s, t, self.E.value, self.F.value, self.G.value, self.H.value),
+            ),
+            _mux(
+                u,
+                _mux4(s, t, self.I.value, self.J.value, self.K.value, self.L.value),
+                _mux4(s, t, self.M.value, self.N.value, self.O.value, self.P.value),
+            ),
+        )
 
 
 class _AOI3_(Component):
@@ -381,10 +365,7 @@ class _AOI3_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if (self.A.value == 1 and self.B.value == 1) or self.C.value == 1:
-            self.Y.value = 0
-        else:
-            self.Y.value = 1
+        self.Y.value = _not(_or(_and(self.A.value, self.B.value), self.C.value))
 
 
 class _OAI3_(Component):
@@ -398,10 +379,7 @@ class _OAI3_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if (self.A.value == 1 or self.B.value == 1) and self.C.value == 1:
-            self.Y.value = 0
-        else:
-            self.Y.value = 1
+        self.Y.value = _not(_and(_or(self.A.value, self.B.value), self.C.value))
 
 
 class _AOI4_(Component):
@@ -416,10 +394,9 @@ class _AOI4_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if (self.A.value == 1 and self.B.value == 1) or (self.C.value == 1 and self.D.value == 1):
-            self.Y.value = 0
-        else:
-            self.Y.value = 1
+        self.Y.value = _not(
+            _or(_and(self.A.value, self.B.value), _and(self.C.value, self.D.value))
+        )
 
 
 class _OAI4_(Component):
@@ -434,10 +411,7 @@ class _OAI4_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        if (self.A.value == 1 or self.B.value == 1) and (self.C.value == 1 or self.D.value == 1):
-            self.Y.value = 0
-        else:
-            self.Y.value = 1
+        self.Y.value = _not(_and(_or(self.A.value, self.B.value), _or(self.C.value, self.D.value)))
 
 
 class _TBUF_(Component):
