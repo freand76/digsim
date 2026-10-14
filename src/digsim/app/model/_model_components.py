@@ -14,7 +14,7 @@ import digsim.circuit.components
 from digsim.app.gui_objects import ComponentObject
 from digsim.circuit import Circuit
 from digsim.circuit.components import Buzzer
-from digsim.circuit.components.atoms import CallbackComponent, Component
+from digsim.circuit.components.atoms import CallbackComponent, Component, DigsimException
 from digsim.storage_model import GuiPositionDataClass
 
 
@@ -125,11 +125,18 @@ class ModelComponents:
 
     def add_object_by_name(
         self, name: str, pos: QPointF, settings: dict[str, Any]
-    ) -> ComponentObject:
-        """Add component object from class name"""
+    ) -> ComponentObject | None:
+        """Add component object from class name, None if the component can't be created"""
         self._app_model.objects.push_undo_state()
         component_class = self._get_component_class(name)
-        component = component_class(self._circuit, **settings)
+        try:
+            with self._circuit.adding_components():
+                component = component_class(self._circuit, **settings)
+        except (DigsimException, OSError) as exc:
+            # For example a Verilog file with errors, or a file that can't be read
+            self._app_model.objects.drop_undo_state()
+            self._app_model.sig_error.emit(f"Could not add {name}: {exc!s}")
+            return None
         self._app_model.model_init()
         component_object = self._add_object(component, pos.x(), pos.y())
         self._app_model.model_changed()

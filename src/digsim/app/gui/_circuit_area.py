@@ -579,6 +579,8 @@ class CircuitArea(QGraphicsView):
             component_object = self._app_model.objects.components.add_object_by_name(
                 name, position, settings
             )
+            if component_object is None:
+                return
             if centered:
                 component_object.move_center_to(position)
             self.grow_scene_rect()
