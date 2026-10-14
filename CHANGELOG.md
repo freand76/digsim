@@ -20,6 +20,7 @@
  - Bugfix: A label wire with a label already in use was left in the circuit
  - Simpler label wire code
  - Bugfix: MemStdOut printed characters while its write enable was undefined
+ - Bugfix: A component that failed to load was left in the circuit
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

@@ -324,9 +324,13 @@ class Circuit:
 
         exception_str_list = []
         for component in circuit_dc.components:
+            names_before = set(self._components)
             try:
                 component.create(self)
             except (DigsimException, FileNotFoundError) as exc:
+                # Remove what the failed component added before it failed
+                for name in set(self._components) - names_before:
+                    del self._components[name]
                 if component_exceptions:
                     raise
                 exception_str_list.append(f"{exc.__class__.__name__}:{exc!s}")

@@ -5,6 +5,7 @@
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import AND, SR, Led, PushButton, YosysComponent
+from digsim.storage_model import CircuitDataClass, ComponentDataClass
 
 
 def test_delete_component():
@@ -73,3 +74,21 @@ def test_reload_yosys_component():
         clock.release()
         circuit.run(ms=1)
         assert counter.cnt.value == expected
+
+
+def test_failed_component_not_left_in_circuit(tmp_path):
+    """A component that fails to load is not left in the circuit, nor are its parts"""
+    circuit_dc = CircuitDataClass(
+        components=[
+            ComponentDataClass(
+                name="counter",
+                type="digsim.circuit.components.YosysComponent",
+                settings={"path": str(tmp_path / "missing.json")},
+            ),
+            ComponentDataClass(name="led", type="digsim.circuit.components.Led"),
+        ]
+    )
+    circuit = Circuit()
+    exceptions = circuit.from_dataclass(circuit_dc, component_exceptions=False)
+    assert len(exceptions) == 1
+    assert [component.name() for component in circuit.components] == ["led"]
