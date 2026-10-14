@@ -78,17 +78,6 @@ class Port(abc.ABC):
         """Get the bit-width of the port"""
         return self._width
 
-    @width.setter
-    def width(self, width: int) -> None:
-        """Set the bit-width of the port, will force a disconnect if it is connected"""
-        if width != self._width:
-            driver = self.get_driver()
-            if driver is not None:
-                driver.disconnect(self)
-            for port in self._wired_ports[:]:
-                self.disconnect(port)
-        self._width = width
-
     @property
     def wire(self) -> NoReturn:
         """Need a property if to be able to have a setter..."""
