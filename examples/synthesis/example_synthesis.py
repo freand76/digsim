@@ -51,6 +51,10 @@ synth_component = YosysComponent(circuit, path=yosys_json_output_path)
 # Initialize circuit
 circuit.init()
 
+# Start with clock and reset low, so that they are not undefined
+synth_component.clk.value = 0
+synth_component.reset.value = 0
+
 # Run for 1 ms
 circuit.run(ms=1)
 

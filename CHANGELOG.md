@@ -51,6 +51,7 @@
  - A label wire output without a matching label wire input gives a warning when the circuit is initialized
  - Keep at most 100 undo steps, so memory use does not grow during a long session
  - Yosys gate cells propagate undefined inputs ("X") as in Verilog, instead of treating them as 0. The simulation results are the same, but VCD files show X until a design has settled after the start.
+ - The Fibonacci synthesis example starts with clock and reset low, so they are not undefined at the start of its waveforms
 
 ## v1.2.0
  - Update pyside6 to 6.12.0
