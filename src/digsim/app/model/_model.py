@@ -211,6 +211,7 @@ class AppModel(QThread):
         model_dc = ModelDataClass(
             circuit=self.objects.circuit.to_dataclass(self._circuit_folder),
             gui=self.objects.components.get_gui_dict(),
+            shortcuts=self.shortcuts.to_dict(),
         )
         return model_dc
 
@@ -223,7 +224,7 @@ class AppModel(QThread):
         appfile_dataclass = AppFileDataClass(
             circuit=model_dataclass.circuit,
             gui=model_dataclass.gui,
-            shortcuts=self.shortcuts.to_dict(),
+            shortcuts=model_dataclass.shortcuts,
             settings=self.settings.get_all(),
         )
         try:

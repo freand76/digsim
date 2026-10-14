@@ -53,7 +53,10 @@ class AppFileDataClass:
 class ModelDataClass:
     circuit: CircuitDataClass
     gui: dict[str, GuiPositionDataClass]
+    shortcuts: dict[str, str] = Field(default_factory=dict)
 
     @staticmethod
     def from_app_file_dc(app_file_dc: AppFileDataClass) -> ModelDataClass:
-        return ModelDataClass(circuit=app_file_dc.circuit, gui=app_file_dc.gui)
+        return ModelDataClass(
+            circuit=app_file_dc.circuit, gui=app_file_dc.gui, shortcuts=app_file_dc.shortcuts
+        )

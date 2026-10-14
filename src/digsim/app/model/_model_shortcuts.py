@@ -46,6 +46,12 @@ class ModelShortcuts:
         """Set shortcut"""
         self._shortcut_component[key] = component.name()
 
+    def remove_component(self, component: Component) -> None:
+        """Remove the shortcuts of a deleted component"""
+        self._shortcut_component = {
+            key: name for key, name in self._shortcut_component.items() if name != component.name()
+        }
+
     def get_component(self, key: str) -> Component | None:
         """Get shortcut, None if its component is not in the circuit (anymore)"""
         component_name = self._shortcut_component.get(key)

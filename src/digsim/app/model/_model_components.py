@@ -167,6 +167,8 @@ class ModelComponents:
     def delete(self, component_object: ComponentObject) -> None:
         """Delete a component object in the model"""
         component_object.disconnect()
+        # A new component with the same name must not get the shortcut
+        self._app_model.shortcuts.remove_component(component_object.component)
         del self._component_objects[component_object.component]
         self._circuit.delete_component(component_object.component)
         self._app_model.sig_delete_component.emit(component_object)

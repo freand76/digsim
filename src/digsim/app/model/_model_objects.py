@@ -81,6 +81,7 @@ class ModelObjects:
     def _restore_state(self, model_dc: ModelDataClass) -> None:
         self.clear()
         exception_str_list = self._app_model.model_to_circuit(model_dc)
+        self._app_model.shortcuts.from_dict(model_dc.shortcuts)
         self._app_model.model_init()
         self._app_model.model_changed()
         if len(exception_str_list) > 0:
