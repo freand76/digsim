@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 
 import digsim.circuit.components._yosys_atoms
 from digsim.synth import Synthesis
-from digsim.utils import NetPort, Nets, YosysCell, YosysModule, YosysNetlist, YosysPort
+from digsim.utils import NetPort, Nets, YosysModule, YosysNetlist, YosysPort
 
 from ._static_level import GND, VDD
 from .atoms import (
@@ -154,26 +154,25 @@ class YosysComponent(MultiComponent):
     ) -> None:
         """Connect a source port to multiple sinks"""
         for sink_port in sinks:
-            if isinstance(sink_port.parent, YosysModule):
+            if sink_port.cell is None:
                 # Connect cell output to module top
                 assert sink_port.bit_index is not None
                 dst_port = self._bus_port(sink_port.name).get_bit(sink_port.bit_index)
                 src_comp_port.wire = dst_port
             else:
                 # Connect cell output to cell input
-                dst_comp = components_dict[sink_port.parent_name]
+                dst_comp = components_dict[sink_port.cell]
                 src_comp_port.wire = dst_comp.port(sink_port.name)
 
     def _connect_cells(self, components_dict: dict[str, Component]) -> None:
         """Connect all cells"""
         nets = self._nets()
         for net, source in nets.source.items():
-            if isinstance(source.parent, YosysModule):
+            if source.cell is None:
                 # Only connect cells here
                 continue
-            if isinstance(source.parent, YosysCell):
-                src_comp = components_dict[source.parent_name]
-                self._connect_sinks(components_dict, src_comp.port(source.name), nets.sinks[net])
+            src_comp = components_dict[source.cell]
+            self._connect_sinks(components_dict, src_comp.port(source.name), nets.sinks[net])
 
         gnd_sinks = nets.sinks.get("0", [])
         self._connect_sinks(components_dict, components_dict["GND"].port("O"), gnd_sinks)
@@ -186,7 +185,7 @@ class YosysComponent(MultiComponent):
         """Connect external input port"""
         for bit_idx, net in enumerate(port_dict.bits):
             for sink_port in self._nets().sinks[net]:
-                if isinstance(sink_port.parent, YosysModule):
+                if sink_port.cell is None:
                     # Connect module input to module output
                     assert sink_port.bit_index is not None
                     dst_port = self._bus_port(sink_port.name).get_bit(sink_port.bit_index)

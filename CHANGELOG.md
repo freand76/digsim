@@ -7,6 +7,7 @@
  - Circuit.to_json_file() stores file paths relative to the JSON file, and from_json_file() reads them from the file's folder by default, so a saved circuit loads from any working directory. Files saved by older versions with such paths load with folder=".".
  - More tests for how Yosys components are wired from a netlist
  - The Yosys netlist model only reads the parts of a netlist that DigSim uses. Net names, attributes and cell parameters are no longer stored.
+ - Simpler Yosys netlist nets: NetPort names its cell (None for a module port) instead of holding the cell or module object, and loading the 6502 netlist is about 30% faster
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

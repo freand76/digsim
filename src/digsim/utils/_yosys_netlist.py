@@ -9,6 +9,7 @@ ignores the rest (for example net names, attributes and cell parameters).
 
 from __future__ import annotations
 
+import dataclasses
 from typing import Literal
 
 from pydantic import Field
@@ -19,18 +20,24 @@ NET_TYPE = Literal["X", "x", "0", "1"] | int
 BIT_TYPE = list[NET_TYPE]
 
 
-@dataclass
+# NetPort and Nets are built from a parsed netlist, not read from JSON: plain dataclasses
+
+
+@dataclasses.dataclass
 class NetPort:
-    parent: YosysModule | YosysCell
-    parent_name: str
+    """A port on a net: a port of the cell 'cell', or bit 'bit_index' of a module port"""
+
     name: str
+    cell: str | None = None
     bit_index: int | None = None
 
 
-@dataclass
+@dataclasses.dataclass
 class Nets:
-    source: dict[NET_TYPE, NetPort] = Field(default_factory=dict)
-    sinks: dict[NET_TYPE, list[NetPort]] = Field(default_factory=dict)
+    """The port that drives each net, and the ports that each net drives"""
+
+    source: dict[NET_TYPE, NetPort] = dataclasses.field(default_factory=dict)
+    sinks: dict[NET_TYPE, list[NetPort]] = dataclasses.field(default_factory=dict)
 
 
 @dataclass
@@ -53,20 +60,6 @@ class YosysCell:
     type: str
     port_directions: dict[str, str] = Field(default_factory=dict)
     connections: dict[str, BIT_TYPE] = Field(default_factory=dict)
-
-    def get_nets(self, name: str, nets: Nets) -> None:
-        for port_name, net_list in self.connections.items():
-            if not net_list:
-                # Handle empty net_list, e.g., by skipping or raising an error
-                continue
-            net = net_list[0]
-            port = NetPort(parent=self, parent_name=name, name=port_name)
-            if self.port_directions[port_name] == "input":
-                if net not in nets.sinks:
-                    nets.sinks[net] = []
-                nets.sinks[net].append(port)
-            else:
-                nets.source[net] = port
 
     def component_name(self, name: str) -> str:
         """Return a friendly name for a netlist cell"""
@@ -92,21 +85,27 @@ class YosysModule:
         )
 
     def get_nets(self) -> Nets:
+        """
+        The nets of the module. Module inputs and cell outputs drive nets, and module
+        outputs and cell inputs are driven by them. The cells have single-bit ports.
+        """
         nets = Nets()
-
-        for port_name, port_item in self.ports.items():
-            for bit_index, net in enumerate(port_item.bits):
-                port = NetPort(parent=self, parent_name="top", name=port_name, bit_index=bit_index)
-                if port_item.is_output:
-                    if net not in nets.sinks:
-                        nets.sinks[net] = []
-                    nets.sinks[net].append(port)
+        for port_name, port in self.ports.items():
+            for bit_index, net in enumerate(port.bits):
+                net_port = NetPort(port_name, bit_index=bit_index)
+                if port.is_output:
+                    nets.sinks.setdefault(net, []).append(net_port)
                 else:
-                    nets.source[net] = port
-
+                    nets.source[net] = net_port
         for cell_name, cell in self.cells.items():
-            cell.get_nets(cell_name, nets)
-
+            for port_name, bits in cell.connections.items():
+                if not bits:
+                    continue
+                net_port = NetPort(port_name, cell=cell_name)
+                if cell.port_directions[port_name] == "input":
+                    nets.sinks.setdefault(bits[0], []).append(net_port)
+                else:
+                    nets.source[bits[0]] = net_port
         return nets
 
 
