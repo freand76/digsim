@@ -254,7 +254,7 @@ class ComponentSettingsIcSelector(ComponentSettingsBase):
         self.setLayout(layout)
         layout.addWidget(QLabel(self._parameter_dict["description"]))
         ic_folder = IntegratedCircuit.folder()
-        ic_files = pathlib.Path(ic_folder).glob("*.json")
+        ic_files = sorted(pathlib.Path(ic_folder).glob("*.json"))
         self._ic_selector = QComboBox(parent)
         for ic_file in ic_files:
             self._ic_selector.addItem(ic_file.stem, userData=ic_file.stem)
