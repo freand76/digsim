@@ -62,7 +62,7 @@ class ClockedJKFF(Component):
     def update(self) -> None:
         rising_edge = self.C.is_rising_edge()
         if rising_edge:
-            if self.J.value == 1 and self.K.value:
+            if self.J.value == 1 and self.K.value == 1:
                 self.Q.value = 1 if self.Q.value == 0 else 0
             elif self.J.value == 1:
                 self.Q.value = 1
