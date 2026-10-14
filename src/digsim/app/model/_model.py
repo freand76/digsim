@@ -86,6 +86,9 @@ class AppModel(QThread):
 
     def model_init(self) -> None:
         """(Re)initialize the model/circuit"""
+        # Events from before the reset are not for the new state
+        while not self._gui_event_queue.empty():
+            self._gui_event_queue.get_nowait()
         self.objects.circuit.init()
         self.objects.init()
         self.sig_sim_time_notify.emit(0)
@@ -163,9 +166,23 @@ class AppModel(QThread):
 
             self.sig_sim_time_notify.emit(self.objects.circuit.time_ns / 1000000000)
 
+        # Handle the GUI events that came before the stop (like the release of a button),
+        # instead of at the next start
+        self._run_gui_events()
+        self.objects.components.update_callback_objects()
+
         self._single_step = False
         self.sig_control_notify.emit()
         self.sig_audio_start.emit(False)
+
+    def _run_gui_events(self) -> None:
+        """Execute all queued GUI events"""
+        while True:
+            try:
+                gui_event_func = self._gui_event_queue.get_nowait()
+            except queue.Empty:
+                return
+            gui_event_func()
 
     def model_to_circuit(self, model_dc: AppFileDataClass | ModelDataClass) -> list[str]:
         if isinstance(model_dc, AppFileDataClass):

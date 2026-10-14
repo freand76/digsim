@@ -45,6 +45,7 @@
  - Bugfix: Label wires were shared by all circuits in a program, so two circuits could not use the same label. The labels in use are now read with Component.get_circuit_parameters(circuit).
  - Bugfix: Deleting a label wire driver in the GUI made the next reset or start fail
  - Label wires are shown while they are dragged into the circuit area, with the label they get when dropped
+ - Bugfix: A button press or release just before the simulation stopped was handled at the next start, also after a reset
 
 ## v1.2.0
  - Update pyside6 to 6.12.0
