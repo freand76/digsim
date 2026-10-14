@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from collections import deque
 from typing import TYPE_CHECKING
 
 from digsim.circuit import Circuit
@@ -20,6 +21,12 @@ if TYPE_CHECKING:
     from ._model import AppModel
 
 
+# The number of undo (and redo) steps that are kept, the oldest step is dropped when there
+# are more. Each step is a copy of the circuit's top-level components, wires and positions
+# (a Yosys component only stores its file path), so 100 steps use little memory.
+UNDO_STACK_DEPTH = 100
+
+
 class ModelObjects:
     """Class to handle objects in the model"""
 
@@ -27,8 +34,8 @@ class ModelObjects:
         self._app_model = app_model
         self._circuit = Circuit(name="DigSimCircuit")
         self._model_components = ModelComponents(app_model, self._circuit)
-        self._undo_stack: list[ModelDataClass] = []
-        self._redo_stack: list[ModelDataClass] = []
+        self._undo_stack: deque[ModelDataClass] = deque(maxlen=UNDO_STACK_DEPTH)
+        self._redo_stack: deque[ModelDataClass] = deque(maxlen=UNDO_STACK_DEPTH)
         self._new_wire = NewWire(self._app_model)
 
     @property
@@ -91,15 +98,15 @@ class ModelObjects:
 
     def reset_undo_stack(self) -> None:
         """Clear undo/redo stacks"""
-        self._undo_stack = []
-        self._redo_stack = []
+        self._undo_stack.clear()
+        self._redo_stack.clear()
         self._app_model.sig_control_notify.emit()
 
     def push_undo_state(self, clear_redo_stack: bool = True) -> None:
         """Push undo state to stack"""
         self._undo_stack.append(self._app_model.circuit_to_model())
         if clear_redo_stack:
-            self._redo_stack = []
+            self._redo_stack.clear()
             self._app_model.sig_control_notify.emit()
 
     def drop_undo_state(self) -> None:
