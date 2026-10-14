@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import heapq
 import os
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from types import TracebackType
 from typing import TYPE_CHECKING
@@ -108,6 +110,20 @@ class Circuit:
         except ValueError:
             pass  # No relative path (another drive on Windows), keep the absolute path
         return str(store_path)
+
+    @contextmanager
+    def adding_components(self) -> Iterator[None]:
+        """
+        Context for creating components: if the block raises an exception, the components
+        it added to the circuit before failing are removed again
+        """
+        names_before = set(self._components)
+        try:
+            yield
+        except BaseException:
+            for name in set(self._components) - names_before:
+                del self._components[name]
+            raise
 
     def delete_component(self, component: Component) -> None:
         """Delete a component, and the components it is built from, from the circuit"""
@@ -324,13 +340,10 @@ class Circuit:
 
         exception_str_list = []
         for component in circuit_dc.components:
-            names_before = set(self._components)
             try:
-                component.create(self)
+                with self.adding_components():
+                    component.create(self)
             except (DigsimException, FileNotFoundError) as exc:
-                # Remove what the failed component added before it failed
-                for name in set(self._components) - names_before:
-                    del self._components[name]
                 if component_exceptions:
                     raise
                 exception_str_list.append(f"{exc.__class__.__name__}:{exc!s}")

@@ -32,6 +32,7 @@
  - Bugfix: A buzzer kept its old tone after the tone was changed in its settings
  - Bugfix: A broken Yosys JSON netlist stopped a circuit from loading instead of giving a warning
  - Bugfix: Reloading a Yosys component whose file was moved raised an exception instead of a warning
+ - Circuit.adding_components() removes the components a failing block added
 
 ## v1.2.0
  - Update pyside6 to 6.12.0

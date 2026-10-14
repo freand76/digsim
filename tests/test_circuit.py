@@ -3,6 +3,8 @@
 
 """Pytest module to test the Circuit class"""
 
+import pytest
+
 from digsim.circuit import Circuit
 from digsim.circuit.components import AND, SR, Led, PushButton, YosysComponent
 from digsim.storage_model import CircuitDataClass, ComponentDataClass
@@ -105,3 +107,16 @@ def test_load_same_dataclass_twice():
     for _ in range(2):
         Circuit().from_dataclass(circuit_dc, folder="examples/yosys_counter")
     assert component_dc.settings == {"path": "counter.json"}
+
+
+def test_adding_components_removes_on_error():
+    """Components added in a failing adding_components block are removed again"""
+    circuit = Circuit()
+    PushButton(circuit, "button")
+    with pytest.raises(ValueError), circuit.adding_components():
+        SR(circuit, "latch")
+        raise ValueError
+    assert [component.name() for component in circuit.components] == ["button"]
+    with circuit.adding_components():
+        Led(circuit, "led")
+    assert [component.name() for component in circuit.components] == ["button", "led"]
