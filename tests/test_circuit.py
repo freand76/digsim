@@ -3,6 +3,8 @@
 
 """Pytest module to test the Circuit class"""
 
+from pathlib import Path
+
 import pytest
 
 from digsim.circuit import Circuit
@@ -154,3 +156,45 @@ def test_sub_components_initialized_once():
     latch.add(CountingAND(circuit, "part"))
     circuit.init()
     assert calls == ["init", "default_state"]
+
+
+def _yosys_circuit_dc(netlist_path):
+    return CircuitDataClass(
+        name="circuit",
+        components=[
+            ComponentDataClass(
+                name="counter",
+                type="digsim.circuit.components.YosysComponent",
+                settings={"path": netlist_path},
+            )
+        ],
+    )
+
+
+def test_stored_paths_use_forward_slashes(tmp_path):
+    """Paths are stored relative to the circuit folder with '/', which Linux and Windows read"""
+    netlist = Path(__file__).parent.parent / "examples" / "yosys_counter" / "counter.json"
+    (tmp_path / "designs" / "counter").mkdir(parents=True)
+    (tmp_path / "circuits").mkdir()
+    netlist_copy = tmp_path / "designs" / "counter" / "counter.json"
+    netlist_copy.write_text(netlist.read_text())
+    circuit = Circuit(name="circuit")
+    YosysComponent(circuit, path=netlist_copy)
+    stored = circuit.to_dataclass(str(tmp_path / "circuits")).components[0].settings["path"]
+    assert stored == "../designs/counter/counter.json"
+    loaded = Circuit()
+    loaded.from_dataclass(_yosys_circuit_dc(stored), str(tmp_path / "circuits"))
+    assert len(loaded.components) > 1
+
+
+def test_load_path_stored_on_windows(tmp_path):
+    """A path stored with '\\' (on Windows, by older versions) is loaded on all systems"""
+    netlist = Path(__file__).parent.parent / "examples" / "yosys_counter" / "counter.json"
+    (tmp_path / "designs").mkdir()
+    (tmp_path / "circuits").mkdir()
+    (tmp_path / "designs" / "counter.json").write_text(netlist.read_text())
+    loaded = Circuit()
+    loaded.from_dataclass(
+        _yosys_circuit_dc("..\\designs\\counter.json"), str(tmp_path / "circuits")
+    )
+    assert len(loaded.components) > 1

@@ -11,7 +11,7 @@ import heapq
 import os
 from collections.abc import Iterator
 from contextlib import contextmanager
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from types import TracebackType
 from typing import Self
 
@@ -92,6 +92,9 @@ class Circuit:
 
     def load_path(self, path: str | Path) -> str:
         """Get the load path relative to the circuit path"""
+        if "\\" in str(path):
+            # Stored with backslashes on Windows by an older version, read on all systems
+            path = PureWindowsPath(path).as_posix()
         load_path = Path(path)
         if not load_path.is_absolute():
             load_path = Path(self._folder) / load_path
@@ -106,7 +109,8 @@ class Circuit:
             store_path = Path(os.path.relpath(store_path, folder_path))
         except ValueError:
             pass  # No relative path (another drive on Windows), keep the absolute path
-        return str(store_path)
+        # '/' also on Windows, so that the circuit file can be loaded on all systems
+        return store_path.as_posix()
 
     @contextmanager
     def adding_components(self) -> Iterator[None]:
