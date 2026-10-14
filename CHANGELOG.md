@@ -8,6 +8,7 @@
  - More tests for how Yosys components are wired from a netlist
  - The Yosys netlist model only reads the parts of a netlist that DigSim uses. Net names, attributes and cell parameters are no longer stored.
  - Simpler Yosys netlist nets: NetPort names its cell (None for a module port) instead of holding the cell or module object, and loading the 6502 netlist is about 30% faster
+ - Yosys components no longer add an empty "nets" component to the circuit, and the unused nets argument is removed
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

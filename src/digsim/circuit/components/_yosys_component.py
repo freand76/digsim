@@ -46,18 +46,12 @@ class YosysComponent(MultiComponent):
         circuit: Circuit,
         path: str | Path | None = None,
         name: str | None = None,
-        nets: bool = True,
     ) -> None:
         super().__init__(circuit, name)
         self._path = str(path) if path is not None else None
-        self._net_comp: Component | None = None
         self._netlist_module: YosysModule | None = None
         self._netlist_nets: Nets | None = None
         self._setup_base()
-
-        if nets:
-            self._net_comp = Component(self._circuit, "nets")
-            self.add(self._net_comp)
 
         if path is not None:
             self._load_file()
@@ -102,9 +96,6 @@ class YosysComponent(MultiComponent):
         self._disconnect_external_ports()
         # Remove yosys atoms
         self._gates_comp.remove_all_components()
-        # Remove nets
-        if self._net_comp is not None:
-            self._net_comp.delete_all_ports()
         # Setup netlist
         self._netlist_module = reload_module
         self._netlist_nets = reload_nets
