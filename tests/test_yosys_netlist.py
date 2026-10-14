@@ -288,3 +288,12 @@ def test_yosys_module_same_interface():
     assert not module.is_same_interface(_module(a=("input", 2), z=("output", 1)))
     assert not module.is_same_interface(_module(a=("input", 3), y=("output", 1)))
     assert not module.is_same_interface(_module(a=("output", 2), y=("output", 1)))
+
+
+@pytest.mark.parametrize("content", ["{", '{"modules": 3}'])
+def test_yosys_component_malformed_netlist(tmp_path, content):
+    """A file that is not a Yosys netlist gives a component exception"""
+    netlist_file = tmp_path / "netlist.json"
+    netlist_file.write_text(content)
+    with pytest.raises(YosysComponentException):
+        YosysComponent(Circuit(), path=netlist_file)

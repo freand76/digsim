@@ -226,15 +226,18 @@ class YosysComponent(MultiComponent):
 
     def _load_netlist_dict(self) -> YosysNetlist:
         """Load yosys netlist dict"""
-        if self._path.endswith(".json"):
-            with open(self._path, encoding="utf-8") as json_file:
-                netlist_dict = json.load(json_file)
-        elif self._path.endswith(".v"):
-            netlist_dict = self._synth_verilog()
-        else:
-            raise YosysComponentException(f"Unknown file extension '{self._path}'")
-
-        yosys_netlist = YosysNetlist(**netlist_dict)
+        try:
+            if self._path.endswith(".json"):
+                with open(self._path, encoding="utf-8") as json_file:
+                    netlist_dict = json.load(json_file)
+            elif self._path.endswith(".v"):
+                netlist_dict = self._synth_verilog()
+            else:
+                raise YosysComponentException(f"Unknown file extension '{self._path}'")
+            yosys_netlist = YosysNetlist(**netlist_dict)
+        except ValueError as exc:
+            # Malformed JSON, or JSON that is not a Yosys netlist (pydantic ValidationError)
+            raise YosysComponentException(f"Not a Yosys netlist: '{self._path}'") from exc
         modules = yosys_netlist.get_modules()
 
         if len(modules) > 1:
