@@ -35,7 +35,7 @@ displays, and play with it right away. It is even fast enough to run a synthesiz
 
 ## Installation and running
 
-DigSim requires Python 3.10 or newer and is published on PyPI as
+DigSim requires Python 3.11 or newer and is published on PyPI as
 [`digsim-logic-simulator`](https://pypi.org/project/digsim-logic-simulator/). Choose the
 option that fits what you want to do. See the
 [installation guide](https://freand76.github.io/digsim/installation/) for more details.

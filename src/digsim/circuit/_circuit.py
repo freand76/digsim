@@ -13,7 +13,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 from types import TracebackType
-from typing import TYPE_CHECKING
+from typing import Self
 
 from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
 
@@ -26,9 +26,6 @@ from .components.atoms import (
     PortOutDelta,
 )
 
-
-if TYPE_CHECKING:
-    from typing_extensions import Self
 
 EventPort = PortOutDelta | PortMultiBitWire
 

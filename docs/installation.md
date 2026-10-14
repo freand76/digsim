@@ -2,7 +2,7 @@
 
 DigSim is published on PyPI as
 [`digsim-logic-simulator`](https://pypi.org/project/digsim-logic-simulator/) and
-requires **Python 3.10 or newer**. All dependencies, including the Qt GUI toolkit and the
+requires **Python 3.11 or newer**. All dependencies, including the Qt GUI toolkit and the
 Yosys synthesis tool, are installed automatically.
 
 Pick the option that suits you:

@@ -19,7 +19,7 @@ Verilog into simulatable netlists.
 - `docs/` — user documentation, published to https://freand76.github.io/digsim/ with
   MkDocs Material (`mkdocs.yml`). `docs/documentation.md` is only a pointer to the site.
 
-Python >= 3.10 is supported (CI tests 3.10–3.14), so don't use newer-only syntax.
+Python >= 3.11 is supported (CI tests 3.11–3.14), so don't use newer-only syntax.
 Dependencies in `pyproject.toml` are pinned to exact versions.
 
 ## Tooling
@@ -40,7 +40,7 @@ The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test
 `uv_run_app.sh`). Run ruff format + check, mypy and pytest before committing.
 
 CI (`.github/workflows/`) runs ruff, and pytest plus `examples/yosys_counter/*.py` on Linux
-(Python 3.10–3.14) and Windows. The test workflows run on push only, not on pull requests.
+(Python 3.11–3.14) and Windows. The test workflows run on push only, not on pull requests.
 mypy is local only. The docs site is rebuilt and deployed by `docs.yaml` on every push to
 `main` that touches `docs/`, `mkdocs.yml` or `CHANGELOG.md` (included in the site's
 Changelog page).
