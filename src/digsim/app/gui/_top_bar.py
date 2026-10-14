@@ -194,14 +194,19 @@ class VcdControlWidget(QFrame):
         self._enable_buttons(False)
 
     def _start_vcd(self, filename: str) -> None:
+        # Close old vcd (if any)
+        self._app_model.objects.circuit.vcd_close()
+        # Enable VCD in the model
+        try:
+            self._app_model.objects.circuit.vcd(filename)
+        except OSError as exc:
+            self._app_model.sig_error.emit(f"Could not open VCD file: {exc!s}")
+            QTimer.singleShot(0, self._disable_vcd_selection)
+            return
         self._vcd_filename = filename
         display_filename = Path(filename).name
         self._filename_widget.set_filename(display_filename)
         self._enable_buttons(True)
-        # Close old vcd (if any)
-        self._app_model.objects.circuit.vcd_close()
-        # Enable VCD in the model
-        self._app_model.objects.circuit.vcd(filename)
 
     def _open_filedialog(self) -> str | None:
         default_filename = self._vcd_filename
