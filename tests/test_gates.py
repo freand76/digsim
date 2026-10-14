@@ -391,3 +391,21 @@ def test_xnor_three_inputs(inputs, out_y):
         port.value = value
     circuit.run(ms=1)
     assert _xnor.Y.value == out_y
+
+
+def test_sr_ports():
+    """The SR latch has S and R as inputs and Q and nQ as outputs"""
+    circuit = Circuit()
+    latch = SR(circuit)
+    assert [port.name() for port in latch.inports()] == ["S", "R"]
+    assert [port.name() for port in latch.outports()] == ["Q", "nQ"]
+
+
+def test_sr_delete_frees_driven_ports():
+    """After deleting an SR latch, the ports it drove can be connected again"""
+    circuit = Circuit()
+    latch = SR(circuit)
+    led_input = NOT(circuit).A
+    latch.Q.wire = led_input
+    circuit.delete_component(latch)
+    assert not led_input.has_driver()

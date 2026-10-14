@@ -262,7 +262,7 @@ class MUX(Component):
 
 
 class SR(MultiComponent):
-    """SR logic gate composed of two NAND gates"""
+    """SR latch composed of two NOR gates"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
@@ -274,8 +274,8 @@ class SR(MultiComponent):
         _nandr.Y.wire = _nands.B
         self.add_port(PortWire(self, "S"))
         self.add_port(PortWire(self, "R"))
-        self.add_port(PortWire(self, "Q"))
-        self.add_port(PortWire(self, "nQ"))
+        self.add_port(PortWire(self, "Q", output=True))
+        self.add_port(PortWire(self, "nQ", output=True))
 
         self.S.wire = _nands.A
         self.R.wire = _nandr.B
