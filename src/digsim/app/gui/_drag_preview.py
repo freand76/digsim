@@ -28,15 +28,12 @@ if TYPE_CHECKING:
     from digsim.app.model import AppModel
 
 
-# Components that must not be created for a preview: label wires register their label
-# in storage shared by all circuits
-_NO_COMPONENT_PREVIEW = {"LabelWireIn", "LabelWireOut"}
-
 # The size of the component icons in the component selector
 _ICON_SIZE = QSize(80, 105)
 
-# Preview pixmap and the position of the component center in it, per component name
-_previews: dict[str, tuple[QPixmap, QPointF]] = {}
+# Preview pixmap and the position of the component center in it, per component name and
+# settings (label wires show their label, which depends on the labels in the circuit)
+_previews: dict[tuple[str, str], tuple[QPixmap, QPointF]] = {}
 
 
 def _default_settings(parameters: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
@@ -45,6 +42,9 @@ def _default_settings(parameters: dict[str, dict[str, Any]]) -> dict[str, Any] |
     for key, parameter in parameters.items():
         if "default" in parameter:
             settings[key] = parameter["default"]
+            # As the settings dialog: change a text that is already in use
+            while settings[key] in parameter.get("invalid_list", []):
+                settings[key] += "x"
         elif "default_index" in parameter:
             settings[key] = parameter["range"][parameter["default_index"]]
         elif parameter["type"] == "component_name":
@@ -52,21 +52,26 @@ def _default_settings(parameters: dict[str, dict[str, Any]]) -> dict[str, Any] |
         elif parameter["type"] == "ic_name":
             ic_files = sorted(Path(IntegratedCircuit.folder()).glob("*.json"))
             settings[key] = ic_files[0].stem
+        elif parameter["type"] == "list" and len(parameter["items"]) > 0:
+            settings[key] = parameter["items"][0]
         else:
             return None
     return settings
 
 
-def _component_preview(app_model: AppModel, name: str) -> tuple[QPixmap, QPointF] | None:
-    """Draw the component with default settings, as it looks when it has been dropped"""
-    if name in _NO_COMPONENT_PREVIEW:
-        return None
+def _preview_settings(app_model: AppModel, name: str) -> dict[str, Any] | None:
+    """The settings the component gets when it is dropped with the dialog defaults"""
     component_class = getattr(digsim.circuit.components, name)
-    settings = _default_settings(component_class.get_parameters())
-    if settings is None:
-        return None
+    return _default_settings(component_class.get_circuit_parameters(app_model.objects.circuit))
+
+
+def _component_preview(
+    app_model: AppModel, name: str, settings: dict[str, Any]
+) -> tuple[QPixmap, QPointF]:
+    """Draw the component with default settings, as it looks when it has been dropped"""
     # Components like FlipFlop select the class to create with their "name" setting
     component_class = getattr(digsim.circuit.components, settings.get("name", name))
+    # A circuit of its own, the preview must not be added to the circuit in the GUI
     component = component_class(Circuit(), **settings)
     object_class = digsim.app.gui_objects.class_factory(type(component).__name__)
     component_object = object_class(app_model, component, 0, 0)
@@ -105,11 +110,19 @@ def drag_preview(app_model: AppModel, name: str) -> tuple[QPixmap, QPointF] | No
     """
     if name not in CLASS_NAME_TO_COMPONENT_OBJECT:
         return None
-    if name not in _previews:
-        try:
-            preview = _component_preview(app_model, name)
-        except (DigsimException, OSError, TypeError, ValueError):
-            # The component could not be created with default settings, use the icon
-            preview = None
-        _previews[name] = preview if preview is not None else _icon_preview(name)
-    return _previews[name]
+    try:
+        settings = _preview_settings(app_model, name)
+    except (DigsimException, OSError, TypeError, ValueError):
+        settings = None
+    key = (name, repr(settings))
+    if key not in _previews:
+        preview = None
+        if settings is not None:
+            try:
+                preview = _component_preview(app_model, name, settings)
+            except (DigsimException, OSError, TypeError, ValueError):
+                # The component could not be created with default settings
+                preview = None
+        # Without settings (like a file path) or a component, use the selector icon
+        _previews[key] = preview if preview is not None else _icon_preview(name)
+    return _previews[key]
