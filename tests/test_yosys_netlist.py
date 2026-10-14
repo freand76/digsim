@@ -310,3 +310,39 @@ def test_yosys_component_from_netlist_has_no_file():
         circuit.to_dataclass()
     with pytest.raises(YosysComponentException, match="no file"):
         counter.reload_file()
+
+
+def test_yosys_component_wiring():
+    """Inputs wired to outputs and to several cells, and constants on outputs"""
+    netlist_dict = {
+        "modules": {
+            "wiring": {
+                "ports": {
+                    "a": {"direction": "input", "bits": [2]},
+                    # A copy of 'a', a constant 1 and 0, and 'a' through two NOT gates
+                    "y": {"direction": "output", "bits": [2, "1", "0", 3, 4]},
+                },
+                "cells": {
+                    "not_1": {
+                        "type": "$_NOT_",
+                        "port_directions": {"A": "input", "Y": "output"},
+                        "connections": {"A": [2], "Y": [3]},
+                    },
+                    "not_2": {
+                        "type": "$_NOT_",
+                        "port_directions": {"A": "input", "Y": "output"},
+                        "connections": {"A": [2], "Y": [4]},
+                    },
+                },
+            }
+        }
+    }
+    circuit = Circuit()
+    comp = YosysComponent(circuit)
+    comp.create_from_netlist(YosysNetlist(**netlist_dict))
+    circuit.init()
+    # Bit 0 of 'y' is the first bit in the netlist
+    for a, expected in [(0, 0b11010), (1, 0b00011)]:
+        comp.a.value = a
+        circuit.run(ms=1)
+        assert comp.y.value == expected
