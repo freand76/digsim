@@ -65,7 +65,6 @@ class LabelObject(ComponentObject):
         else:
             pen.setWidth(1)
         painter.setPen(pen)
-        painter.setBrush(Qt.BrushStyle.SolidPattern)
         painter.setBrush(Qt.GlobalColor.gray)
 
         if "in" in name.lower():

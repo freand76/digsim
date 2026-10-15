@@ -47,7 +47,6 @@ class LogicAnalyzerObject(ImageObject):
 
     def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter)
-        painter.setBrush(Qt.BrushStyle.SolidPattern)
         painter.setBrush(Qt.GlobalColor.black)
         painter.drawRoundedRect(
             QRect(

@@ -12,7 +12,7 @@ from PySide6.QtGui import QFont, QPainter, QPen
 from PySide6.QtWidgets import QStyleOptionGraphicsItem, QWidget
 
 from digsim.circuit.components import DipSwitch
-from digsim.circuit.components.atoms import Component, Port
+from digsim.circuit.components.atoms import Component
 
 from ._image_objects import ImageObject
 
@@ -118,9 +118,6 @@ class DipSwitchObject(ImageObject):
             int(self.rect().y() + self.BORDER_TO_PORT - str_h),
             "ON",
         )
-
-    def _portlist(self) -> list[Port]:
-        return self.component.outports()
 
     def paint(
         self,

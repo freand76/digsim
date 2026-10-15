@@ -31,7 +31,6 @@ class PortGraphicsItem(QGraphicsRectItem):
         self._app_model = app_model
         self._port = port
         self.setPen(QPen(Qt.GlobalColor.black))
-        self.setBrush(Qt.BrushStyle.SolidPattern)
         self.setBrush(QBrush(Qt.GlobalColor.gray))
         self.setAcceptHoverEvents(True)
 

@@ -62,7 +62,6 @@ class GuiNoteObject(ComponentObject):
         else:
             pen.setWidth(1)
         painter.setPen(pen)
-        painter.setBrush(Qt.BrushStyle.SolidPattern)
         painter.setBrush(Qt.GlobalColor.yellow)
         painter.drawRect(self.rect())
         painter.setFont(self._NOTE_FONT)
@@ -85,7 +84,6 @@ class GuiNoteObject(ComponentObject):
         pen = QPen(cls._NOTE_PEN)
         pen.setWidth(1)
         painter.setPen(pen)
-        painter.setBrush(Qt.BrushStyle.SolidPattern)
         painter.setBrush(Qt.GlobalColor.yellow)
         painter.drawRect(note_rect)
         painter.setFont(cls._NOTE_FONT)

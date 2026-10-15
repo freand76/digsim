@@ -163,7 +163,6 @@ class ImageObjectFlipFlop(ImageObject):
     """The class for a flip-flop image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/FlipFlop.png"
-    PORT_TO_IMAGE_DIST = 20
 
     def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter)

@@ -13,6 +13,7 @@
  - Simpler Yosys component code
  - Bugfix: A GUI object that subclasses another image object with its own image showed the base class image
  - Correct the descriptions of several GUI object classes
+ - Remove unused and repeated code from the GUI objects
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

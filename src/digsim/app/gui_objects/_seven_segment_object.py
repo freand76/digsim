@@ -148,15 +148,11 @@ class SevenSegmentObject(ComponentObject):
             path.closeSubpath()
             painter.drawPath(path)
 
-        DOT_OFFSET_X = 40
-        DOT_OFFSET_Y = 60
-        DOT_RADIUS = 3
-
         if "." in active_segments:
             painter.setPen(Qt.GlobalColor.red)
             painter.setBrush(Qt.GlobalColor.red)
         else:
             painter.setPen(Qt.GlobalColor.darkRed)
             painter.setBrush(Qt.GlobalColor.darkRed)
-        dotPoint = QPoint(DOT_OFFSET_X, DOT_OFFSET_Y) + start_point
-        painter.drawEllipse(dotPoint, DOT_RADIUS, DOT_RADIUS)
+        dot_point = QPoint(cls.DOT_OFFSET_X, cls.DOT_OFFSET_Y) + start_point
+        painter.drawEllipse(dot_point, cls.DOT_RADIUS, cls.DOT_RADIUS)

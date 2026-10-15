@@ -53,7 +53,6 @@ class ComponentContextMenu(QMenu):
         deleteAction = QAction("Delete", self)
         self.addAction(deleteAction)
         deleteAction.triggered.connect(self._delete)
-        self._menu_action: QAction | None = None
 
     def _add_settings(self) -> None:
         self._reconfigurable_parameters = self._component.get_reconfigurable_parameters()
@@ -64,11 +63,7 @@ class ComponentContextMenu(QMenu):
 
     def open_at(self, position: QPoint) -> None:
         """Create context menu for component"""
-        self._menu_action = self.exec(position)
-
-    def get_action(self) -> str:
-        """Get context menu action"""
-        return self._menu_action.text() if self._menu_action is not None else ""
+        self.exec(position)
 
     def _delete(self) -> None:
         self._component_object.setSelected(True)

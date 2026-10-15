@@ -196,7 +196,7 @@ class ComponentObject(QGraphicsRectItem):
     def update_ports(self) -> None:
         """Update port positions for the placed component"""
 
-        # Make sure all ports are fit in the hieght of the component
+        # Make sure all ports fit in the height of the component
         max_ports = max(len(self._component.inports()), len(self._component.outports()))
         if max_ports > 1:
             min_height = (max_ports - 1) * self._port_distance + 2 * self.BORDER_TO_PORT
@@ -301,7 +301,6 @@ class ComponentObject(QGraphicsRectItem):
             pen.setWidth(1)
         pen.setColor(Qt.GlobalColor.black)
         painter.setPen(pen)
-        painter.setBrush(Qt.BrushStyle.SolidPattern)
         painter.setBrush(color)
         painter.drawRoundedRect(comp_rect, 5, 5)
 
