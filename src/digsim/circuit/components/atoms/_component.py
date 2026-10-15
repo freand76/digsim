@@ -248,7 +248,7 @@ class Component(abc.ABC):
                 reconfigurable_parameters[parameter] = copy.deepcopy(parameter_dict)
                 reconfigurable_parameters[parameter]["default"] = self.parameter_get(parameter)
                 if reconfigurable_parameters[parameter]["type"] == "width_pow2":
-                    reconfigurable_parameters[parameter]["type"] = int
+                    reconfigurable_parameters[parameter]["type"] = "int"
                     reconfigurable_parameters[parameter]["min"] = 0
                     reconfigurable_parameters[parameter]["max"] = (
                         2 ** self.parameter_get("width") - 1
