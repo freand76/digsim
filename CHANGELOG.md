@@ -35,6 +35,7 @@
  - The default application settings are kept in the model instead of the settings dialog
  - Bugfix: Pressing Del with nothing selected added an undo step that did nothing
  - Bugfix: Bring to front and Send to back could not be undone on their own
+ - Bugfix: A circuit file with an update frequency of 0 or an unknown setting value made the simulation fail to start. Such settings are now ignored.
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

@@ -42,8 +42,16 @@ class ModelSettings:
         return self._settings.copy()
 
     def from_dict(self, circuit_dict: dict[str, Any]) -> None:
-        """Get settings from circuit dict"""
+        """
+        Get settings from circuit dict. Unknown settings, and values that can't be used
+        (like an update frequency of 0 in an edited file), are ignored.
+        """
         for key, data in circuit_dict.items():
+            default = self.DEFAULT_SETTINGS.get(key)
+            if default is None or type(data) is not type(default):
+                continue
+            if key == "update_frequency" and data <= 0:
+                continue
             self._settings[key] = data
 
     def get(self, key: str) -> Any:
