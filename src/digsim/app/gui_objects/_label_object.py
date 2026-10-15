@@ -21,7 +21,10 @@ if TYPE_CHECKING:
 
 
 class LabelObject(ComponentObject):
-    """The class for a label wire component (Wire Sink or Wire Source) placed in the GUI"""
+    """The base class for the label wire components (Wire Sink and Wire Source) in the GUI"""
+
+    # A Wire Sink, which takes the signal in (LabelWireIn), or a Wire Source
+    SINK: bool
 
     _LABEL_PEN = QPen(Qt.GlobalColor.black)
 
@@ -33,9 +36,8 @@ class LabelObject(ComponentObject):
         label_w, label_h = self.get_string_metrics(label)
         self.width = 2 * self.PORT_SIDE + label_w
         self.height = self.PORT_SIDE + label_h
-        self._input = len(self._component.inports()) > 0
 
-        if self._input:
+        if self.SINK:
             xpos = -ComponentObject.RECT_TO_BORDER
         else:
             xpos = self.width - self.PORT_SIDE - 1
@@ -56,7 +58,7 @@ class LabelObject(ComponentObject):
 
     @classmethod
     def _paint_label(
-        cls, painter: QPainter, comp_rect: QRect | QRectF, name: str, selected: bool = False
+        cls, painter: QPainter, comp_rect: QRect | QRectF, selected: bool = False
     ) -> None:
         # A copy: the class pen is shared by all instances
         pen = QPen(cls._LABEL_PEN)
@@ -67,7 +69,7 @@ class LabelObject(ComponentObject):
         painter.setPen(pen)
         painter.setBrush(Qt.GlobalColor.gray)
 
-        if "in" in name.lower():
+        if cls.SINK:
             points = QPolygon(
                 [
                     QPoint(int(comp_rect.x()), int(comp_rect.y() + comp_rect.height() / 2)),
@@ -107,10 +109,7 @@ class LabelObject(ComponentObject):
         painter.drawPolygon(points)
 
     def paint_component(self, painter: QPainter) -> None:
-        if self._input:
-            self._paint_label(painter, self.rect(), "sink", self.selected)
-        else:
-            self._paint_label(painter, self.rect(), "source", self.selected)
+        self._paint_label(painter, self.rect(), self.selected)
 
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
@@ -124,6 +123,17 @@ class LabelObject(ComponentObject):
                 width,
                 height,
             ),
-            name,
         )
         cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)
+
+
+class LabelWireInObject(LabelObject):
+    """The class for a Wire Sink (LabelWireIn) placed in the GUI"""
+
+    SINK = True
+
+
+class LabelWireOutObject(LabelObject):
+    """The class for a Wire Source (LabelWireOut) placed in the GUI"""
+
+    SINK = False

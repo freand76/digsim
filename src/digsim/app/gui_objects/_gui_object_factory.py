@@ -27,7 +27,7 @@ from ._image_objects import (
     ImageObjectXNOR,
     ImageObjectXOR,
 )
-from ._label_object import LabelObject
+from ._label_object import LabelWireInObject, LabelWireOutObject
 from ._led_bar_object import LedBarObject
 from ._logic_analyzer_object import LogicAnalyzerObject
 from ._seven_segment_object import SevenSegmentObject
@@ -47,8 +47,8 @@ CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "DipSwitch": DipSwitchObject,
     "DFF": ImageObjectDFF,
     "HexDigit": HexDigitObject,
-    "LabelWireIn": LabelObject,
-    "LabelWireOut": LabelObject,
+    "LabelWireIn": LabelWireInObject,
+    "LabelWireOut": LabelWireOutObject,
     "Led": ImageObjectLed,
     "LogicAnalyzer": LogicAnalyzerObject,
     "NAND": ImageObjectNAND,
