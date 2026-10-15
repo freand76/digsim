@@ -314,6 +314,9 @@ class ImageObjectXNOR(GateImageObject):
   `SHOW_PORT_NAMES = False` to leave out the port names. `GateImageObject` sets
   `SHOW_PORT_NAMES = False`, and the LED leaves out both.
 - The same image is used in the component selector.
+- Components with many ports, like ICs and flip-flops, subclass `NamedBoxObject`
+  instead. It draws a box with the component's name and port names, and only uses the
+  image in the component selector.
 
 ### 3b. A GUI object drawn by code
 

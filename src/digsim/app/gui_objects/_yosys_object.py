@@ -3,16 +3,16 @@
 
 """A yosys component with an image as symbol the GUI"""
 
-from PySide6.QtGui import QAction, QPainter
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu, QWidget
 
 from digsim.circuit.components import YosysComponent
 from digsim.circuit.components.atoms import DigsimException
 
-from ._image_objects import ImageObject
+from ._image_objects import NamedBoxObject
 
 
-class YosysObject(ImageObject):
+class YosysObject(NamedBoxObject):
     """The class for a Yosys image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/YOSYS.png"
@@ -22,10 +22,6 @@ class YosysObject(ImageObject):
         component = self._component
         assert isinstance(component, YosysComponent)
         return component
-
-    def paint_component(self, painter: QPainter) -> None:
-        self.paint_component_base(painter)
-        self.paint_component_name(painter)
 
     def add_context_menu_action(self, menu: QMenu, parent: QWidget | None) -> None:
         reloadAction = QAction("Reload", menu)

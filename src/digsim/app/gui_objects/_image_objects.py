@@ -92,6 +92,17 @@ class ImageObject(ComponentObject):
         painter.drawPixmap(QPoint(int(xpos), int(ypos)), pixmap)
 
 
+class NamedBoxObject(ImageObject):
+    """
+    A base class for components drawn as a box with their name and port names.
+    The image is only used as the icon in the component selector.
+    """
+
+    def paint_component(self, painter: QPainter) -> None:
+        self.paint_component_base(painter)
+        self.paint_component_name(painter)
+
+
 class GateImageObject(ImageObject):
     """The base class for gate components placed in the GUI"""
 
@@ -152,14 +163,10 @@ class ImageObjectDFF(ImageObject):
         self.width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._image().width()
 
 
-class ImageObjectFlipFlop(ImageObject):
+class ImageObjectFlipFlop(NamedBoxObject):
     """The class for a flip-flop image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/FlipFlop.png"
-
-    def paint_component(self, painter: QPainter) -> None:
-        self.paint_component_base(painter)
-        self.paint_component_name(painter)
 
 
 class ImageObjectMUX(ImageObject):
@@ -211,14 +218,10 @@ class ImageObjectLed(ImageObject):
     SHOW_PORT_NAMES = False
 
 
-class ImageObjectIC(ImageObject):
+class ImageObjectIC(NamedBoxObject):
     """The class for an IC image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/IC.png"
-
-    def paint_component(self, painter: QPainter) -> None:
-        self.paint_component_base(painter)
-        self.paint_component_name(painter)
 
 
 class ImageObjectWithActiveRect(ImageObject):
