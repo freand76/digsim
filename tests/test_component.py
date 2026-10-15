@@ -3,8 +3,11 @@
 
 """Pytest module to test the Component base class"""
 
+import pytest
+
 from digsim.circuit import Circuit
-from digsim.circuit.components import StaticValue
+from digsim.circuit.components import AND, StaticValue
+from digsim.circuit.components.atoms import ComponentException
 
 
 def test_reconfigurable_width_dependent_value():
@@ -18,3 +21,11 @@ def test_reconfigurable_width_dependent_value():
     assert parameters["value"]["default"] == 5
     # The component's own parameters are not changed
     assert StaticValue.get_parameters()["value"]["type"] == "width_pow2"
+
+
+def test_wire_getter_message():
+    """Reading a component's wire gives an error that names the component"""
+    circuit = Circuit()
+    gate = AND(circuit)
+    with pytest.raises(ComponentException, match="Cannot get wire for component 'AND'"):
+        _ = gate.wire

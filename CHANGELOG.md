@@ -46,6 +46,7 @@
  - Simpler storage model code
  - Bugfix: A synthesis whose console file could not be opened left two file descriptors open
  - Bugfix: python -m digsim.synth ended with a traceback when the output file could not be written, and printed "ERROR:" twice
+ - Bugfix: The error for reading a component's wire showed a method instead of the component name. The unused Component.settings_from_dict() is removed.
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

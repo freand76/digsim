@@ -159,7 +159,7 @@ class Component(abc.ABC):
     @property
     def wire(self) -> NoReturn:
         """Property needed to be able to have a setter"""
-        raise ComponentException(f"Cannot get wire for component '{self.display_name}'")
+        raise ComponentException(f"Cannot get wire for component '{self.display_name()}'")
 
     @wire.setter
     def wire(self, port: Port) -> None:
@@ -209,10 +209,6 @@ class Component(abc.ABC):
 
     def onrelease(self) -> None:
         """What to happen for an interactive de-activation"""
-
-    def settings_from_dict(self, settings: dict[str, ParameterValue]) -> None:
-        """Get component settings from dict"""
-        raise ComponentException(f"No setup for component '{self.display_name}'")
 
     def settings_to_dict(self) -> dict[str, ParameterValue]:
         """Return component settings as a dict"""
