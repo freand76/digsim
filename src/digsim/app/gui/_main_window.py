@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QScrollArea,
-    QSplitter,
     QVBoxLayout,
     QWidget,
 )
@@ -30,7 +29,7 @@ if TYPE_CHECKING:
     from digsim.app.model import AppModel
 
 
-class CircuitEditor(QSplitter):
+class CircuitEditor(QWidget):
     """
     The circuit editor, the component selection widget and the circuit area widget.
     """
@@ -43,7 +42,8 @@ class CircuitEditor(QSplitter):
         layout = QHBoxLayout(self)
         self.setLayout(layout)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
+        # A small gap between the component selection and the circuit area
+        layout.setSpacing(4)
 
         self._selection_area = QScrollArea(self)
         self._selection_area.setFixedWidth(106)
@@ -53,11 +53,10 @@ class CircuitEditor(QSplitter):
         self._circuit_area = CircuitArea(app_model, self)
         selection_panel = ComponentSelection(self._circuit_area, self)
 
-        layout.addWidget(self._circuit_area)
         self._selection_area.setWidget(selection_panel)
 
         layout.addWidget(self._selection_area)
-        layout.setStretchFactor(self._selection_area, 0)
+        layout.addWidget(self._circuit_area, 1)
         self._circuit_area.setFocus()
 
     def _control_notify(self) -> None:

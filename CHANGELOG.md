@@ -27,6 +27,7 @@
  - Fix the grammar of the question before a circuit is replaced, and add the missing Zoom in tooltip
  - Remove unused code and correct docstrings in the main window, circuit area, top bar and component selector
  - Simpler mouse wheel zoom code
+ - The component selector and circuit area are placed side by side without a splitter, which showed a grip that could not be dragged
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window
