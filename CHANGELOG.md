@@ -37,6 +37,7 @@
  - Bugfix: Bring to front and Send to back could not be undone on their own
  - Bugfix: A circuit file with an update frequency of 0 or an unknown setting value made the simulation fail to start. Such settings are now ignored.
  - Remove unused code and correct docstrings in the application model
+ - Bugfix: For a moment after a single step, the GUI treated the simulation as stopped while its thread still used the circuit, so it could be changed under it
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

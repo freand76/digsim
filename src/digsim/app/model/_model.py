@@ -41,11 +41,13 @@ class AppModel(QThread):
     def __init__(self) -> None:
         super().__init__()
         self._setup_model_components()
-        self._started = False
+        # Set to keep the simulation loop in run() going, cleared to stop it
+        self._keep_running = False
         self._single_step = False
         self._changed = False
         self._gui_event_queue: queue.Queue[Callable[[], None]] = queue.Queue()
         self._circuit_folder = ""
+        self.finished.connect(self._thread_finished)
 
     def _setup_model_components(self) -> None:
         self._model_objects = ModelObjects(self)
@@ -69,8 +71,11 @@ class AppModel(QThread):
 
     @property
     def is_running(self) -> bool:
-        """Return True if the simulation thread is running"""
-        return self._started
+        """
+        Return True if the simulation thread is running. That is also after the loop has
+        been told to stop, until the thread has finished, since it still uses the circuit.
+        """
+        return self._keep_running or self.isRunning()
 
     @property
     def is_changed(self) -> bool:
@@ -95,26 +100,26 @@ class AppModel(QThread):
     def model_start(self) -> None:
         """Start model simulation thread"""
         self.model_abort_wire()
-        self._started = True
+        self._keep_running = True
         self._single_step = False
         self.start()
         self.sig_control_notify.emit()
 
     def model_single_step(self) -> None:
         """Start the simulation thread, to run until the next input event"""
-        self._started = True
+        self._keep_running = True
         self._single_step = True
         self.start()
         self.sig_control_notify.emit()
 
     def model_stop(self) -> None:
         """Stop model simulation thread"""
-        self._started = False
+        self._keep_running = False
         self.wait()
 
     def model_reset(self) -> None:
         """Reset model simulation"""
-        if not self._started:
+        if not self.is_running:
             self.model_init()
 
     def model_changed(self) -> None:
@@ -139,7 +144,7 @@ class AppModel(QThread):
         sim_tick_ms = 1000 / self._model_settings.get("update_frequency")
         real_time = self._model_settings.get("real_time")
         self.sig_audio_start.emit(True)
-        while self._started:
+        while self._keep_running:
             next_tick += sim_tick_ms / 1000
 
             # Execute one GUI event at a time
@@ -151,7 +156,7 @@ class AppModel(QThread):
                 ms=sim_tick_ms, single_step=self._single_step
             )
             if single_step_stop:
-                self._started = False
+                self._keep_running = False
 
             self.objects.components.update_callback_objects()
 
@@ -171,8 +176,14 @@ class AppModel(QThread):
         self.objects.components.update_callback_objects()
 
         self._single_step = False
-        self.sig_control_notify.emit()
         self.sig_audio_start.emit(False)
+        # sig_control_notify is sent by _thread_finished(), when the thread has stopped
+
+    def _thread_finished(self) -> None:
+        """Called in the GUI thread when the simulation thread has finished"""
+        # QThread.finished is sent right before the thread ends, wait until it has
+        self.wait()
+        self.sig_control_notify.emit()
 
     def _run_gui_events(self) -> None:
         """Execute all queued GUI events"""
