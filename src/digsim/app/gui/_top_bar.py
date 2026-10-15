@@ -298,6 +298,8 @@ class LoadSaveWidget(QFrame):
         self._clear_button.clicked.connect(self._clear)
         layout.addWidget(self._clear_button)
         self._app_model.sig_control_notify.connect(self._control_notify)
+        # The Delete button follows the selection
+        circuit_editor.circuit_area.scene().selectionChanged.connect(self._control_notify)
         self._control_notify()
 
     def _settings_dialog(self) -> None:
