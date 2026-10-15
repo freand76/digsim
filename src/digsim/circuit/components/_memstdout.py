@@ -19,7 +19,20 @@ if TYPE_CHECKING:
 
 
 class MemStdOut(Component):
-    """Synchronous memory mapped stdout class"""
+    """
+    Prints the characters written to one address, like a memory-mapped terminal.
+    A newline (0x0A) prints the whole line.
+
+    Ports:
+        clk: Clock input.
+        Address: Input, 16 bits.
+        DataIn: Input, 8 bits.
+        WE: Write enable input.
+
+    Args:
+        circuit: The circuit to add the component to.
+        address: The address to print the characters written to.
+    """
 
     def __init__(self, circuit: Circuit, address: int = 0x8000) -> None:
         super().__init__(circuit, "MemStdOut")

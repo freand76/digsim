@@ -15,7 +15,16 @@ if TYPE_CHECKING:
 
 
 class OnOffSwitch(CallbackComponent):
-    """On/Off Switch  component class"""
+    """
+    A switch that stays on or off. Its output is 1 while it is on.
+
+    Ports:
+        O: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)

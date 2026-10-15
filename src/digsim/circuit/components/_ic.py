@@ -19,7 +19,17 @@ if TYPE_CHECKING:
 
 
 class IntegratedCircuit(YosysComponent):
-    """IC component class (predefined yosys module)"""
+    """
+    A classic logic chip, from the Yosys netlists in digsim/circuit/components/ic.
+
+    Ports:
+        The ports of the chip.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        ic_name: The netlist's file name without .json, like "74162" or "7448".
+    """
 
     def __init__(self, circuit: Circuit, name: str = "IC", ic_name: str | None = None) -> None:
         if ic_name is None:

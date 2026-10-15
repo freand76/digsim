@@ -28,7 +28,21 @@ if TYPE_CHECKING:
 
 
 class Mem64kByte(Component):
-    """64kByte synchronous memory class"""
+    """
+    A 64 kB memory, read or written on a rising clock edge. It is always named Memory.
+
+    Ports:
+        clk: Clock input.
+        Address: Input, 16 bits.
+        DataIn: Input, 8 bits.
+        WE: Write enable input, 1 writes DataIn, otherwise DataOut is read.
+        DataOut: Output, 8 bits.
+
+    Args:
+        circuit: The circuit to add the component to.
+        rom_filename: A binary file loaded into the memory when it is created.
+        rom_address: The address to load the file at.
+    """
 
     def __init__(
         self, circuit: Circuit, rom_filename: str | Path | None = None, rom_address: int = 0

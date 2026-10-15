@@ -15,7 +15,14 @@ if TYPE_CHECKING:
 
 
 class Note(Component):
-    """Note component"""
+    """
+    A text note in the GUI. It has no ports.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        text: The text.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None, text: str = "") -> None:
         super().__init__(circuit, name)

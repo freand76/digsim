@@ -52,6 +52,7 @@
  - Simpler simulation core code, and Circuit.run() and run_until() are typed to take float times
  - Bugfix: When a bit of a bus became undefined, VCD files kept showing the old bus value
  - Document Circuit.process_single_event(), which processes one event at a time
+ - Docstrings that describe each component's ports and arguments, and the arguments, return values and errors of the main Circuit and Synthesis methods
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

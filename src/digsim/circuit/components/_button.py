@@ -15,7 +15,16 @@ if TYPE_CHECKING:
 
 
 class PushButton(CallbackComponent):
-    """PushButton component class"""
+    """
+    A push button. Its output is 1 while it is pushed, and 0 otherwise.
+
+    Ports:
+        O: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)

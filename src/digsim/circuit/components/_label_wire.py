@@ -30,7 +30,18 @@ def _sinks(circuit: Circuit, label: str) -> list[LabelWireOut]:
 
 
 class LabelWireIn(Component):
-    """LabelWireIn component class, drives the LabelWireOut components with the same label"""
+    """
+    A Wire Sink: passes its input to every LabelWireOut with the same label, without a drawn wire.
+
+    Ports:
+        <label>: Input, named like the label, `width` bits.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        label: The label.
+        width: The number of bits.
+    """
 
     def __init__(
         self, circuit: Circuit, name: str | None = None, label: str = "", width: int = 1
@@ -88,7 +99,18 @@ class LabelWireIn(Component):
 
 
 class LabelWireOut(Component):
-    """LabelWireOut component class, driven by the LabelWireIn with the same label"""
+    """
+    A Wire Source: outputs the signal of the LabelWireIn with the same label.
+
+    Ports:
+        <label>: Output, named like the label.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        label: The label.
+        width: The number of bits, used when there is no LabelWireIn with the label yet.
+    """
 
     def __init__(
         self, circuit: Circuit, name: str | None = None, label: str = "", width: int = 1

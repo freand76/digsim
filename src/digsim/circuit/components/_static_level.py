@@ -15,7 +15,16 @@ if TYPE_CHECKING:
 
 
 class VDD(Component):
-    """VDD / Logic1 component class"""
+    """
+    A constant logic 1.
+
+    Ports:
+        O: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
@@ -26,7 +35,16 @@ class VDD(Component):
 
 
 class GND(Component):
-    """GND / Logic0 component class"""
+    """
+    A constant logic 0.
+
+    Ports:
+        O: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)

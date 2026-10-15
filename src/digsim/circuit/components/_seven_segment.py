@@ -16,7 +16,17 @@ if TYPE_CHECKING:
 
 
 class SevenSegment(CallbackComponent):
-    """7-segment LED component class"""
+    """
+    A 7-segment display, with an input for each segment.
+
+    Ports:
+        A, B, ..., G: Inputs, one for each segment.
+        dot: Input for the decimal point.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     PORTLIST: typing.ClassVar = ["A", "B", "C", "D", "E", "F", "G", "dot"]
 

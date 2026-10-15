@@ -61,7 +61,14 @@ class CircuitEvent:
 
 
 class Circuit:
-    """Class that handles the circuit simulation"""
+    """
+    A circuit: holds the components and runs the simulation. Use it in a with statement,
+    `with Circuit(vcd="waves.vcd") as circuit:`, to close the VCD file at the end.
+
+    Args:
+        name: The circuit name, needed to save the circuit.
+        vcd: A VCD file to write waveforms to, from init().
+    """
 
     def __init__(self, name: str | None = None, vcd: str | None = None) -> None:
         self._components: dict[str, Component] = {}
@@ -141,7 +148,10 @@ class Circuit:
         return [comp for comp in self._components.values() if comp.is_toplevel()]
 
     def init(self) -> None:
-        """Initialize circuit and components (and ports)"""
+        """
+        Initialize the circuit: set the time to 0 and all ports to "X", then let the
+        components set their default state. Call it after adding and connecting components.
+        """
         self._time_ns = 0
         self._circuit_events = []
         self._events_by_port = {}
@@ -160,7 +170,13 @@ class Circuit:
         self._components = {}
 
     def vcd(self, filename: str) -> None:
-        """Start wave collecting in a gtkwave .vcd file"""
+        """
+        Start writing waveforms to a VCD file, for GTKWave or another viewer.
+
+        Raises:
+            CircuitError: If a VCD file is already open.
+            OSError: If the file can't be opened.
+        """
         if self._vcd is not None:
             raise CircuitError("VCD already started")
         self._vcd = WavesWriter(filename=filename)
@@ -172,7 +188,7 @@ class Circuit:
             raise
 
     def vcd_close(self) -> None:
-        """Close gtkwave .vcd file"""
+        """Finish and close the VCD file, if one is open"""
         if self._vcd is not None:
             self._vcd.close()
             self._vcd = None
@@ -217,8 +233,15 @@ class Circuit:
 
     def process_single_event(self, stop_time_ns: int | None = None) -> tuple[bool, bool]:
         """
-        Process one simulation event
-        Return False if there are no events or if the stop_time has passed
+        Process only the next event, to step through a simulation.
+
+        Args:
+            stop_time_ns: Don't process an event after this time, keep it for later.
+
+        Returns:
+            If an event was processed (False if there were none, or the next one is after
+            stop_time_ns), and if it was on a port of a top-level component, rather than
+            inside one like a Yosys component.
         """
         events = self._circuit_events
         events_by_port = self._events_by_port
@@ -249,7 +272,21 @@ class Circuit:
         ns: float | None = None,
         single_step: bool = False,
     ) -> bool:
-        """Run simulation for a period of time"""
+        """
+        Run the simulation for a period of time. The times are added together, so
+        run(ms=1, us=500) runs for 1.5 ms.
+
+        Args:
+            s: Seconds.
+            ms: Milliseconds.
+            us: Microseconds.
+            ns: Nanoseconds.
+            single_step: Stop after the first event on a port of a top-level component,
+                at the end of its time (the GUI's Single Step).
+
+        Returns:
+            True if the run stopped for a single step.
+        """
         stop_time_ns = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
         single_step_stop = False
         # The loop in process_single_event(), inlined since it runs for every event
@@ -290,20 +327,29 @@ class Circuit:
         us: float | None = None,
         ns: float | None = None,
     ) -> None:
-        """Run simulation until a specified time"""
+        """
+        Run the simulation until an absolute time, nothing happens if it has passed.
+        The times are added together.
+
+        Args:
+            s: Seconds.
+            ms: Milliseconds.
+            us: Microseconds.
+            ns: Nanoseconds.
+        """
         stop_time_ns = self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
         if stop_time_ns >= self._time_ns:
             self.run(ns=stop_time_ns - self._time_ns)
 
     def add_event(self, port: EventPort, value: VALUE_TYPE, propagation_delay_ns: int) -> None:
-        """Add delta cycle event, this will also write values to .vcd file"""
+        """Add an event for a port, used by the components"""
         event_time_ns = self._time_ns + propagation_delay_ns
         event = CircuitEvent(event_time_ns, port, value)
         self._events_by_port[port] = event
         heapq.heappush(self._circuit_events, event)
 
     def add_component(self, component: Component) -> None:
-        """Add component to circuit"""
+        """Add a component to the circuit, components do it when they are created"""
         name_id = 1
         namebase = component.name()
         while component.name() in self._components:
@@ -319,14 +365,24 @@ class Circuit:
         self.add_component(comp)
 
     def get_component(self, component_name: str) -> Component:
-        """Get component with 'component_name'"""
+        """
+        Get a component by its name.
+
+        Raises:
+            CircuitError: If the circuit has no component with the name.
+        """
         comp = self._components.get(component_name)
         if comp is not None:
             return comp
         raise CircuitError(f"Component '{component_name}' not found")
 
     def to_dataclass(self, folder: str = ".") -> CircuitDataClass:
-        """Generate dict from circuit, used when storing circuit"""
+        """
+        The circuit as a data class, used when saving it.
+
+        Args:
+            folder: File paths, like a Verilog file, are stored relative to this folder.
+        """
         if self._name is None:
             raise CircuitError("Circuit must have a name")
         self._folder = folder
@@ -339,7 +395,20 @@ class Circuit:
         component_exceptions: bool = True,
         connect_exceptions: bool = True,
     ) -> list[str]:
-        """Clear circuit and add components from dict"""
+        """
+        Replace the circuit's components with the ones in a data class.
+
+        Args:
+            circuit_dc: The circuit data class, for example from a loaded file.
+            folder: The folder that relative file paths are read from.
+            component_exceptions: Raise when a component can't be created, otherwise
+                skip it and report it in the returned list.
+            connect_exceptions: Raise when a wire can't be connected, otherwise skip it
+                and report it in the returned list.
+
+        Returns:
+            The errors for the skipped components and wires.
+        """
         self._folder = folder
         self.clear()
 
@@ -363,7 +432,10 @@ class Circuit:
         return exception_str_list
 
     def to_json_file(self, filename: str | Path) -> None:
-        """Store circuit in json file, with file paths relative to the file's folder"""
+        """
+        Save the circuit in a JSON file. File paths in it, like a Verilog file, are stored
+        relative to the file's folder. The circuit needs a name.
+        """
         circuitfile_dc = CircuitFileDataClass(
             circuit=self.to_dataclass(str(Path(filename).parent))
         )
@@ -371,8 +443,12 @@ class Circuit:
 
     def from_json_file(self, filename: str | Path, folder: str | None = None) -> None:
         """
-        Load circuit from json file. Relative file paths in it are read from 'folder', by
-        default the file's folder (where to_json_file stores them relative to).
+        Load a circuit from a JSON file, replacing the circuit's components.
+
+        Args:
+            filename: The file.
+            folder: The folder that relative file paths in the file are read from, by
+                default the file's folder (where to_json_file() stores them relative to).
         """
         file_dc = CircuitFileDataClass.load(filename)
         if folder is None:

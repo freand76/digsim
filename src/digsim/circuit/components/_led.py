@@ -16,7 +16,17 @@ if TYPE_CHECKING:
 
 
 class Led(CallbackComponent):
-    """LED component class"""
+    """
+    An LED, lit while its input is 1.
+
+    Ports:
+        I: Input.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        callback: Called with the component when its input changes.
+    """
 
     def __init__(
         self,

@@ -67,11 +67,17 @@ def _console_to_file(console_file: pathlib.Path) -> Iterator[None]:
 
 
 class SynthesisException(DigsimException):
-    """Exception class for yosys synthesis"""
+    """Yosys could not synthesize the Verilog, the message is the Yosys error"""
 
 
 class Synthesis:
-    """Helper class for yosys synthesis"""
+    """
+    Synthesizes Verilog into a netlist with Yosys, which a YosysComponent can be built from.
+
+    Args:
+        verilog_files: One Verilog file, or a list of them.
+        verilog_top_module: The name of the module to synthesize.
+    """
 
     @staticmethod
     @contextmanager
@@ -126,7 +132,12 @@ class Synthesis:
 
     @classmethod
     def list_modules(cls, verilog_files: VerilogFiles) -> list[str]:
-        """List available modules in verilog files"""
+        """
+        The names of the modules in Verilog files.
+
+        Raises:
+            SynthesisException: If Yosys reports an error, like a syntax error.
+        """
         files = _script_files(verilog_files)
         with cls._work_dir() as work_dir:
             modules_file = work_dir / "modules.txt"
@@ -149,7 +160,15 @@ class Synthesis:
         self._yosys_log: list[str] = []
 
     def synth_to_json(self, silent: bool = False) -> str:
-        """Execute yosys with generated synthesis script"""
+        """
+        Synthesize, and return the netlist as JSON text.
+
+        Args:
+            silent: Don't print the Yosys log.
+
+        Raises:
+            SynthesisException: If Yosys reports an error, like a syntax error.
+        """
         script = f"read -sv {_script_files(self._verilog_files)}; "
         script += f"hierarchy -top {self._verilog_top_module}; "
         script += "proc; flatten; "
@@ -171,7 +190,15 @@ class Synthesis:
             return json_file.read_text(encoding="utf-8")
 
     def synth_to_dict(self, silent: bool = False) -> dict[str, Any]:
-        """Execute yosys with generated synthesis script and return python dict"""
+        """
+        Synthesize, and return the netlist as a dict, for YosysNetlist(**netlist_dict).
+
+        Args:
+            silent: Don't print the Yosys log.
+
+        Raises:
+            SynthesisException: If Yosys reports an error, like a syntax error.
+        """
         yosys_json = self.synth_to_json(silent)
         try:
             netlist_dict = json.loads(yosys_json)
@@ -180,11 +207,20 @@ class Synthesis:
         return netlist_dict
 
     def synth_to_json_file(self, filename: str | pathlib.Path, silent: bool = False) -> None:
-        """Execute yosys with generated synthesis script and write to file"""
+        """
+        Synthesize, and write the netlist to a JSON file.
+
+        Args:
+            filename: The netlist file to write.
+            silent: Don't print the Yosys log.
+
+        Raises:
+            SynthesisException: If Yosys reports an error, like a syntax error.
+        """
         yosys_json = self.synth_to_json(silent)
         with open(filename, mode="w", encoding="utf-8") as json_file:
             json_file.write(yosys_json)
 
     def get_log(self) -> list[str]:
-        """Get the yosys output"""
+        """The Yosys log of the last synthesis"""
         return self._yosys_log

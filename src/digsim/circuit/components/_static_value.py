@@ -15,7 +15,18 @@ if TYPE_CHECKING:
 
 
 class StaticValue(Component):
-    """Static value component class"""
+    """
+    A constant value on a wire or a bus.
+
+    Ports:
+        O: Output, `width` bits.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        width: The number of bits, 1 to 16.
+        value: The value.
+    """
 
     def __init__(
         self, circuit: Circuit, name: str | None = None, width: int = 1, value: int = 0

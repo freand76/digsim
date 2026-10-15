@@ -16,7 +16,17 @@ if TYPE_CHECKING:
 
 
 class Buzzer(CallbackComponent):
-    """Buzzer component class"""
+    """
+    A buzzer, plays a tone in the GUI while its input is 1.
+
+    Ports:
+        I: Input.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        tone: The note, "A" to "G".
+    """
 
     TONE_TO_FREQUENCY: typing.ClassVar = {
         "A": 880,

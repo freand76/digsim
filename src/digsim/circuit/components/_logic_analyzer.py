@@ -16,7 +16,17 @@ if TYPE_CHECKING:
 
 
 class LogicAnalyzer(CallbackComponent):
-    """Logic Analyzer component class"""
+    """
+    A logic analyzer, keeps the last 100 samples of each input to show them in the GUI.
+
+    Ports:
+        A, B, ..., H: Inputs.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        sample_rate: The samples per second.
+    """
 
     PORTLIST: typing.ClassVar = ["A", "B", "C", "D", "E", "F", "G", "H"]
 

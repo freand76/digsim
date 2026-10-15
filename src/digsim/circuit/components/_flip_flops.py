@@ -15,7 +15,14 @@ if TYPE_CHECKING:
 
 
 class FlipFlop(Component):
-    """FlipFlip factory component"""
+    """
+    Lets the GUI choose a flip-flop type. In Python, create SRFF, ClockedSRFF, ClockedJKFF or
+    ClockedTFF directly.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     @classmethod
     def get_parameters(cls) -> dict[str, dict[str, Any]]:
@@ -34,7 +41,18 @@ class FlipFlop(Component):
 
 
 class SRFF(Component):
-    """SR-FlipFlop"""
+    """
+    An SR flip-flop: S sets Q to 1 and R resets it to 0, without a clock. R wins when both are 1.
+
+    Ports:
+        S: Set input.
+        R: Reset input.
+        Q: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name, display_name="SR")
@@ -50,7 +68,19 @@ class SRFF(Component):
 
 
 class ClockedJKFF(Component):
-    """Clocked JK-FlipFlop"""
+    """
+    A JK flip-flop: on a rising clock edge, J sets Q to 1, K resets it to 0, and both toggle it.
+
+    Ports:
+        J: Input.
+        C: Clock input.
+        K: Input.
+        Q: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name, display_name="JK-FlipFlop")
@@ -71,7 +101,20 @@ class ClockedJKFF(Component):
 
 
 class ClockedSRFF(Component):
-    """Clocked SR-FlipFlop"""
+    """
+    A clocked SR flip-flop: on a rising clock edge, S sets Q to 1 and R resets it to 0.
+    R wins when both are 1.
+
+    Ports:
+        S: Set input.
+        C: Clock input.
+        R: Reset input.
+        Q: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name, display_name="SR-FlipFlop")
@@ -90,7 +133,18 @@ class ClockedSRFF(Component):
 
 
 class ClockedTFF(Component):
-    """Clocked T-FlipFlop"""
+    """
+    A T flip-flop: Q toggles on a rising clock edge while T is 1.
+
+    Ports:
+        T: Input.
+        C: Clock input.
+        Q: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name, display_name="T-FlipFlop")

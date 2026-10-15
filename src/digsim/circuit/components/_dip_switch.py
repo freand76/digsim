@@ -15,7 +15,17 @@ if TYPE_CHECKING:
 
 
 class DipSwitch(CallbackComponent):
-    """On/Off Switch  component class"""
+    """
+    A row of switches, with one output for each switch.
+
+    Ports:
+        0, 1, ...: Outputs, one for each switch, numbered from 0.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        bits: The number of switches, 2 to 8.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None, bits: int = 8) -> None:
         super().__init__(circuit, name)

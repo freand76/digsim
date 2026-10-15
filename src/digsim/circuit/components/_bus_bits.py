@@ -15,7 +15,19 @@ if TYPE_CHECKING:
 
 
 class Bus2Wires(Component):
-    """Bus to Bits splitter"""
+    """
+    Splits a bus into single-bit wires.
+
+    Ports:
+        bus: Input, `width` bits.
+        bus_0, bus_1, ...: Outputs, one for each enabled bit. bus_0 is the least significant bit.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        width: The number of bits.
+        enable: The bits to have outputs for, all if None.
+    """
 
     def __init__(
         self,
@@ -56,7 +68,18 @@ class Bus2Wires(Component):
 
 
 class Wires2Bus(Component):
-    """Bits to Bus merger"""
+    """
+    Merges single-bit wires into a bus.
+
+    Ports:
+        bus_0, bus_1, ...: Inputs, one for each bit. bus_0 is the least significant bit.
+        bus: Output, `width` bits.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        width: The number of bits.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None, width: int = 1) -> None:
         super().__init__(circuit, name)

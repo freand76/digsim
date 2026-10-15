@@ -37,7 +37,18 @@ class YosysComponentException(DigsimException):
 
 
 class YosysComponent(MultiComponent):
-    """Class to create a yosys component from a yosys json netlist"""
+    """
+    A component built from a Verilog file or a Yosys JSON netlist.
+
+    Ports:
+        The ports of the Verilog module, with the same names and widths.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        path: A Verilog file (.v) or Yosys netlist (.json) with one module, or None to
+            create the component later with create_from_netlist().
+    """
 
     def __init__(
         self,

@@ -15,7 +15,17 @@ if TYPE_CHECKING:
 
 
 class Clock(CallbackComponent):
-    """Clock component class"""
+    """
+    A clock, its output is a square wave.
+
+    Ports:
+        O: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        frequency: The frequency in Hz.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None, frequency: int = 1) -> None:
         super().__init__(circuit, name)

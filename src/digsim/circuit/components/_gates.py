@@ -16,7 +16,17 @@ if TYPE_CHECKING:
 
 
 class NOT(Component):
-    """NOT logic gate"""
+    """
+    A NOT gate: Y is the inverse of A.
+
+    Ports:
+        A: Input.
+        Y: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
@@ -61,7 +71,18 @@ class ConfigPortsComponent(Component):
 
 
 class OR(ConfigPortsComponent):
-    """OR logic gate"""
+    """
+    An OR gate: Y is 1 when at least one input is 1.
+
+    Ports:
+        A, B, ...: Inputs, one for each of `ports`, named from A.
+        Y: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        ports: The number of inputs, 2 to 8.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
         super().__init__(circuit, name, ports)
@@ -76,7 +97,18 @@ class OR(ConfigPortsComponent):
 
 
 class AND(ConfigPortsComponent):
-    """AND logic gate"""
+    """
+    An AND gate: Y is 1 when all inputs are 1.
+
+    Ports:
+        A, B, ...: Inputs, one for each of `ports`, named from A.
+        Y: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        ports: The number of inputs, 2 to 8.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
         super().__init__(circuit, name, ports)
@@ -91,7 +123,18 @@ class AND(ConfigPortsComponent):
 
 
 class XOR(ConfigPortsComponent):
-    """XOR logic gate"""
+    """
+    An XOR gate: Y is 1 when an odd number of inputs are 1.
+
+    Ports:
+        A, B, ...: Inputs, one for each of `ports`, named from A.
+        Y: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        ports: The number of inputs, 2 to 8.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
         super().__init__(circuit, name, ports)
@@ -109,7 +152,18 @@ class XOR(ConfigPortsComponent):
 
 
 class XNOR(ConfigPortsComponent):
-    """XNOR logic gate, high when an even number of inputs are high"""
+    """
+    An XNOR gate: Y is 1 when an even number of inputs are 1.
+
+    Ports:
+        A, B, ...: Inputs, one for each of `ports`, named from A.
+        Y: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        ports: The number of inputs, 2 to 8.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
         super().__init__(circuit, name, ports)
@@ -127,7 +181,18 @@ class XNOR(ConfigPortsComponent):
 
 
 class NAND(ConfigPortsComponent):
-    """NAND logic gate"""
+    """
+    A NAND gate: Y is 0 when all inputs are 1.
+
+    Ports:
+        A, B, ...: Inputs, one for each of `ports`, named from A.
+        Y: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        ports: The number of inputs, 2 to 8.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
         super().__init__(circuit, name, ports)
@@ -142,7 +207,18 @@ class NAND(ConfigPortsComponent):
 
 
 class NOR(ConfigPortsComponent):
-    """NOR logic gate"""
+    """
+    A NOR gate: Y is 0 when at least one input is 1.
+
+    Ports:
+        A, B, ...: Inputs, one for each of `ports`, named from A.
+        Y: Output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        ports: The number of inputs, 2 to 8.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None, ports: int = 2) -> None:
         super().__init__(circuit, name, ports)
@@ -157,7 +233,23 @@ class NOR(ConfigPortsComponent):
 
 
 class DFF(Component):
-    """D-FlipFlop"""
+    """
+    A D flip-flop: Q takes the value of D on a rising edge of C.
+
+    Ports:
+        D: Data input, `width` bits.
+        R: Reset input, 1 sets Q to 0 at once (only with `async_reset`).
+        E: Clock enable input, the clock edge is ignored while it is 0 (only with `clock_enable`).
+        C: Clock input.
+        Q: Output, `width` bits.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        async_reset: Add the reset input R.
+        clock_enable: Add the clock enable input E.
+        width: The number of bits.
+    """
 
     def __init__(
         self,
@@ -215,7 +307,20 @@ class DFF(Component):
 
 
 class MUX(Component):
-    """MUX"""
+    """
+    A multiplexer: Y is the input that S selects.
+
+    Ports:
+        A, B, ...: Inputs, one for each of `ports`, `width` bits.
+        S: Select input, 0 selects A, 1 selects B and so on.
+        Y: Output, `width` bits.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        ports: The number of inputs, 2, 4 or 8.
+        width: The number of bits of each input.
+    """
 
     def __init__(
         self, circuit: Circuit, name: str | None = None, ports: int = 2, width: int = 1
@@ -262,7 +367,19 @@ class MUX(Component):
 
 
 class SR(MultiComponent):
-    """SR latch composed of two NOR gates"""
+    """
+    An SR latch built from two NOR gates: S sets Q to 1 and R resets it to 0.
+
+    Ports:
+        S: Set input.
+        R: Reset input.
+        Q: Output.
+        nQ: Inverted output.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)

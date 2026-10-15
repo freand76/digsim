@@ -16,7 +16,19 @@ if TYPE_CHECKING:
 
 
 class HexDigit(CallbackComponent):
-    """HexDigit component class"""
+    """
+    Hexadecimal digits that show the value of a bus.
+
+    Ports:
+        val: Input, 4 bits for each digit. The first digit shows the most significant bits.
+        dot: Input, one bit for each decimal point (only with `dot`).
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        digits: The number of digits, 1 to 8.
+        dot: Add the decimal point input.
+    """
 
     VAL_TO_SEGMENTS: typing.ClassVar = {
         0: "ABCDEF",

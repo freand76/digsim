@@ -15,7 +15,17 @@ if TYPE_CHECKING:
 
 
 class LedBar(CallbackComponent):
-    """A row of LEDs showing the bits of a bus"""
+    """
+    A row of LEDs showing the bits of a bus.
+
+    Ports:
+        I: Input, `width` bits.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        width: The number of LEDs, 1 to 16.
+    """
 
     def __init__(self, circuit: Circuit, name: str | None = None, width: int = 8) -> None:
         super().__init__(circuit, name, callback=None)

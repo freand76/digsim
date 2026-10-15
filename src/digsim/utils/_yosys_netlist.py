@@ -42,6 +42,8 @@ class Nets:
 
 @dataclass
 class YosysPort:
+    """A port of a module: its direction ("input" or "output") and the nets of its bits"""
+
     direction: str
     bits: BIT_TYPE
 
@@ -57,6 +59,8 @@ class YosysPort:
 
 @dataclass
 class YosysCell:
+    """A cell (a gate or flip-flop) of a module, and the nets its ports connect to"""
+
     type: str
     port_directions: dict[str, str] = Field(default_factory=dict)
     connections: dict[str, BIT_TYPE] = Field(default_factory=dict)
@@ -72,6 +76,8 @@ class YosysCell:
 
 @dataclass
 class YosysModule:
+    """A module of a netlist: its ports and cells"""
+
     ports: dict[str, YosysPort] = Field(default_factory=dict)
     cells: dict[str, YosysCell] = Field(default_factory=dict)
 
@@ -111,6 +117,11 @@ class YosysModule:
 
 @dataclass
 class YosysNetlist:
+    """
+    A Yosys JSON netlist, read with YosysNetlist(**netlist_dict). Only the parts that
+    DigSim uses are kept.
+    """
+
     modules: dict[str, YosysModule] = Field(default_factory=dict)
 
     def get_modules(self) -> dict[str, YosysModule]:
