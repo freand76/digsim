@@ -164,7 +164,17 @@ from digsim.circuit.components.atoms import CallbackComponent, PortIn
 
 
 class LedBar(CallbackComponent):
-    """A row of LEDs showing the bits of a bus"""
+    """
+    A row of LEDs showing the bits of a bus.
+
+    Ports:
+        I: Input, `width` bits.
+
+    Args:
+        circuit: The circuit to add the component to.
+        name: The component name, the class name if not given.
+        width: The number of LEDs, 1 to 16.
+    """
 
     def __init__(self, circuit, name=None, width=8):
         super().__init__(circuit, name, callback=None)
@@ -199,6 +209,10 @@ class LedBar(CallbackComponent):
 
 `LedBar` is a `CallbackComponent`. It doesn't compute anything, but the callback lets a
 user of the component (and the GUI, in part 2) know when its input has changed.
+
+The docstring describes the component's ports under `Ports:` and its arguments under
+`Args:`. For the components in DigSim, the [API Reference](api/components.md) is generated
+from it.
 
 ### Step 4: Test it
 

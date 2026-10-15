@@ -16,11 +16,43 @@ nav:
   - Examples: examples.md
   - Creating Components: components.md
   - Contributing: contributing.md
+  - API Reference:
+      - Overview: api/index.md
+      - Circuit: api/circuit.md
+      - Components: api/components.md
+      - Component Base Classes: api/base-classes.md
+      - Ports: api/ports.md
+      - Synthesis: api/synthesis.md
+      - Yosys Netlist: api/netlist.md
   - Changelog: changelog.md
 
 exclude_docs: |
   documentation.md
   scripts/
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: google
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            members_order: source
+            merge_init_into_class: true
+            separate_signature: true
+            show_signature_annotations: true
+            signature_crossrefs: true
+            filters: ["!^_"]
+            heading_level: 2
+
+extra_css:
+  - stylesheets/extra.css
 
 theme:
   name: material

@@ -70,7 +70,7 @@ Python 3.11.
 For documentation changes, preview the site while you edit it, at <http://127.0.0.1:8000/digsim/>:
 
 ```sh
-uv tool run --with mkdocs-material mkdocs serve
+uv tool run --with mkdocs-material --with mkdocstrings-python --with ruff mkdocs serve
 ```
 
 If you change an example, regenerate the images on the [Examples](examples.md) page:

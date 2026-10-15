@@ -150,7 +150,7 @@ Contributions are welcome, see
 uv tool run ruff format && uv tool run ruff check   # format and lint
 uv run --with pytest pytest                         # run the tests
 uv run --with mypy mypy                             # type check
-uv tool run --with mkdocs-material mkdocs serve     # preview the documentation
+uv tool run --with mkdocs-material --with mkdocstrings-python --with ruff mkdocs serve  # preview the docs
 ```
 
 ## Star History

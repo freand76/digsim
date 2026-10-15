@@ -1,0 +1,24 @@
+/* Section titles in the navigation, like "GUI Application" and "API Reference" */
+.md-nav--primary .md-nav__item--section > .md-nav__link {
+  margin-top: 1.4em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  color: var(--md-typeset-a-color);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* The site name above the navigation */
+.md-nav--primary > .md-nav__title {
+  color: var(--md-default-fg-color);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+/* Page titles, light grey and thin in the default theme */
+.md-typeset h1 {
+  color: var(--md-default-fg-color);
+  font-weight: 600;
+}

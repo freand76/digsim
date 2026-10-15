@@ -32,7 +32,7 @@ uv tool run ruff check           # lint (add --fix for autofixes)
 uv run --with pytest pytest      # run all tests (tests/ and examples/pytest_tb/)
 uv run --with mypy mypy          # type check (config in pyproject.toml)
 uv run -m digsim.app             # start the GUI
-uv tool run --with mkdocs-material mkdocs build --strict   # check the docs build
+uv tool run --with mkdocs-material --with mkdocstrings-python --with ruff mkdocs build --strict   # check the docs build
 uv run --with pytest python docs/scripts/generate_examples.py  # regenerate example images
 uv run python docs/scripts/generate_tutorial.py  # regenerate GUI tutorial screenshots
 ```
@@ -43,7 +43,7 @@ The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test
 CI (`.github/workflows/`) runs ruff, and pytest plus `examples/yosys_counter/*.py` on Linux
 (Python 3.11–3.14) and Windows. The test workflows run on push only, not on pull requests.
 mypy is local only. The docs site is rebuilt and deployed by `docs.yaml` on every push to
-`main` that touches `docs/`, `mkdocs.yml` or `CHANGELOG.md` (included in the site's
+`main` that touches `docs/`, `src/digsim/`, `mkdocs.yml` or `CHANGELOG.md` (included in the site's
 Changelog page).
 
 - CI runners can't load Qt's GUI libraries (no `libEGL`): tests must not import `QtGui` or
@@ -56,6 +56,11 @@ Changelog page).
 - Component images in `docs/images/components/` are copies of
   `src/digsim/app/gui_objects/images/` (except `LedBar.png`, a screenshot of the drawn
   component), and `docs/images/app_icon.png` of `src/digsim/app/images/app_icon.png`.
+- The API Reference (`docs/api/`) is generated from the docstrings with mkdocstrings. Public
+  classes and methods use Google style docstrings, and components list their ports under
+  `Ports:` (they are created at runtime, so only the docstring can show them). The API pages
+  list the members to show, so the reference only has the supported API: add a new public
+  method there, and leave out internal plumbing that is only public by name.
 - `docs/components.md` walks through the real `XNOR` and `LedBar` code. Keep it in sync
   when changing them. Regenerate the example images when an example changes.
 
