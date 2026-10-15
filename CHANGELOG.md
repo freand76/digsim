@@ -49,6 +49,7 @@
  - Bugfix: The error for reading a component's wire showed a method instead of the component name. The unused Component.settings_from_dict() is removed.
  - Bugfix: Changing several settings of a component reconfigured it once per setting, partly with the old settings
  - Port.disconnect() only disconnects a port that it drives, a wrong call no longer cuts another connection
+ - Simpler simulation core code, and Circuit.run() and run_until() are typed to take float times
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

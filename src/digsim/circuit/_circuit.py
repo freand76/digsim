@@ -61,7 +61,7 @@ class CircuitEvent:
 
 
 class Circuit:
-    """Class thay handles the circuit simulation"""
+    """Class that handles the circuit simulation"""
 
     def __init__(self, name: str | None = None, vcd: str | None = None) -> None:
         self._components: dict[str, Component] = {}
@@ -243,10 +243,10 @@ class Circuit:
 
     def run(
         self,
-        s: int | None = None,
-        ms: int | None = None,
-        us: int | None = None,
-        ns: int | None = None,
+        s: float | None = None,
+        ms: float | None = None,
+        us: float | None = None,
+        ns: float | None = None,
         single_step: bool = False,
     ) -> bool:
         """Run simulation for a period of time"""
@@ -285,10 +285,10 @@ class Circuit:
 
     def run_until(
         self,
-        s: int | None = None,
-        ms: int | None = None,
-        us: int | None = None,
-        ns: int | None = None,
+        s: float | None = None,
+        ms: float | None = None,
+        us: float | None = None,
+        ns: float | None = None,
     ) -> None:
         """Run simulation until a specified time"""
         stop_time_ns = self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
@@ -298,7 +298,6 @@ class Circuit:
     def add_event(self, port: EventPort, value: VALUE_TYPE, propagation_delay_ns: int) -> None:
         """Add delta cycle event, this will also write values to .vcd file"""
         event_time_ns = self._time_ns + propagation_delay_ns
-        # print(f"Add event {port.parent().name()}:{port.name()} => {value}")
         event = CircuitEvent(event_time_ns, port, value)
         self._events_by_port[port] = event
         heapq.heappush(self._circuit_events, event)
@@ -320,7 +319,7 @@ class Circuit:
         self.add_component(comp)
 
     def get_component(self, component_name: str) -> Component:
-        """Get component witgh 'component_name'"""
+        """Get component with 'component_name'"""
         comp = self._components.get(component_name)
         if comp is not None:
             return comp

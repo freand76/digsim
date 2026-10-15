@@ -71,7 +71,7 @@ class Component(abc.ABC):
 
     def delete_all_ports(self) -> None:
         """
-        Deleta all component ports
+        Delete all component ports
         """
         self._ports = []
 
@@ -80,14 +80,7 @@ class Component(abc.ABC):
         path_parts = []
         current_component: Component | None = self
         while current_component is not None:
-            name = current_component.name()
-            if not isinstance(name, str):
-                raise TypeError(
-                    f"Component name is not a string: "
-                    f"{name} ({type(name)}), "
-                    f"component: {current_component.__class__.__name__}"
-                )
-            path_parts.append(name)
+            path_parts.append(current_component.name())
             current_component = current_component._parent
         return ".".join(reversed(path_parts))
 
@@ -97,11 +90,7 @@ class Component(abc.ABC):
         return self._ports
 
     def _get_ports(self, output: bool) -> list[Port]:
-        sel_ports = []
-        for port in self._ports:
-            if port.is_output() == output:
-                sel_ports.append(port)
-        return sel_ports
+        return [port for port in self._ports if port.is_output() == output]
 
     def inports(self) -> list[Port]:
         """Get component input ports"""

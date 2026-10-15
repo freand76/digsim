@@ -240,3 +240,25 @@ def test_json_file_explicit_folder(tmp_path, monkeypatch):
     loaded = Circuit()
     loaded.from_json_file("circuits/old.json", folder=".")
     assert len(loaded.components) > 1
+
+
+def test_process_single_event():
+    """Events can be processed one at a time, the public way to step through a simulation"""
+    circuit = Circuit()
+    button = PushButton(circuit, "button")
+    led = Led(circuit, "led")
+    button.O.wire = led.I
+    circuit.init()
+    button.push()
+    assert circuit.process_single_event() == (True, True)
+    assert led.I.value == 1
+    assert circuit.process_single_event() == (False, False)
+    # Events after the stop time are kept for later
+    button.release()
+    gate = AND(circuit, "gate")
+    gate.A.value = 1
+    gate.B.value = 1
+    assert circuit.process_single_event(stop_time_ns=circuit.time_ns) == (True, True)
+    assert circuit.process_single_event(stop_time_ns=circuit.time_ns) == (False, False)
+    assert circuit.process_single_event() == (True, True)
+    assert gate.Y.value == 1

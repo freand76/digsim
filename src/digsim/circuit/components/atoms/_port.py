@@ -53,14 +53,14 @@ class Port(abc.ABC):
         self.init()  # Initialize the port
 
     def init(self) -> None:
-        """Initialize port, will be called when compponent/circuit is initialized"""
+        """Initialize port, will be called when the component/circuit is initialized"""
         self._value = "X"
         self._edge_detect_value = "X"
         self.update_wires("X")
 
     @property
     def wired_ports(self) -> list[Port]:
-        """Get wires from thisport"""
+        """Get the ports that this port drives"""
         return self._wired_ports
 
     @property
@@ -149,7 +149,7 @@ class Port(abc.ABC):
 
     def is_rising_edge(self) -> bool:
         """
-        Return True if a rising edge has occured
+        Return True if a rising edge has occurred
         Note: This function can only be called once per 'update'
         """
         rising_edge = False
@@ -160,7 +160,7 @@ class Port(abc.ABC):
 
     def is_falling_edge(self) -> bool:
         """
-        Return True if a falling edge has occured
+        Return True if a falling edge has occurred
         Note: This function can only be called once per 'update'
         """
         falling_edge = False
@@ -267,7 +267,7 @@ class PortOutDelta(Port):
         self._update_parent = False  # Should this port update parent on change
 
     def update_parent(self, update_parent: bool) -> None:
-        """Set update parent valiable (True/False)"""
+        """Set if the port updates its parent when it changes"""
         self._update_parent = update_parent
 
     def set_delay_ns(self, delay_ns: int) -> None:
@@ -319,7 +319,7 @@ class PortOutImmediate(PortOutDelta):
 
     def delta_cycle(self, value: VALUE_TYPE) -> None:
         """
-        Do nothing here, the event is just used to updates waves in Circuit class
+        Do nothing here, the event is just used to update waves in Circuit class
         """
 
 
@@ -347,9 +347,9 @@ class PortWireBit(PortWire):
 
 class PortMultiBitWire(Port):
     """
-    The PortMultiWireBit class is used when several bits should be collected into
+    The PortMultiBitWire class is used when several bits should be collected into
     a multi bit bus port.
-    The PortWireMultiBit will add events to the circuit upon change to update vcd output.
+    The PortMultiBitWire will add events to the circuit upon change to update vcd output.
     """
 
     def __init__(self, parent: Component, name: str, width: int, output: bool = False) -> None:
@@ -413,5 +413,5 @@ class PortMultiBitWire(Port):
     def delta_cycle(self, value: VALUE_TYPE) -> None:
         """
         Do nothing here, the event passed in 'update_value_from_bits'
-        is just used to updates waves in Circuit class
+        is just used to update waves in Circuit class
         """
