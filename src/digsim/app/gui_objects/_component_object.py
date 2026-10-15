@@ -41,6 +41,8 @@ class ComponentObject(QGraphicsRectItem):
     BORDER_TO_PORT = 25
     PORT_SIDE = 8
     DEFAULT_PORT_TO_PORT_DISTANCE = 20
+    # Draw the port names next to the ports
+    SHOW_PORT_NAMES = True
 
     _COMPONENT_NAME_FONT = QFont("Arial", 10)
     _PORT_NAME_FONT = QFont("Arial", 8)
@@ -66,7 +68,6 @@ class ComponentObject(QGraphicsRectItem):
         self._parent_widget: QWidget | None = None
         self._mouse_press_pos: QPoint | None = None
         self._moved = False
-        self._paint_port_names = True
         self._save_pos: QPointF | QPoint = self.rect().topLeft()
 
         # Create ports
@@ -165,17 +166,13 @@ class ComponentObject(QGraphicsRectItem):
     ) -> None:
         """QT function"""
         self.paint_component(painter)
-        if self._paint_port_names:
+        if self.SHOW_PORT_NAMES:
             self.paint_portnames(painter)
 
     @property
     def component(self) -> Component:
         """Get component"""
         return self._component
-
-    def paint_port_names(self, enable: bool) -> None:
-        """Enable/Disable paint port names"""
-        self._paint_port_names = enable
 
     def has_moved(self) -> bool:
         """True if the component has moved since last call"""

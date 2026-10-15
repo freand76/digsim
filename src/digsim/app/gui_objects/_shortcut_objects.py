@@ -49,14 +49,10 @@ class ButtonObject(ImageObject):
     IMAGE_FILENAME = "images/PB.png"
     BUTTON_RADIUS = 35
 
-    _BUTTON_ACTIVE_PEN = QPen(Qt.GlobalColor.green)
+    SHOW_NAME = False
+    SHOW_PORT_NAMES = False
 
-    def __init__(
-        self, app_model: AppModel, component: Component, xpos: float, ypos: float
-    ) -> None:
-        super().__init__(app_model, component, xpos, ypos)
-        self.show_name(False)
-        self.paint_port_names(False)
+    _BUTTON_ACTIVE_PEN = QPen(Qt.GlobalColor.green)
 
     def paint_component(self, painter: QPainter) -> None:
         super().paint_component(painter)

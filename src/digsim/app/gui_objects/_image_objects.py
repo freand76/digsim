@@ -25,6 +25,8 @@ class ImageObject(ComponentObject):
 
     IMAGE_FILENAME: str | None = None
     ACTIVE_IMAGE_FILENAME: str | None = None
+    # Draw the component's name on the image
+    SHOW_NAME = True
     _pixmap: QPixmap | None = None
     _pixmap_active: QPixmap | None = None
 
@@ -37,13 +39,8 @@ class ImageObject(ComponentObject):
         port_distance: int = ComponentObject.DEFAULT_PORT_TO_PORT_DISTANCE,
     ) -> None:
         super().__init__(app_model, component, xpos, ypos, port_distance=port_distance)
-        self._show_name = True
         self.setup_size()
         self.update_ports()
-
-    def show_name(self, enable: bool) -> None:
-        """Enable/Disable name on image component"""
-        self._show_name = enable
 
     def setup_size(self) -> None:
         """Change size of component"""
@@ -73,7 +70,7 @@ class ImageObject(ComponentObject):
         self.paint_pixmap(
             painter, self.object_pos.x() + xpos, self.object_pos.y() + ypos, self.component.active
         )
-        if self._show_name:
+        if self.SHOW_NAME:
             self.paint_selectable_component_name(
                 painter, self.object_pos, self.size, self.component.display_name()
             )
@@ -98,11 +95,7 @@ class ImageObject(ComponentObject):
 class GateImageObject(ImageObject):
     """The base class for gate components placed in the GUI"""
 
-    def __init__(
-        self, app_model: AppModel, component: Component, xpos: float, ypos: float
-    ) -> None:
-        super().__init__(app_model, component, xpos, ypos)
-        self.paint_port_names(False)
+    SHOW_PORT_NAMES = False
 
 
 class ImageObjectAND(GateImageObject):
@@ -190,13 +183,9 @@ class ImageObjectStaticValue(ImageObject):
     IMAGE_FILENAME = "images/ZERO.png"
     ACTIVE_IMAGE_FILENAME = "images/ONE.png"
 
-    _STATIC_VALUE_FONT = QFont("Arial", 16)
+    SHOW_NAME = False
 
-    def __init__(
-        self, app_model: AppModel, component: Component, xpos: float, ypos: float
-    ) -> None:
-        super().__init__(app_model, component, xpos, ypos)
-        self.show_name(False)
+    _STATIC_VALUE_FONT = QFont("Arial", 16)
 
     def paint_component(self, painter: QPainter) -> None:
         if self.component.O.width == 1:
@@ -218,13 +207,8 @@ class ImageObjectLed(ImageObject):
 
     IMAGE_FILENAME = "images/LED_OFF.png"
     ACTIVE_IMAGE_FILENAME = "images/LED_ON.png"
-
-    def __init__(
-        self, app_model: AppModel, component: Component, xpos: float, ypos: float
-    ) -> None:
-        super().__init__(app_model, component, xpos, ypos)
-        self.show_name(False)
-        self.paint_port_names(False)
+    SHOW_NAME = False
+    SHOW_PORT_NAMES = False
 
 
 class ImageObjectIC(ImageObject):
@@ -243,14 +227,10 @@ class ImageObjectWithActiveRect(ImageObject):
     When active the image will have a green border painted around it.
     """
 
-    _ACTIVE_RECT_PEN = QPen(Qt.GlobalColor.green)
+    SHOW_NAME = False
+    SHOW_PORT_NAMES = False
 
-    def __init__(
-        self, app_model: AppModel, component: Component, xpos: float, ypos: float
-    ) -> None:
-        super().__init__(app_model, component, xpos, ypos)
-        self.show_name(False)
-        self.paint_port_names(False)
+    _ACTIVE_RECT_PEN = QPen(Qt.GlobalColor.green)
 
     def paint_component(self, painter: QPainter) -> None:
         super().paint_component(painter)

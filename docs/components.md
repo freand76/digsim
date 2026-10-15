@@ -310,6 +310,9 @@ class ImageObjectXNOR(GateImageObject):
   included in the package (see `MANIFEST.in`).
 - Set `ACTIVE_IMAGE_FILENAME` as well to show another image while the component's `active`
   property is `True`, the way the LED lights up.
+- Set `SHOW_NAME = False` to leave out the component's name on the image, and
+  `SHOW_PORT_NAMES = False` to leave out the port names. `GateImageObject` sets
+  `SHOW_PORT_NAMES = False`, and the LED leaves out both.
 - The same image is used in the component selector.
 
 ### 3b. A GUI object drawn by code
