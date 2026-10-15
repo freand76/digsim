@@ -192,12 +192,12 @@ class Port(abc.ABC):
         return bool(not self.has_driver())
 
     def disconnect(self, port: Port) -> None:
-        """Disconnect port if it is wired"""
+        """Disconnect 'port' if this port drives it"""
+        # Only then: the port could be driven by another port, that keeps its connection
         if port in self._wired_ports:
-            index = self._wired_ports.index(port)
-            del self._wired_ports[index]
-        port.set_driver(None)
-        connection_generation.value += 1
+            self._wired_ports.remove(port)
+            port.set_driver(None)
+            connection_generation.value += 1
 
     def strval(self) -> str:
         """Return value as string"""
