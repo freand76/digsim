@@ -231,7 +231,8 @@ class Component(abc.ABC):
         """Update parameters from settings dict"""
         for setting, value in settings.items():
             self.parameter_set(setting, value)
-            self.reconfigure()
+        # Once, with all the new settings
+        self.reconfigure()
 
     def reconfigure(self) -> None:
         """Update the component from the parameters"""
