@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QPoint, QPointF, QRect, Qt
 from PySide6.QtGui import QFont, QPainter, QPen
-from PySide6.QtWidgets import QStyleOptionGraphicsItem, QWidget
 
 from digsim.circuit.components import DipSwitch
 from digsim.circuit.components.atoms import Component
@@ -25,6 +24,8 @@ class DipSwitchObject(ImageObject):
     """The class for a DIP switch component placed in the GUI"""
 
     IMAGE_FILENAME = "images/DIP_SWITCH.png"
+    # The switches are numbered instead
+    SHOW_PORT_NAMES = False
     DIP_SWITCH_WIDTH = 20
     DIP_SWITCH_HEIGHT = 10
 
@@ -121,12 +122,6 @@ class DipSwitchObject(ImageObject):
             "ON",
         )
 
-    def paint(
-        self,
-        painter: QPainter,
-        option: QStyleOptionGraphicsItem,
-        widget: QWidget | None = None,
-    ) -> None:
-        """QT function"""
+    def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter, color=Qt.GlobalColor.red)
         self._paint_dip_switch(painter)
