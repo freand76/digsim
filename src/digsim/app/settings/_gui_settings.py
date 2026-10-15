@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -71,15 +71,6 @@ class GuiSettingsDialog(QDialog):
             # A frequency from a circuit file that is not in the list
             self._update_frequency.addItem(f"{frequency} Hz", userData=frequency)
         self._update_frequency.setCurrentIndex(self._update_frequency.findData(frequency))
-
-    @classmethod
-    def default_settings(cls) -> dict[str, Any]:
-        """Default settings"""
-        return {
-            "real_time": True,
-            "color_wires": True,
-            "update_frequency": 20,
-        }
 
     def start(self) -> None:
         """Start Dialog"""

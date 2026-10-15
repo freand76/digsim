@@ -5,9 +5,8 @@
 
 from __future__ import annotations
 
+import typing
 from typing import TYPE_CHECKING, Any
-
-from digsim.app.settings import GuiSettingsDialog
 
 
 if TYPE_CHECKING:
@@ -17,9 +16,18 @@ if TYPE_CHECKING:
 class ModelSettings:
     """Class to handle settings in the model"""
 
+    DEFAULT_SETTINGS: typing.ClassVar[dict[str, Any]] = {
+        # Slow down the simulation to real time
+        "real_time": True,
+        # Color wires by their logic level
+        "color_wires": True,
+        # GUI updates per second
+        "update_frequency": 20,
+    }
+
     def __init__(self, app_model: AppModel) -> None:
         self._app_model = app_model
-        self._settings = GuiSettingsDialog.default_settings()
+        self._settings = dict(self.DEFAULT_SETTINGS)
 
     def update(self, settings: dict[str, Any]) -> None:
         """Update model settings"""
