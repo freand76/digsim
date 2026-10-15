@@ -60,7 +60,9 @@ class ComponentObject(QGraphicsRectItem):
         self._port_distance = port_distance
 
         # Class variables
-        self._port_dict: dict[Port, dict[str, Any]] = {}
+        # The name shown for each port (with its bit range for a bus), and its graphics item
+        self._port_names: dict[Port, str] = {}
+        self._port_items: dict[Port, PortGraphicsItem] = {}
         self._parent_widget: QWidget | None = None
         self._mouse_press_pos: QPoint | None = None
         self._moved = False
@@ -184,13 +186,11 @@ class ComponentObject(QGraphicsRectItem):
     def create_ports(self) -> None:
         """Create ports for component object"""
         for port in self._component.ports:
-            self._port_dict[port] = {}
             if port.width == 1:
-                self._port_dict[port]["name"] = port.name()
+                self._port_names[port] = port.name()
             else:
-                self._port_dict[port]["name"] = f"{port.name()}[{port.width - 1}:0]"
-            item = PortGraphicsItem(self._app_model, self, port)
-            self._port_dict[port]["item"] = item
+                self._port_names[port] = f"{port.name()}[{port.width - 1}:0]"
+            self._port_items[port] = PortGraphicsItem(self._app_model, self, port)
         self.update_ports()
 
     def update_ports(self) -> None:
@@ -206,7 +206,7 @@ class ComponentObject(QGraphicsRectItem):
         max_inport_name = ""
         max_outport_name = ""
         for port in self.component.ports:
-            port_name = self._port_dict[port]["name"]
+            port_name = self._port_names[port]
             if port.is_input() and len(port_name) > len(max_inport_name):
                 max_inport_name = port_name
             elif not port.is_input() and len(port_name) > len(max_outport_name):
@@ -223,36 +223,28 @@ class ComponentObject(QGraphicsRectItem):
 
     def get_port_item(self, port: Port) -> PortGraphicsItem:
         """Get port item"""
-        return self._port_dict[port]["item"]
+        return self._port_items[port]
 
     def set_port_rect(self, port: Port, rect: QRect | QRectF) -> None:
         """Set port rect"""
         self.get_port_item(port).setRect(rect)
 
     def _set_port_rects(self, ports: list[Port], xpos: float) -> None:
-        if len(ports) == 1:
+        """Place the ports at 'xpos', spread evenly around the vertical center"""
+        top_to_port = (self.height - self._port_distance * (len(ports) - 1)) / 2
+        for idx, port in enumerate(ports):
             rect = QRect(
                 int(self.object_pos.x() + xpos),
-                int(self.object_pos.y() + self.height / 2 - self.PORT_SIDE / 2),
+                int(
+                    self.object_pos.y()
+                    + top_to_port
+                    + idx * self._port_distance
+                    - self.PORT_SIDE / 2
+                ),
                 self.PORT_SIDE,
                 self.PORT_SIDE,
             )
-            self.get_port_item(ports[0]).setRect(rect)
-        elif len(ports) > 1:
-            top_to_port = (self.height - self._port_distance * (len(ports) - 1)) / 2
-            for idx, port in enumerate(ports):
-                rect = QRect(
-                    int(self.object_pos.x() + xpos),
-                    int(
-                        self.object_pos.y()
-                        + top_to_port
-                        + idx * self._port_distance
-                        - self.PORT_SIDE / 2
-                    ),
-                    self.PORT_SIDE,
-                    self.PORT_SIDE,
-                )
-                self.get_port_item(port).setRect(rect)
+            self.get_port_item(port).setRect(rect)
 
     def set_parent_widget(self, parent: QWidget) -> None:
         """Set the parent"""
@@ -344,7 +336,7 @@ class ComponentObject(QGraphicsRectItem):
         painter.setFont(self._PORT_NAME_FONT)
         for port in self._component.ports:
             rect = self.get_port_item(port).rect()
-            port_str = self._port_dict[port]["name"]
+            port_str = self._port_names[port]
             str_pixels_w, str_pixels_h = self.get_string_metrics(port_str, self._PORT_NAME_FONT)
             text_y = rect.y() + str_pixels_h - self.PORT_SIDE / 2
             if rect.x() < self.object_pos.x():
