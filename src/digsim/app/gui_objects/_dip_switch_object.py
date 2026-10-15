@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
 
 class DipSwitchObject(ImageObject):
-    """The class for a bus/bit component placed in the GUI"""
+    """The class for a DIP switch component placed in the GUI"""
 
     IMAGE_FILENAME = "images/DIP_SWITCH.png"
     DIP_SWITCH_WIDTH = 20

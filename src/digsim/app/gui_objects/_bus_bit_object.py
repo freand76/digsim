@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 
 
 class BusBitsObject(ComponentObject):
-    """The class for a bus/bit component placed in the GUI"""
+    """The class for a bus to wires (Bus2Wires) component placed in the GUI"""
 
     WIRE_LENGTH_COMPONENT = 5
     WIRE_LENGTH_SELECTABLE = 15
@@ -107,7 +107,7 @@ class BusBitsObject(ComponentObject):
 
 
 class BitsBusObject(BusBitsObject):
-    """The class for a bit/bit component placed in the GUI"""
+    """The class for a wires to bus (Wires2Bus) component placed in the GUI"""
 
     WIRE_LENGTH_COMPONENT = -5
     WIRE_LENGTH_SELECTABLE = -15

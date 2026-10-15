@@ -109,7 +109,7 @@ class SevenSegmentObject(ComponentObject):
     def paint_selectable_digit(
         cls, painter: QPainter, size: QSize, name: str, segments: str
     ) -> None:
-        """Paint a digit (for selectable component in gui"""
+        """Paint a digit (for the component selector)"""
         xpos = size.width() / 2 - cls.DIGIT_WIDTH / 2
         cls.paint_digit_rect(painter, xpos, 0)
         cls.draw_digit(painter, xpos, 0, segments)

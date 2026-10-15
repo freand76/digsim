@@ -12,6 +12,7 @@
  - Bugfix: A Verilog module with an input that it does not use, or a netlist with an unused cell output, could not be loaded
  - Simpler Yosys component code
  - Bugfix: A GUI object that subclasses another image object with its own image showed the base class image
+ - Correct the descriptions of several GUI object classes
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

@@ -130,7 +130,7 @@ class ImageObjectNOR(GateImageObject):
 
 
 class ImageObjectNOT(GateImageObject):
-    """The class for a NOR image component placed in the GUI"""
+    """The class for a NOT image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/NOT.png"
 
@@ -160,7 +160,7 @@ class ImageObjectDFF(ImageObject):
 
 
 class ImageObjectFlipFlop(ImageObject):
-    """The class for a FlipFLop image component placed in the GUI"""
+    """The class for a flip-flop image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/FlipFlop.png"
     PORT_TO_IMAGE_DIST = 20
@@ -229,7 +229,7 @@ class ImageObjectLed(ImageObject):
 
 
 class ImageObjectIC(ImageObject):
-    """The class for a Yosys image component placed in the GUI"""
+    """The class for an IC image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/IC.png"
 

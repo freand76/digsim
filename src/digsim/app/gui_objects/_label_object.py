@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 
 class LabelObject(ComponentObject):
-    """The class for a bus/bit component placed in the GUI"""
+    """The class for a label wire component (Wire Sink or Wire Source) placed in the GUI"""
 
     _LABEL_PEN = QPen(Qt.GlobalColor.black)
 
