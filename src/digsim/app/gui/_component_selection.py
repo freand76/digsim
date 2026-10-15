@@ -6,7 +6,6 @@
 from __future__ import annotations
 
 from functools import partial
-from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QMimeData, QPoint, QSize, Qt, QTimer
 from PySide6.QtGui import QDrag, QMouseEvent, QPainter, QPaintEvent, QPixmap
@@ -17,14 +16,10 @@ import digsim.app.gui_objects
 from ._circuit_area import CircuitArea
 
 
-if TYPE_CHECKING:
-    from digsim.app.model import AppModel
-
-
 class SelectableComponentWidget(QPushButton):
     """
     The selectable component class,
-    this is the component widget than can be dragged into the circuit area.
+    this is the component widget that can be dragged into the circuit area.
     """
 
     def __init__(
@@ -86,13 +81,10 @@ class SelectableComponentWidget(QPushButton):
         """QT event callback function"""
         QTimer.singleShot(0, partial(self._circuit_area.add_component, self._name, None))
 
-    def paintEvent(self, event: QPaintEvent) -> None:
+    def paintEvent(self, _: QPaintEvent) -> None:
         """QT event callback function"""
-        if self._paint_class is None:
-            super().paintEvent(event)
-        else:
-            painter = QPainter(self)
-            self._paint_class.paint_selectable_component(painter, self.size(), self._display_name)
+        painter = QPainter(self)
+        self._paint_class.paint_selectable_component(painter, self.size(), self._display_name)
 
 
 class HorizontalLine(QFrame):
@@ -127,12 +119,11 @@ class DescriptionText(QWidget):
 class ComponentSelection(QWidget):
     """
     The component selection area,
-    these are the components than can be dragged into the circuit area.
+    these are the components that can be dragged into the circuit area.
     """
 
-    def __init__(self, app_model: AppModel, circuit_area: CircuitArea, parent: QWidget) -> None:
+    def __init__(self, circuit_area: CircuitArea, parent: QWidget) -> None:
         super().__init__(parent)
-        self.app_model = app_model
         layout = QVBoxLayout(self)
         self.setLayout(layout)
         layout.setContentsMargins(5, 5, 5, 5)

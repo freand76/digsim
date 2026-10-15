@@ -49,7 +49,7 @@ if TYPE_CHECKING:
 
 
 class WirePartGraphicsItem(QGraphicsRectItem):
-    """A part of a wire graphcis item"""
+    """A part of a wire graphics item"""
 
     CLOSE_TO_WIRE_MARGIN = 10
 
@@ -158,7 +158,7 @@ class WireGraphicsItem(QGraphicsPathItem):
         self._src_port.disconnect(self._dst_port)
 
     def select(self, selected: bool) -> None:
-        """Select all parts of the wiregrapgicsitem"""
+        """Select all parts of the wire"""
         for item in self._part_items:
             item.wire_selected(selected)
         if selected:
@@ -235,7 +235,6 @@ class NewWireGraphicsItem(QGraphicsPathItem):
         widget: QWidget | None = None,
     ) -> None:
         """QT function"""
-        end_pos = None
         start_port = self._app_model.objects.new_wire.start_port()
         end_pos = self._app_model.objects.new_wire.end_pos()
         pen = QPen(Qt.GlobalColor.darkGray)
@@ -524,14 +523,6 @@ class CircuitArea(QGraphicsView):
         """QT event callback function"""
         self.setFocus()
         event.accept()
-
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        """QT event callback function"""
-        super().mousePressEvent(event)
-
-    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
-        """QT event callback function"""
-        super().mouseReleaseEvent(event)
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """QT event callback function"""

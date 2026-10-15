@@ -25,6 +25,7 @@
  - Bugfix: Wires could be selected while the simulation was running
  - Bugfix: The Delete button stayed disabled after selecting a component or wire
  - Fix the grammar of the question before a circuit is replaced, and add the missing Zoom in tooltip
+ - Remove unused code and correct docstrings in the main window, circuit area, top bar and component selector
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

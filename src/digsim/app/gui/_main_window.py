@@ -32,7 +32,7 @@ if TYPE_CHECKING:
 
 class CircuitEditor(QSplitter):
     """
-    The circuit editor, the component selction widget and the circuit area widget.
+    The circuit editor, the component selection widget and the circuit area widget.
     """
 
     def __init__(self, app_model: AppModel, parent: QWidget) -> None:
@@ -51,7 +51,7 @@ class CircuitEditor(QSplitter):
         self._selection_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self._circuit_area = CircuitArea(app_model, self)
-        selection_panel = ComponentSelection(app_model, self._circuit_area, self)
+        selection_panel = ComponentSelection(self._circuit_area, self)
 
         layout.addWidget(self._circuit_area)
         self._selection_area.setWidget(selection_panel)
@@ -94,7 +94,7 @@ class CentralWidget(QWidget):
 
 class MainWindow(QMainWindow):
     """
-    The main window for the applicaton.
+    The main window for the application.
     """
 
     def __init__(self, app_model: AppModel, package_version: str) -> None:
@@ -149,9 +149,6 @@ class MainWindow(QMainWindow):
             self._app_model.shortcuts.release(event.key())
             event.accept()
 
-    def _undo_shortcut(self) -> None:
-        self._app_model.objects.undo()
-
     def error_dialog(self, error_message: str) -> None:
         """Execute Error dialog"""
         QMessageBox.critical(self, "Error!", error_message, QMessageBox.StandardButton.Ok)
@@ -166,8 +163,8 @@ class MainWindow(QMainWindow):
         if not self._app_model.is_changed or are_you_sure_destroy_circuit(
             self, "Close Application"
         ):
+            # Stops the simulation thread and waits for it
             self._app_model.model_stop()
-            self._app_model.wait()
             super().closeEvent(event)
         else:
             event.ignore()

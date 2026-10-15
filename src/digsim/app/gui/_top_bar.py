@@ -74,7 +74,7 @@ class SimControlWidget(QFrame):
             self._app_model.model_stop()
 
     def _single_step(self) -> None:
-        """Button action: Reset"""
+        """Button action: Single step"""
         self._start_button.setEnabled(False)
         self._single_step_button.setEnabled(False)
         self._app_model.model_single_step()
@@ -105,7 +105,7 @@ class SimControlWidget(QFrame):
 
 class SimTimeWidget(QFrame):
     """
-    The widget showing simulation time in the opt bar
+    The widget showing simulation time in the top bar
     """
 
     def __init__(self, app_model: AppModel, parent: QWidget) -> None:
@@ -151,7 +151,7 @@ class VcdFilenameWidget(QFrame):
         layout.addWidget(self._vcd_filename)
 
     def set_filename(self, filename: str) -> None:
-        """Set filename in VcdFilenameWdiget"""
+        """Set the filename shown"""
         self._vcd_filename.setText(filename)
 
 
@@ -234,7 +234,6 @@ class VcdControlWidget(QFrame):
                 filename = self._open_filedialog()
 
                 if filename is not None:
-                    self._enable_buttons(True)
                     self._start_vcd(filename)
                 else:
                     QTimer.singleShot(0, self._disable_vcd_selection)
@@ -330,7 +329,7 @@ class LoadSaveWidget(QFrame):
         self._app_model.save_circuit(path[0])
 
     def _clear(self) -> None:
-        """Button action: Save"""
+        """Button action: Clear"""
         self._app_model.clear_circuit()
 
     def _control_notify(self) -> None:
