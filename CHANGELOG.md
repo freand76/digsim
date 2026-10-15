@@ -22,6 +22,7 @@
  - The DIP switch GUI object draws itself in paint_component(), like the other GUI objects
  - The guide for adding components says that mypy reports a GUI object without paint_component() or paint_selectable_component()
  - Bugfix: Ctrl+Z, Ctrl+Y and Del changed the circuit while the simulation was running
+ - Bugfix: Wires could be selected while the simulation was running
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

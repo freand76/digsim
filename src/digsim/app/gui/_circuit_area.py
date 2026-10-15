@@ -84,7 +84,11 @@ class WirePartGraphicsItem(QGraphicsRectItem):
 
     def itemChange(self, change: QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
         """QT event callback function"""
-        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
+            # Like components, wires can't be selected while the simulation runs
+            if self._app_model.is_running:
+                value = False
+        elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:
             self._parent.select(self.isSelected())
         return super().itemChange(change, value)
 
