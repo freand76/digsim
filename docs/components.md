@@ -397,6 +397,11 @@ class LedBarObject(ComponentObject):
 | `update_size()` | Called when the component's settings change. Set `self.width` and `self.height`, then call `update_ports()` to move the ports. |
 | `component` | Override it to return the component's own type, so type checkers know its methods. |
 
+`paint_component()` and `paint_selectable_component()` are abstract methods. If a GUI
+object class misses one of them, mypy reports it when the class is registered in
+[step 4](#4-register-the-gui-object). Python itself doesn't check it while the application
+runs, so run mypy (see [Contributing](contributing.md#before-you-submit)).
+
 The GUI repaints a `CallbackComponent` after its `update()` runs, which is why `LedBar`
 subclasses it. A plain `Component` is only repainted when something else in the circuit
 changes.
