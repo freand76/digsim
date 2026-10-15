@@ -78,6 +78,9 @@ class ModelObjects:
 
     def delete_selected(self) -> None:
         """Delete selected object(s)"""
+        # The circuit can't change while the simulation thread runs it (the Del shortcut)
+        if self._app_model.is_running:
+            return
         self.push_undo_state()
         selected_objects = self._app_model.objects.get_selected()
         if len(selected_objects) > 0:
@@ -121,6 +124,9 @@ class ModelObjects:
 
     def undo(self) -> None:
         """Undo to last saved state"""
+        # The circuit can't be rebuilt while the simulation thread runs it (Ctrl+Z)
+        if self._app_model.is_running:
+            return
         if len(self._undo_stack) > 0:
             self.push_redo_state()
             model_dc = self._undo_stack.pop()
@@ -129,7 +135,10 @@ class ModelObjects:
             self._app_model.sig_synchronize_gui.emit()
 
     def redo(self) -> None:
-        """Undo to last saved state"""
+        """Redo the last undone change"""
+        # The circuit can't be rebuilt while the simulation thread runs it (Ctrl+Y)
+        if self._app_model.is_running:
+            return
         if len(self._redo_stack) > 0:
             self.push_undo_state(clear_redo_stack=False)
             model_dc = self._redo_stack.pop()
