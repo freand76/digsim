@@ -86,6 +86,8 @@ class ComponentSettingText(ComponentSettingsBase):
         self._text_edit.setText(self._parameter_dict["default"])
         self._text_edit.textChanged.connect(self._update)
         layout.addWidget(self._text_edit)
+        # The text is a setting also if it is not edited
+        self._update()
 
     def _update(self) -> None:
         value = self._text_edit.toPlainText()
