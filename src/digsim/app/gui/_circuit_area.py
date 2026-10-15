@@ -540,17 +540,15 @@ class CircuitArea(QGraphicsView):
         if not self._wheel_zoom_mode:
             super().wheelEvent(event)
             return
-        if event.angleDelta().y() > 0:
+        wheel_steps = event.angleDelta().y()
+        if wheel_steps != 0:
             before = self.mapToScene(self._mouse_pos)
-            self._zoom_in()
-            after = self.mapToScene(self._mouse_pos)
-            translation = after - before
-            self.translate(translation.x(), translation.y())
-        elif event.angleDelta().y() < 0:
-            before = self.mapToScene(self._mouse_pos)
-            self._zoom_out()
-            after = self.mapToScene(self._mouse_pos)
-            translation = after - before
+            if wheel_steps > 0:
+                self._zoom_in()
+            else:
+                self._zoom_out()
+            # Keep the point under the mouse pointer in place
+            translation = self.mapToScene(self._mouse_pos) - before
             self.translate(translation.x(), translation.y())
         event.accept()
 
