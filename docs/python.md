@@ -66,6 +66,7 @@ gtkwave sr.vcd
 | `init()` | Initialize the circuit, after adding and connecting components |
 | `run(s=, ms=, us=, ns=)` | Run the simulation for a period of time |
 | `run_until(s=, ms=, us=, ns=)` | Run the simulation until an absolute time |
+| `process_single_event(stop_time_ns=None)` | Process only the next event, to step through a simulation. Returns two booleans: if an event was processed (not if there were none, or the next one is after `stop_time_ns`), and if it was on a port of a top-level component rather than inside one, like a Yosys component. |
 | `time_ns` | The current simulation time in nanoseconds |
 | `get_component(name)` | Look up a component by name |
 | `vcd(filename)` / `vcd_close()` | Start or finish writing a VCD file |
