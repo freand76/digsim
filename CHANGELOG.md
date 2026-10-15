@@ -33,6 +33,7 @@
  - Bugfix: An update frequency from a circuit file that is not in the settings list was lost when the settings were saved, and the next simulation start failed
  - Simpler component settings dialog code
  - The default application settings are kept in the model instead of the settings dialog
+ - Bugfix: Pressing Del with nothing selected added an undo step that did nothing
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

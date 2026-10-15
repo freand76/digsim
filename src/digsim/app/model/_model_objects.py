@@ -81,12 +81,16 @@ class ModelObjects:
         # The circuit can't change while the simulation thread runs it (the Del shortcut)
         if self._app_model.is_running:
             return
-        self.push_undo_state()
+        undo_state = self._app_model.circuit_to_model()
         selected_objects = self._app_model.objects.get_selected()
         if len(selected_objects) > 0:
             self._delete(selected_objects)
             self._app_model.model_changed()
+        # The circuit area deletes the selected wires
         self._app_model.sig_delete_wires.emit()
+        # An undo step only if something was deleted
+        if self._app_model.circuit_to_model() != undo_state:
+            self._add_undo_state(undo_state)
 
     def _restore_state(self, model_dc: ModelDataClass) -> None:
         self.clear()
@@ -107,7 +111,10 @@ class ModelObjects:
 
     def push_undo_state(self, clear_redo_stack: bool = True) -> None:
         """Push undo state to stack"""
-        self._undo_stack.append(self._app_model.circuit_to_model())
+        self._add_undo_state(self._app_model.circuit_to_model(), clear_redo_stack)
+
+    def _add_undo_state(self, undo_state: ModelDataClass, clear_redo_stack: bool = True) -> None:
+        self._undo_stack.append(undo_state)
         if clear_redo_stack:
             self._redo_stack.clear()
             self._app_model.sig_control_notify.emit()
