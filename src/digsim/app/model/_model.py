@@ -45,7 +45,6 @@ class AppModel(QThread):
         self._single_step = False
         self._changed = False
         self._gui_event_queue: queue.Queue[Callable[[], None]] = queue.Queue()
-        self._multi_select = False
         self._circuit_folder = ""
 
     def _setup_model_components(self) -> None:
@@ -102,7 +101,7 @@ class AppModel(QThread):
         self.sig_control_notify.emit()
 
     def model_single_step(self) -> None:
-        """Start model simulation thread"""
+        """Start the simulation thread, to run until the next input event"""
         self._started = True
         self._single_step = True
         self.start()
@@ -124,7 +123,7 @@ class AppModel(QThread):
         self.sig_control_notify.emit()
 
     def model_add_event(self, func: Callable[[], None]) -> None:
-        """Add medel events (functions) from the GUI"""
+        """Add model events (functions) from the GUI, run by the simulation thread"""
         self._gui_event_queue.put(func)
 
     def model_abort_wire(self) -> None:
@@ -245,9 +244,8 @@ class AppModel(QThread):
             self.sig_error.emit(f"Could not load circuit: {exc!s}")
             return
         self._model_clear()
+        # Path("file.circuit").parent is "."
         self._circuit_folder = str(Path(path).parent)
-        if len(self._circuit_folder) == 0:
-            self._circuit_folder = "."
         exception_str_list = self.model_to_circuit(app_file_dc)
         self.shortcuts.from_dict(app_file_dc.shortcuts)
         self.settings.from_dict(app_file_dc.settings)

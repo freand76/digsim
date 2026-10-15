@@ -50,7 +50,7 @@ class ModelObjects:
 
     @property
     def new_wire(self) -> NewWire:
-        """return the model components"""
+        """return the wire that is being drawn"""
         return self._new_wire
 
     def init(self) -> None:
@@ -64,8 +64,7 @@ class ModelObjects:
 
     def get_list(self) -> list[ComponentObject]:
         """Get list of all model objects"""
-        model_objects = self._model_components.get_object_list()
-        return model_objects
+        return self._model_components.get_object_list()
 
     def get_selected(self) -> list[ComponentObject]:
         """Get selected objects"""
@@ -73,8 +72,7 @@ class ModelObjects:
 
     def _delete(self, selected_objects: list[ComponentObject]) -> None:
         for obj in selected_objects:
-            if ModelComponents.is_component_object(obj):
-                self._model_components.delete(obj)
+            self._model_components.delete(obj)
 
     def delete_selected(self) -> None:
         """Delete selected object(s)"""

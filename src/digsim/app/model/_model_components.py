@@ -25,11 +25,6 @@ if TYPE_CHECKING:
 class ModelComponents:
     """Class to handle the component objects in the model"""
 
-    @staticmethod
-    def is_component_object(obj: object) -> bool:
-        """Test if this object is a component object"""
-        return isinstance(obj, ComponentObject)
-
     def __init__(self, app_model: AppModel, circuit: Circuit) -> None:
         self._app_model = app_model
         self._circuit = circuit
@@ -56,12 +51,7 @@ class ModelComponents:
 
     def get_top_zlevel(self) -> float:
         """Get the highest z level in the model"""
-        max_zlevel: float | None = None
-        for comp_object in self._component_objects.values():
-            max_zlevel = (
-                comp_object.zlevel if max_zlevel is None else (max(max_zlevel, comp_object.zlevel))
-            )
-        return max_zlevel if max_zlevel is not None else 0
+        return max((obj.zlevel for obj in self._component_objects.values()), default=0)
 
     def component_moved(self) -> None:
         """Call when component has moved to update state"""
@@ -78,11 +68,7 @@ class ModelComponents:
     def send_to_back(self, component_object: ComponentObject) -> None:
         """Make the component object the lowest in the stack"""
         self._app_model.objects.push_undo_state()
-        min_zlevel: float | None = None
-        for comp_object in self._component_objects.values():
-            min_zlevel = (
-                comp_object.zlevel if min_zlevel is None else (min(min_zlevel, comp_object.zlevel))
-            )
+        min_zlevel = min((obj.zlevel for obj in self._component_objects.values()), default=None)
         if min_zlevel is None or min_zlevel == 0:
             for comp_object in self._component_objects.values():
                 comp_object.zlevel = comp_object.zlevel + 1
