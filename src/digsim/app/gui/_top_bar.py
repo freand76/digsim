@@ -262,6 +262,7 @@ class LoadSaveWidget(QFrame):
         self._zoom_in_button = QPushButton("", self)
         self._zoom_in_button.setIcon(qta.icon("msc.zoom-in"))
         self._zoom_in_button.clicked.connect(self._app_model.zoom_in)
+        self._zoom_in_button.setToolTip("Zoom in")
         self._zoom_out_button = QPushButton("", self)
         self._zoom_out_button.setIcon(qta.icon("msc.zoom-out"))
         self._zoom_out_button.clicked.connect(self._app_model.zoom_out)

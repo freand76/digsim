@@ -22,5 +22,5 @@ def are_you_sure_destroy_circuit(parent: QWidget | None, dialog_text: str) -> bo
     return warning_messagebox(
         parent,
         dialog_text,
-        "Are you sure want to destroy the current circuit?",
+        "Are you sure you want to destroy the current circuit?",
     )
