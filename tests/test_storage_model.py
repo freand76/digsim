@@ -6,6 +6,7 @@
 import pytest
 
 from digsim.circuit import Circuit
+from digsim.circuit.components import Led, PushButton
 from digsim.circuit.components.atoms import DigsimException
 from digsim.storage_model import (
     AppFileDataClass,
@@ -76,3 +77,15 @@ def test_component_without_display_name():
         name="y", type="digsim.circuit.components.AND", display_name="My gate"
     )
     assert component_dc.create(Circuit()).display_name() == "My gate"
+
+
+def test_wire_with_dot_in_component_name(tmp_path):
+    """Wires to components with a dot in the name are saved and loaded"""
+    circuit = Circuit(name="c")
+    button = PushButton(circuit, "button.1")
+    led = Led(circuit, "led.v2.0")
+    button.O.wire = led.I
+    circuit.to_json_file(tmp_path / "c.json")
+    loaded = Circuit()
+    loaded.from_json_file(tmp_path / "c.json")
+    assert loaded.get_component("button.1").O.wired_ports == [loaded.get_component("led.v2.0").I]

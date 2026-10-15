@@ -50,8 +50,9 @@ class WireDataClass:
     dst: str
 
     def connect(self, circuit: Circuit) -> None:
-        src_comp_name, src_port_name = self.src.split(".")
-        dst_comp_name, dst_port_name = self.dst.split(".")
+        # "component.port", the component name can contain dots but a port name can't
+        src_comp_name, _, src_port_name = self.src.rpartition(".")
+        dst_comp_name, _, dst_port_name = self.dst.rpartition(".")
         src_comp = circuit.get_component(src_comp_name)
         dst_comp = circuit.get_component(dst_comp_name)
         src_comp.port(src_port_name).wire = dst_comp.port(dst_port_name)
