@@ -66,8 +66,11 @@ class GuiSettingsDialog(QDialog):
         self._slow_to_real_time.setChecked(self._settings["real_time"])
         self._show_wire_value.setChecked(self._settings["color_wires"])
 
-        index = self._update_frequency.findData(self._settings["update_frequency"])
-        self._update_frequency.setCurrentIndex(index)
+        frequency = self._settings["update_frequency"]
+        if self._update_frequency.findData(frequency) < 0:
+            # A frequency from a circuit file that is not in the list
+            self._update_frequency.addItem(f"{frequency} Hz", userData=frequency)
+        self._update_frequency.setCurrentIndex(self._update_frequency.findData(frequency))
 
     @classmethod
     def default_settings(cls) -> dict[str, Any]:
