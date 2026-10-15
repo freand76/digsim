@@ -65,3 +65,14 @@ def test_component_that_cannot_be_created(component_type, settings, message):
         CircuitDataClass(components=[component_dc]), component_exceptions=False
     )
     assert len(warnings) == 1
+
+
+def test_component_without_display_name():
+    """A component stored without display name (older files) keeps its own"""
+    component_dc = ComponentDataClass(name="x", type="digsim.circuit.components.AND")
+    component = component_dc.create(Circuit())
+    assert component.display_name() == "AND"
+    component_dc = ComponentDataClass(
+        name="y", type="digsim.circuit.components.AND", display_name="My gate"
+    )
+    assert component_dc.create(Circuit()).display_name() == "My gate"

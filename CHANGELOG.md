@@ -41,6 +41,7 @@
  - Bugfix: A circuit file that is valid JSON but not an object (like a list) raised TypeError instead of being reported as malformed
  - Bugfix: Loading a folder or a file without read permission raised an exception instead of showing an error
  - Bugfix: A circuit file with an unknown component type, or a setting that a component does not have, stopped the whole load instead of giving a warning for that component. Types that are not components are refused.
+ - Bugfix: Components from circuit files without display names got an empty name in the GUI
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

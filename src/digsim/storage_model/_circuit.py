@@ -103,7 +103,8 @@ class ComponentDataClass:
             # A setting that the component does not have
             raise DigsimException(f"Invalid settings for '{self.name}': {exc}") from exc
         component.set_name(self.name)
-        if self.display_name is not None:
+        # Files from older versions have no display name, keep the component's own
+        if self.display_name:
             component.set_display_name(self.display_name)
         return component
 
