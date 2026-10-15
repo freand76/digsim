@@ -50,10 +50,13 @@ class ImageObject(ComponentObject):
 
     @classmethod
     def _get_pixmaps(cls) -> None:
-        """Load the pixmap at first use"""
-        if cls.ACTIVE_IMAGE_FILENAME is not None and cls._pixmap_active is None:
+        """
+        Load the pixmaps at first use. Each class loads its own: a subclass with another
+        image must not use the pixmap that its base class has already loaded.
+        """
+        if cls.ACTIVE_IMAGE_FILENAME is not None and "_pixmap_active" not in cls.__dict__:
             cls._pixmap_active = QPixmap(Path(__file__).parent / cls.ACTIVE_IMAGE_FILENAME)
-        if cls.IMAGE_FILENAME is not None and cls._pixmap is None:
+        if cls.IMAGE_FILENAME is not None and "_pixmap" not in cls.__dict__:
             cls._pixmap = QPixmap(Path(__file__).parent / cls.IMAGE_FILENAME)
 
     @classmethod

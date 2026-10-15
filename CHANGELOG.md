@@ -11,6 +11,7 @@
  - Yosys components no longer add an empty "nets" component to the circuit, and the unused nets argument is removed
  - Bugfix: A Verilog module with an input that it does not use, or a netlist with an unused cell output, could not be loaded
  - Simpler Yosys component code
+ - Bugfix: A GUI object that subclasses another image object with its own image showed the base class image
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window
