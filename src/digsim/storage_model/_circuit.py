@@ -86,12 +86,22 @@ class ComponentDataClass:
         if "path" in settings:
             settings["path"] = circuit.load_path(settings["path"])
 
-        py_module_name = ".".join(self.type.split(".")[0:-1])
-        py_class_name = self.type.split(".")[-1]
+        # Imported here: digsim.circuit imports this module
+        from digsim.circuit.components.atoms import Component, DigsimException
 
-        module = importlib.import_module(py_module_name)
-        class_ = getattr(module, py_class_name)
-        component = class_(circuit=circuit, **settings)
+        py_module_name, _, py_class_name = self.type.rpartition(".")
+        try:
+            class_ = getattr(importlib.import_module(py_module_name), py_class_name)
+        except (ImportError, AttributeError, ValueError) as exc:
+            # For example a component from a newer version of DigSim
+            raise DigsimException(f"Unknown component type '{self.type}'") from exc
+        if not (isinstance(class_, type) and issubclass(class_, Component)):
+            raise DigsimException(f"'{self.type}' is not a component")
+        try:
+            component = class_(circuit=circuit, **settings)
+        except TypeError as exc:
+            # A setting that the component does not have
+            raise DigsimException(f"Invalid settings for '{self.name}': {exc}") from exc
         component.set_name(self.name)
         if self.display_name is not None:
             component.set_display_name(self.display_name)

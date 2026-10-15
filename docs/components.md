@@ -228,7 +228,7 @@ Inputs that are not driven by another component can be set directly, as here.
 `circuit.to_json_file()` stores each component's type as its module path and class name,
 leaving out module names that start with `_`. A component in `my_components.py` is stored
 as `my_components.XNOR`, so `my_components` must be importable when the circuit is
-loaded again.
+loaded again. If it isn't, loading reports the component as an unknown component type.
 
 ## Part 2: Adding the component to the GUI
 

@@ -5,10 +5,13 @@
 
 import pytest
 
+from digsim.circuit import Circuit
+from digsim.circuit.components.atoms import DigsimException
 from digsim.storage_model import (
     AppFileDataClass,
     CircuitDataClass,
     CircuitFileDataClass,
+    ComponentDataClass,
     ModelDataClass,
 )
 
@@ -39,3 +42,26 @@ def test_circuit_file_round_trip(tmp_path):
     circuit_file_dc = CircuitFileDataClass(circuit=CircuitDataClass(name="c"))
     circuit_file_dc.save(tmp_path / "c.json")
     assert CircuitFileDataClass.load(tmp_path / "c.json") == circuit_file_dc
+
+
+@pytest.mark.parametrize(
+    "component_type, settings, message",
+    [
+        ("digsim.circuit.components.FutureGate", {}, "Unknown component type"),
+        ("digsim.future_module.Gate", {}, "Unknown component type"),
+        ("NoModule", {}, "Unknown component type"),
+        ("builtins.dict", {}, "is not a component"),
+        ("digsim.circuit.Circuit", {}, "is not a component"),
+        ("digsim.circuit.components.AND", {"ports": 2, "future": 1}, "Invalid settings"),
+    ],
+)
+def test_component_that_cannot_be_created(component_type, settings, message):
+    """A component that can't be created gives a DigsimException, the load can continue"""
+    component_dc = ComponentDataClass(name="x", type=component_type, settings=settings)
+    circuit = Circuit()
+    with pytest.raises(DigsimException, match=message):
+        component_dc.create(circuit)
+    warnings = Circuit().from_dataclass(
+        CircuitDataClass(components=[component_dc]), component_exceptions=False
+    )
+    assert len(warnings) == 1
