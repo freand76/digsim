@@ -72,8 +72,10 @@ class DipSwitchObject(ImageObject):
             ):
                 select = idx
                 break
-        self.component.select(select)
-        self.repaint()
+        # Repaint only when another switch is highlighted, not on every mouse move
+        if select != self.component.selected():
+            self.component.select(select)
+            self.repaint()
 
     def single_click_action(self) -> None:
         self.component.toggle()

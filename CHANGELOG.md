@@ -18,6 +18,7 @@
  - GUI objects choose whether to show the component name and port names with the SHOW_NAME and SHOW_PORT_NAMES class attributes, described in the guide for adding components
  - NamedBoxObject: a base class for GUI objects drawn as a box with their name, like ICs, described in the guide for adding components
  - Simpler label wire GUI objects, which no longer choose their shape by looking for "in" in a text
+ - The DIP switch only repaints the circuit when the mouse moves to another switch, not on every mouse move
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window
