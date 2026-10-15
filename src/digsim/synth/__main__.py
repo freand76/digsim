@@ -21,6 +21,11 @@ def _synth_modules(args: argparse.Namespace) -> int:
         synthesis.synth_to_json_file(args.output_file, silent=args.silent)
         print(f"Synthesis complete in {time.monotonic() - start_time:.2f}s")
     except SynthesisException as exc:
+        # The Yosys error message starts with "ERROR:" itself
+        print(exc)
+        return -1
+    except OSError as exc:
+        # The output file could not be written
         print(f"ERROR: {exc!s}")
         return -1
     return 0
@@ -35,7 +40,7 @@ def _list_modules(args: argparse.Namespace) -> int:
             print(f"{idx}: {module}")
         print("========")
     except SynthesisException as exc:
-        print(f"ERROR: {exc!s}")
+        print(exc)
         return -1
     return 0
 

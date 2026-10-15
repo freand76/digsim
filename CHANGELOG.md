@@ -45,6 +45,7 @@
  - Bugfix: A circuit with a dot in a component name could be saved but not loaded
  - Simpler storage model code
  - Bugfix: A synthesis whose console file could not be opened left two file descriptors open
+ - Bugfix: python -m digsim.synth ended with a traceback when the output file could not be written, and printed "ERROR:" twice
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window
