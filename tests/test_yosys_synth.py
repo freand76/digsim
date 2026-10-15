@@ -10,6 +10,7 @@ from pathlib import Path
 import pytest
 
 from digsim.synth import Synthesis, SynthesisException
+from digsim.synth._synthesis import _console_to_file
 
 
 @pytest.fixture
@@ -122,3 +123,13 @@ def test_yosys_path_with_space(verilog_path):
         assert Synthesis.list_modules(verilog_file) == ["module_one"]
         netlist_dict = Synthesis(verilog_file, "module_one").synth_to_dict(silent=True)
         assert "module_one" in netlist_dict["modules"]
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="uses /proc to list open files")
+def test_console_file_that_cannot_be_opened(tmp_path):
+    """No file descriptors are left open when the console file can't be opened"""
+    open_before = len(os.listdir("/proc/self/fd"))
+    for _ in range(3):
+        with pytest.raises(OSError), _console_to_file(tmp_path / "missing" / "console.txt"):
+            pass
+    assert len(os.listdir("/proc/self/fd")) == open_before

@@ -52,8 +52,9 @@ def _console_to_file(console_file: pathlib.Path) -> Iterator[None]:
     """
     sys.stdout.flush()
     sys.stderr.flush()
-    saved = [os.dup(1), os.dup(2)]
+    # Opened first: if that fails, no saved file descriptors are left open
     console = os.open(console_file, os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+    saved = [os.dup(1), os.dup(2)]
     try:
         os.dup2(console, 1)
         os.dup2(console, 2)
