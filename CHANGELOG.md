@@ -31,6 +31,7 @@
  - Bugfix: Settings on a Static Value component showed "Unknown settings type" instead of the value slider
  - Bugfix: A new Note placed without editing its text was empty instead of showing the default text
  - Bugfix: An update frequency from a circuit file that is not in the settings list was lost when the settings were saved, and the next simulation start failed
+ - Simpler component settings dialog code
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

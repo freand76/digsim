@@ -39,7 +39,7 @@ class ComponentSettingsException(Exception):
 
 
 class ComponentSettingsBase(QFrame):
-    """SettingsBase"""
+    """The base class for the input of one parameter in the settings dialog"""
 
     def __init__(
         self,
@@ -69,7 +69,7 @@ class ComponentSettingsBase(QFrame):
 
 
 class ComponentSettingText(ComponentSettingsBase):
-    """Text setting"""
+    """Text setting, in a text box with several lines"""
 
     def __init__(
         self,
@@ -95,7 +95,7 @@ class ComponentSettingText(ComponentSettingsBase):
 
 
 class ComponentSettingSingleLineText(ComponentSettingsBase):
-    """Text setting"""
+    """Text setting, in a single line"""
 
     def __init__(
         self,
@@ -105,7 +105,6 @@ class ComponentSettingSingleLineText(ComponentSettingsBase):
         settings: dict[str, Any],
     ) -> None:
         super().__init__(parent, parameter, parameter_dict, settings)
-        self._parent = parent
         layout = QVBoxLayout(self)
         self.setLayout(layout)
         layout.addWidget(QLabel(self._parameter_dict["description"]))
@@ -115,7 +114,6 @@ class ComponentSettingSingleLineText(ComponentSettingsBase):
         while default in self._invalid_list:
             default += "x"
         self._line_edit.setText(default)
-        self._settings[self._parameter] = self._parameter_dict["default"]
         self._line_edit.textChanged.connect(self._update)
         layout.addWidget(self._line_edit)
         self._invalid_text = QLabel()
@@ -186,11 +184,6 @@ class ComponentSettingsSliderWidthPow2(ComponentSettingsSlider):
         self._settings_slider.setMinimum(0)
         self._settings_slider.setTickInterval(int(max(1, (value_max - 0) / 10)))
 
-    def _update(self, value: int) -> None:
-        self._settings[self._parameter] = value
-        self._value_label.setText(f"{value}")
-        self.emit_signal()
-
     def on_setting_change(self, parameter: str) -> None:
         if parameter == "width":
             self._setup()
@@ -229,7 +222,6 @@ class ComponentSettingsCheckBox(ComponentSettingsBase):
         super().__init__(parent, parameter, parameter_dict, settings)
         layout = QHBoxLayout(self)
         self.setLayout(layout)
-        self.setFrameStyle(QFrame.Shape.Panel)
         self._settings[parameter] = parameter_dict["default"]
         self._settings_checkbox = QCheckBox(parameter_dict["description"], self)
         self._settings_checkbox.setChecked(parameter_dict["default"])
@@ -366,7 +358,7 @@ class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
 
     def _update(self) -> None:
         self._settings[self._parameter] = []
-        for checkbox_id in range(32):
+        for checkbox_id in range(self.MAX_WIDTH):
             checkbox = self._bit_checkboxes[checkbox_id]
             checkbox.setEnabled(checkbox_id < self._settings["width"])
             if checkbox_id < self._settings["width"] and checkbox.isChecked():
@@ -375,6 +367,20 @@ class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
     def on_setting_change(self, parameter: str) -> None:
         if parameter == "width":
             self._update()
+
+
+# The input for each parameter type (see "The settings dialog" in docs/components.md)
+_SETTINGS_WIDGETS: dict[str, type[ComponentSettingsBase]] = {
+    "width_pow2": ComponentSettingsSliderWidthPow2,
+    "width_bool": ComponentSettingsCheckBoxWidthBool,
+    "int": ComponentSettingsSlider,
+    "str": ComponentSettingText,
+    "bool": ComponentSettingsCheckBox,
+    "intrange": ComponentSettingsIntRangeSlider,
+    "ic_name": ComponentSettingsIcSelector,
+    "component_name": ComponentSettingsNameSelector,
+    "list": ComponentSettingsListSelector,
+}
 
 
 class ComponentSettingsDialog(QDialog):
@@ -430,48 +436,15 @@ class ComponentSettingsDialog(QDialog):
 
     def _setup_dialog(self, parameters: dict[str, dict[str, Any]]) -> None:
         for parameter, parameter_dict in parameters.items():
-            widget: ComponentSettingsBase
-            if parameter_dict["type"] == "width_pow2":
-                widget = ComponentSettingsSliderWidthPow2(
-                    self, parameter, parameter_dict, self._settings
-                )
-            elif parameter_dict["type"] == "width_bool":
-                widget = ComponentSettingsCheckBoxWidthBool(
-                    self, parameter, parameter_dict, self._settings
-                )
-            elif parameter_dict["type"] == "int":
-                widget = ComponentSettingsSlider(self, parameter, parameter_dict, self._settings)
-            elif parameter_dict["type"] == "str":
-                single_line = parameter_dict.get("single_line", False)
-                if single_line:
-                    widget = ComponentSettingSingleLineText(
-                        self, parameter, parameter_dict, self._settings
-                    )
-                else:
-                    widget = ComponentSettingText(self, parameter, parameter_dict, self._settings)
-            elif parameter_dict["type"] == "bool":
-                widget = ComponentSettingsCheckBox(self, parameter, parameter_dict, self._settings)
-            elif parameter_dict["type"] == "intrange":
-                widget = ComponentSettingsIntRangeSlider(
-                    self, parameter, parameter_dict, self._settings
-                )
-            elif parameter_dict["type"] == "ic_name":
-                widget = ComponentSettingsIcSelector(
-                    self, parameter, parameter_dict, self._settings
-                )
-            elif parameter_dict["type"] == "component_name":
-                widget = ComponentSettingsNameSelector(
-                    self, parameter, parameter_dict, self._settings
-                )
-            elif parameter_dict["type"] == "list":
-                widget = ComponentSettingsListSelector(
-                    self, parameter, parameter_dict, self._settings
-                )
+            parameter_type = parameter_dict["type"]
+            if parameter_type == "str" and parameter_dict.get("single_line", False):
+                widget_class: type[ComponentSettingsBase] = ComponentSettingSingleLineText
+            elif parameter_type in _SETTINGS_WIDGETS:
+                widget_class = _SETTINGS_WIDGETS[parameter_type]
             else:
-                self._app_model.sig_error.emit(f"Unknown settings type '{parameter_dict['type']}'")
+                self._app_model.sig_error.emit(f"Unknown settings type '{parameter_type}'")
                 continue
-
-            self._layout.addWidget(widget)
+            self._layout.addWidget(widget_class(self, parameter, parameter_dict, self._settings))
 
     def __init__(
         self,
@@ -488,8 +461,9 @@ class ComponentSettingsDialog(QDialog):
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self._settings: dict[str, Any] = {}
         self._setup_dialog(parameters)
-        QBtn = QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        self.buttonBox = QDialogButtonBox(QBtn)
+        self.buttonBox = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self._layout.addWidget(self.buttonBox)
