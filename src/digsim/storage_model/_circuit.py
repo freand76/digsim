@@ -11,7 +11,7 @@ import importlib
 import json
 from dataclasses import asdict
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
@@ -20,6 +20,28 @@ from pydantic.dataclasses import dataclass
 if TYPE_CHECKING:
     from digsim.circuit import Circuit
     from digsim.circuit.components.atoms import Component, Port
+
+
+def read_json_file(filename: str | Path) -> dict[str, Any]:
+    """Read a circuit file (JSON object), ValueError if it isn't one"""
+    try:
+        with open(filename, mode="r", encoding="utf-8") as json_file:
+            file_dict = json.load(json_file)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Malformed JSON file: {filename} - {exc}") from exc
+    except FileNotFoundError as exc:
+        raise FileNotFoundError(f"File not found: {filename}") from exc
+    if not isinstance(file_dict, dict):
+        # A ValueError like other malformed files, the callers report those
+        raise ValueError(f"Malformed circuit file: {filename} - not a JSON object")  # noqa: TRY004
+    return file_dict
+
+
+def write_json_file(filename: str | Path, data: Any) -> None:
+    """Write a data class to a circuit file"""
+    json_object = json.dumps(asdict(data), indent=4)
+    with open(filename, mode="w", encoding="utf-8") as json_file:
+        json_file.write(json_object)
 
 
 @dataclass
@@ -119,16 +141,7 @@ class CircuitFileDataClass:
 
     @staticmethod
     def load(filename: str | Path) -> CircuitFileDataClass:
-        try:
-            with open(filename, mode="r", encoding="utf-8") as json_file:
-                dc = CircuitFileDataClass(**json.load(json_file))
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"Malformed JSON file: {filename} - {exc}") from exc
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"File not found: {filename}") from exc
-        return dc
+        return CircuitFileDataClass(**read_json_file(filename))
 
     def save(self, filename: str | Path) -> None:
-        json_object = json.dumps(asdict(self), indent=4)
-        with open(filename, mode="w", encoding="utf-8") as json_file:
-            json_file.write(json_object)
+        write_json_file(filename, self)

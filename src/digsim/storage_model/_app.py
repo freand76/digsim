@@ -7,15 +7,13 @@ Module that handles the dataclasses for application
 
 from __future__ import annotations
 
-import json
-from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from ._circuit import CircuitDataClass
+from ._circuit import CircuitDataClass, read_json_file, write_json_file
 
 
 @dataclass
@@ -34,19 +32,10 @@ class AppFileDataClass:
 
     @staticmethod
     def load(filename: str | Path) -> AppFileDataClass:
-        try:
-            with open(filename, mode="r", encoding="utf-8") as json_file:
-                app_filedata_class = AppFileDataClass(**json.load(json_file))
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"Malformed JSON file: {filename} - {exc}") from exc
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(f"File not found: {filename}") from exc
-        return app_filedata_class
+        return AppFileDataClass(**read_json_file(filename))
 
     def save(self, filename: str | Path) -> None:
-        json_object = json.dumps(asdict(self), indent=4)
-        with open(filename, mode="w", encoding="utf-8") as json_file:
-            json_file.write(json_object)
+        write_json_file(filename, self)
 
 
 @dataclass
