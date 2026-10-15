@@ -39,6 +39,7 @@
  - Remove unused code and correct docstrings in the application model
  - Bugfix: For a moment after a single step, the GUI treated the simulation as stopped while its thread still used the circuit, so it could be changed under it
  - Bugfix: A circuit file that is valid JSON but not an object (like a list) raised TypeError instead of being reported as malformed
+ - Bugfix: Loading a folder or a file without read permission raised an exception instead of showing an error
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window
