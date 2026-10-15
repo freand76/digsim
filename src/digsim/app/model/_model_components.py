@@ -70,12 +70,14 @@ class ModelComponents:
 
     def bring_to_front(self, component_object: ComponentObject) -> None:
         """Make the component object the highest in the stack"""
+        self._app_model.objects.push_undo_state()
         max_zlevel = self.get_top_zlevel()
         component_object.zlevel = max_zlevel + 1
         self._app_model.model_changed()
 
     def send_to_back(self, component_object: ComponentObject) -> None:
         """Make the component object the lowest in the stack"""
+        self._app_model.objects.push_undo_state()
         min_zlevel: float | None = None
         for comp_object in self._component_objects.values():
             min_zlevel = (

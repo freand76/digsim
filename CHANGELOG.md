@@ -34,6 +34,7 @@
  - Simpler component settings dialog code
  - The default application settings are kept in the model instead of the settings dialog
  - Bugfix: Pressing Del with nothing selected added an undo step that did nothing
+ - Bugfix: Bring to front and Send to back could not be undone on their own
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window
