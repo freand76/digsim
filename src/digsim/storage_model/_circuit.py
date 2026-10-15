@@ -59,17 +59,15 @@ class WireDataClass:
 
     @classmethod
     def list_from_port(cls, src_port: Port) -> list[WireDataClass]:
-        wires = []
-        for port in src_port.wired_ports:
-            # Only add port on top-level components
-            if port.parent().is_toplevel():
-                wires.append(
-                    WireDataClass(
-                        src=f"{src_port.parent().name()}.{src_port.name()}",
-                        dst=f"{port.parent().name()}.{port.name()}",
-                    )
-                )
-        return wires
+        # Only wires between top-level components, the parts of a component are not saved
+        return [
+            WireDataClass(
+                src=f"{src_port.parent().name()}.{src_port.name()}",
+                dst=f"{port.parent().name()}.{port.name()}",
+            )
+            for port in src_port.wired_ports
+            if port.parent().is_toplevel()
+        ]
 
 
 @dataclass
@@ -79,7 +77,7 @@ class ComponentDataClass:
     name: str
     type: str
     display_name: str = Field(default="")
-    settings: dict = Field(default_factory=dict)
+    settings: dict[str, Any] = Field(default_factory=dict)
 
     def create(self, circuit: Circuit) -> Component:
         """Factory: Create a component from a dict"""
@@ -112,12 +110,9 @@ class ComponentDataClass:
     @staticmethod
     def from_component(component: Component) -> ComponentDataClass:
         """Return the component information as a dict, used when storing a circuit"""
-        module_split = type(component).__module__.split(".")
-        type_str = ""
-        for module in module_split:
-            if not module.startswith("_"):
-                type_str += f"{module}."
-        type_str += type(component).__name__
+        # The public module path, without private modules like '_gates'
+        modules = [m for m in type(component).__module__.split(".") if not m.startswith("_")]
+        type_str = ".".join([*modules, type(component).__name__])
 
         return ComponentDataClass(
             name=component.name(),
