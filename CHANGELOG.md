@@ -50,6 +50,7 @@
  - Bugfix: Changing several settings of a component reconfigured it once per setting, partly with the old settings
  - Port.disconnect() only disconnects a port that it drives, a wrong call no longer cuts another connection
  - Simpler simulation core code, and Circuit.run() and run_until() are typed to take float times
+ - Bugfix: When a bit of a bus became undefined, VCD files kept showing the old bus value
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

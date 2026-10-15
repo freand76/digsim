@@ -403,7 +403,10 @@ class PortMultiBitWire(Port):
         value = 0
         for bit_id, bit in enumerate(self._bits):
             if bit.value == "X":
-                self.update_wires("X")
+                if self._value != "X":
+                    self.update_wires("X")
+                    # Send event just to update waves, also when the bus becomes undefined
+                    self.parent().add_event(self, "X", 0)
                 return
             value = value | (bit.value << bit_id)
         self.update_wires(value)

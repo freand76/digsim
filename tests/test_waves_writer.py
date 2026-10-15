@@ -4,7 +4,8 @@
 """Pytest module to test the VCD (waves) output"""
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import Led, PushButton
+from digsim.circuit.components import Led, PushButton, Wires2Bus
+from digsim.circuit.components._yosys_atoms import _NOT_
 
 
 def _changes(vcd_text, scope, name):
@@ -46,3 +47,39 @@ def test_vcd_follows_rewiring(tmp_path):
     vcd_text = vcd_path.read_text()
     assert _changes(vcd_text, "led1", "I")[-3:] == ["1", "0", "1"]
     assert _changes(vcd_text, "led2", "I")[-1] == "1"
+
+
+def _last_vcd_value(vcd_text, name):
+    """The last value written for the variable 'name' in a VCD file"""
+    ident = next(
+        line.split()[3]
+        for line in vcd_text.splitlines()
+        if line.startswith("$var") and line.split()[4] == name
+    )
+    values = [
+        line.split()[0]
+        for line in vcd_text.split("$enddefinitions $end")[1].splitlines()
+        if line.endswith(f" {ident}")
+    ]
+    return values[-1]
+
+
+def test_bus_that_becomes_undefined(tmp_path):
+    """When a bit of a bus becomes undefined, the VCD shows the bus as undefined"""
+    vcd = tmp_path / "bus.vcd"
+    circuit = Circuit(vcd=str(vcd))
+    not_a = _NOT_(circuit, "not_a")
+    not_b = _NOT_(circuit, "not_b")
+    wires2bus = Wires2Bus(circuit, "wires2bus", width=2)
+    not_a.Y.wire = wires2bus.port("bus_0")
+    not_b.Y.wire = wires2bus.port("bus_1")
+    circuit.init()
+    not_a.A.value = 0
+    not_b.A.value = 0
+    circuit.run(ns=10)
+    assert wires2bus.bus.value == 3
+    not_b.A.value = "X"
+    circuit.run(ns=10)
+    assert wires2bus.bus.value == "X"
+    circuit.vcd_close()
+    assert _last_vcd_value(vcd.read_text(), "bus") == "bX"
