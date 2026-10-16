@@ -164,10 +164,12 @@ class Circuit:
         self.run_until(ns=0)  # Handle all time zero events
 
     def clear(self) -> None:
-        """Remove all components"""
+        """Remove all components, and the events of their ports"""
         for comp in self._components.values():
             comp.clear()
         self._components = {}
+        self._circuit_events = []
+        self._events_by_port = {}
 
     def vcd(self, filename: str) -> None:
         """

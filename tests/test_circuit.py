@@ -262,3 +262,13 @@ def test_process_single_event():
     assert circuit.process_single_event(stop_time_ns=circuit.time_ns) == (False, False)
     assert circuit.process_single_event() == (True, True)
     assert gate.Y.value == 1
+
+
+def test_clear_removes_pending_events():
+    """Clearing a circuit also drops the events of the removed components"""
+    circuit = Circuit()
+    button = PushButton(circuit, "button")
+    circuit.init()
+    button.push()
+    circuit.clear()
+    assert circuit.process_single_event() == (False, False)
