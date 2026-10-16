@@ -755,6 +755,7 @@ def screenshots() -> None:
     from digsim.app.gui import MainWindow
     from digsim.app.gui._circuit_area import CircuitArea
     from digsim.app.model import AppModel
+    from digsim.circuit.components import OnOffSwitch, PushButton
 
     app = QApplication.instance() or QApplication([])
     assert app is not None  # keep the application alive while taking screenshots
@@ -771,6 +772,14 @@ def screenshots() -> None:
         QTimer.singleShot(ms, loop.quit)
         loop.exec()
 
+    def simulate(ms: int) -> None:
+        """
+        Run the simulation for a fixed simulated time, in this thread instead of the
+        simulation thread, so that the screenshots are the same every time
+        """
+        model.objects.circuit.run(ms=ms)
+        model.objects.components.update_callback_objects()
+
     def interact(name: str) -> None:
         """Make each circuit show something interesting before the screenshot"""
         circuit = model.objects.circuit
@@ -778,31 +787,31 @@ def screenshots() -> None:
         if name in ("counter_yosys_netlist", "counter_yosys_verilog", "74162_counter"):
             # Enable counting
             for component in components:
-                if type(component).__name__ == "OnOffSwitch":
-                    model.model_add_event(component.turn_on)
-            spin(2500)
+                if isinstance(component, OnOffSwitch):
+                    component.turn_on()
+            simulate(2500)
         elif name == "shift_register":
             # Shift in a single one
             button = circuit.get_component("PushButton")
-            model.model_add_event(button.push)
-            spin(250)
-            model.model_add_event(button.release)
-            spin(500)
+            assert isinstance(button, PushButton)
+            button.push()
+            simulate(250)
+            button.release()
+            simulate(500)
         elif name == "buzzers":
             # Press the third button (screenshot while pressed)
-            model.model_add_event(circuit.get_component("PushButton_2").push)
-            spin(300)
+            button = circuit.get_component("PushButton_2")
+            assert isinstance(button, PushButton)
+            button.push()
+            simulate(300)
         else:
-            spin(1000)
+            simulate(1000)
 
     with chdir(ROOT):
         for path in sorted((ROOT / "example_circuits").glob("*.circuit")):
             model.load_circuit(str(path.relative_to(ROOT)))
-            spin(300)
-            model.model_start()
-            spin(300)
+            simulate(300)
             interact(path.stem)
-            model.model_stop()
             spin(200)
             # Grab the whole circuit at 1:1 scale, cropped to its components
             for component_object in model.objects.get_list():

@@ -58,6 +58,7 @@
  - Remove the unused Component.delete_all_ports()
  - Bugfix: Circuit.clear() kept the pending events of the removed components
  - Update the GitHub Actions in all workflows to their newest versions, which run on Node 24
+ - The GUI circuit screenshots in the documentation are the same every time they are regenerated
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window
