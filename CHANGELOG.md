@@ -57,6 +57,7 @@
  - Restructure the documentation site into GUI, Python, API Reference and Project sections, and split the components guide into a Python page and a GUI page
  - Remove the unused Component.delete_all_ports()
  - Bugfix: Circuit.clear() kept the pending events of the removed components
+ - Update the GitHub Actions in all workflows to their newest versions, which run on Node 24
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window

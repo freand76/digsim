@@ -10,13 +10,13 @@ jobs:
         os: [ubuntu-latest]
         python-version: ["3.11", "3.12", "3.13", "3.14"]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v7
     - name: Set timezone
-      uses: szenius/set-timezone@v1.2
+      uses: szenius/set-timezone@v2.0
       with:
         timezoneLinux: "Europe/Stockholm"
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
     - name: Upgrade pip

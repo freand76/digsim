@@ -10,14 +10,14 @@ jobs:
         os: [windows-latest]
         python-version: ["3.13"]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
 
     - name: Set Windows Timezone
       run: tzutil /s "W. Europe Standard Time"
       shell: powershell
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: ${{ matrix.python-version }}
 
