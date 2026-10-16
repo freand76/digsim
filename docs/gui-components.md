@@ -238,7 +238,9 @@ placed right away). The parameter's `type` selects the input:
 | `ic_name` | Drop-down with the built-in ICs | |
 | `path` | File dialog (when it is the only parameter) | `fileinfo` (file filter) |
 
-Every parameter needs a `description`, the label shown in the dialog. Add
+Every parameter needs a `description`, the label shown in the dialog. In type-annotated code,
+`get_parameters()` returns `dict[str, Parameter]`, with `Parameter` from
+`digsim.circuit.components.atoms`, so mypy checks the keys and the `type`. Add
 `"reconfigurable": True` to let the user change the parameter later, with **Settings** in
 the component's context menu. Afterwards, the component's `reconfigure()` method and the GUI
 object's `update_size()` are called.

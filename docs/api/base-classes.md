@@ -44,6 +44,17 @@ Subclass them to write [your own components](../components.md).
       members:
         - add
 
+## Parameters
+
+::: digsim.circuit.components.atoms.Parameter
+    options:
+      heading_level: 3
+      show_if_no_docstring: true
+
+::: digsim.circuit.components.atoms.ParameterType
+    options:
+      heading_level: 3
+
 ## Exceptions
 
 ::: digsim.circuit.components.atoms.DigsimException

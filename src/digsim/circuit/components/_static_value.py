@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from .atoms import Component, PortOutImmediate
+from .atoms import Component, Parameter, PortOutImmediate
 
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ class StaticValue(Component):
         return self.parameter_get("width") == 1 and self.parameter_get("value") == 1
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "value": {
                 "type": "width_pow2",

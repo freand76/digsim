@@ -14,7 +14,12 @@ import digsim.circuit.components
 from digsim.app.gui_objects import ComponentObject
 from digsim.circuit import Circuit
 from digsim.circuit.components import Buzzer
-from digsim.circuit.components.atoms import CallbackComponent, Component, DigsimException
+from digsim.circuit.components.atoms import (
+    CallbackComponent,
+    Component,
+    DigsimException,
+    Parameter,
+)
 from digsim.storage_model import GuiPositionDataClass
 
 
@@ -97,7 +102,7 @@ class ModelComponents:
     def _get_component_class(self, name: str) -> type[Component]:
         return getattr(digsim.circuit.components, name)
 
-    def get_object_parameters(self, name: str) -> dict[str, dict[str, Any]]:
+    def get_object_parameters(self, name: str) -> dict[str, Parameter]:
         """Get parameters for a component"""
         return self._get_component_class(name).get_circuit_parameters(self._circuit)
 

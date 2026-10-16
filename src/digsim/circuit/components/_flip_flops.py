@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from .atoms import Component, PortIn, PortOutDelta, PortWire
+from .atoms import Component, Parameter, PortIn, PortOutDelta, PortWire
 
 
 if TYPE_CHECKING:
@@ -25,7 +25,7 @@ class FlipFlop(Component):
     """
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "name": {
                 "type": "component_name",

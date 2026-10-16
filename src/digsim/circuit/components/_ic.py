@@ -8,10 +8,10 @@ Module for creating a yosys component in the ic folder
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from ._yosys_component import YosysComponent
-from .atoms import ComponentException, ParameterValue
+from .atoms import ComponentException, Parameter, ParameterValue
 
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ class IntegratedCircuit(YosysComponent):
         return {"ic_name": self.parameter_get("ic_name")}
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "ic_name": {
                 "type": "ic_name",

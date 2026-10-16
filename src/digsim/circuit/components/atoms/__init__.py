@@ -8,6 +8,8 @@ from ._component import (
     Component,
     ComponentException,
     MultiComponent,
+    Parameter,
+    ParameterType,
     ParameterValue,
 )
 from ._digsim_exception import DigsimException

@@ -6,9 +6,9 @@
 from __future__ import annotations
 
 import typing
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from .atoms import CallbackComponent, PortOutDelta, PortWire
+from .atoms import CallbackComponent, Parameter, PortOutDelta, PortWire
 
 
 if TYPE_CHECKING:
@@ -66,7 +66,7 @@ class LogicAnalyzer(CallbackComponent):
         return self.data_dict
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "sample_rate": {
                 "type": "int",

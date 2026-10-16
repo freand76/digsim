@@ -20,6 +20,7 @@ from .atoms import (
     Component,
     DigsimException,
     MultiComponent,
+    Parameter,
     ParameterValue,
     Port,
     PortMultiBitWire,
@@ -257,7 +258,7 @@ class YosysComponent(MultiComponent):
         return {"path": path}
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "path": {
                 "type": "path",

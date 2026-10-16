@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from .atoms import CallbackComponent, PortOutImmediate
+from .atoms import CallbackComponent, Parameter, PortOutImmediate
 
 
 if TYPE_CHECKING:
@@ -79,7 +79,7 @@ class DipSwitch(CallbackComponent):
         return True
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "bits": {
                 "type": "int",

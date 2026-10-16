@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from .atoms import CallbackComponent, PortOutDelta, PortOutImmediate
+from .atoms import CallbackComponent, Parameter, PortOutDelta, PortOutImmediate
 
 
 if TYPE_CHECKING:
@@ -59,7 +59,7 @@ class Clock(CallbackComponent):
         return self.O.value == 1
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "frequency": {
                 "type": "int",

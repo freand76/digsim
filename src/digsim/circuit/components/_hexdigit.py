@@ -6,9 +6,9 @@
 from __future__ import annotations
 
 import typing
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from .atoms import VALUE_TYPE, CallbackComponent, PortIn
+from .atoms import VALUE_TYPE, CallbackComponent, Parameter, PortIn
 
 
 if TYPE_CHECKING:
@@ -90,7 +90,7 @@ class HexDigit(CallbackComponent):
         return segments
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "digits": {
                 "type": "int",

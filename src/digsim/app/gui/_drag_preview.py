@@ -21,7 +21,7 @@ import digsim.circuit.components
 from digsim.app.gui_objects._gui_object_factory import CLASS_NAME_TO_COMPONENT_OBJECT
 from digsim.circuit import Circuit
 from digsim.circuit.components import IntegratedCircuit
-from digsim.circuit.components.atoms import DigsimException
+from digsim.circuit.components.atoms import DigsimException, Parameter
 
 
 if TYPE_CHECKING:
@@ -36,7 +36,7 @@ _ICON_SIZE = QSize(80, 105)
 _previews: dict[tuple[str, str], tuple[QPixmap, QPointF]] = {}
 
 
-def _default_settings(parameters: dict[str, dict[str, Any]]) -> dict[str, Any] | None:
+def _default_settings(parameters: dict[str, Parameter]) -> dict[str, Any] | None:
     """The settings dialog defaults, or None if a parameter has no default (a file path)"""
     settings: dict[str, Any] = {}
     for key, parameter in parameters.items():

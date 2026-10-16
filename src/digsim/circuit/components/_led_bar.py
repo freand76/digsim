@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from .atoms import CallbackComponent, PortIn
+from .atoms import CallbackComponent, Parameter, PortIn
 
 
 if TYPE_CHECKING:
@@ -41,7 +41,7 @@ class LedBar(CallbackComponent):
         return [bool((value >> bit) & 1) for bit in range(width)]
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "width": {
                 "type": "int",

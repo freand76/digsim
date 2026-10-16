@@ -5,13 +5,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QPoint
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QMenu, QWidget
 
 from digsim.app.settings import ComponentSettingsDialog
+from digsim.circuit.components.atoms import Parameter
 
 
 if TYPE_CHECKING:
@@ -31,7 +32,7 @@ class ComponentContextMenu(QMenu):
         self._app_model = app_model
         self._component_object = component_object
         self._component = self._component_object.component
-        self._reconfigurable_parameters: dict[str, dict[str, Any]] = {}
+        self._reconfigurable_parameters: dict[str, Parameter] = {}
         # Title
         titleAction = QAction(self._component.display_name(), self)
         titleAction.setEnabled(False)

@@ -8,7 +8,7 @@ from __future__ import annotations
 import abc
 import copy
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, NoReturn
+from typing import TYPE_CHECKING, Any, Literal, NoReturn, NotRequired, TypedDict
 
 from ._digsim_exception import DigsimException
 from ._port import VALUE_TYPE, Port, PortMultiBitWire, PortOutDelta
@@ -18,6 +18,42 @@ if TYPE_CHECKING:
     from digsim.circuit import Circuit
 
 ParameterValue = int | str | bool | list[int] | None
+
+# The settings input for a parameter, see "The settings dialog" in docs/gui-components.md
+ParameterType = Literal[
+    "bool",
+    "component_name",
+    "ic_name",
+    "int",
+    "intrange",
+    "list",
+    "path",
+    "str",
+    "width_bool",
+    "width_pow2",
+]
+
+
+class Parameter(TypedDict):
+    """
+    The description of a component parameter, returned by get_parameters(). The GUI
+    builds the settings dialog from it, see "The settings dialog" in the guide for adding
+    components to the GUI.
+    """
+
+    type: ParameterType
+    description: str
+    default: NotRequired[Any]
+    min: NotRequired[int]
+    max: NotRequired[int]
+    reconfigurable: NotRequired[bool]
+    single_line: NotRequired[bool]
+    invalid_list: NotRequired[list[str]]
+    items: NotRequired[list[str]]
+    range: NotRequired[list[int]]
+    default_index: NotRequired[int]
+    component_list: NotRequired[dict[str, str]]
+    fileinfo: NotRequired[str]
 
 
 class ComponentException(DigsimException):
@@ -198,12 +234,12 @@ class Component(abc.ABC):
         return copy.deepcopy(self._parameters)
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         """Return parameters"""
         return {}
 
     @classmethod
-    def get_circuit_parameters(cls, circuit: Circuit) -> dict[str, dict[str, Any]]:
+    def get_circuit_parameters(cls, circuit: Circuit) -> dict[str, Parameter]:
         """
         Return parameters for a new component in 'circuit',
         for components whose parameters depend on the other components (like label wires)
@@ -220,9 +256,9 @@ class Component(abc.ABC):
     def reconfigure(self) -> None:
         """Update the component from the parameters"""
 
-    def get_reconfigurable_parameters(self) -> dict[str, dict[str, Any]]:
+    def get_reconfigurable_parameters(self) -> dict[str, Parameter]:
         """Return reconfigurable parameters"""
-        reconfigurable_parameters: dict[str, dict[str, Any]] = {}
+        reconfigurable_parameters: dict[str, Parameter] = {}
         for parameter, parameter_dict in self.get_parameters().items():
             if parameter_dict.get("reconfigurable", False):
                 reconfigurable_parameters[parameter] = copy.deepcopy(parameter_dict)

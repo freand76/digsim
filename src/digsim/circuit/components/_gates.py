@@ -6,9 +6,17 @@
 from __future__ import annotations
 
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from .atoms import Component, ComponentException, MultiComponent, PortIn, PortOutDelta, PortWire
+from .atoms import (
+    Component,
+    ComponentException,
+    MultiComponent,
+    Parameter,
+    PortIn,
+    PortOutDelta,
+    PortWire,
+)
 
 
 if TYPE_CHECKING:
@@ -58,7 +66,7 @@ class ConfigPortsComponent(Component):
         self.parameter_set("ports", ports)
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "ports": {
                 "type": "int",
@@ -284,7 +292,7 @@ class DFF(Component):
             self.Q.value = self.D.value
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "async_reset": {
                 "type": "bool",
@@ -348,7 +356,7 @@ class MUX(Component):
         self.Y.value = self._inports[select].value
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "ports": {
                 "type": "intrange",

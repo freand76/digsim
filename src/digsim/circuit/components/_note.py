@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from .atoms import Component
+from .atoms import Component, Parameter
 
 
 if TYPE_CHECKING:
@@ -29,7 +29,7 @@ class Note(Component):
         self.parameter_set("text", text)
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "text": {
                 "type": "str",

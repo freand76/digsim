@@ -6,9 +6,9 @@
 from __future__ import annotations
 
 import warnings
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from .atoms import Component, DigsimException, PortWire
+from .atoms import Component, DigsimException, Parameter, PortWire
 
 
 if TYPE_CHECKING:
@@ -71,7 +71,7 @@ class LabelWireIn(Component):
         super().remove_connections()
 
     @classmethod
-    def _label_parameters(cls, label_list: list[str]) -> dict[str, dict[str, Any]]:
+    def _label_parameters(cls, label_list: list[str]) -> dict[str, Parameter]:
         return {
             "label": {
                 "type": "str",
@@ -90,11 +90,11 @@ class LabelWireIn(Component):
         }
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return cls._label_parameters([])
 
     @classmethod
-    def get_circuit_parameters(cls, circuit: Circuit) -> dict[str, dict[str, Any]]:
+    def get_circuit_parameters(cls, circuit: Circuit) -> dict[str, Parameter]:
         return cls._label_parameters(list(_drivers(circuit)))
 
 
@@ -155,7 +155,7 @@ class LabelWireOut(Component):
         super().remove_connections()
 
     @classmethod
-    def _label_parameters(cls, label_list: list[str]) -> dict[str, dict[str, Any]]:
+    def _label_parameters(cls, label_list: list[str]) -> dict[str, Parameter]:
         return {
             "label": {
                 "type": "list",
@@ -165,9 +165,9 @@ class LabelWireOut(Component):
         }
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return cls._label_parameters([])
 
     @classmethod
-    def get_circuit_parameters(cls, circuit: Circuit) -> dict[str, dict[str, Any]]:
+    def get_circuit_parameters(cls, circuit: Circuit) -> dict[str, Parameter]:
         return cls._label_parameters(list(_drivers(circuit)))

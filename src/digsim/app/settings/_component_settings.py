@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
 )
 
 from digsim.circuit.components import IntegratedCircuit
+from digsim.circuit.components.atoms import Parameter
 
 
 if TYPE_CHECKING:
@@ -45,7 +46,7 @@ class ComponentSettingsBase(QFrame):
         self,
         parent: ComponentSettingsDialog,
         parameter: str,
-        parameter_dict: dict[str, Any],
+        parameter_dict: Parameter,
         settings: dict[str, Any],
     ) -> None:
         super().__init__(parent)
@@ -75,7 +76,7 @@ class ComponentSettingText(ComponentSettingsBase):
         self,
         parent: ComponentSettingsDialog,
         parameter: str,
-        parameter_dict: dict[str, Any],
+        parameter_dict: Parameter,
         settings: dict[str, Any],
     ) -> None:
         super().__init__(parent, parameter, parameter_dict, settings)
@@ -101,7 +102,7 @@ class ComponentSettingSingleLineText(ComponentSettingsBase):
         self,
         parent: ComponentSettingsDialog,
         parameter: str,
-        parameter_dict: dict[str, Any],
+        parameter_dict: Parameter,
         settings: dict[str, Any],
     ) -> None:
         super().__init__(parent, parameter, parameter_dict, settings)
@@ -139,7 +140,7 @@ class ComponentSettingsSlider(ComponentSettingsBase):
         self,
         parent: ComponentSettingsDialog,
         parameter: str,
-        parameter_dict: dict[str, Any],
+        parameter_dict: Parameter,
         settings: dict[str, Any],
     ) -> None:
         super().__init__(parent, parameter, parameter_dict, settings)
@@ -216,7 +217,7 @@ class ComponentSettingsCheckBox(ComponentSettingsBase):
         self,
         parent: ComponentSettingsDialog,
         parameter: str,
-        parameter_dict: dict[str, Any],
+        parameter_dict: Parameter,
         settings: dict[str, Any],
     ) -> None:
         super().__init__(parent, parameter, parameter_dict, settings)
@@ -240,7 +241,7 @@ class ComponentSettingsIcSelector(ComponentSettingsBase):
         self,
         parent: ComponentSettingsDialog,
         parameter: str,
-        parameter_dict: dict[str, Any],
+        parameter_dict: Parameter,
         settings: dict[str, Any],
     ) -> None:
         super().__init__(parent, parameter, parameter_dict, settings)
@@ -267,7 +268,7 @@ class ComponentSettingsNameSelector(ComponentSettingsBase):
         self,
         parent: ComponentSettingsDialog,
         parameter: str,
-        parameter_dict: dict[str, Any],
+        parameter_dict: Parameter,
         settings: dict[str, Any],
     ) -> None:
         super().__init__(parent, parameter, parameter_dict, settings)
@@ -293,7 +294,7 @@ class ComponentSettingsListSelector(ComponentSettingsBase):
         self,
         parent: ComponentSettingsDialog,
         parameter: str,
-        parameter_dict: dict[str, Any],
+        parameter_dict: Parameter,
         settings: dict[str, Any],
     ) -> None:
         super().__init__(parent, parameter, parameter_dict, settings)
@@ -324,7 +325,7 @@ class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
         self,
         parent: ComponentSettingsDialog,
         parameter: str,
-        parameter_dict: dict[str, Any],
+        parameter_dict: Parameter,
         settings: dict[str, Any],
     ) -> None:
         super().__init__(parent, parameter, parameter_dict, settings)
@@ -391,7 +392,7 @@ class ComponentSettingsDialog(QDialog):
 
     @staticmethod
     def _is_file_path(
-        parent: QWidget | None, parameters: dict[str, dict[str, Any]]
+        parent: QWidget | None, parameters: dict[str, Parameter]
     ) -> tuple[bool, dict[str, Any]]:
         parameters_list = list(parameters.keys())
         first_key = parameters_list[0]
@@ -413,7 +414,7 @@ class ComponentSettingsDialog(QDialog):
         parent: QWidget | None,
         app_model: AppModel,
         name: str,
-        parameters: dict[str, dict[str, Any]],
+        parameters: dict[str, Parameter],
     ) -> tuple[bool, dict[str, Any]]:
         """Start a settings dialog and return the settings"""
         if len(parameters) == 0:
@@ -434,7 +435,7 @@ class ComponentSettingsDialog(QDialog):
             app_model.sig_error.emit(str(exc))
             return False, {}
 
-    def _setup_dialog(self, parameters: dict[str, dict[str, Any]]) -> None:
+    def _setup_dialog(self, parameters: dict[str, Parameter]) -> None:
         for parameter, parameter_dict in parameters.items():
             parameter_type = parameter_dict["type"]
             if parameter_type == "str" and parameter_dict.get("single_line", False):
@@ -451,7 +452,7 @@ class ComponentSettingsDialog(QDialog):
         parent: QWidget | None,
         app_model: AppModel,
         name: str,
-        parameters: dict[str, dict[str, Any]],
+        parameters: dict[str, Parameter],
     ) -> None:
         super().__init__(parent)
         self._app_model = app_model

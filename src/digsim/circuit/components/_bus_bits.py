@@ -5,9 +5,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from .atoms import Component, PortMultiBitWire
+from .atoms import Component, Parameter, PortMultiBitWire
 
 
 if TYPE_CHECKING:
@@ -50,7 +50,7 @@ class Bus2Wires(Component):
         self.parameter_set("enable", enable)
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "width": {
                 "type": "int",
@@ -91,7 +91,7 @@ class Wires2Bus(Component):
         self.parameter_set("width", width)
 
     @classmethod
-    def get_parameters(cls) -> dict[str, dict[str, Any]]:
+    def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "width": {
                 "type": "int",
