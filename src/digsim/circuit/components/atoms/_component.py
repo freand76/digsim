@@ -69,12 +69,6 @@ class Component(abc.ABC):
         self.__dict__[port.name()] = port
         self._ports.append(port)
 
-    def delete_all_ports(self) -> None:
-        """
-        Delete all component ports
-        """
-        self._ports = []
-
     def path(self) -> str:
         """Get component path (iterative)"""
         path_parts = []
