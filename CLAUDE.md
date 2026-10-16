@@ -61,8 +61,9 @@ Changelog page).
   `Ports:` (they are created at runtime, so only the docstring can show them). The API pages
   list the members to show, so the reference only has the supported API: add a new public
   method there, and leave out internal plumbing that is only public by name.
-- `docs/components.md` walks through the real `XNOR` and `LedBar` code. Keep it in sync
-  when changing them. Regenerate the example images when an example changes.
+- `docs/components.md` (Python) and `docs/gui-components.md` (GUI) walk through the real
+  `XNOR` and `LedBar` code. Keep them in sync when changing them. Regenerate the example
+  images when an example changes.
 
 Ruff config is in `pyproject.toml`: line length 99, isort with PySide6 imports in their
 own section and two blank lines after imports, no relative imports from parent packages.

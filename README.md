@@ -139,7 +139,8 @@ Read more in the documentation:
 - [Examples](https://freand76.github.io/digsim/examples/): every example with circuit
   diagrams, expected output and waveforms
 - [Creating Components](https://freand76.github.io/digsim/components/): write your own
-  components, for Python circuits and the GUI
+  components for Python circuits, and
+  [add them to the GUI](https://freand76.github.io/digsim/gui-components/)
 
 Contributions are welcome, see
 [Contributing](https://freand76.github.io/digsim/contributing/).

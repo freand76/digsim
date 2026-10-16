@@ -51,7 +51,8 @@ DigSim uses [uv](https://docs.astral.sh/uv/) for development.
 | `examples/`, `example_circuits/` | Python examples and GUI circuits, see [Examples](examples.md) |
 | `docs/` | This documentation |
 
-To add a component, follow [Creating Components](components.md).
+To add a component, follow [Creating Components](components.md) and
+[Adding Components to the GUI](gui-components.md).
 
 ## Before you submit
 
