@@ -791,6 +791,8 @@ def screenshots() -> None:
                     component.turn_on()
             simulate(2500)
         elif name == "shift_register":
+            # Clock the undefined start values out of all six flip-flops (5 Hz clock)
+            simulate(1500)
             # Shift in a single one
             button = circuit.get_component("PushButton")
             assert isinstance(button, PushButton)

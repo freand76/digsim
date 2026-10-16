@@ -60,6 +60,7 @@
  - Update the GitHub Actions in all workflows to their newest versions, which run on Node 24
  - The GUI circuit screenshots in the documentation are the same every time they are regenerated
  - Component parameters are typed with the Parameter TypedDict, so mypy checks their keys and types
+ - The shift register screenshot in the documentation shows no undefined wires
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window
