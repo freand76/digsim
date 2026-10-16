@@ -61,6 +61,7 @@
  - The GUI circuit screenshots in the documentation are the same every time they are regenerated
  - Component parameters are typed with the Parameter TypedDict, so mypy checks their keys and types
  - The shift register screenshot in the documentation shows no undefined wires
+ - Bugfix: Settings missing from a loaded circuit file kept the values of the circuit loaded before
 
 ## v1.3.0
  - Bugfix: Error and close dialogs were not attached to the main window
