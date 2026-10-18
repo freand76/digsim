@@ -37,6 +37,57 @@ dedicated simulators, but fast enough to be useful.
 - **Waveforms**: write simulation results to VCD files and inspect them in
   [GTKWave](https://gtkwave.sourceforge.net/) or a similar viewer.
 
+## How does DigSim compare?
+
+DigSim combines things that are usually separate tools: a circuit editor to play with,
+a Verilog simulator, and a Python API for testbenches. This is how it compares with some
+other open source tools for digital logic:
+
+| | DigSim | [Logisim Evolution](https://github.com/logisim-evolution/logisim-evolution) | [Digital](https://github.com/hneemann/Digital) | [cocotb](https://www.cocotb.org/) | [DigitalJS](https://github.com/tilk/digitaljs) |
+| --- | --- | --- | --- | --- | --- |
+| Graphical circuit editor | ✅ | ✅ | ✅ | ❌ | ❌ shows circuits, no editor |
+| Interactive simulation (buttons, LEDs, displays) | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Verilog designs in the simulation | ✅ | ❌ VHDL components | ✅ | ✅ | ✅ through Yosys |
+| Verilog support included, no other tools to install | ✅ bundled Yosys | ❌ | ❌ needs Icarus Verilog | ❌ needs an HDL simulator | ✅ online version |
+| Python API for circuits and testbenches | ✅ | ❌ Tcl console | ❌ | ✅ | ❌ JavaScript API |
+| Automated tests | ✅ pytest | ✅ test vectors | ✅ test cases | ✅ Python coroutines | ❌ |
+| Waveforms | ✅ VCD files | ✅ chronogram | ✅ measurement graph | ✅ from the simulator | ❌ |
+| Internal signals and state names of Verilog designs | ✅ | ❌ | ❌ | ✅ | ❌ |
+| Subcircuits in the editor | ❌ use Verilog or ICs | ✅ | ✅ | ❌ | ❌ |
+| Export to Verilog or VHDL, FPGA boards | ❌ | ✅ | ✅ | ❌ | ❌ |
+| Runs on Linux, Windows and macOS | ✅ | ✅ | ✅ | ✅ | ✅ in a browser |
+| Installed with | pip / uv | installer or JAR | JAR (Java) | pip, plus a simulator | browser or npm |
+| Written in | Python | Java | Java | Python | JavaScript |
+| License | BSD (Clear) | GPL-3.0 | GPL-3.0 | BSD | BSD-2-Clause |
+
+In short:
+
+- **Logisim Evolution and Digital** are made for drawing circuits, with subcircuits and
+  export to FPGA boards. DigSim is lighter, but simulates Verilog without other tools,
+  and its circuits can be built and tested from Python.
+- **cocotb** is the established way to test Verilog and VHDL in Python, with a real HDL
+  simulator such as Icarus Verilog or Verilator. It is faster for large designs, but has
+  no circuit editor and nothing interactive. DigSim's pytest testbenches need nothing
+  but `pip install`.
+- **DigitalJS** shows and simulates Yosys-synthesized Verilog in the browser. DigSim
+  also lets you draw the circuit around the design, and run it from Python.
+
+Other things in DigSim that can be useful:
+
+- **Gate-level or functional simulation**: synthesize Verilog into gates, or into
+  functional blocks (adders, multiplexers, registers) for a faster simulation, see
+  [Verilog and Yosys](synthesis.md#gates-or-functional-blocks).
+- **Internal signals and states**: the registers and state machines inside a Verilog
+  design can be read from Python and are written to the VCD file, with the states by
+  name, see [Internal signals and states](synthesis.md#internal-signals-and-states).
+- **Wires to shape**: wires with corners, wire trees and joints, saved with the circuit.
+- **Ready-made ICs**: 74-series chips, synthesized from Verilog.
+- **Your own components**: in Python, and in the GUI with an image, see
+  [Creating Components](components.md).
+
+The table describes the tools as far as their documentation goes. Corrections are
+welcome as [issues](https://github.com/freand76/digsim/issues).
+
 ## Get started
 
 1. [Install DigSim](installation.md), or run it directly with `uvx digsim-logic-simulator`.

@@ -22,6 +22,9 @@ displays, and play with it right away. It is even fast enough to run a synthesiz
 
 **📖 Documentation: <https://freand76.github.io/digsim/>**
 
+How does DigSim compare with Logisim Evolution, Digital, cocotb and DigitalJS? See the
+[comparison table](https://freand76.github.io/digsim/#how-does-digsim-compare).
+
 ## Features
 
 - **Interactive GUI**: build and simulate circuits with buttons, switches, clocks, LEDs,
