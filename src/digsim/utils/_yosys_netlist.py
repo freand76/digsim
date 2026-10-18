@@ -102,11 +102,69 @@ class YosysCell:
 
 
 @dataclass
+class YosysNetname:
+    """
+    A named signal of a module, a wire or register of the Verilog (hierarchical, like
+    "ALU.OUT", after flattening), and the nets of its bits. Yosys adds attributes, like the
+    names of the values of a SystemVerilog enum ("enum_value_01": "\\RUN").
+    """
+
+    bits: BIT_TYPE
+    hide_name: int = 0
+    attributes: dict[str, str | int] = Field(default_factory=dict)
+
+    def enum_names(self) -> dict[int, str]:
+        """The names of the values, for a signal declared as a SystemVerilog enum"""
+        names = {}
+        for attribute, name in self.attributes.items():
+            if attribute.startswith("enum_value_") and isinstance(name, str):
+                value = attribute[len("enum_value_") :]
+                if value and all(char in "01" for char in value):
+                    names[int(value, 2)] = name.lstrip("\\")
+        return names
+
+
+@dataclass
 class YosysModule:
-    """A module of a netlist: its ports and cells"""
+    """A module of a netlist: its ports, cells, named signals and parameters"""
 
     ports: dict[str, YosysPort] = Field(default_factory=dict)
     cells: dict[str, YosysCell] = Field(default_factory=dict)
+    netnames: dict[str, YosysNetname] = Field(default_factory=dict)
+    # The parameters of the module and their values, as binary strings
+    parameter_default_values: dict[str, str | int] = Field(default_factory=dict)
+
+    def signal_names(self) -> list[str]:
+        """
+        The named signals of the module that are not ports, and not names that Yosys made
+        up (hidden names, like "$and$cpu.v:10$5_Y")
+        """
+        return [
+            name
+            for name, netname in self.netnames.items()
+            if not netname.hide_name
+            and not name.startswith("$")
+            and name not in self.ports
+            and any(isinstance(net, int) for net in netname.bits)
+        ]
+
+    def state_names(self, name: str) -> dict[int, str]:
+        """
+        Names for the values of a signal: the names of a SystemVerilog enum, or else the
+        module parameters with the width of the signal (like "parameter IDLE = 2'd0", a
+        common way to name states in Verilog). A value with more names gets them all,
+        separated by "/".
+        """
+        netname = self.netnames[name]
+        names = netname.enum_names()
+        if names:
+            return names
+        width = len(netname.bits)
+        for parameter, value in self.parameter_default_values.items():
+            if isinstance(value, str) and len(value) == width and all(c in "01" for c in value):
+                number = int(value, 2)
+                names[number] = f"{names[number]}/{parameter}" if number in names else parameter
+        return names
 
     def is_same_interface(self, netlist: YosysModule) -> bool:
         """Same port names, with the same directions and bitwidths"""

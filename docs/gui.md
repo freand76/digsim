@@ -255,7 +255,10 @@ A Yosys component gets its behavior from your own Verilog. When you add one, a f
 dialog asks for either a **Verilog file** or a **Yosys netlist** in JSON format. Verilog
 files are synthesized automatically when loaded. Check **Synthesize Verilog into
 functional blocks** in the dialog after the file for a faster simulation, see
-[Gates or functional blocks](synthesis.md#gates-or-functional-blocks). See
+[Gates or functional blocks](synthesis.md#gates-or-functional-blocks). Check **Write the
+internal signals to the VCD file** to see the wires and registers inside the design in
+the waveforms, with the signals to show as state names in the text field below it, see
+[Internal signals and states](synthesis.md#internal-signals-and-states). See
 [Verilog and Yosys](synthesis.md) for how to create netlists.
 
 !!! note

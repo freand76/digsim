@@ -22,12 +22,17 @@ class WavesWriter:
         self._vcd_file: io.TextIOWrapper | None = None
         self._vcd_writer: VCDWriter | None = None
         self._vcd_dict: dict[Port, Any] = {}
+        # The ports that are written as text, like the name of a state (see init())
+        self._text_ports: set[Port] = set()
         # Per port: the variables of all ports it drives, valid for one connection generation
-        self._vars_cache: dict[Port, list[tuple[Port, Any]]] = {}
+        self._vars_cache: dict[Port, list[tuple[Port, Any, bool]]] = {}
         self._vars_cache_generation = -1
 
     def init(self, ports: list[Port]) -> None:
-        """Initialize vcd writer, with a variable for each port"""
+        """
+        Initialize vcd writer, with a variable for each port. A port with a vcd_text()
+        method, like a state of a Yosys component, is a string variable with that text.
+        """
         if self._vcd_file is not None or self._vcd_writer is not None:
             self.close()
         self._vcd_file = open(self._vcd_name, mode="w", encoding="utf-8")  # noqa
@@ -35,14 +40,21 @@ class WavesWriter:
             raise RuntimeError("VCD file is None")
         self._vcd_writer = VCDWriter(self._vcd_file, timescale="1 ns", date="today")
         self._vcd_dict = {}
+        self._text_ports = set()
         self._vars_cache = {}
         for port in ports:
-            var = self._vcd_writer.register_var(port.path(), port.name(), "wire", size=port.width)
+            if hasattr(port, "vcd_text"):
+                var = self._vcd_writer.register_var(port.path(), port.name(), "string", init="")
+                self._text_ports.add(port)
+            else:
+                var = self._vcd_writer.register_var(
+                    port.path(), port.name(), "wire", size=port.width
+                )
             self._vcd_dict[port] = var
         self._vcd_file.flush()
 
-    def _port_vars(self, port: Port) -> list[tuple[Port, Any]]:
-        """The (port, variable) pairs to update when 'port' changes"""
+    def _port_vars(self, port: Port) -> list[tuple[Port, Any, bool]]:
+        """The (port, variable, is text) to update when 'port' changes"""
         if self._vars_cache_generation != connection_generation.value:
             self._vars_cache = {}
             self._vars_cache_generation = connection_generation.value
@@ -52,7 +64,7 @@ class WavesWriter:
             for wired_port in port.get_wired_ports_recursive():
                 var = self._vcd_dict.get(wired_port)
                 if var is not None:
-                    port_vars.append((wired_port, var))
+                    port_vars.append((wired_port, var, wired_port in self._text_ports))
             self._vars_cache[port] = port_vars
         return port_vars
 
@@ -63,8 +75,11 @@ class WavesWriter:
         if self._vcd_writer is None:
             raise RuntimeError("VCD Writer is None")
         change = self._vcd_writer.change
-        for wired_port, var in self._port_vars(port):
-            change(var, timestamp=time_ns, value=wired_port.value)
+        for wired_port, var, is_text in self._port_vars(port):
+            if is_text:
+                change(var, timestamp=time_ns, value=wired_port.vcd_text())  # type: ignore[attr-defined]
+            else:
+                change(var, timestamp=time_ns, value=wired_port.value)
 
     def flush(self) -> None:
         """Write buffered changes to the vcd file"""
@@ -82,4 +97,5 @@ class WavesWriter:
             self._vcd_file = None
 
         self._vcd_dict = {}
+        self._text_ports = set()
         self._vars_cache = {}

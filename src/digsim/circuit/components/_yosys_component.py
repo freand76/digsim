@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING, Any
 import digsim.circuit.components._yosys_atoms
 from digsim.synth import Synthesis
 from digsim.utils import NetPort, Nets, YosysCell, YosysModule, YosysNetlist
+from digsim.utils._yosys_netlist import NET_TYPE
 
 from ._static_level import GND, VDD
 from ._yosys_functional import (
@@ -23,6 +24,7 @@ from ._yosys_functional import (
     group_comparisons,
 )
 from .atoms import (
+    VALUE_TYPE,
     Component,
     DigsimException,
     MultiComponent,
@@ -43,6 +45,48 @@ class YosysComponentException(DigsimException):
     """Yosys component exception class"""
 
 
+class SignalPort(PortMultiBitWire):
+    """
+    A named signal of a Yosys component, a wire or register of the Verilog (see the
+    'signals' argument of YosysComponent). Its bits are wired from the nets of the signal,
+    and it is in the VCD file like a port.
+    """
+
+    def __init__(self, parent: Component, name: str, width: int) -> None:
+        super().__init__(parent, name, width, output=True)
+
+
+class StatePort(SignalPort):
+    """
+    A named signal with names for its values, like the states of a state machine. It is
+    in the VCD file as text, the name of its value.
+    """
+
+    def __init__(self, parent: Component, name: str, width: int, names: dict[int, str]) -> None:
+        self._names = names
+        super().__init__(parent, name, width)
+
+    @property
+    def names(self) -> dict[int, str]:
+        """The names of the values"""
+        return self._names
+
+    def state(self) -> str:
+        """The name of the value, the value as a number if it has no name, or X"""
+        value = self.value
+        if value == "X":
+            return "X"
+        return self._names.get(value, str(value))
+
+    def vcd_text(self) -> str:
+        """The text in the VCD file"""
+        return self.state()
+
+
+class _Signals(Component):
+    """The named signals of a Yosys component, as ports"""
+
+
 class YosysComponent(MultiComponent):
     """
     A component built from a Verilog file or a Yosys JSON netlist.
@@ -53,11 +97,17 @@ class YosysComponent(MultiComponent):
     Args:
         circuit: The circuit to add the component to.
         name: The component name, the class name if not given.
-        path: A Verilog file (.v) or Yosys netlist (.json) with one module, or None to
-            create the component later with create_from_netlist().
+        path: A Verilog file (.v, or SystemVerilog .sv) or Yosys netlist (.json) with one
+            module, or None to create the component later with create_from_netlist().
         functional: Synthesize a Verilog file into functional blocks, like adders and
             multiplexers, instead of gates, which simulates faster. A netlist is used as
             it is.
+        signals: Make the named signals of the netlist (the wires and registers of the
+            Verilog) readable with signal(), and write them to the VCD file. It makes the
+            simulation slower.
+        states: Signals (with signals=True) whose values have names, see state(). A
+            signal declared as a SystemVerilog enum always has them. A list, or names
+            separated by commas.
     """
 
     def __init__(
@@ -66,10 +116,17 @@ class YosysComponent(MultiComponent):
         path: str | Path | None = None,
         name: str | None = None,
         functional: bool = False,
+        signals: bool = False,
+        states: str | list[str] | None = None,
     ) -> None:
         super().__init__(circuit, name)
         self._path = str(path) if path is not None else None
         self._functional = functional
+        self._signals = signals
+        if isinstance(states, str):
+            states = [state.strip() for state in states.split(",") if state.strip()]
+        self._states = list(states or [])
+        self._signals_comp: _Signals | None = None
         self._netlist_module: YosysModule | None = None
         # The cells of the netlist, as components
         self._gates_comp = MultiComponent(self._circuit, "gates")
@@ -110,8 +167,12 @@ class YosysComponent(MultiComponent):
 
         # Disconnect ports
         self._disconnect_external_ports()
-        # Remove yosys atoms
+        # Remove yosys atoms, and the named signals
         self._gates_comp.remove_all_components()
+        if self._signals_comp is not None:
+            self._circuit.delete_component(self._signals_comp)
+            self._components.remove(self._signals_comp)
+            self._signals_comp = None
         # Setup netlist
         self._netlist_module = reload_module
         # Create component
@@ -283,6 +344,91 @@ class YosysComponent(MultiComponent):
         self._connect_cells(components_dict, nets, linked)
         # Connect external input ports
         self._connect_external_input(components_dict, nets)
+        if self._signals:
+            self._create_signals(components_dict, nets)
+
+    def _driver(
+        self, components_dict: dict[str, Component], nets: Nets, net: NET_TYPE
+    ) -> Port | None:
+        """The port that drives a net, None if nothing does (like an undefined bit)"""
+        if net in ("0", "1"):
+            return components_dict["GND" if net == "0" else "VDD"].port("O")
+        source = nets.source.get(net)
+        if source is None:
+            return None
+        if source.cell is None:
+            assert source.bit_index is not None
+            return self._bus_port(source.name).get_bit(source.bit_index)
+        return self._cell_port(components_dict[source.cell], source)
+
+    def _create_signals(self, components_dict: dict[str, Component], nets: Nets) -> None:
+        """The named signals, as ports wired from their nets"""
+        module = self._module()
+        names = module.signal_names()
+        for state in self._states:
+            if state not in names:
+                raise YosysComponentException(f"No signal '{state}' for state names")
+        signals_comp = _Signals(self._circuit, "signals")
+        self.add(signals_comp)
+        self._signals_comp = signals_comp
+        for name in names:
+            netname = module.netnames[name]
+            width = len(netname.bits)
+            value_names = netname.enum_names()
+            if name in self._states:
+                value_names = module.state_names(name)
+            port: SignalPort
+            if value_names or name in self._states:
+                port = StatePort(signals_comp, name, width, value_names)
+            else:
+                port = SignalPort(signals_comp, name, width)
+            signals_comp.add_port(port)
+            for bit, net in enumerate(netname.bits):
+                driver = self._driver(components_dict, nets, net)
+                if driver is not None:
+                    driver.wire = port.get_bit(bit)
+
+    def signal_names(self) -> list[str]:
+        """
+        The named signals of the netlist, the wires and registers of the Verilog, like
+        "PC" or "ALU.OUT" (from the ALU submodule)
+        """
+        return self._module().signal_names()
+
+    def _signal_port(self, name: str) -> SignalPort:
+        if self._signals_comp is None:
+            raise YosysComponentException(
+                f"The signals of '{self.name()}' are not available, create it with signals=True"
+            )
+        if name not in self._signals_comp.__dict__:
+            raise YosysComponentException(f"No signal '{name}' in '{self.name()}'")
+        port = self._signals_comp.port(name)
+        assert isinstance(port, SignalPort)
+        return port
+
+    def signal(self, name: str) -> VALUE_TYPE:
+        """
+        The value of a named signal, see signal_names().
+
+        Raises:
+            YosysComponentException: If the component was created without signals=True,
+                or it has no signal with the name.
+        """
+        return self._signal_port(name).value
+
+    def state(self, name: str) -> str:
+        """
+        The name of the value of a signal with named values (see the 'states' argument),
+        like the state of a state machine. A value without a name is returned as a number.
+
+        Raises:
+            YosysComponentException: If the component was created without signals=True,
+                or the signal has no names for its values.
+        """
+        port = self._signal_port(name)
+        if not isinstance(port, StatePort):
+            raise YosysComponentException(f"The signal '{name}' has no names for its values")
+        return port.state()
 
     def _file_path(self) -> str:
         """The Verilog or netlist file of the component"""
@@ -310,7 +456,7 @@ class YosysComponent(MultiComponent):
             if path.endswith(".json"):
                 with open(path, encoding="utf-8") as json_file:
                     netlist_dict = json.load(json_file)
-            elif path.endswith(".v"):
+            elif path.endswith((".v", ".sv")):
                 netlist_dict = self._synth_verilog(path)
             else:
                 raise YosysComponentException(f"Unknown file extension '{path}'")
@@ -349,9 +495,13 @@ class YosysComponent(MultiComponent):
     def settings_to_dict(self) -> dict[str, ParameterValue]:
         path = self.circuit.store_path(self._file_path())
         settings: dict[str, ParameterValue] = {"path": path}
+        # Only when set, so that files without them still open in older versions
         if self._functional:
-            # Only when set, so that files without it still open in older versions
             settings["functional"] = True
+        if self._signals:
+            settings["signals"] = True
+        if self._states:
+            settings["states"] = ",".join(self._states)
         return settings
 
     @classmethod
@@ -359,12 +509,23 @@ class YosysComponent(MultiComponent):
         return {
             "path": {
                 "type": "path",
-                "fileinfo": "Yosys JSON Netlist (*.json);;Verilog File (*.v)",
+                "fileinfo": "Yosys JSON Netlist (*.json);;Verilog File (*.v *.sv)",
                 "description": "Select verilog file or Yosys json netlist",
             },
             "functional": {
                 "type": "bool",
                 "default": False,
                 "description": "Synthesize Verilog into functional blocks (faster)",
+            },
+            "signals": {
+                "type": "bool",
+                "default": False,
+                "description": "Write the internal signals to the VCD file (slower)",
+            },
+            "states": {
+                "type": "str",
+                "single_line": True,
+                "default": "",
+                "description": "Signals shown as state names (separated by commas)",
             },
         }

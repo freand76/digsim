@@ -19,6 +19,11 @@ simulated per second.
 Waveforms are not written by default, since that makes the simulation
 slower. Use '--vcd' to write them to '6502.vcd', or '--vcd <file>' to
 choose the file name.
+
+With '--signals', the internal signals of the CPU, like the program
+counter and the registers, are readable and written to the VCD file, and
+the example prints the registers after the simulation. The state of the
+CPU is written with the names of its states (the parameters in cpu.v).
 """
 
 import argparse
@@ -55,6 +60,11 @@ parser.add_argument(
     action="store_true",
     help="use the CPU synthesized into functional blocks (6502_functional.json)",
 )
+parser.add_argument(
+    "--signals",
+    action="store_true",
+    help="make the internal signals of the CPU readable and write them to the VCD file",
+)
 args = parser.parse_args()
 netlist = "6502_functional.json" if args.functional else "6502_primitives.json"
 
@@ -68,7 +78,12 @@ irq = StaticValue(test_circuit, "IRQ", value=0)
 rdy = StaticValue(test_circuit, "RDY", value=1)
 
 # Instantiate the 6502 Yosys component, memory, and stdout output
-yosys_6502 = YosysComponent(test_circuit, path=example_path / netlist)
+yosys_6502 = YosysComponent(
+    test_circuit,
+    path=example_path / netlist,
+    signals=args.signals,
+    states=["state"] if args.signals else None,
+)
 mem = Mem64kByte(test_circuit, rom_filename=example_path / "code.bin", rom_address=0xF800)
 output = MemStdOut(test_circuit, address=0x8000)
 
@@ -118,3 +133,12 @@ print(
     f"Simulated {clock_cycles} clock cycles of {netlist} in {elapsed:.2f} s: "
     f"{clock_cycles / elapsed:.0f} clocks/second"
 )
+
+if args.signals:
+    # A few of the internal signals: the registers (AXYS holds A, S, X and Y), the
+    # program counter, the status register and the state of the CPU
+    a, s, x, y = (yosys_6502.signal(f"AXYS[{index}]") for index in range(4))
+    print(
+        f"CPU: PC={yosys_6502.signal('PC'):04X} A={a:02X} X={x:02X} Y={y:02X} S={s:02X} "
+        f"P={yosys_6502.signal('P'):02X} state={yosys_6502.state('state')}"
+    )

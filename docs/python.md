@@ -152,4 +152,5 @@ expected output and waveforms.
 | [`synthesis`](https://github.com/freand76/digsim/tree/main/examples/synthesis) | Running Yosys synthesis from Python |
 | [`yosys_counter`](https://github.com/freand76/digsim/tree/main/examples/yosys_counter) | A Verilog counter, from a netlist or straight from Verilog |
 | [`yosys_6502`](https://github.com/freand76/digsim/tree/main/examples/yosys_6502) | A synthesized 6502 CPU running a program from memory |
+| [`yosys_fsm`](https://github.com/freand76/digsim/tree/main/examples/yosys_fsm) | A SystemVerilog state machine, with the names of its states in the VCD file |
 | [`pytest_tb`](https://github.com/freand76/digsim/tree/main/examples/pytest_tb) | pytest testbenches for Verilog designs |

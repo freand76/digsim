@@ -61,8 +61,8 @@ synthesis = Synthesis(["counter.v"], "counter", functional=True)
 
 A netlist with functional blocks has far fewer cells, so it simulates faster. Between
 functional blocks, the bits of a port are also sent as one word instead of one bit at a
-time. The 6502 CPU in the [examples](examples.md#6502-cpu) has 2047 cells as gates and 608
-as functional blocks, and runs about 1.5 times faster. The simulation is the same for the
+time. The 6502 CPU in the [examples](examples.md#6502-cpu) has 2047 cells as gates and 431
+as functional blocks, and runs about 1.6 times faster. The simulation is the same for the
 ports of the design. Inside it there are no gates, and the signals between the functional
 blocks are not in a VCD file, only the ports of the design and the blocks' ports to them.
 
@@ -74,8 +74,44 @@ A netlist made with another Yosys flow can be loaded too. DigSim simulates all t
 functional cells of Yosys that can be simulated, also the ones that the functional
 synthesis doesn't make: the adders and multipliers of `alumacc` (`$alu`, `$macc_v2`,
 `$lcu`, `$fa`), lookup tables (`$lut`, `$sop`) and `$tribuf`, which gives "X" when it is
-not enabled. Memories (`$mem_v2`) and state machines (`$fsm`) are not simulated, synthesize
-with `memory_map` and `fsm_map` for them, like the functional synthesis does.
+not enabled. Memories (`$mem_v2`) and extracted state machines (`$fsm`) are not simulated.
+Synthesize with `memory_map`, and without the FSM passes (`synth -nofsm`) or with
+`fsm_map`, like the functional synthesis does.
+
+## Internal signals and states
+
+A Yosys netlist also has the names of the wires and registers of the Verilog, with the
+bits they use. With `signals=True`, a `YosysComponent` makes them readable, and writes
+them to the VCD file next to the ports. It makes the simulation slower, so it is off by
+default.
+
+```python
+cpu = YosysComponent(circuit, path="cpu.json", signals=True, states=["state"])
+cpu.signal_names()  # ["ABH", "ABL", ..., "PC", "state", ...]
+cpu.signal("PC")  # The value, like a port value: a number or "X"
+cpu.state("state")  # The name of the state, like "FETCH"
+```
+
+The names are hierarchical after flattening, like `ALU.OUT` for the signal `OUT` in the
+submodule `ALU`.
+
+A signal with names for its values, like the state of a state machine, is written to the
+VCD file as text, the name of its value, which a viewer like GTKWave shows. The names
+come from:
+
+- **A SystemVerilog enum**: Yosys keeps the names of an enum in the netlist, so a state
+  declared as an enum always has them. This is the reliable way.
+- **Parameters**: for the signals listed in `states`, the module parameters with the
+  width of the signal, a common way to name states in Verilog (`parameter FETCH = 6'd8`).
+  A value with more names gets them all, separated by "/".
+
+The functional synthesis keeps the encoding of a state machine, so that the names fit.
+Gate-level and functional netlists have the same named signals. In the GUI, the settings
+of a Yosys component have a checkbox for the signals and a text field for the states.
+
+A change of a signal with several bits can be written as two changes at the same time in
+the VCD file, while its bits change one at a time, like the ports of a Yosys component.
+A viewer shows the last one.
 
 ## Running Yosys directly
 

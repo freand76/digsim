@@ -3,4 +3,12 @@
 
 """All classes within digsim.utils namespace"""
 
-from ._yosys_netlist import NetPort, Nets, YosysCell, YosysModule, YosysNetlist, YosysPort
+from ._yosys_netlist import (
+    NetPort,
+    Nets,
+    YosysCell,
+    YosysModule,
+    YosysNetlist,
+    YosysNetname,
+    YosysPort,
+)

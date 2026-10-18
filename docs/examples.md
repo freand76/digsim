@@ -295,6 +295,20 @@ Simulated 302 clock cycles of 6502_functional.json in 0.26 s: 1147 clocks/second
 
 `verilog/synth.sh` in the repository synthesizes both netlists.
 
+Add `--signals` to make the internal signals of the CPU readable (see
+[Internal signals and states](synthesis.md#internal-signals-and-states)). The example then
+prints the registers after the simulation, and with `--vcd` the waveforms have the
+signals inside the CPU too, with the state of the CPU as the names of its states:
+
+```sh
+uv run python examples/yosys_6502/example_yosys_6502.py --functional --signals
+```
+
+```text
+...
+CPU: PC=F82E A=00 X=00 Y=0C S=FF P=37 state=DECODE
+```
+
 Waveforms are not written by default, since writing every signal in the CPU makes the
 simulation slower. Add `--vcd` to write them to `6502.vcd`, or `--vcd <file>` to choose the
 file name:
@@ -310,6 +324,47 @@ onwards, then writing `48`, the character `H`, to the text output at address `80
 
 To change the program, edit the assembly files and rebuild `code.bin` with `compile.sh`,
 which needs the [cc65](https://cc65.github.io/) assembler and linker.
+
+### State machine (traffic light)
+
+[`examples/yosys_fsm/example_yosys_fsm.py`](https://github.com/freand76/digsim/blob/main/examples/yosys_fsm/example_yosys_fsm.py)
+simulates a traffic light, a state machine in
+[`traffic_light.sv`](https://github.com/freand76/digsim/blob/main/examples/yosys_fsm/traffic_light.sv)
+with its states as a SystemVerilog enum. A request turns the light from red to green, and
+back after a while. The component is created with `signals=True`, so its internal signals,
+the state and a timer, are readable, and the state has the names of the enum:
+
+```python
+light = YosysComponent(circuit, path="traffic_light.sv", functional=True, signals=True)
+light.state("state")  # "RED", "RED_YELLOW", "GREEN" or "YELLOW"
+```
+
+```sh
+uv run python examples/yosys_fsm/example_yosys_fsm.py
+```
+
+```text
+Internal signals: state, timer
+   10 ms: RED
+  200 ms: RED after the reset
+  260 ms: RED_YELLOW
+  460 ms: GREEN
+  960 ms: YELLOW
+ 1160 ms: RED
+```
+
+The example writes `traffic_light.vcd`, with the state as text, the name of the state.
+In the VCD file it is a string variable:
+
+```text
+$var string 1 0! state $end
+...
+#250000001
+sRED_YELLOW 0!
+...
+#450000001
+sGREEN 0!
+```
 
 ### pytest testbenches
 
