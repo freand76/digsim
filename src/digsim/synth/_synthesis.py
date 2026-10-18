@@ -182,8 +182,9 @@ class Synthesis:
         if self._functional:
             # The coarse synthesis only, without mapping to gates. Without alumacc, an
             # adder stays an $add cell instead of an $alu, and the memories are mapped to
-            # registers and multiplexers.
-            script += f"synth -noabc -noalumacc -top {top} -run begin:fine; "
+            # registers and multiplexers. Without the FSM passes, a state machine keeps
+            # its encoding, and the names of its states (see YosysComponent signals).
+            script += f"synth -noabc -noalumacc -nofsm -top {top} -run begin:fine; "
             script += "memory_map; opt -full; clean; "
         else:
             script += "memory_dff; "
