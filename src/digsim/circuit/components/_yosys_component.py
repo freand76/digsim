@@ -167,11 +167,64 @@ class YosysComponent(MultiComponent):
             return component.cell_port(net_port.name, net_port.bit_index)
         return component.port(net_port.name)
 
+    @staticmethod
+    def _link_functional_cells(
+        components_dict: dict[str, Component], cells: dict[str, YosysCell], nets: Nets
+    ) -> set[tuple[str, str, int]]:
+        """
+        Connect the outputs of functional cells to the inputs of functional cells as words,
+        a part of an input for each run of bits from the same output. Returns the input
+        bits that are connected, (cell, port, bit).
+        """
+        linked: set[tuple[str, str, int]] = set()
+        for cellname, cell in cells.items():
+            component = components_dict.get(cellname)
+            if not isinstance(component, FunctionalCell):
+                continue
+            for port, bits in cell.connections.items():
+                if cell.port_directions.get(port) != "input":
+                    continue
+                # Runs of bits from consecutive bits of the same output
+                run: tuple[FunctionalCell, str, int, int, int] | None = None
+                runs: list[tuple[FunctionalCell, str, int, int, int]] = []
+                for bit, net in enumerate(bits):
+                    source = nets.source.get(net)
+                    source_comp = (
+                        None
+                        if source is None or source.cell is None
+                        else components_dict[source.cell]
+                    )
+                    if source is None or not isinstance(source_comp, FunctionalCell):
+                        run = None
+                        continue
+                    assert source.bit_index is not None
+                    if (
+                        run is not None
+                        and run[0] is source_comp
+                        and run[1] == source.name
+                        and run[3] + run[4] == source.bit_index
+                    ):
+                        run = (run[0], run[1], run[2], run[3], run[4] + 1)
+                        runs[-1] = run
+                    else:
+                        run = (source_comp, source.name, bit, source.bit_index, 1)
+                        runs.append(run)
+                    linked.add((cellname, port, bit))
+                for source_comp, output, offset, start, width in runs:
+                    source_comp.link(output, start, component, port, offset, width)
+        return linked
+
     def _connect_sinks(
-        self, components_dict: dict[str, Component], src_comp_port: Port, sinks: list[NetPort]
+        self,
+        components_dict: dict[str, Component],
+        src_comp_port: Port,
+        sinks: list[NetPort],
+        linked: set[tuple[str, str, int]] | None = None,
     ) -> None:
-        """Connect a source port to multiple sinks"""
+        """Connect a source port to multiple sinks, not the ones that are linked as words"""
         for sink_port in sinks:
+            if linked and (sink_port.cell, sink_port.name, sink_port.bit_index) in linked:
+                continue
             if sink_port.cell is None:
                 # Connect cell output to module top
                 assert sink_port.bit_index is not None
@@ -182,7 +235,12 @@ class YosysComponent(MultiComponent):
                 dst_comp = components_dict[sink_port.cell]
                 src_comp_port.wire = self._cell_port(dst_comp, sink_port)
 
-    def _connect_cells(self, components_dict: dict[str, Component], nets: Nets) -> None:
+    def _connect_cells(
+        self,
+        components_dict: dict[str, Component],
+        nets: Nets,
+        linked: set[tuple[str, str, int]],
+    ) -> None:
         """Connect all cells"""
         for net, source in nets.source.items():
             if source.cell is None:
@@ -190,7 +248,10 @@ class YosysComponent(MultiComponent):
                 continue
             src_comp = components_dict[source.cell]
             self._connect_sinks(
-                components_dict, self._cell_port(src_comp, source), nets.sinks.get(net, [])
+                components_dict,
+                self._cell_port(src_comp, source),
+                nets.sinks.get(net, []),
+                linked,
             )
 
         gnd_sinks = nets.sinks.get("0", [])
@@ -217,8 +278,9 @@ class YosysComponent(MultiComponent):
         nets = YosysModule(ports=module.ports, cells=cells).get_nets()
         # Create cells
         components_dict = self._create_cells(cells)
-        # Connect cells
-        self._connect_cells(components_dict, nets)
+        # Connect cells, functional cells to each other as words
+        linked = self._link_functional_cells(components_dict, cells, nets)
+        self._connect_cells(components_dict, nets, linked)
         # Connect external input ports
         self._connect_external_input(components_dict, nets)
 

@@ -290,7 +290,7 @@ uv run python examples/yosys_6502/example_yosys_6502.py --functional
 ```text
 ...
 StringOutput [line]: 'Hello World'
-Simulated 302 clock cycles of 6502_functional.json in 0.31 s: 967 clocks/second
+Simulated 302 clock cycles of 6502_functional.json in 0.26 s: 1147 clocks/second
 ```
 
 `verilog/synth.sh` in the repository synthesizes both netlists.

@@ -348,3 +348,41 @@ def test_wiring_cells():
     assert _run(circuit, tribuf, A=0b0110, EN=1) == {"Y": 0b0110}
     # No high impedance value in DigSim: undefined when not enabled
     assert _run(circuit, tribuf, EN=0) == {"Y": "X"}
+
+
+def test_word_links_like_gates():
+    """
+    A counter, where the adder drives the register and the register the adder: between
+    functional cells the bits are sent as words, and it counts like the gates
+    """
+    counter = Path(__file__).parent.parent / "examples" / "pytest_tb" / "up_down_counter.v"
+    components = []
+    for functional in (False, True):
+        circuit = Circuit()
+        component = YosysComponent(circuit)
+        synthesis = Synthesis([str(counter)], "up_down_counter", functional=functional)
+        component.create_from_netlist(YosysNetlist(**synthesis.synth_to_dict(silent=True)))
+        circuit.init()
+        components.append((circuit, component))
+    word_links = [
+        cell
+        for cell in components[1][1]._gates_comp._components
+        if getattr(cell, "_word_outputs", None)
+    ]
+    assert word_links, "no functional cell sends words"
+    rng = random.Random(4)
+    for _ in range(100):
+        inputs = {
+            "nrst": int(rng.random() > 0.05),
+            "up": rng.randrange(2),
+            "down": rng.randrange(2),
+        }
+        for circuit, component in components:
+            for name, value in inputs.items():
+                component.port(name).value = value
+            circuit.run(us=1)
+            component.clk.value = 1
+            circuit.run(us=1)
+            component.clk.value = 0
+            circuit.run(us=1)
+        assert components[1][1].value.value == components[0][1].value.value, inputs

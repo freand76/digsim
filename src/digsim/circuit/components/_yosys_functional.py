@@ -97,12 +97,56 @@ class _CellInput(PortWire):
             self._parent.update()
 
 
+class _WordOut(PortOutDelta):
+    """
+    An output port of a functional cell as one word, for the functional cells it drives
+    (see FunctionalCell.link()). A change of the port is one event, instead of one for
+    each bit that changes, and updates each cell it drives once. It is not one of the
+    ports of the cell, so it is not in a VCD file.
+    """
+
+    def __init__(self, parent: Component, name: str, width: int) -> None:
+        super().__init__(parent, name)
+        self._word_width = width
+        # For each cell it drives: (input port, offset in the input, offset in this port,
+        # number of bits)
+        self._links: dict[FunctionalCell, list[tuple[str, int, int, int]]] = {}
+
+    def add_link(
+        self, cell: FunctionalCell, port: str, offset: int, start: int, width: int
+    ) -> None:
+        """Drive bits of an input port of a cell"""
+        self._links.setdefault(cell, []).append((port, offset, start, width))
+
+    def delta_cycle(self, value: VALUE_TYPE) -> None:
+        # The value is the bits and, above them, the undefined bits
+        assert isinstance(value, int)
+        width = self._word_width
+        bits = value & ((1 << width) - 1)
+        undefined = value >> width
+        for cell, links in self._links.items():
+            # All the bits it drives in the cell first, then one update
+            update = False
+            for port, offset, start, length in links:
+                mask = (1 << length) - 1
+                if cell.set_bits(
+                    port, offset, length, (bits >> start) & mask, (undefined >> start) & mask
+                ):
+                    update = True
+            if update:
+                cell.update()
+
+
 class FunctionalCell(Component):
     """
     The base class of the functional cells. Inputs that change the output at once update
     the cell, data inputs of flip-flops are only read (at the clock edge). An output bit
     only gets an event when it changes, since every event updates the components it
     drives.
+
+    Between functional cells, the bits of a port are sent as one word (see link()): one
+    event for a change, and one update of each cell it drives. The bits that drive the
+    ports of the module, or other cells, have ports of their own.
     """
 
     def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
@@ -111,9 +155,15 @@ class FunctionalCell(Component):
         self._bits: dict[str, list[Port]] = {}
         # The value of each input port: [bits, undefined bits]
         self._inputs: dict[str, list[int]] = {}
+        # The inputs that update the cell (and not only are read at a clock edge)
+        self._updating_inputs: set[str] = set()
         # The last value written to each output port, None before the first one
         self._outputs: dict[str, Word | None] = {}
         self._output_masks: dict[str, int] = {}
+        # The outputs as words, for the functional cells they drive
+        self._word_outputs: dict[str, _WordOut] = {}
+        # The output bits with ports that drive something (set at init)
+        self._bit_outputs: dict[str, int] = {}
         self._params: dict[str, int] = {}
 
     def param(self, name: str, default: int = 0) -> int:
@@ -137,6 +187,8 @@ class FunctionalCell(Component):
             self.add_port(port)
         self._bits[name] = ports
         self._inputs[name] = word
+        if update:
+            self._updating_inputs.add(name)
 
     def add_output(self, name: str) -> None:
         """Add an output port"""
@@ -153,23 +205,61 @@ class FunctionalCell(Component):
         """The port of one bit of a cell port"""
         return self._bits[name][bit]
 
+    def link(
+        self, output: str, start: int, cell: FunctionalCell, port: str, offset: int, width: int
+    ) -> None:
+        """
+        Drive 'width' bits of the input 'port' of another functional cell, from bit
+        'offset', with the bits of an output from bit 'start', as one word
+        """
+        word_output = self._word_outputs.get(output)
+        if word_output is None:
+            word_output = _WordOut(self, f"{output}[word]", self.width(output))
+            self._word_outputs[output] = word_output
+        word_output.add_link(cell, port, offset, start, width)
+
+    def set_bits(self, name: str, offset: int, width: int, bits: int, undefined: int) -> bool:
+        """
+        Set bits of an input port, from a word output of another cell. Returns if the cell
+        should update: if the bits changed, and the port updates the cell.
+        """
+        word = self._inputs[name]
+        mask = ((1 << width) - 1) << offset
+        new_bits = (word[0] & ~mask) | (bits << offset)
+        new_undefined = (word[1] & ~mask) | (undefined << offset)
+        if new_bits == word[0] and new_undefined == word[1]:
+            return False
+        word[0] = new_bits
+        word[1] = new_undefined
+        return name in self._updating_inputs
+
     def init(self) -> None:
         super().init()
         # All ports are "X" after init, and the first value of each output bit gets an event
         for name, word in self._inputs.items():
             word[0] = 0
             word[1] = _mask(len(self._bits[name]))
-        for name in self._outputs:
-            self._outputs[name] = None
+        for name, ports in self._bits.items():
+            if name in self._outputs:
+                self._outputs[name] = None
+                self._bit_outputs[name] = sum(
+                    1 << bit for bit, port in enumerate(ports) if port.wired_ports
+                )
 
     def read(self, name: str) -> Word:
         """The value of an input port"""
         word = self._inputs[name]
         return word[0], word[1]
 
+    def read_bit(self, name: str) -> VALUE_TYPE:
+        """The value of a one-bit input port (from the copy, it may be linked as a word)"""
+        word = self._inputs[name]
+        if word[1] & 1:
+            return "X"
+        return word[0] & 1
+
     def write(self, name: str, word: Word) -> None:
-        """Set an output port, an event for each bit that changes"""
-        ports = self._bits[name]
+        """Set an output port: an event for the word, and for each bit with a port"""
         mask = self._output_masks[name]
         undefined = word[1] & mask
         value = word[0] & ~undefined & mask
@@ -181,6 +271,11 @@ class FunctionalCell(Component):
             if not changed:
                 return
         self._outputs[name] = (value, undefined)
+        word_output = self._word_outputs.get(name)
+        if word_output is not None:
+            word_output.value = value | (undefined << len(self._bits[name]))
+        changed &= self._bit_outputs.get(name, mask)
+        ports = self._bits[name]
         while changed:
             low = changed & -changed
             changed ^= low
@@ -864,11 +959,11 @@ class _Register(FunctionalCell):
 
     def control_active(self, port_name: str, polarity_name: str) -> bool:
         """Is a one-bit control input active"""
-        return self._bits[port_name][0].value == self.param(polarity_name)
+        return self.read_bit(port_name) == self.param(polarity_name)
 
     def clock_edge(self) -> bool:
         """Did the clock change to its active level since the last update"""
-        clock = self._bits["CLK"][0].value
+        clock = self.read_bit("CLK")
         edge = clock != self._old_clock and clock == self.param("CLK_POLARITY")
         self._old_clock = clock
         return edge
@@ -1405,7 +1500,7 @@ class Tribuf(FunctionalCell):
         self._width = self.width("Y")
 
     def update(self) -> None:
-        enable = self._bits["EN"][0].value
+        enable = self.read_bit("EN")
         self.write("Y", self.read("A") if enable == 1 else _undefined(self._width))
 
 
