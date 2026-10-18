@@ -26,6 +26,7 @@ SOURCES = {
     "7485": ("74xx/7485.v", "ttl_7485"),
     "74138": ("74xx/74138.v", "ttl_74138"),
     "74151": ("74xx/74151.v", "ttl_74151"),
+    "74162": ("74xx/74162.v", "ttl_74162"),
     "74193": ("74xx/74193.v", "ttl_74193"),
     "74194": ("74xx/74194.v", "ttl_74194"),
     "74595": ("74xx/74595.v", "ttl_74595"),
@@ -288,6 +289,36 @@ def test_74151_multiplexer(kind):
 # --------------------------------------------------------------------------------------
 # Counters and shift registers: random operations, compared with a model
 # --------------------------------------------------------------------------------------
+
+
+# The next count of the 74162 from the counts 10 to 15, from the datasheet's state diagram
+DECADE_RETURN = {10: 11, 11: 6, 12: 13, 13: 4, 14: 15, 15: 2}
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_74162_decade_counter(kind):
+    bench = Bench("74162", kind)
+    bench.set(Clk=0, Clear_bar=0, Load_bar=1, ENP=1, ENT=1, D=0)
+    bench.pulse("Clk")
+    bench.set(Clear_bar=1)
+    count = 0
+    rng = random.Random(6)
+    for _ in range(400):
+        clear, load = int(rng.random() > 0.05), int(rng.random() > 0.1)
+        enp, ent = int(rng.random() > 0.2), int(rng.random() > 0.2)
+        d = rng.randrange(16)
+        bench.set(Clear_bar=clear, Load_bar=load, ENP=enp, ENT=ent, D=d)
+        # The ripple carry is high at 9 (QA and QD) while ENT is high, without a clock
+        assert bench.get("RCO") == int(ent and count & 0b1001 == 0b1001), count
+        bench.pulse("Clk")
+        # Synchronous: clear before load before counting
+        if not clear:
+            count = 0
+        elif not load:
+            count = d
+        elif enp and ent:
+            count = DECADE_RETURN.get(count, (count + 1) % 10)
+        assert bench.get("Q") == count, (clear, load, enp, ent)
 
 
 @pytest.mark.parametrize("kind", KINDS)

@@ -1,64 +1,39 @@
-// 4-bit BCD decade counter with parallel load, synchronous clear
+// Copyright (c) Fredrik Andersson, 2023-2025
+// All rights reserved
 
-module ttl_74162 #(parameter WIDTH = 4, DELAY_RISE = 0, DELAY_FALL = 0)
-(
-  input Clear_bar,
-  input Load_bar,
-  input ENT,
-  input ENP,
-  input [WIDTH-1:0] D,
-  input Clk,
-  output RCO,
-  output [WIDTH-1:0] Q
+// 74162: synchronous 4-bit decade counter with parallel load, written from the datasheet.
+// At a rising edge of Clk: Clear_bar (low) clears, else Load_bar (low) loads D, else it
+// counts while ENP and ENT are high. RCO is high at 9 while ENT is high, for the next
+// counter in a chain. Q[0] is QA and Q[3] is QD of the datasheet.
+// The flip-flops toggle like the datasheet's logic, so the counts 10 to 15 go back to
+// the decade like on the real chip: 10, 11, 6 and 12, 13, 4 and 14, 15, 2.
+
+module ttl_74162 (
+    input Clear_bar,
+    input Load_bar,
+    input ENT,
+    input ENP,
+    input [3:0] D,
+    input Clk,
+    output RCO,
+    output reg [3:0] Q
 );
+   // The toggles of a synchronous decade counter: QA always, QB when QA is high and QD
+   // low, QC when QA and QB are high, QD when QA, QB and QC are high, or QA and QD
+   wire [3:0] toggle = {
+      (Q[0] & Q[1] & Q[2]) | (Q[0] & Q[3]),
+      Q[0] & Q[1],
+      Q[0] & ~Q[3],
+      1'b1
+   };
 
-//------------------------------------------------//
-wire RCO_current;
-reg [WIDTH-1:0] Q_current;
-wire [WIDTH-1:0] Q_next;
+   always @(posedge Clk)
+     if (!Clear_bar)
+       Q <= 4'd0;
+     else if (!Load_bar)
+       Q <= D;
+     else if (ENP & ENT)
+       Q <= Q ^ toggle;
 
-assign Q_next = Q_current + 1;
-
-always @(posedge Clk)
-begin
-  if (!Clear_bar)
-  begin
-    Q_current <= 4'b0000;
-  end
-  else
-  begin
-    if (!Load_bar)
-    begin
-      Q_current <= D;
-    end
-
-    if (Load_bar && ENT && ENP)
-    begin
-      case (Q_current)
-        // abnormal inputs above BCD 9: return to the count range
-        4'b1010: Q_current <= 4'b1001;
-        4'b1100: Q_current <= 4'b1001;
-        4'b1110: Q_current <= 4'b1001;
-
-        4'b1011: Q_current <= 4'b0100;
-
-        4'b1101: Q_current <= 4'b0000;
-        4'b1111: Q_current <= 4'b0000;
-
-        // normal inputs
-        4'b1001: Q_current <= 4'b0000;
-        default: Q_current <= Q_next;
-      endcase
-    end
-  end
-end
-
-// output
-assign RCO_current = ENT && Q_current == 4'b1001;
-
-//------------------------------------------------//
-
-assign #(DELAY_RISE, DELAY_FALL) RCO = RCO_current;
-assign #(DELAY_RISE, DELAY_FALL) Q = Q_current;
-
+   assign RCO = ENT & Q[0] & Q[3];
 endmodule

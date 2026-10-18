@@ -3,16 +3,12 @@
 Some verilog files have been "borrowed" from different github repositories,
 I will try to keep track of them and give credits!
 
-## 74162 [Link](https://github.com/TimRudy/ice-chips-verilog)
-```
-> python3 -m digsim.synth synth -i verilog/74xx/74162.v -o src/digsim/circuit/components/ic/74162.json -t ttl_74162
-```
-
 ## ICs written from their datasheets
 
 These ICs are written for DigSim from the descriptions in their datasheets, and tested
 against models of the datasheets in `tests/test_ics.py`: 74181, 74182, 74283, 7485,
-74138, 74151, 74193, 74194, 74595 (`verilog/74xx`), 4017 and 4511 (`verilog/4000`).
+74138, 74151, 74162, 74193, 74194, 74595 (`verilog/74xx`), 4017 and 4511
+(`verilog/4000`).
 `verilog/synth.sh` synthesizes them into the netlists in
 `src/digsim/circuit/components/ic`.
 
