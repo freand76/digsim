@@ -137,6 +137,12 @@ class AppModel(QThread):
             self._model_objects.new_wire.abort()
             self.sig_repaint.emit()
 
+    def model_remove_wire_corner(self) -> None:
+        """Remove the last corner of a wire that is being drawn"""
+        if self._model_objects.new_wire.ongoing():
+            self._model_objects.new_wire.remove_last_click()
+            self.sig_repaint.emit()
+
     def run(self) -> None:
         """Simulation thread run function"""
         start_time = time.perf_counter()
@@ -212,6 +218,8 @@ class AppModel(QThread):
             )
             # Add component positions
             self.objects.components.add_gui_positions(dc.gui)
+            # Wire paths, after the components are placed
+            self.objects.wires.from_dict(dc.wires)
         except DigsimException as exc:
             self.sig_error.emit(f"Circuit error: {exc!s}")
             return exception_str_list
@@ -222,6 +230,7 @@ class AppModel(QThread):
             circuit=self.objects.circuit.to_dataclass(self._circuit_folder),
             gui=self.objects.components.get_gui_dict(),
             shortcuts=self.shortcuts.to_dict(),
+            wires=self.objects.wires.to_dict(),
         )
         return model_dc
 
@@ -235,6 +244,7 @@ class AppModel(QThread):
             circuit=model_dataclass.circuit,
             gui=model_dataclass.gui,
             shortcuts=model_dataclass.shortcuts,
+            wires=model_dataclass.wires,
             settings=self.settings.get_all(),
         )
         try:

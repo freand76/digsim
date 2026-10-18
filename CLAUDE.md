@@ -35,6 +35,7 @@ uv run -m digsim.app             # start the GUI
 uv tool run --with mkdocs-material --with mkdocstrings-python --with ruff mkdocs build --strict   # check the docs build
 uv run --with pytest python docs/scripts/generate_examples.py  # regenerate example images
 uv run python docs/scripts/generate_tutorial.py  # regenerate GUI tutorial screenshots
+uv run python tools/gui_fuzz.py --seed 7 --steps 300  # randomized GUI test, offscreen
 ```
 
 The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test.sh`,
@@ -48,8 +49,10 @@ Changelog page).
 
 - CI runners can't load Qt's GUI libraries (no `libEGL`): tests must not import `QtGui` or
   `QtWidgets`. Keep testable logic in Qt-free modules (like `app/_desktop_entry.py`). The
-  GUI has no automated tests, so check GUI changes by running the app (offscreen with
-  `QT_QPA_PLATFORM=offscreen` for scripted checks).
+  GUI has no automated tests in CI, so check GUI changes by running the app (offscreen with
+  `QT_QPA_PLATFORM=offscreen` for scripted checks). `tools/gui_fuzz.py` builds and edits
+  circuits with random mouse actions and checks the GUI against the circuit after each
+  step, and the `gui-tester` agent (`.claude/agents/`) runs it and reports the result.
 - Ruff 0.17 also formats Python code blocks in Markdown files, and CI checks that.
 - Documentation prose doesn't use semicolons unless one is really called for. Split the
   sentence or join the parts with a word instead. Code examples are exempt.

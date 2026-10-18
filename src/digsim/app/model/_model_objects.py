@@ -13,6 +13,7 @@ from digsim.storage_model import ModelDataClass
 
 from ._model_components import ModelComponents
 from ._model_new_wire import NewWire
+from ._model_wires import ModelWires
 
 
 if TYPE_CHECKING:
@@ -22,8 +23,8 @@ if TYPE_CHECKING:
 
 
 # The number of undo (and redo) steps that are kept, the oldest step is dropped when there
-# are more. Each step is a copy of the circuit's top-level components, wires and positions
-# (a Yosys component only stores its file path), so 100 steps use little memory.
+# are more. Each step is a copy of the circuit's top-level components, wires, positions and
+# wire paths (a Yosys component only stores its file path), so 100 steps use little memory.
 UNDO_STACK_DEPTH = 100
 
 
@@ -37,6 +38,7 @@ class ModelObjects:
         self._undo_stack: deque[ModelDataClass] = deque(maxlen=UNDO_STACK_DEPTH)
         self._redo_stack: deque[ModelDataClass] = deque(maxlen=UNDO_STACK_DEPTH)
         self._new_wire = NewWire(self._app_model)
+        self._wires = ModelWires(self._app_model)
 
     @property
     def circuit(self) -> Circuit:
@@ -53,6 +55,11 @@ class ModelObjects:
         """return the wire that is being drawn"""
         return self._new_wire
 
+    @property
+    def wires(self) -> ModelWires:
+        """return the shape of the wires"""
+        return self._wires
+
     def init(self) -> None:
         """Initialize objects"""
         self._model_components.init()
@@ -60,6 +67,7 @@ class ModelObjects:
     def clear(self) -> None:
         """Clear components and wires"""
         self._model_components.clear()
+        self._wires.clear()
         self._circuit.clear()
 
     def get_list(self) -> list[ComponentObject]:
@@ -88,7 +96,7 @@ class ModelObjects:
         self._app_model.sig_delete_wires.emit()
         # An undo step only if something was deleted
         if self._app_model.circuit_to_model() != undo_state:
-            self._add_undo_state(undo_state)
+            self.add_undo_state(undo_state)
 
     def _restore_state(self, model_dc: ModelDataClass) -> None:
         self.clear()
@@ -109,9 +117,10 @@ class ModelObjects:
 
     def push_undo_state(self, clear_redo_stack: bool = True) -> None:
         """Push undo state to stack"""
-        self._add_undo_state(self._app_model.circuit_to_model(), clear_redo_stack)
+        self.add_undo_state(self._app_model.circuit_to_model(), clear_redo_stack)
 
-    def _add_undo_state(self, undo_state: ModelDataClass, clear_redo_stack: bool = True) -> None:
+    def add_undo_state(self, undo_state: ModelDataClass, clear_redo_stack: bool = True) -> None:
+        """Push a state from before a change, taken before the change was known to work"""
         self._undo_stack.append(undo_state)
         if clear_redo_stack:
             self._redo_stack.clear()

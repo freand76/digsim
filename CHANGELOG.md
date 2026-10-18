@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## vx.x.x
+ - Wires in the GUI are made of horizontal and vertical segments, and the shape of each wire is saved with the circuit. Circuits without wire shapes load with the automatic route, like before.
+ - Click in the circuit area while drawing a wire to add corners, and press Backspace to remove the last one. The finished wire keeps the shape it was drawn with.
+ - Select a wire to reshape it: drag a segment by the dot in its middle, right-click a segment to split or merge it, or choose "Automatic route" to get the automatic shape back. When a component moves, only the segments at its ports follow it, and the wires between components that are moved together move with them.
+ - Wire trees: the wires from one output port can share the way. Click a corner of a wire to start a new wire there, or end a wire drawn from an input port anywhere on a wire with the same width. Right-click a wire and choose "Add joint" to put a corner on a straight part of it. A branch leaves its wire across it, with a dot where it starts.
+ - A click on a wire selects it from the closest split to the input ports it leads to, and a second click, or "Select wire tree" in its context menu, selects the whole tree. Del deletes the selected part and keeps the parts that other wires use.
+ - Bugfix: A wire that could not be connected, like to an input that already has a wire, added an undo step that did nothing and cleared the redo steps
+ - Bugfix: Components moved together with other selected components went back to their old place on undo, save or load
+ - Add a randomized test of the GUI (tools/gui_fuzz.py) that builds and edits circuits with mouse actions and checks the GUI against the circuit after each step, and a gui-tester agent for Claude Code that runs it
+
 ## v1.4.0
  - Add a script that takes the screenshots for a GUI tutorial in the real application
  - Add "Your First Circuit", a step by step guide with screenshots to building and simulating a circuit in the GUI, and group the GUI pages in the documentation

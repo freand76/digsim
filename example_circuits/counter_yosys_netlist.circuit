@@ -306,127 +306,201 @@
         "counter": {
             "x": 595,
             "y": 280,
-            "z": 0.0
+            "z": 0
         },
         "Clock_1": {
             "x": 265,
             "y": 135,
-            "z": 0.0
+            "z": 0
         },
         "PushButton_2": {
             "x": 265,
             "y": 285,
-            "z": 0.0
+            "z": 0
         },
         "HexDigit_4": {
             "x": 895,
             "y": 410,
-            "z": 0.0
+            "z": 0
         },
         "OnOffSwitch": {
             "x": 265,
             "y": 425,
-            "z": 0.0
+            "z": 0
         },
         "Led": {
             "x": 595,
             "y": 135,
-            "z": 0.0
+            "z": 0
         },
         "Note": {
             "x": 492,
             "y": 386,
-            "z": 0.0
+            "z": 0
         },
         "Note_1": {
             "x": 73,
             "y": 42,
-            "z": 0.0
+            "z": 0
         },
         "Note_2": {
             "x": 53,
             "y": 445,
-            "z": 0.0
+            "z": 0
         },
         "Note_3": {
             "x": 37,
             "y": 305,
-            "z": 0.0
+            "z": 0
         },
         "Note_4": {
             "x": 34,
             "y": 154,
-            "z": 0.0
+            "z": 0
         },
         "Note_5": {
             "x": 513,
             "y": 89,
-            "z": 0.0
+            "z": 0
         },
         "Note_6": {
             "x": 825,
             "y": 520,
-            "z": 0.0
+            "z": 0
         },
         "LogicAnalyzer": {
             "x": 965,
             "y": 21,
-            "z": 0.0
+            "z": 0
         },
         "Bus2Wires": {
             "x": 788,
             "y": 116,
-            "z": 0.0
+            "z": 0
         },
         "LabelWireIn": {
             "x": 403,
             "y": 532,
-            "z": 0.0
+            "z": 0
         },
         "LabelWireIn_1": {
             "x": 401,
             "y": 390,
-            "z": 0.0
+            "z": 0
         },
         "LabelWireIn_2": {
             "x": 405,
             "y": 231,
-            "z": 0.0
+            "z": 0
         },
         "LabelWireOut": {
             "x": 819,
             "y": 36,
-            "z": 0.0
+            "z": 0
         },
         "LabelWireOut_1": {
             "x": 751,
             "y": 56,
-            "z": 0.0
+            "z": 0
         },
         "LabelWireOut_2": {
             "x": 819,
             "y": 76,
-            "z": 0.0
+            "z": 0
         },
         "Note_7": {
             "x": 1007,
             "y": 227,
-            "z": 0.0
+            "z": 0
         },
         "Buzzer": {
             "x": 655,
             "y": 510,
-            "z": 0.0
+            "z": 0
         },
         "LabelWireOut_3": {
             "x": 512,
             "y": 540,
-            "z": 0.0
+            "z": 0
         },
         "Note_8": {
             "x": 569,
             "y": 604,
-            "z": 0.0
+            "z": 0
+        }
+    },
+    "wires": {
+        "Led.I": {
+            "path": [
+                374,
+                175,
+                469
+            ]
+        },
+        "LabelWireIn_2.CLOCK": {
+            "path": [
+                374
+            ],
+            "branch": "Led.I",
+            "corner": 1
+        },
+        "counter.clk": {
+            "path": [
+                469
+            ],
+            "branch": "Led.I",
+            "corner": 3
+        },
+        "HexDigit_4.dot": {
+            "path": [
+                373,
+                465,
+                469,
+                465,
+                619
+            ]
+        },
+        "LabelWireIn.SWITCH": {
+            "path": [
+                373
+            ],
+            "branch": "HexDigit_4.dot",
+            "corner": 1
+        },
+        "counter.up": {
+            "path": [
+                469
+            ],
+            "branch": "HexDigit_4.dot",
+            "corner": 3
+        },
+        "counter.reset": {
+            "path": [
+                372,
+                325,
+                469
+            ]
+        },
+        "LabelWireIn_1.BUTTON": {
+            "path": [
+                372
+            ],
+            "branch": "counter.reset",
+            "corner": 1
+        },
+        "HexDigit_4.val": {
+            "path": [
+                734,
+                325,
+                788
+            ]
+        },
+        "Bus2Wires.bus": {
+            "path": [
+                734
+            ],
+            "branch": "HexDigit_4.val",
+            "corner": 1
         }
     },
     "shortcuts": {

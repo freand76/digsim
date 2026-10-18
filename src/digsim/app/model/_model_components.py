@@ -20,7 +20,7 @@ from digsim.circuit.components.atoms import (
     DigsimException,
     Parameter,
 )
-from digsim.storage_model import GuiPositionDataClass
+from digsim.storage_model import GuiPositionDataClass, ModelDataClass
 
 
 if TYPE_CHECKING:
@@ -35,6 +35,7 @@ class ModelComponents:
         self._circuit = circuit
         self._component_objects: dict[Component, ComponentObject] = {}
         self._component_callback_list: list[Component] = []
+        self._move_undo_state: ModelDataClass | None = None
 
     def clear(self) -> None:
         """Clear components objects"""
@@ -58,9 +59,20 @@ class ModelComponents:
         """Get the highest z level in the model"""
         return max((obj.zlevel for obj in self._component_objects.values()), default=0)
 
+    def set_move_undo_state(self, undo_state: ModelDataClass | None) -> None:
+        """
+        The state from before a move (taken at the mouse press), for the undo step of the
+        move: the components and the wires that move with them change while they move
+        """
+        self._move_undo_state = undo_state
+
     def component_moved(self) -> None:
         """Call when component has moved to update state"""
-        self._app_model.objects.push_undo_state()
+        if self._move_undo_state is not None:
+            self._app_model.objects.add_undo_state(self._move_undo_state)
+            self._move_undo_state = None
+        else:
+            self._app_model.objects.push_undo_state()
         self._app_model.model_changed()
 
     def bring_to_front(self, component_object: ComponentObject) -> None:
@@ -159,6 +171,8 @@ class ModelComponents:
 
     def delete(self, component_object: ComponentObject) -> None:
         """Delete a component object in the model"""
+        # The wires that start on the component's wires are kept
+        self._app_model.objects.wires.remove_component(component_object.component)
         component_object.disconnect()
         # A new component with the same name must not get the shortcut
         self._app_model.shortcuts.remove_component(component_object.component)

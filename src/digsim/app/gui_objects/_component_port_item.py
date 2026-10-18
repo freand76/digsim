@@ -34,6 +34,11 @@ class PortGraphicsItem(QGraphicsRectItem):
         self.setBrush(QBrush(Qt.GlobalColor.gray))
         self.setAcceptHoverEvents(True)
 
+    @property
+    def port(self) -> Port:
+        """The port of the item"""
+        return self._port
+
     def _repaint(self) -> None:
         """Make scene repaint for component update"""
         self._app_model.sig_repaint.emit()

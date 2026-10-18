@@ -10,7 +10,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic.dataclasses import dataclass
 
 from ._circuit import CircuitDataClass, read_json_file, write_json_file
@@ -24,9 +24,33 @@ class GuiPositionDataClass:
 
 
 @dataclass
+class GuiWireDataClass:
+    """
+    The shape of a wire in the GUI: the position of each segment between the first and
+    the last, [x, y, x, ..., x], see digsim.app._wire_path. A wire that starts at a
+    corner of another wire from the same output port (a branch, see digsim.app._wire_tree)
+    has that wire, by the input port it drives, and the number of the corner.
+    """
+
+    path: list[int]
+    branch: str | None = None
+    corner: int | None = None
+
+    @field_validator("path", mode="before")
+    @classmethod
+    def _whole_numbers(cls, path: Any) -> Any:
+        """Positions are whole numbers, files with fractions are rounded"""
+        if isinstance(path, list):
+            return [round(value) if isinstance(value, float) else value for value in path]
+        return path
+
+
+@dataclass
 class AppFileDataClass:
     circuit: CircuitDataClass
     gui: dict[str, GuiPositionDataClass] = Field(default_factory=dict)
+    # The wire shapes, by the input port each wire drives, like "Led.I"
+    wires: dict[str, GuiWireDataClass] = Field(default_factory=dict)
     shortcuts: dict[str, str] = Field(default_factory=dict)
     settings: dict[str, Any] = Field(default_factory=dict)
 
@@ -43,9 +67,13 @@ class ModelDataClass:
     circuit: CircuitDataClass
     gui: dict[str, GuiPositionDataClass]
     shortcuts: dict[str, str] = Field(default_factory=dict)
+    wires: dict[str, GuiWireDataClass] = Field(default_factory=dict)
 
     @staticmethod
     def from_app_file_dc(app_file_dc: AppFileDataClass) -> ModelDataClass:
         return ModelDataClass(
-            circuit=app_file_dc.circuit, gui=app_file_dc.gui, shortcuts=app_file_dc.shortcuts
+            circuit=app_file_dc.circuit,
+            gui=app_file_dc.gui,
+            shortcuts=app_file_dc.shortcuts,
+            wires=app_file_dc.wires,
         )

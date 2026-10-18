@@ -137,6 +137,9 @@ class MainWindow(QMainWindow):
         if event.key() == Qt.Key.Key_Escape:
             self._app_model.model_abort_wire()
             event.accept()
+        elif event.key() == Qt.Key.Key_Backspace:
+            self._app_model.model_remove_wire_corner()
+            event.accept()
 
     def keyReleaseEvent(self, event: QKeyEvent) -> None:
         """QT event callback function"""

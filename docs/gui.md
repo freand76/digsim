@@ -61,11 +61,76 @@ with the **Del** key or the **Delete** button in the control area.
 Wires connect component ports. To draw a wire, **click a port, then click the port you
 want to connect it to**. Press **Esc** to cancel a wire you have started.
 
-- One output port can drive any number of input ports.
+On the way to the second port, each click in the circuit area adds a corner to the wire.
+From the port where you started, the wire runs horizontally to the x position of each
+click and then vertically to it. Press **Backspace** to remove the last corner. While you
+draw, the wire shows the corner that a click at the mouse pointer makes, and the wire
+keeps that shape when you click the second port. Only its last bend moves to just before
+the port, so that the wire reaches the port horizontally. A wire drawn without clicks to
+a port behind the output port gets an automatic route around the component instead.
+
+- One output port can drive any number of input ports, see [Wire trees](#wire-trees).
 - Both ends must be of the same kind: a single-bit wire, or a bus of the same width.
   Use the [bus/wire converters](#bus-and-wire-components) to split or merge buses.
 - **Wire Source** and **Wire Sink** components connect signals by label instead of with a
   drawn wire, which keeps large circuits readable.
+
+Click a wire to select it. Delete the selected wire with the **Del** key or the
+**Delete** button.
+
+### Wire trees
+
+When an output port drives several input ports, the wires can share the way. Point at a
+corner of a wire, and the pointer shows a crosshair, like over a port. Click the corner to
+start a new wire there, and finish it at an input port like any other wire. A wire can also
+be drawn the other way: start it at an input port and click a wire with the same width,
+at a corner or anywhere along it. Away from a corner, the click adds a joint there. The
+new wire is a branch from the same output port, and a dot shows where it starts. The wires
+of one output port make up a wire tree.
+
+To start a wire on a straight part of a wire, add a joint first: right-click the wire
+where you want it and choose **Add joint**. The wire keeps its shape and gets a corner
+there, shown as a ring while the wire is selected.
+
+- **Select:** a click on a wire selects it from the closest split before the click, where
+  the wire splits up or where it starts, to the input ports that it leads to. A click on a
+  branch selects the branch up to where it starts, while a click close to the output port
+  selects all wires after it.
+- **Select the whole tree:** click a selected wire again, or right-click the wire and
+  choose **Select wire tree**.
+- **Delete:** **Del** deletes the selected part of the tree. The parts that other wires
+  still use are kept, and wires that start on a deleted wire keep their shape. Deleting a
+  component deletes the wires to it in the same way, up to the closest split.
+
+A new branch leaves a joint, or reaches it, across the wire and not along it: up or down
+from a horizontal wire, and to the side from a vertical one. A branch keeps its corner
+when the wire it starts on is reshaped: it follows when a segment is dragged, split or
+merged.
+
+### Shaping wires
+
+A wire runs in horizontal and vertical segments, and starts and ends horizontally at its
+ports. A new wire keeps the shape it was drawn with, and you can change it:
+
+- **Move a segment:** select the wire, and a dot appears in the middle of each segment
+  that can be moved. Drag a segment by its dot. Vertical segments move sideways and
+  horizontal segments move up and down. The segments at the ports can't be moved.
+- **Split a segment:** right-click a segment and choose **Split segment**. This adds a
+  small step where you clicked, with two new segments that you can drag into place.
+- **Add a joint:** right-click a segment and choose **Add joint**, see
+  [Wire trees](#wire-trees). Like a split without a step, it divides the segment in two
+  parts that can be dragged on their own.
+- **Merge segments:** right-click a segment and choose **Merge segments**, the opposite of
+  a split. The segment and its neighbor are removed, and the segments on each side are
+  joined into one. A wire always keeps at least one vertical segment.
+- **Reset the shape:** right-click the wire and choose **Automatic route** to give it the
+  automatic route again, for where its components are now.
+
+When you move a component, only the segments at its ports follow it, and the rest of the
+wire keeps its shape. When you move several selected components together, the wires
+between them move with them. Every change can be undone with **Ctrl + Z**, and the shape of each
+wire is saved with the circuit. Circuits saved by older versions get the automatic route
+when they are loaded.
 
 ## Simulation
 
@@ -111,9 +176,10 @@ file in [GTKWave](https://gtkwave.sourceforge.net/) or a similar waveform viewer
 | **Ctrl + +** / **Ctrl + -** | Zoom in / out |
 | **Shift + drag** | Pan the circuit area |
 | **Ctrl + Z** / **Ctrl + Y** | Undo / redo |
-| **Del** | Delete the selected component |
+| **Del** | Delete the selected components and wires |
 | **Space** | Start / stop the simulation |
 | **Esc** | Cancel the wire being drawn |
+| **Backspace** | Remove the last corner of the wire being drawn |
 
 ### Keyboard shortcuts for inputs
 

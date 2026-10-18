@@ -100,6 +100,9 @@ class ComponentObject(QGraphicsRectItem):
         """QT event callback function"""
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             self._moved = True
+            # Also when it moves with other selected components (only the one under the
+            # mouse gets the release)
+            self._save_pos = (self.rect().topLeft() + self.pos()).toPoint()
         elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
             if self._app_model.is_running:
                 value = 0
