@@ -4,7 +4,7 @@
 """
 Module with classes to parse a yosys netlist.
 Only the parts of the netlist that are used to build a component are read, pydantic
-ignores the rest (for example net names, attributes and cell parameters).
+ignores the rest (for example net names and attributes).
 """
 
 from __future__ import annotations
@@ -25,7 +25,11 @@ BIT_TYPE = list[NET_TYPE]
 
 @dataclasses.dataclass
 class NetPort:
-    """A port on a net: a port of the cell 'cell', or bit 'bit_index' of a module port"""
+    """
+    A port on a net: bit 'bit_index' of a port of the cell 'cell', or of a module port
+    (no cell). The gate cells have single-bit ports, the functional cells (like $add)
+    have a bit index for each bit of a port.
+    """
 
     name: str
     cell: str | None = None
@@ -59,11 +63,21 @@ class YosysPort:
 
 @dataclass
 class YosysCell:
-    """A cell (a gate or flip-flop) of a module, and the nets its ports connect to"""
+    """
+    A cell of a module, and the nets its ports connect to. A gate cell, like $_AND_, has
+    single-bit ports. A functional cell, like $add, has ports of any width, and
+    parameters (like the widths) as binary strings.
+    """
 
     type: str
     port_directions: dict[str, str] = Field(default_factory=dict)
     connections: dict[str, BIT_TYPE] = Field(default_factory=dict)
+    parameters: dict[str, str | int] = Field(default_factory=dict)
+
+    @property
+    def is_gate(self) -> bool:
+        """A gate cell, like $_AND_ (not a functional cell like $and)"""
+        return self.type.startswith("$_")
 
     def component_name(self, name: str) -> str:
         """Return a friendly name for a netlist cell"""
@@ -71,7 +85,20 @@ class YosysCell:
 
     def component_type(self) -> str:
         """Return a friendly type for a netlist cell"""
-        return f"_{self.type[2:-1]}_"
+        if self.is_gate:
+            return f"_{self.type[2:-1]}_"
+        return self.type[1:]
+
+    def parameter(self, name: str, default: int = 0) -> int:
+        """A parameter as a number, bits that are undefined ("x") count as 0"""
+        value = self.parameters.get(name)
+        if value is None:
+            return default
+        if isinstance(value, int):
+            return value
+        if value and all(char in "01xXzZ" for char in value):
+            return int("".join("1" if char == "1" else "0" for char in value), 2)
+        return default
 
 
 @dataclass
@@ -93,7 +120,7 @@ class YosysModule:
     def get_nets(self) -> Nets:
         """
         The nets of the module. Module inputs and cell outputs drive nets, and module
-        outputs and cell inputs are driven by them. The cells have single-bit ports.
+        outputs and cell inputs are driven by them.
         """
         nets = Nets()
         for port_name, port in self.ports.items():
@@ -105,13 +132,13 @@ class YosysModule:
                     nets.source[net] = net_port
         for cell_name, cell in self.cells.items():
             for port_name, bits in cell.connections.items():
-                if not bits:
-                    continue
-                net_port = NetPort(port_name, cell=cell_name)
-                if cell.port_directions[port_name] == "input":
-                    nets.sinks.setdefault(bits[0], []).append(net_port)
-                else:
-                    nets.source[bits[0]] = net_port
+                is_input = cell.port_directions[port_name] == "input"
+                for bit_index, net in enumerate(bits):
+                    net_port = NetPort(port_name, cell=cell_name, bit_index=bit_index)
+                    if is_input:
+                        nets.sinks.setdefault(net, []).append(net_port)
+                    else:
+                        nets.source[net] = net_port
         return nets
 
 

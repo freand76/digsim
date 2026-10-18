@@ -13,9 +13,15 @@ from typing import TYPE_CHECKING, Any
 
 import digsim.circuit.components._yosys_atoms
 from digsim.synth import Synthesis
-from digsim.utils import NetPort, Nets, YosysModule, YosysNetlist
+from digsim.utils import NetPort, Nets, YosysCell, YosysModule, YosysNetlist
 
 from ._static_level import GND, VDD
+from ._yosys_functional import (
+    FUNCTIONAL_CELLS,
+    IGNORED_CELLS,
+    FunctionalCell,
+    group_comparisons,
+)
 from .atoms import (
     Component,
     DigsimException,
@@ -49,6 +55,9 @@ class YosysComponent(MultiComponent):
         name: The component name, the class name if not given.
         path: A Verilog file (.v) or Yosys netlist (.json) with one module, or None to
             create the component later with create_from_netlist().
+        functional: Synthesize a Verilog file into functional blocks, like adders and
+            multiplexers, instead of gates, which simulates faster. A netlist is used as
+            it is.
     """
 
     def __init__(
@@ -56,9 +65,11 @@ class YosysComponent(MultiComponent):
         circuit: Circuit,
         path: str | Path | None = None,
         name: str | None = None,
+        functional: bool = False,
     ) -> None:
         super().__init__(circuit, name)
         self._path = str(path) if path is not None else None
+        self._functional = functional
         self._netlist_module: YosysModule | None = None
         # The cells of the netlist, as components
         self._gates_comp = MultiComponent(self._circuit, "gates")
@@ -117,16 +128,25 @@ class YosysComponent(MultiComponent):
             raise YosysComponentException(f"Port '{portname}' is not a bus port")
         return port
 
-    def _create_cells(self) -> dict[str, Component]:
+    def _create_cells(self, cells: dict[str, YosysCell]) -> dict[str, Component]:
         """Create cells in component"""
         components_dict: dict[str, Component] = {}
-        for cellname, cell in self._module().cells.items():
-            if cell.type == "$scopeinfo":
+        for cellname, cell in cells.items():
+            if cell.type in IGNORED_CELLS:
                 continue
-            component_class = getattr(
-                digsim.circuit.components._yosys_atoms, cell.component_type()
-            )
-            component = component_class(self._circuit, name=cell.component_name(cellname))
+            name = cell.component_name(cellname)
+            component: Component
+            if cell.is_gate:
+                component_class = getattr(
+                    digsim.circuit.components._yosys_atoms, cell.component_type(), None
+                )
+                if component_class is None:
+                    raise YosysComponentException(f"Unsupported Yosys cell '{cell.type}'")
+                component = component_class(self._circuit, name=name)
+            elif cell.type in FUNCTIONAL_CELLS:
+                component = FUNCTIONAL_CELLS[cell.type](self._circuit, name, cell)
+            else:
+                raise YosysComponentException(f"Unsupported Yosys cell '{cell.type}'")
             self._gates_comp.add(component)
             components_dict[cellname] = component
 
@@ -138,6 +158,14 @@ class YosysComponent(MultiComponent):
         components_dict["GND"] = gnd
 
         return components_dict
+
+    @staticmethod
+    def _cell_port(component: Component, net_port: NetPort) -> Port:
+        """The port of a cell on a net: a gate port, or one bit of a functional cell port"""
+        if isinstance(component, FunctionalCell):
+            assert net_port.bit_index is not None
+            return component.cell_port(net_port.name, net_port.bit_index)
+        return component.port(net_port.name)
 
     def _connect_sinks(
         self, components_dict: dict[str, Component], src_comp_port: Port, sinks: list[NetPort]
@@ -152,7 +180,7 @@ class YosysComponent(MultiComponent):
             else:
                 # Connect cell output to cell input
                 dst_comp = components_dict[sink_port.cell]
-                src_comp_port.wire = dst_comp.port(sink_port.name)
+                src_comp_port.wire = self._cell_port(dst_comp, sink_port)
 
     def _connect_cells(self, components_dict: dict[str, Component], nets: Nets) -> None:
         """Connect all cells"""
@@ -162,7 +190,7 @@ class YosysComponent(MultiComponent):
                 continue
             src_comp = components_dict[source.cell]
             self._connect_sinks(
-                components_dict, src_comp.port(source.name), nets.sinks.get(net, [])
+                components_dict, self._cell_port(src_comp, source), nets.sinks.get(net, [])
             )
 
         gnd_sinks = nets.sinks.get("0", [])
@@ -183,9 +211,12 @@ class YosysComponent(MultiComponent):
 
     def _create_component(self) -> None:
         """Create yosys component"""
-        nets = self._module().get_nets()
+        module = self._module()
+        # Comparisons of the same nets with constants are simulated as one cell
+        cells = group_comparisons(module.cells)
+        nets = YosysModule(ports=module.ports, cells=cells).get_nets()
         # Create cells
-        components_dict = self._create_cells()
+        components_dict = self._create_cells(cells)
         # Connect cells
         self._connect_cells(components_dict, nets)
         # Connect external input ports
@@ -207,7 +238,7 @@ class YosysComponent(MultiComponent):
         else:
             raise YosysComponentException("Current only one module per verilog file is supported")
 
-        synthesis = Synthesis(path, toplevel)
+        synthesis = Synthesis(path, toplevel, functional=self._functional)
         return synthesis.synth_to_dict(silent=True)
 
     def _load_netlist_dict(self) -> YosysNetlist:
@@ -255,7 +286,11 @@ class YosysComponent(MultiComponent):
 
     def settings_to_dict(self) -> dict[str, ParameterValue]:
         path = self.circuit.store_path(self._file_path())
-        return {"path": path}
+        settings: dict[str, ParameterValue] = {"path": path}
+        if self._functional:
+            # Only when set, so that files without it still open in older versions
+            settings["functional"] = True
+        return settings
 
     @classmethod
     def get_parameters(cls) -> dict[str, Parameter]:
@@ -264,5 +299,10 @@ class YosysComponent(MultiComponent):
                 "type": "path",
                 "fileinfo": "Yosys JSON Netlist (*.json);;Verilog File (*.v)",
                 "description": "Select verilog file or Yosys json netlist",
-            }
+            },
+            "functional": {
+                "type": "bool",
+                "default": False,
+                "description": "Synthesize Verilog into functional blocks (faster)",
+            },
         }

@@ -16,7 +16,7 @@ def _synth_modules(args: argparse.Namespace) -> int:
         print(f" - Reading {infile}")
     print(f"Generating {args.output_file}...")
     start_time = time.monotonic()
-    synthesis = Synthesis(args.input_files, args.top)
+    synthesis = Synthesis(args.input_files, args.top, functional=args.functional)
     try:
         synthesis.synth_to_json_file(args.output_file, silent=args.silent)
         print(f"Synthesis complete in {time.monotonic() - start_time:.2f}s")
@@ -60,6 +60,13 @@ if __name__ == "__main__":
     )
     synth_parser.add_argument(
         "--silent", "-s", action="store_true", help="Silent the yosys output"
+    )
+    synth_parser.add_argument(
+        "--functional",
+        "-f",
+        action="store_true",
+        help="Synthesize into functional blocks (adders, multiplexers, registers) instead of "
+        "gates, which simulates faster",
     )
     synth_parser.set_defaults(func=_synth_modules)
     list_parser = subparser.add_parser("list")

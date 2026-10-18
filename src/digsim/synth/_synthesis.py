@@ -77,6 +77,9 @@ class Synthesis:
     Args:
         verilog_files: One Verilog file, or a list of them.
         verilog_top_module: The name of the module to synthesize.
+        functional: Synthesize into functional blocks, like adders, multiplexers and
+            registers, instead of gates and one-bit flip-flops. The netlist has far fewer
+            cells, so it simulates faster.
     """
 
     @staticmethod
@@ -154,9 +157,12 @@ class Synthesis:
             modules.append(line.replace("$abstract\\", "").strip())
         return modules
 
-    def __init__(self, verilog_files: VerilogFiles, verilog_top_module: str) -> None:
+    def __init__(
+        self, verilog_files: VerilogFiles, verilog_top_module: str, functional: bool = False
+    ) -> None:
         self._verilog_files = _file_list(verilog_files)
         self._verilog_top_module = verilog_top_module
+        self._functional = functional
         self._yosys_log: list[str] = []
 
     def synth_to_json(self, silent: bool = False) -> str:
@@ -169,12 +175,20 @@ class Synthesis:
         Raises:
             SynthesisException: If Yosys reports an error, like a syntax error.
         """
+        top = self._verilog_top_module
         script = f"read -sv {_script_files(self._verilog_files)}; "
-        script += f"hierarchy -top {self._verilog_top_module}; "
+        script += f"hierarchy -top {top}; "
         script += "proc; flatten; "
-        script += "memory_dff; "
-        script += "proc; opt; techmap; opt; "
-        script += f"synth -noabc -top {self._verilog_top_module}; "
+        if self._functional:
+            # The coarse synthesis only, without mapping to gates. Without alumacc, an
+            # adder stays an $add cell instead of an $alu, and the memories are mapped to
+            # registers and multiplexers.
+            script += f"synth -noabc -noalumacc -top {top} -run begin:fine; "
+            script += "memory_map; opt -full; clean; "
+        else:
+            script += "memory_dff; "
+            script += "proc; opt; techmap; opt; "
+            script += f"synth -noabc -top {top}; "
 
         self._yosys_log = []
         with self._work_dir() as work_dir:

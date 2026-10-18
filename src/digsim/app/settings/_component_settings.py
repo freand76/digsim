@@ -394,10 +394,13 @@ class ComponentSettingsDialog(QDialog):
     def _is_file_path(
         parent: QWidget | None, parameters: dict[str, Parameter]
     ) -> tuple[bool, dict[str, Any]]:
-        parameters_list = list(parameters.keys())
-        first_key = parameters_list[0]
+        """
+        If the first parameter is a file, ask for it with a file dialog. Returns if it is
+        a file, and the settings with the file (empty if the dialog was cancelled).
+        """
+        first_key = next(iter(parameters))
         settings = {}
-        is_file_path = len(parameters_list) == 1 and parameters[first_key]["type"] == "path"
+        is_file_path = parameters[first_key]["type"] == "path"
         if is_file_path:
             description = parameters[first_key]["description"]
             fileinfo = parameters[first_key]["fileinfo"]
@@ -423,14 +426,19 @@ class ComponentSettingsDialog(QDialog):
 
         is_file_path, settings = cls._is_file_path(parent, parameters)
         if is_file_path:
-            return len(settings) > 0, settings
+            if len(settings) == 0:
+                return False, {}
+            # The other parameters in a dialog after the file, if there are any
+            parameters = {key: value for key, value in parameters.items() if key not in settings}
+            if len(parameters) == 0:
+                return True, settings
 
         try:
             dialog = ComponentSettingsDialog(parent, app_model, name, parameters)
             result = dialog.exec()
             if result == QDialog.DialogCode.Rejected:
                 return False, {}
-            return True, dialog.get_settings()
+            return True, {**settings, **dialog.get_settings()}
         except ComponentSettingsException as exc:
             app_model.sig_error.emit(str(exc))
             return False, {}

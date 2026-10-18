@@ -253,8 +253,10 @@ folder.
 
 A Yosys component gets its behavior from your own Verilog. When you add one, a file
 dialog asks for either a **Verilog file** or a **Yosys netlist** in JSON format. Verilog
-files are synthesized automatically when loaded. See [Verilog and Yosys](synthesis.md)
-for how to create netlists.
+files are synthesized automatically when loaded. Check **Synthesize Verilog into
+functional blocks** in the dialog after the file for a faster simulation, see
+[Gates or functional blocks](synthesis.md#gates-or-functional-blocks). See
+[Verilog and Yosys](synthesis.md) for how to create netlists.
 
 !!! note
     A Verilog file loaded directly can only contain one module. Synthesize designs with

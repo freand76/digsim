@@ -28,6 +28,7 @@ python -m digsim.synth synth -i <file1.v> [<file2.v> ...] -o <netlist.json> -t <
 | `-o`, `--output-file` | The JSON netlist to write |
 | `-t`, `--top` | The name of the top module |
 | `-s`, `--silent` | Hide the Yosys output |
+| `-f`, `--functional` | Synthesize into functional blocks instead of gates, see below |
 
 To list the modules found in a set of Verilog files:
 
@@ -46,6 +47,26 @@ synthesis.synth_to_json_file("counter.json")
 
 `synth_to_dict()` returns the netlist instead of writing it, see
 [Verilog Testbench with pytest](testbenches.md).
+
+## Gates or functional blocks
+
+By default, Yosys synthesizes a design into gates and one-bit flip-flops, like `AND`, `OR`
+and `DFF`. With `functional=True` (or `--functional` on the command line), it stops
+before that and keeps functional blocks: adders, comparisons, multiplexers and registers
+as wide as in the Verilog.
+
+```python
+synthesis = Synthesis(["counter.v"], "counter", functional=True)
+```
+
+A netlist with functional blocks has far fewer cells, so it simulates faster. The 6502
+CPU in the [examples](examples.md#6502-cpu) has 2047 cells as gates and 608 as functional
+blocks, and runs about 1.3 times faster. The simulation is the same for the ports of the
+design, but there are no gates inside to look at in the waveforms.
+
+`YosysComponent(circuit, path="counter.v", functional=True)` synthesizes a Verilog file
+into functional blocks, and in the GUI a checkbox after the file selects it. A netlist
+file is used the way it was synthesized.
 
 ## Running Yosys directly
 
