@@ -9,6 +9,7 @@
  - Yosys components can make their internal signals readable and write them to the VCD file (signals=True), with the states of state machines as names, from SystemVerilog enums or parameters. SystemVerilog (.sv) files can be loaded. New example: examples/yosys_fsm
  - The waveform images of the documentation show text signals, like the state of the traffic light example
  - The file dialog of a Yosys component shows netlists, Verilog and SystemVerilog files at first
+ - Update Yosys (yowasp-yosys) to 0.70 and pydantic to 2.14.1
 
 ## v1.5.0
  - Wires in the GUI are made of horizontal and vertical segments, and the shape of each wire is saved with the circuit. Circuits without wire shapes load with the automatic route, like before.
