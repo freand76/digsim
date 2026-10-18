@@ -3,6 +3,7 @@
 
 """Pytest module to test the named signals and states of Yosys components"""
 
+import json
 from pathlib import Path
 
 import pytest
@@ -10,7 +11,8 @@ import pytest
 from digsim.circuit import Circuit
 from digsim.circuit.components import YosysComponent
 from digsim.circuit.components._yosys_component import YosysComponentException
-from digsim.utils import YosysModule, YosysNetname
+from digsim.synth import Synthesis
+from digsim.utils import YosysModule, YosysNetlist, YosysNetname
 
 
 TRAFFIC_LIGHT = Path(__file__).parent.parent / "examples" / "yosys_fsm" / "traffic_light.sv"
@@ -145,3 +147,72 @@ def test_signals_after_reload():
     circuit.init()
     assert light.state("state") == "X"
     assert light.signal_names() == ["state", "timer"]
+
+
+# The named signals that DigSim reads from Yosys netlists. These tests synthesize with the
+# bundled Yosys, so that an upgrade of Yosys that renames or drops them is noticed.
+
+REPO = Path(__file__).parent.parent
+CPU_FILES = [str(REPO / "verilog" / "6502" / "ALU.v"), str(REPO / "verilog" / "6502" / "cpu.v")]
+# Signal name: width, of the 6502 (registers, the state, and a signal of the submodule)
+CPU_SIGNALS = {
+    "PC": 16,
+    "PCH": 8,
+    "PCL": 8,
+    "IR": 8,
+    "P": 8,
+    "AXYS[0]": 8,
+    "AXYS[1]": 8,
+    "AXYS[2]": 8,
+    "AXYS[3]": 8,
+    "state": 6,
+    "ALU.OUT": 8,
+}
+# Some of the states of the 6502, from the parameters in cpu.v
+CPU_STATES = {8: "BRK0", 12: "DECODE", 13: "FETCH", 36: "REG"}
+
+
+def _check_cpu_module(module):
+    names = module.signal_names()
+    for name, width in CPU_SIGNALS.items():
+        assert name in names, name
+        assert len(module.netnames[name].bits) == width, name
+    states = module.state_names("state")
+    assert len(states) == 50
+    assert all(states[value] == name for value, name in CPU_STATES.items())
+
+
+@pytest.mark.parametrize("functional", [False, True])
+def test_cpu_signals_from_yosys(functional):
+    """The 6502 synthesized now has its registers, its state and the names of its states"""
+    netlist = YosysNetlist(
+        **Synthesis(CPU_FILES, "cpu", functional=functional).synth_to_dict(silent=True)
+    )
+    _check_cpu_module(netlist.modules["cpu"])
+
+
+@pytest.mark.parametrize("netlist_file", ["6502_primitives.json", "6502_functional.json"])
+def test_cpu_signals_in_example_netlists(netlist_file):
+    """The netlists of the 6502 example have the same signals and states"""
+    path = REPO / "examples" / "yosys_6502" / netlist_file
+    netlist = YosysNetlist(**json.loads(path.read_text()))
+    _check_cpu_module(netlist.modules["cpu"])
+
+
+@pytest.mark.parametrize("functional", [False, True])
+def test_enum_states_from_yosys(functional):
+    """
+    The states of a SystemVerilog enum keep their names and encoding: the functional
+    synthesis doesn't make the state register one-hot
+    """
+    synthesis = Synthesis([str(TRAFFIC_LIGHT)], "traffic_light", functional=functional)
+    module = YosysNetlist(**synthesis.synth_to_dict(silent=True)).modules["traffic_light"]
+    assert module.signal_names() == ["state", "timer"]
+    assert len(module.netnames["state"].bits) == 2
+    assert module.netnames["state"].enum_names() == {
+        0: "RED",
+        1: "RED_YELLOW",
+        2: "GREEN",
+        3: "YELLOW",
+    }
+    assert len(module.netnames["timer"].bits) == 3
