@@ -353,8 +353,11 @@ Internal signals: state, timer
  1160 ms: RED
 ```
 
-The example writes `traffic_light.vcd`, with the state as text, the name of the state.
-In the VCD file it is a string variable:
+The example writes `traffic_light.vcd`, with the state as text, the name of the state:
+
+![Traffic light waveforms](images/examples/traffic_light_waves.svg)
+
+In the VCD file the state is a string variable:
 
 ```text
 $var string 1 0! state $end

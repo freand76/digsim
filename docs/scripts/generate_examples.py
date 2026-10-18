@@ -52,6 +52,8 @@ FONT = "font-family='Helvetica, Arial, sans-serif'"
 class Signal:
     width: int
     changes: list[tuple[int, int | str]] = field(default_factory=list)
+    # A string variable, like the name of a state: drawn like a bus, with its text
+    text: bool = False
 
     def value_at(self, time: int) -> int | str:
         value: int | str = "X"
@@ -87,7 +89,7 @@ def parse_vcd(path: Path) -> tuple[dict[str, Signal], int]:
             idx += 2
         elif token == "$var":
             width, ident, name = int(tokens[idx + 2]), tokens[idx + 3], tokens[idx + 4]
-            signal = Signal(width)
+            signal = Signal(width, text=tokens[idx + 1] == "string")
             signals[".".join([*scope, name])] = signal
             by_id.setdefault(ident, []).append(signal)
             idx += 6
@@ -105,6 +107,11 @@ def parse_vcd(path: Path) -> tuple[dict[str, Signal], int]:
         elif token[0] in "bB":
             for signal in by_id.get(tokens[idx + 1], []):
                 signal.changes.append((time, parse_value(token[1:])))
+            idx += 2
+        elif token[0] in "sS":
+            # A string value, "X" if it is undefined
+            for signal in by_id.get(tokens[idx + 1], []):
+                signal.changes.append((time, token[1:]))
             idx += 2
         else:
             for signal in by_id.get(token[1:], []):
@@ -209,11 +216,15 @@ def render_waves(
                 continue
             if change_time >= end:
                 break
+            if change_time == seg_start and segments:
+                # More changes at the same time (bits changing one at a time): the last
+                # one is the value
+                seg_start, _, value = segments.pop()
             segments.append((seg_start, change_time, value))
             seg_start, value = change_time, change_value
         segments.append((seg_start, end, value))
 
-        if signal.width == 1:
+        if signal.width == 1 and not signal.text:
             points: list[str] = []
             for seg_from, seg_to, seg_value in segments:
                 if seg_value == "X":
@@ -242,11 +253,10 @@ def render_waves(
                     f"{x2 - slant:.1f},{y_high} {x2:.1f},{mid} {x2 - slant:.1f},{y_low} "
                     f"{x1 + slant:.1f},{y_low}' fill='{fill}' stroke='{color}' stroke-width='1'/>"
                 )
-                text = (
-                    "X"
-                    if seg_value == "X"
-                    else (f"{seg_value:X}" if radix == "hex" else str(seg_value))
-                )
+                if seg_value == "X" or isinstance(seg_value, str):
+                    text = str(seg_value)
+                else:
+                    text = f"{seg_value:X}" if radix == "hex" else str(seg_value)
                 if x2 - x1 > 7 * len(text) + 6:
                     parts.append(
                         f"<text x='{(x1 + x2) / 2:.1f}' y='{mid + 4:.1f}' text-anchor='middle' "
@@ -611,6 +621,7 @@ EXAMPLES = [
     "examples/yosys_counter/example_yosys_counter_netlist.py",
     "examples/synthesis/example_synthesis.py",
     "examples/yosys_6502/example_yosys_6502.py --vcd",
+    "examples/yosys_fsm/example_yosys_fsm.py",
 ]
 
 
@@ -738,6 +749,23 @@ def waves(vcd_dir: Path) -> None:
         ],
         OUT / "testbench_waves.svg",
         end=120 * ms,
+        width=1000,
+    )
+    # The traffic light, with its state as the names of the states
+    render_waves(
+        vcd_dir / "traffic_light.vcd",
+        [
+            ("clk", "clk.O"),
+            ("reset", "reset.O"),
+            ("request", "request.O"),
+            ("state", "traffic_light.signals.state"),
+            ("timer", "traffic_light.signals.timer"),
+            ("red", "traffic_light.red"),
+            ("yellow", "traffic_light.yellow"),
+            ("green", "traffic_light.green"),
+        ],
+        OUT / "traffic_light_waves.svg",
+        end=1400 * ms,
         width=1000,
     )
     # The second test, test_count_up: up to 15 and around to 0

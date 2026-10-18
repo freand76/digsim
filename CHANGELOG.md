@@ -7,6 +7,7 @@
  - Yosys netlists from other synthesis flows can be simulated, with the cells $alu, $lcu, $fa, $macc_v2, $lut, $sop, $bweqx, $concat, $slice and $tribuf
  - Functional blocks send the bits of a port to each other as one word, which makes the simulation of a functional netlist faster
  - Yosys components can make their internal signals readable and write them to the VCD file (signals=True), with the states of state machines as names, from SystemVerilog enums or parameters. SystemVerilog (.sv) files can be loaded. New example: examples/yosys_fsm
+ - The waveform images of the documentation show text signals, like the state of the traffic light example
 
 ## v1.5.0
  - Wires in the GUI are made of horizontal and vertical segments, and the shape of each wire is saved with the circuit. Circuits without wire shapes load with the automatic route, like before.
