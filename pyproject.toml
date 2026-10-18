@@ -30,6 +30,8 @@ dependencies = [
   "pydantic==2.14.1",
   "qtawesome==1.4.2",
   "yowasp-yosys==0.70.0.0.post1259",
+  # Runs Yosys in-process: yowasp-yosys accepts any 1.x, and it decides the wasmtime versions
+  "yowasp-runtime==1.96",
   "wasmtime==47.0.1",
 ]
 
