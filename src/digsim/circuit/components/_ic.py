@@ -18,6 +18,24 @@ if TYPE_CHECKING:
     from digsim.circuit import Circuit
 
 
+# A short description of each bundled IC, for the IC selector of the GUI
+IC_DESCRIPTIONS = {
+    "4017": "Decade counter with 10 decoded outputs",
+    "4511": "BCD to 7-segment latch, decoder and driver",
+    "7448": "BCD to 7-segment decoder",
+    "7485": "4-bit magnitude comparator",
+    "74138": "3-to-8 line decoder, demultiplexer (demux)",
+    "74151": "8-to-1 multiplexer (mux), data selector",
+    "74162": "Synchronous decade counter with parallel load",
+    "74181": "4-bit arithmetic logic unit (ALU)",
+    "74182": "Look-ahead carry generator for the 74181",
+    "74193": "Up/down binary counter with parallel load",
+    "74194": "4-bit bidirectional universal shift register",
+    "74283": "4-bit binary full adder",
+    "74595": "8-bit shift register with output register",
+}
+
+
 class IntegratedCircuit(YosysComponent):
     """
     A classic logic chip, from the Yosys netlists in digsim/circuit/components/ic.
@@ -42,6 +60,14 @@ class IntegratedCircuit(YosysComponent):
     def folder(cls) -> str:
         """Get predefined IC folder"""
         return str(Path(__file__).parent / "ic")
+
+    @classmethod
+    def available(cls) -> dict[str, str]:
+        """The ICs in the IC folder, with their descriptions (empty if there is none)"""
+        return {
+            path.stem: IC_DESCRIPTIONS.get(path.stem, "")
+            for path in sorted(Path(cls.folder()).glob("*.json"))
+        }
 
     def settings_to_dict(self) -> dict[str, ParameterValue]:
         return {"ic_name": self.parameter_get("ic_name")}

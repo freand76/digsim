@@ -3,6 +3,7 @@
 ## vx.x.x
  - New ICs, written from their datasheets and tested against them: the 74181 ALU, 74182 carry look-ahead, 74283 adder, 7485 comparator, 74138 decoder, 74151 multiplexer, 74193 up/down counter, 74194 and 74595 shift registers, the 4017 decade counter and the 4511 BCD to 7-segment driver
  - The 74162 IC is a new implementation, written from its datasheet. The earlier one came from a GPL-3.0 licensed project, which doesn't fit the license of DigSim.
+ - The IC selector has a search field: type a number, or words of the description like counter or shift, also with skipped letters, and pick from the ICs that match
 
 ## v1.6.0
  - Add "Verilog Testbench with pytest" to the documentation, a walkthrough of testing a Verilog design with DigSim and pytest, with waveforms of the tests

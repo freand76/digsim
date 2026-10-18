@@ -241,8 +241,10 @@ The multiplexer has 2, 4 or 8 inputs and a data width between 1 and 32 bits.
 
 ![IC](images/components/IC.png)
 
-ICs are pre-synthesized Yosys netlists of classic logic chips. Pins with names ending in
-`_bar` are active low.
+ICs are pre-synthesized Yosys netlists of classic logic chips. When you add one, type in
+the search field to find it: a number (`741`), a word of the description (`counter`,
+`shift`), or several words. Skipped letters are fine too. Press **Enter** or double-click
+to add the selected IC. Pins with names ending in `_bar` are active low.
 
 | IC | Description |
 | --- | --- |

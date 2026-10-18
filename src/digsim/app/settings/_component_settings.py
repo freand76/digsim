@@ -5,10 +5,10 @@
 
 from __future__ import annotations
 
-import pathlib
 from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
+from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QListWidget,
+    QListWidgetItem,
     QPushButton,
     QSlider,
     QTextEdit,
@@ -27,6 +29,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from digsim.app._ic_search import search_ics
 from digsim.circuit.components import IntegratedCircuit
 from digsim.circuit.components.atoms import Parameter
 
@@ -235,7 +238,11 @@ class ComponentSettingsCheckBox(ComponentSettingsBase):
 
 
 class ComponentSettingsIcSelector(ComponentSettingsBase):
-    """IC Selector"""
+    """
+    IC selector: a search field and the ICs that match it (see search_ics), with their
+    descriptions. The arrow keys move in the list while typing, and Enter or a double
+    click selects the IC and closes the dialog.
+    """
 
     def __init__(
         self,
@@ -248,17 +255,55 @@ class ComponentSettingsIcSelector(ComponentSettingsBase):
         layout = QVBoxLayout(self)
         self.setLayout(layout)
         layout.addWidget(QLabel(self._parameter_dict["description"]))
-        ic_folder = IntegratedCircuit.folder()
-        ic_files = sorted(pathlib.Path(ic_folder).glob("*.json"))
-        self._ic_selector = QComboBox(parent)
-        for ic_file in ic_files:
-            self._ic_selector.addItem(ic_file.stem, userData=ic_file.stem)
-        layout.addWidget(self._ic_selector)
-        self._ic_selector.currentIndexChanged.connect(self._update)
-        self._update(self._ic_selector.currentIndex())
+        self._ics = IntegratedCircuit.available()
+        self._search = QLineEdit(self)
+        self._search.setPlaceholderText("Search, like 74181, counter or shift")
+        self._search.setClearButtonEnabled(True)
+        self._search.installEventFilter(self)
+        layout.addWidget(self._search)
+        self._list = QListWidget(self)
+        self._list.setMinimumWidth(380)
+        layout.addWidget(self._list)
+        self._search.textChanged.connect(self._filter)
+        self._search.returnPressed.connect(self._accept)
+        self._list.currentItemChanged.connect(self._update)
+        self._list.itemDoubleClicked.connect(self._accept)
+        self._filter("")
+        self._search.setFocus()
 
-    def _update(self, value: int) -> None:
-        self._settings[self._parameter] = self._ic_selector.itemData(value)
+    def _filter(self, query: str) -> None:
+        """Show the ICs that match the search, and select the best match"""
+        self._list.clear()
+        for name in search_ics(query, self._ics):
+            description = self._ics[name]
+            item = QListWidgetItem(f"{name}  {description}" if description else name)
+            item.setData(Qt.ItemDataRole.UserRole, name)
+            self._list.addItem(item)
+        self._list.setCurrentRow(0)
+        self._update(self._list.currentItem())
+
+    def _update(self, item: QListWidgetItem | None) -> None:
+        if item is None:
+            self._settings.pop(self._parameter, None)
+            self._parent.sig_enable_ok.emit(False)
+        else:
+            self._settings[self._parameter] = item.data(Qt.ItemDataRole.UserRole)
+            self._parent.sig_enable_ok.emit(True)
+
+    def _accept(self) -> None:
+        if self._list.currentItem() is not None:
+            self._parent.accept()
+
+    def eventFilter(self, watched: QObject, event: QEvent) -> bool:
+        """QT function: the arrow keys in the search field move in the list"""
+        if watched is self._search and event.type() == QEvent.Type.KeyPress:
+            assert isinstance(event, QKeyEvent)
+            step = {Qt.Key.Key_Up: -1, Qt.Key.Key_Down: 1}.get(Qt.Key(event.key()))
+            if step is not None and self._list.count() > 0:
+                row = min(max(self._list.currentRow() + step, 0), self._list.count() - 1)
+                self._list.setCurrentRow(row)
+                return True
+        return super().eventFilter(watched, event)
 
 
 class ComponentSettingsNameSelector(ComponentSettingsBase):
