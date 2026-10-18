@@ -238,7 +238,7 @@ The netlist is written to `examples/synthesis/fibonacci.json` and the waveforms 
 
 [`examples/yosys_6502/example_yosys_6502.py`](https://github.com/freand76/digsim/blob/main/examples/yosys_6502/example_yosys_6502.py)
 simulates a synthesized [6502 CPU](https://en.wikipedia.org/wiki/MOS_Technology_6502)
-(`6502.json`) connected to a 64 kB memory and a memory-mapped text output at address
+(`6502_primitives.json`) connected to a 64 kB memory and a memory-mapped text output at address
 `0x8000`. The program in the memory, built from
 [`code.s`](https://github.com/freand76/digsim/blob/main/examples/yosys_6502/code.s),
 writes "Hello World" to the text output, which prints each character.
@@ -249,7 +249,8 @@ writes "Hello World" to the text output, which prints each character.
 uv run python examples/yosys_6502/example_yosys_6502.py
 ```
 
-The simulation of 300 clock cycles takes less than a second:
+The simulation of 300 clock cycles takes less than a second, and the example prints how
+many clock cycles it simulated per second:
 
 ```text
 cpu
@@ -274,7 +275,25 @@ StringOutput [char]: 'r'
 StringOutput [char]: 'l'
 StringOutput [char]: 'd'
 StringOutput [line]: 'Hello World'
+Simulated 302 clock cycles of 6502_primitives.json in 0.41 s: 728 clocks/second
 ```
+
+`6502_primitives.json` is the CPU synthesized into gates. Add `--functional` to run
+`6502_functional.json` instead, the same CPU synthesized into functional blocks like
+adders and multiplexers (see
+[Gates or functional blocks](synthesis.md#gates-or-functional-blocks)):
+
+```sh
+uv run python examples/yosys_6502/example_yosys_6502.py --functional
+```
+
+```text
+...
+StringOutput [line]: 'Hello World'
+Simulated 302 clock cycles of 6502_functional.json in 0.31 s: 967 clocks/second
+```
+
+`verilog/synth.sh` in the repository synthesizes both netlists.
 
 Waveforms are not written by default, since writing every signal in the CPU makes the
 simulation slower. Add `--vcd` to write them to `6502.vcd`, or `--vcd <file>` to choose the
