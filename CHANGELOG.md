@@ -11,6 +11,7 @@
  - The file dialog of a Yosys component shows netlists, Verilog and SystemVerilog files at first
  - Update Yosys (yowasp-yosys) to 0.70 and pydantic to 2.14.1
  - Pin yowasp-runtime, which runs Yosys in DigSim, to 1.96
+ - Pin the versions of ruff and the test tools in CI
 
 ## v1.5.0
  - Wires in the GUI are made of horizontal and vertical segments, and the shape of each wire is saved with the circuit. Circuits without wire shapes load with the automatic route, like before.

@@ -34,7 +34,7 @@ jobs:
       run: python examples/yosys_counter/example_yosys_counter_verilog.py
 
     - name: Install pytest
-      run: pip install pytest pytest-md pytest-emoji
+      run: pip install "pytest==9.1.1" "pytest-md==0.2.0" "pytest-emoji==0.2.0"
 
     - name: Execute pytest
       uses: pavelzw/pytest-action@v2

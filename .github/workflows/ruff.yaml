@@ -14,11 +14,11 @@ jobs:
      - name: Run Ruff lint
        uses: astral-sh/ruff-action@v4.1.0
        with:
-         version: "latest"
+         version: "0.17.1"
          args: "check --output-format=github"
 
      - name: Run Ruff Format
        uses: astral-sh/ruff-action@v4.1.0
        with:
-         version: "latest"
+         version: "0.17.1"
          args: "format --check --respect-gitignore"

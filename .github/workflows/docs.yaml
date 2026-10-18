@@ -33,7 +33,7 @@ jobs:
           python-version: "3.13"
 
       - name: Install MkDocs
-        run: pip install "mkdocs<2" "mkdocs-material==9.7.7" "mkdocstrings==1.0.7" "mkdocstrings-python==2.0.9" "ruff==0.16.10"
+        run: pip install "mkdocs<2" "mkdocs-material==9.7.7" "mkdocstrings==1.0.7" "mkdocstrings-python==2.0.9" "ruff==0.17.1"
 
       - name: Build site
         run: mkdocs build --strict
