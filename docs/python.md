@@ -135,39 +135,8 @@ See [Verilog and Yosys](synthesis.md) for more about synthesis.
 ## Testbenches with pytest
 
 Because circuits are plain Python, a Verilog design can be tested with
-[pytest](https://pytest.org/). Synthesize the design in a fixture, then drive the inputs
-and assert on the outputs:
-
-```python
-import pytest
-
-from digsim.circuit import Circuit
-from digsim.circuit.components import YosysComponent
-from digsim.synth import Synthesis
-from digsim.utils import YosysNetlist
-
-
-@pytest.fixture
-def dut():
-    circuit = Circuit()
-    counter = YosysComponent(circuit)
-    synthesis = Synthesis(["up_down_counter.v"], "up_down_counter")
-    counter.create_from_netlist(YosysNetlist(**synthesis.synth_to_dict()))
-    circuit.init()
-    return circuit, counter
-
-
-def test_count_up(dut):
-    circuit, counter = dut
-    ...
-```
-
-Complete testbenches for an ALU and an up/down counter are in
-[`examples/pytest_tb`](https://github.com/freand76/digsim/tree/main/examples/pytest_tb):
-
-```sh
-pytest examples/pytest_tb
-```
+[pytest](https://pytest.org/): synthesize the design in a fixture, then drive its inputs
+and assert on its outputs. See [Verilog Testbench with pytest](testbenches.md).
 
 ## More examples
 

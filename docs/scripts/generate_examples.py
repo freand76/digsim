@@ -740,6 +740,29 @@ def waves(vcd_dir: Path) -> None:
         end=120 * ms,
         width=1000,
     )
+    # The second test, test_count_up: up to 15 and around to 0
+    render_waves(
+        vcd_dir / "up_down_counter_test.vcd",
+        [
+            ("clk", "up_down_counter.clk"),
+            ("nrst", "up_down_counter.nrst"),
+            ("up", "up_down_counter.up"),
+            ("down", "up_down_counter.down"),
+            ("value", "up_down_counter.value"),
+        ],
+        OUT / "testbench_count_up_waves.svg",
+        start=24 * ms,
+        end=60 * ms,
+        width=1000,
+    )
+    render_waves(
+        vcd_dir / "alu_test.vcd",
+        [("op", "alu.op"), ("A", "alu.A"), ("B", "alu.B"), ("O", "alu.O")],
+        OUT / "testbench_alu_waves.svg",
+        end=20 * ms,
+        radix="hex",
+        width=1000,
+    )
 
 
 # --------------------------------------------------------------------------------------

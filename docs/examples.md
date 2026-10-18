@@ -297,7 +297,8 @@ which needs the [cc65](https://cc65.github.io/) assembler and linker.
 [`examples/pytest_tb`](https://github.com/freand76/digsim/tree/main/examples/pytest_tb) tests
 two Verilog designs with [pytest](https://pytest.org/): an 8-bit ALU (`alu.v`) and a 4-bit
 up/down counter (`up_down_counter.v`). Each test module synthesizes its design in a fixture,
-drives the inputs from Python and asserts on the outputs.
+drives the inputs from Python and asserts on the outputs. See
+[Verilog Testbench with pytest](testbenches.md) for how they work.
 
 ![Testbench setup](images/examples/testbench_circuit.svg)
 

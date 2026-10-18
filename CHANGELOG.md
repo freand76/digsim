@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## vx.x.x
+ - Add "Verilog Testbench with pytest" to the documentation, a walkthrough of testing a Verilog design with DigSim and pytest, with waveforms of the tests
+
 ## v1.5.0
  - Wires in the GUI are made of horizontal and vertical segments, and the shape of each wire is saved with the circuit. Circuits without wire shapes load with the automatic route, like before.
  - Click in the circuit area while drawing a wire to add corners, and press Backspace to remove the last one. The finished wire keeps the shape it was drawn with.

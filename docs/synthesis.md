@@ -45,7 +45,7 @@ synthesis.synth_to_json_file("counter.json")
 ```
 
 `synth_to_dict()` returns the netlist instead of writing it, see
-[testbenches](python.md#testbenches-with-pytest).
+[Verilog Testbench with pytest](testbenches.md).
 
 ## Running Yosys directly
 

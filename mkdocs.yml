@@ -16,6 +16,7 @@ nav:
   - Python:
       - Python Circuits: python.md
       - Verilog and Yosys: synthesis.md
+      - Verilog Testbench with pytest: testbenches.md
       - Creating Components: components.md
   - API Reference:
       - Overview: api/index.md
