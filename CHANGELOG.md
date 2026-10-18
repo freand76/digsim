@@ -8,6 +8,7 @@
  - Functional blocks send the bits of a port to each other as one word, which makes the simulation of a functional netlist faster
  - Yosys components can make their internal signals readable and write them to the VCD file (signals=True), with the states of state machines as names, from SystemVerilog enums or parameters. SystemVerilog (.sv) files can be loaded. New example: examples/yosys_fsm
  - The waveform images of the documentation show text signals, like the state of the traffic light example
+ - The file dialog of a Yosys component shows netlists, Verilog and SystemVerilog files at first
 
 ## v1.5.0
  - Wires in the GUI are made of horizontal and vertical segments, and the shape of each wire is saved with the circuit. Circuits without wire shapes load with the automatic route, like before.
