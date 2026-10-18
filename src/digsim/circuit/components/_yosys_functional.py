@@ -1145,6 +1145,270 @@ class Sr(_Register):
         self.set_q(q)
 
 
+# --------------------------------------------------------------------------------------
+# Cells of other synthesis flows: arithmetic building blocks, lookup tables and wiring.
+# The functional synthesis of Synthesis doesn't make them, but other netlists can have
+# them, for example with alumacc ($alu, $macc_v2) or LUT mapping ($lut).
+# --------------------------------------------------------------------------------------
+
+
+class Alu(FunctionalCell):
+    """
+    module \\$alu (A, B, CI, BI, X, Y, CO): Y = A + (B or ~B, if BI) + CI, with X the XOR
+    of the operands and CO the carry out of each bit
+    """
+
+    def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
+        super().__init__(circuit, name, cell)
+        for port in ("A", "B", "CI", "BI"):
+            self.add_input(port)
+        for port in ("X", "Y", "CO"):
+            self.add_output(port)
+        self._signed = bool(self.param("A_SIGNED")) and bool(self.param("B_SIGNED"))
+        self._width = self.width("Y")
+        self._mask = _mask(self._width)
+
+    def update(self) -> None:
+        width, mask = self._width, self._mask
+        a = _extend(self.read("A"), self.width("A"), self._signed, width)
+        b = _extend(self.read("B"), self.width("B"), self._signed, width)
+        ci, ci_undefined = self.read("CI")
+        bi, bi_undefined = self.read("BI")
+        if bi_undefined:
+            b = (0, mask)
+        elif bi:
+            b = (~b[0] & ~b[1] & mask, b[1])
+        undefined = (a[1] | b[1]) & mask
+        self.write("X", ((a[0] ^ b[0]) & ~undefined, undefined))
+        if undefined or ci_undefined or bi_undefined:
+            # As in Verilog, an undefined bit makes the sum and the carries undefined
+            self.write("Y", _undefined(width))
+            self.write("CO", _undefined(width))
+            return
+        total = a[0] + b[0] + ci
+        self.write("Y", (total & mask, 0))
+        # The carry into bit i+1 is the sum bit XOR the operand bits, for bit i+1
+        self.write("CO", (((total ^ a[0] ^ b[0]) >> 1) & mask, 0))
+
+
+class Lcu(FunctionalCell):
+    """module \\$lcu (P, G, CI, CO): the carry out of each bit, from propagate and generate"""
+
+    def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
+        super().__init__(circuit, name, cell)
+        for port in ("P", "G", "CI"):
+            self.add_input(port)
+        self.add_output("CO")
+        self._width = self.width("CO")
+
+    def update(self) -> None:
+        p, p_undefined = self.read("P")
+        g, g_undefined = self.read("G")
+        carry, ci_undefined = self.read("CI")
+        if p_undefined or g_undefined or ci_undefined:
+            self.write("CO", _undefined(self._width))
+            return
+        co = 0
+        for bit in range(self._width):
+            carry = (g >> bit) & 1 | ((p >> bit) & 1 & carry)
+            co |= carry << bit
+        self.write("CO", (co, 0))
+
+
+class Fa(FunctionalCell):
+    """module \\$fa (A, B, C, X, Y): a full adder for each bit, Y the sum and X the carry"""
+
+    def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
+        super().__init__(circuit, name, cell)
+        for port in ("A", "B", "C"):
+            self.add_input(port)
+        self.add_output("X")
+        self.add_output("Y")
+        self._mask = _mask(self.width("Y"))
+
+    def update(self) -> None:
+        a, a_undefined = self.read("A")
+        b, b_undefined = self.read("B")
+        c, c_undefined = self.read("C")
+        undefined = (a_undefined | b_undefined | c_undefined) & self._mask
+        self.write("Y", ((a ^ b ^ c) & ~undefined, undefined))
+        self.write("X", (((a & b) | (c & (a ^ b))) & ~undefined, undefined))
+
+
+class MaccV2(FunctionalCell):
+    """
+    module \\$macc_v2 (A, B, C, Y): Y is the sum of the products of the parts of A and B,
+    and of the parts of C, each of them added or subtracted
+    """
+
+    def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
+        super().__init__(circuit, name, cell)
+        for port in ("A", "B", "C"):
+            self.add_input(port)
+        self.add_output("Y")
+        self._width = self.width("Y")
+
+    def _parts(self, count: int, widths: int, signed: int) -> list[tuple[int, int, bool]]:
+        """The (offset, width, signed) of each part of a port"""
+        parts = []
+        offset = 0
+        for index in range(count):
+            width = (widths >> (16 * index)) & 0xFFFF
+            parts.append((offset, width, bool((signed >> index) & 1)))
+            offset += width
+        return parts
+
+    def _operand(self, value: int, part: tuple[int, int, bool], signed: bool) -> int:
+        offset, width, _ = part
+        operand = (value >> offset) & _mask(width)
+        return _signed(operand, width) if signed else operand
+
+    def update(self) -> None:
+        a, a_undefined = self.read("A")
+        b, b_undefined = self.read("B")
+        c, c_undefined = self.read("C")
+        if a_undefined or b_undefined or c_undefined:
+            self.write("Y", _undefined(self._width))
+            return
+        products = self.param("NPRODUCTS")
+        addends = self.param("NADDENDS")
+        a_parts = self._parts(products, self.param("A_WIDTHS"), self.param("A_SIGNED"))
+        b_parts = self._parts(products, self.param("B_WIDTHS"), self.param("B_SIGNED"))
+        c_parts = self._parts(addends, self.param("C_WIDTHS"), self.param("C_SIGNED"))
+        total = 0
+        for index in range(products):
+            # Signed only if both factors are
+            signed = a_parts[index][2] and b_parts[index][2]
+            product = self._operand(a, a_parts[index], signed) * self._operand(
+                b, b_parts[index], signed
+            )
+            total += -product if (self.param("PRODUCT_NEGATED") >> index) & 1 else product
+        for index in range(addends):
+            addend = self._operand(c, c_parts[index], c_parts[index][2])
+            total += -addend if (self.param("ADDEND_NEGATED") >> index) & 1 else addend
+        self.write("Y", (total & _mask(self._width), 0))
+
+
+class Lut(FunctionalCell):
+    """module \\$lut (A, Y): bit A of the table LUT"""
+
+    def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
+        super().__init__(circuit, name, cell)
+        self.add_input("A")
+        self.add_output("Y")
+
+    def update(self) -> None:
+        a, a_undefined = self.read("A")
+        if a_undefined:
+            self.write("Y", (0, 1))
+        else:
+            self.write("Y", ((self.param("LUT") >> a) & 1, 0))
+
+
+class Sop(FunctionalCell):
+    """
+    module \\$sop (A, Y): a sum of products, Y is 1 if A matches one of the DEPTH terms
+    in TABLE (two bits for each bit of A: 01 for a 0, 10 for a 1, 00 for either)
+    """
+
+    def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
+        super().__init__(circuit, name, cell)
+        self.add_input("A")
+        self.add_output("Y")
+        width = self.width("A")
+        table = self.param("TABLE")
+        # For each term: the bits of A that must be 0, and the ones that must be 1
+        self._terms = []
+        for term in range(self.param("DEPTH")):
+            zeros = ones = 0
+            for bit in range(width):
+                pair = (table >> (2 * width * term + 2 * bit)) & 3
+                if pair & 1:
+                    zeros |= 1 << bit
+                if pair & 2:
+                    ones |= 1 << bit
+            self._terms.append((zeros, ones))
+
+    def update(self) -> None:
+        a, a_undefined = self.read("A")
+        maybe = False
+        for zeros, ones in self._terms:
+            if (a & zeros & ~a_undefined) or (~a & ones & ~a_undefined):
+                # A known bit doesn't match the term
+                continue
+            if not (a_undefined & (zeros | ones)):
+                self.write("Y", (1, 0))
+                return
+            maybe = True
+        self.write("Y", (0, 1) if maybe else (0, 0))
+
+
+class Bweqx(FunctionalCell):
+    """module \\$bweqx (A, B, Y): for each bit, 1 if the bits of A and B are the same, "X" too"""
+
+    def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
+        super().__init__(circuit, name, cell)
+        self.add_input("A")
+        self.add_input("B")
+        self.add_output("Y")
+        self._mask = _mask(self.width("Y"))
+
+    def update(self) -> None:
+        a, a_undefined = self.read("A")
+        b, b_undefined = self.read("B")
+        differ = (a ^ b) | (a_undefined ^ b_undefined)
+        self.write("Y", (~differ & self._mask, 0))
+
+
+class Concat(FunctionalCell):
+    """module \\$concat (A, B, Y): Y = {B, A}"""
+
+    def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
+        super().__init__(circuit, name, cell)
+        self.add_input("A")
+        self.add_input("B")
+        self.add_output("Y")
+        self._a_width = self.width("A")
+
+    def update(self) -> None:
+        a, a_undefined = self.read("A")
+        b, b_undefined = self.read("B")
+        shift = self._a_width
+        self.write("Y", (a | (b << shift), a_undefined | (b_undefined << shift)))
+
+
+class Slice(FunctionalCell):
+    """module \\$slice (A, Y): Y = A >> OFFSET"""
+
+    def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
+        super().__init__(circuit, name, cell)
+        self.add_input("A")
+        self.add_output("Y")
+        self._offset = self.param("OFFSET")
+
+    def update(self) -> None:
+        a, a_undefined = self.read("A")
+        self.write("Y", (a >> self._offset, a_undefined >> self._offset))
+
+
+class Tribuf(FunctionalCell):
+    """
+    module \\$tribuf (A, EN, Y): A when enabled, otherwise high impedance, which is "X"
+    in DigSim (it has no high impedance value)
+    """
+
+    def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
+        super().__init__(circuit, name, cell)
+        self.add_input("A")
+        self.add_input("EN")
+        self.add_output("Y")
+        self._width = self.width("Y")
+
+    def update(self) -> None:
+        enable = self._bits["EN"][0].value
+        self.write("Y", self.read("A") if enable == 1 else _undefined(self._width))
+
+
 # The functional cells by their Yosys cell type
 FUNCTIONAL_CELLS: dict[str, type[FunctionalCell]] = {
     "$not": Not,
@@ -1205,6 +1469,16 @@ FUNCTIONAL_CELLS: dict[str, type[FunctionalCell]] = {
     "$adlatch": Adlatch,
     "$dlatchsr": Dlatchsr,
     "$sr": Sr,
+    "$alu": Alu,
+    "$lcu": Lcu,
+    "$fa": Fa,
+    "$macc_v2": MaccV2,
+    "$lut": Lut,
+    "$sop": Sop,
+    "$bweqx": Bweqx,
+    "$concat": Concat,
+    "$slice": Slice,
+    "$tribuf": Tribuf,
 }
 
 # Cells without outputs, for formal verification and simulation messages

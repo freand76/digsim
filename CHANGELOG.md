@@ -4,6 +4,7 @@
  - Add "Verilog Testbench with pytest" to the documentation, a walkthrough of testing a Verilog design with DigSim and pytest, with waveforms of the tests
  - Synthesize Verilog into functional blocks, like adders, multiplexers and registers, instead of gates, for a faster simulation: Synthesis(..., functional=True), "--functional" for "python -m digsim.synth synth", and a "functional" setting (a checkbox in the GUI) for Yosys components loaded from Verilog
  - The 6502 example runs the CPU synthesized into gates or, with --functional, into functional blocks, and prints how many clock cycles it simulated per second
+ - Yosys netlists from other synthesis flows can be simulated, with the cells $alu, $lcu, $fa, $macc_v2, $lut, $sop, $bweqx, $concat, $slice and $tribuf
 
 ## v1.5.0
  - Wires in the GUI are made of horizontal and vertical segments, and the shape of each wire is saved with the circuit. Circuits without wire shapes load with the automatic route, like before.

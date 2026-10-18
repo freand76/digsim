@@ -68,6 +68,13 @@ design, but there are no gates inside to look at in the waveforms.
 into functional blocks, and in the GUI a checkbox after the file selects it. A netlist
 file is used the way it was synthesized.
 
+A netlist made with another Yosys flow can be loaded too. DigSim simulates all the
+functional cells of Yosys that can be simulated, also the ones that the functional
+synthesis doesn't make: the adders and multipliers of `alumacc` (`$alu`, `$macc_v2`,
+`$lcu`, `$fa`), lookup tables (`$lut`, `$sop`) and `$tribuf`, which gives "X" when it is
+not enabled. Memories (`$mem_v2`) and state machines (`$fsm`) are not simulated, synthesize
+with `memory_map` and `fsm_map` for them, like the functional synthesis does.
+
 ## Running Yosys directly
 
 Yosys is also available as the `yowasp-yosys` command. Start it interactively:
