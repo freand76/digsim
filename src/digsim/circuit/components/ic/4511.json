@@ -1,0 +1,1071 @@
+{
+  "creator": "Yosys 0.70 (git sha1 28ba3cb92, Release, Clang /workspace/YoWASP/yosys/wasi-sdk-33.0-x86_64-linux/share/cmake/../..//bin/clang++ 22.1.0)",
+  "modules": {
+    "cmos_4511": {
+      "attributes": {
+        "hdlname": "cmos_4511",
+        "top": "00000000000000000000000000000001",
+        "src": "verilog/4000/4511.v:9.1-47.10"
+      },
+      "ports": {
+        "D": {
+          "direction": "input",
+          "bits": [ 2, 3, 4, 5 ]
+        },
+        "LE": {
+          "direction": "input",
+          "bits": [ 6 ]
+        },
+        "BI_bar": {
+          "direction": "input",
+          "bits": [ 7 ]
+        },
+        "LT_bar": {
+          "direction": "input",
+          "bits": [ 8 ]
+        },
+        "a": {
+          "direction": "output",
+          "bits": [ 9 ]
+        },
+        "b": {
+          "direction": "output",
+          "bits": [ 10 ]
+        },
+        "c": {
+          "direction": "output",
+          "bits": [ 11 ]
+        },
+        "d": {
+          "direction": "output",
+          "bits": [ 12 ]
+        },
+        "e": {
+          "direction": "output",
+          "bits": [ 13 ]
+        },
+        "f": {
+          "direction": "output",
+          "bits": [ 14 ]
+        },
+        "g": {
+          "direction": "output",
+          "bits": [ 15 ]
+        }
+      },
+      "cells": {
+        "$auto$ff.cc:337:slice$100": {
+          "hide_name": 1,
+          "type": "$_DLATCH_N_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:24.4-26.20"
+          },
+          "port_directions": {
+            "D": "input",
+            "E": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "D": [ 2 ],
+            "E": [ 6 ],
+            "Q": [ 16 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$101": {
+          "hide_name": 1,
+          "type": "$_DLATCH_N_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:24.4-26.20"
+          },
+          "port_directions": {
+            "D": "input",
+            "E": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "D": [ 3 ],
+            "E": [ 6 ],
+            "Q": [ 17 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$102": {
+          "hide_name": 1,
+          "type": "$_DLATCH_N_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:24.4-26.20"
+          },
+          "port_directions": {
+            "D": "input",
+            "E": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "D": [ 4 ],
+            "E": [ 6 ],
+            "Q": [ 18 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$103": {
+          "hide_name": 1,
+          "type": "$_DLATCH_N_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:24.4-26.20"
+          },
+          "port_directions": {
+            "D": "input",
+            "E": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "D": [ 5 ],
+            "E": [ 6 ],
+            "Q": [ 19 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$104": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.47-45.78"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 7 ],
+            "B": [ 20 ],
+            "Y": [ 21 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$105": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.47-45.78"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 7 ],
+            "B": [ 22 ],
+            "Y": [ 23 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$106": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.47-45.78"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 7 ],
+            "B": [ 24 ],
+            "Y": [ 25 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$107": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.47-45.78"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 7 ],
+            "B": [ 26 ],
+            "Y": [ 27 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$108": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.47-45.78"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 7 ],
+            "B": [ 28 ],
+            "Y": [ 29 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$109": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.47-45.78"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 7 ],
+            "B": [ 30 ],
+            "Y": [ 31 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$110": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.47-45.78"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 7 ],
+            "B": [ 32 ],
+            "Y": [ 33 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$111": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.23-45.79"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 21 ],
+            "S": [ 8 ],
+            "Y": [ 9 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$112": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.23-45.79"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 23 ],
+            "S": [ 8 ],
+            "Y": [ 10 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$113": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.23-45.79"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 25 ],
+            "S": [ 8 ],
+            "Y": [ 11 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$114": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.23-45.79"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 27 ],
+            "S": [ 8 ],
+            "Y": [ 12 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$115": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.23-45.79"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 29 ],
+            "S": [ 8 ],
+            "Y": [ 13 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$116": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.23-45.79"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 31 ],
+            "S": [ 8 ],
+            "Y": [ 14 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$117": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.23-45.79"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 33 ],
+            "S": [ 8 ],
+            "Y": [ 15 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$237": {
+          "hide_name": 1,
+          "type": "$_NOT_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 16 ],
+            "Y": [ 34 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$239": {
+          "hide_name": 1,
+          "type": "$_NOT_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 17 ],
+            "Y": [ 35 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$241": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 34 ],
+            "B": [ 16 ],
+            "S": [ 17 ],
+            "Y": [ 36 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$242": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 16 ],
+            "B": [ 34 ],
+            "S": [ 17 ],
+            "Y": [ 37 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$243": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "0" ],
+            "B": [ 34 ],
+            "S": [ 17 ],
+            "Y": [ 38 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$244": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 34 ],
+            "S": [ 17 ],
+            "Y": [ 39 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$245": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 34 ],
+            "B": [ "1" ],
+            "S": [ 17 ],
+            "Y": [ 40 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$246": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 16 ],
+            "S": [ 17 ],
+            "Y": [ 41 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$247": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 34 ],
+            "B": [ 34 ],
+            "S": [ 17 ],
+            "Y": [ 42 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$248": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 34 ],
+            "B": [ "0" ],
+            "S": [ 17 ],
+            "Y": [ 43 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$250": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 35 ],
+            "B": [ "0" ],
+            "S": [ 18 ],
+            "Y": [ 44 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$251": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 43 ],
+            "B": [ "0" ],
+            "S": [ 18 ],
+            "Y": [ 45 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$252": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 40 ],
+            "B": [ 16 ],
+            "S": [ 18 ],
+            "Y": [ 46 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$253": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 36 ],
+            "S": [ 18 ],
+            "Y": [ 47 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$254": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 41 ],
+            "B": [ "1" ],
+            "S": [ 18 ],
+            "Y": [ 48 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$255": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 40 ],
+            "B": [ 37 ],
+            "S": [ 18 ],
+            "Y": [ 49 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$256": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 42 ],
+            "B": [ 38 ],
+            "S": [ 18 ],
+            "Y": [ 50 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$257": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 43 ],
+            "B": [ 39 ],
+            "S": [ 18 ],
+            "Y": [ 51 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$258": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 17 ],
+            "B": [ 39 ],
+            "S": [ 18 ],
+            "Y": [ 52 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$259": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 46 ],
+            "B": [ 44 ],
+            "S": [ 19 ],
+            "Y": [ 20 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$260": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 47 ],
+            "B": [ 44 ],
+            "S": [ 19 ],
+            "Y": [ 22 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$261": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 48 ],
+            "B": [ 44 ],
+            "S": [ 19 ],
+            "Y": [ 24 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$262": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 49 ],
+            "B": [ 45 ],
+            "S": [ 19 ],
+            "Y": [ 26 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$263": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 50 ],
+            "B": [ 45 ],
+            "S": [ 19 ],
+            "Y": [ 28 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$264": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 51 ],
+            "B": [ 44 ],
+            "S": [ 19 ],
+            "Y": [ 30 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$265": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 52 ],
+            "B": [ 44 ],
+            "S": [ 19 ],
+            "Y": [ 32 ]
+          }
+        }
+      },
+      "netnames": {
+        "$memory$auto$proc_rom.cc:155:do_switch$9$rdmux[0][0][0]$a$121": {
+          "hide_name": 1,
+          "bits": [ 46, 47, 48, 49, 50, 51, 52 ],
+          "attributes": {
+          }
+        },
+        "$memory$auto$proc_rom.cc:155:do_switch$9$rdmux[0][0][0]$b$122": {
+          "hide_name": 1,
+          "bits": [ 44, 44, 44, 45, 45, 44, 44 ],
+          "attributes": {
+          }
+        },
+        "$memory$auto$proc_rom.cc:155:do_switch$9$rdmux[0][1][0]$a$124": {
+          "hide_name": 1,
+          "bits": [ 40, "1", 41, 40, 42, 43, 17 ],
+          "attributes": {
+          }
+        },
+        "$memory$auto$proc_rom.cc:155:do_switch$9$rdmux[0][1][0]$b$125": {
+          "hide_name": 1,
+          "bits": [ 16, 36, "1", 37, 38, 39, 39 ],
+          "attributes": {
+          }
+        },
+        "$memory$auto$proc_rom.cc:155:do_switch$9$rdmux[0][1][1]$a$127": {
+          "hide_name": 1,
+          "bits": [ 35, 35, 35, 43, 43, 35, 35 ],
+          "attributes": {
+          }
+        },
+        "$memory$auto$proc_rom.cc:155:do_switch$9$rdmux[0][2][0]$a$130": {
+          "hide_name": 1,
+          "bits": [ 34, "1", "1", 34, 34, 34, "0" ],
+          "attributes": {
+          }
+        },
+        "$ternary$verilog/4000/4511.v:45$6_Y": {
+          "hide_name": 1,
+          "bits": [ 21, 23, 25, 27, 29, 31, 33 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.47-45.78"
+          }
+        },
+        "BI_bar": {
+          "hide_name": 0,
+          "bits": [ 7 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:12.11-12.17"
+          }
+        },
+        "D": {
+          "hide_name": 0,
+          "bits": [ 2, 3, 4, 5 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:10.17-10.18"
+          }
+        },
+        "LE": {
+          "hide_name": 0,
+          "bits": [ 6 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:11.11-11.13"
+          }
+        },
+        "LT_bar": {
+          "hide_name": 0,
+          "bits": [ 8 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:13.11-13.17"
+          }
+        },
+        "a": {
+          "hide_name": 0,
+          "bits": [ 9 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:14.12-14.13"
+          }
+        },
+        "b": {
+          "hide_name": 0,
+          "bits": [ 10 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:15.12-15.13"
+          }
+        },
+        "c": {
+          "hide_name": 0,
+          "bits": [ 11 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:16.12-16.13"
+          }
+        },
+        "d": {
+          "hide_name": 0,
+          "bits": [ 12 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:17.12-17.13"
+          }
+        },
+        "e": {
+          "hide_name": 0,
+          "bits": [ 13 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:18.12-18.13"
+          }
+        },
+        "f": {
+          "hide_name": 0,
+          "bits": [ 14 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:19.12-19.13"
+          }
+        },
+        "g": {
+          "hide_name": 0,
+          "bits": [ 15 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:20.12-20.13"
+          }
+        },
+        "latched": {
+          "hide_name": 0,
+          "bits": [ 16, 17, 18, 19 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:22.14-22.21"
+          }
+        },
+        "segments": {
+          "hide_name": 0,
+          "bits": [ 20, 22, 24, 26, 28, 30, 32 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:28.14-28.22"
+          }
+        },
+        "shown": {
+          "hide_name": 0,
+          "bits": [ 9, 10, 11, 12, 13, 14, 15 ],
+          "attributes": {
+            "src": "verilog/4000/4511.v:45.15-45.20"
+          }
+        }
+      }
+    }
+  }
+}

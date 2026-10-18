@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## vx.x.x
+ - New ICs, written from their datasheets and tested against them: the 74181 ALU, 74182 carry look-ahead, 74283 adder, 7485 comparator, 74138 decoder, 74151 multiplexer, 74193 up/down counter, 74194 and 74595 shift registers, the 4017 decade counter and the 4511 BCD to 7-segment driver
+
 ## v1.6.0
  - Add "Verilog Testbench with pytest" to the documentation, a walkthrough of testing a Verilog design with DigSim and pytest, with waveforms of the tests
  - Synthesize Verilog into functional blocks, like adders, multiplexers and registers, instead of gates, for a faster simulation: Synthesis(..., functional=True), "--functional" for "python -m digsim.synth synth", and a "functional" setting (a checkbox in the GUI) for Yosys components loaded from Verilog
