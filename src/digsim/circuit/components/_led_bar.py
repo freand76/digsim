@@ -36,7 +36,7 @@ class LedBar(CallbackComponent):
         """The state of each LED, bit 0 first"""
         width = self.parameter_get("width")
         value = self.I.value
-        if value == "X":
+        if not isinstance(value, int):
             return [False] * width
         return [bool((value >> bit) & 1) for bit in range(width)]
 

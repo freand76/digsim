@@ -175,6 +175,11 @@ class ComponentSelection(QWidget):
         )
         layout.addWidget(SelectableComponentWidget("Bus2Wires", self, circuit_area))
         layout.addWidget(SelectableComponentWidget("Wires2Bus", self, circuit_area))
+        layout.addWidget(
+            SelectableComponentWidget(
+                "TristateBuffer", self, circuit_area, display_name="Tristate Buffer"
+            )
+        )
         layout.addWidget(DescriptionText(self, "IC / Verilog"))
         layout.addWidget(
             SelectableComponentWidget("IntegratedCircuit", self, circuit_area, display_name="IC")

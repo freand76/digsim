@@ -23,4 +23,5 @@ from ._port import (
     PortOutImmediate,
     PortWire,
     PortWireBit,
+    resolve,
 )

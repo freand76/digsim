@@ -346,8 +346,8 @@ def test_wiring_cells():
         "$tribuf", {"A": ("input", 4), "EN": ("input", 1), "Y": ("output", 4)}
     )
     assert _run(circuit, tribuf, A=0b0110, EN=1) == {"Y": 0b0110}
-    # No high impedance value in DigSim: undefined when not enabled
-    assert _run(circuit, tribuf, EN=0) == {"Y": "X"}
+    # Not driven when not enabled, high impedance
+    assert _run(circuit, tribuf, EN=0) == {"Y": "Z"}
 
 
 def test_word_links_like_gates():

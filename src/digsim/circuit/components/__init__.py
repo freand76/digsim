@@ -23,5 +23,6 @@ from ._on_off_switch import OnOffSwitch
 from ._seven_segment import SevenSegment
 from ._static_level import GND, VDD
 from ._static_value import StaticValue
+from ._tristate_buffer import TristateBuffer
 from ._yosys_component import YosysComponent, YosysComponentException
 from .atoms import PortConnectionError

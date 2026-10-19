@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QPointF
@@ -14,6 +15,11 @@ from digsim.circuit.components.atoms import Component, Port, PortConnectionError
 
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from digsim.app._wire_key import Wire
+    from digsim.app._wire_lines import At, Node
+
     from ._model import AppModel
 
 
@@ -27,13 +33,13 @@ class NewWire:
         # The positions clicked between the ports, the wire's corners
         self._clicks: list[Point] = []
         # For a wire started at a corner of another wire: that wire and the corner
-        self._start_branch: tuple[Port, int] | None = None
+        self._start_branch: tuple[Wire, int] | None = None
 
     def start_port(self) -> Port | None:
         """Get start port for unfinished new wire object"""
         return self._start_port
 
-    def start_branch(self) -> tuple[Port, int] | None:
+    def start_branch(self) -> tuple[Wire, int] | None:
         """The wire and corner where the new wire started, None if it started at a port"""
         return self._start_branch
 
@@ -61,88 +67,87 @@ class NewWire:
             self._start_branch = None
             self._clicks = []
 
-    def start_at_corner(self, wire: Port, corner: int) -> None:
-        """
-        Start a new wire at a corner of the wire to the input port 'wire', a branch of
-        the wire tree from the same output port
-        """
-        self._start_port = wire.get_driver()
+    def start_at_corner(self, wire: Wire, corner: int) -> None:
+        """Start a new wire at a corner of a drawn wire"""
+        self._start_port = wire[0]
         self._start_branch = (wire, corner)
         self._clicks = []
 
     def end(self, component: Component, portname: str) -> None:
-        """End new wire object"""
+        """End new wire object at a port"""
         end_port = component.port(portname)
         if self._start_port is None:
             raise PortConnectionError("No wire started")
-        if self._start_branch is not None and not end_port.is_input():
-            raise PortConnectionError("A wire from a wire must end at an input port")
-        if self._start_port.is_output() and end_port.is_input():
-            src_port, dst_port = self._start_port, end_port
+        wires = self._app_model.objects.wires
+        if self._start_branch is not None:
+            line, corner = self._start_branch
+            if end_port.is_output():
+                # The output port joins the line, drawn from the line
+                self._change(
+                    partial(wires.connect_join, end_port, line, corner, self._clicks, False)
+                )
+            else:
+                self._change(partial(wires.connect_branch, line, corner, end_port, self._clicks))
+        elif self._start_port.is_output() and end_port.is_input():
+            self._change(partial(wires.connect_ports, self._start_port, end_port, self._clicks))
         elif self._start_port.is_input() and end_port.is_output():
-            src_port, dst_port = end_port, self._start_port
+            self._change(
+                partial(wires.connect_ports, end_port, self._start_port, self._clicks, False)
+            )
         else:
-            raise PortConnectionError("Cannot connect to port of same type")
-        self._connect(src_port, dst_port, self._start_branch)
+            # Two ports of the same kind, their lines become one
+            self._change(partial(wires.connect_ports, self._start_port, end_port, self._clicks))
 
-    def can_end_at_corner(self) -> bool:
-        """Can the wire end at a corner of another wire: if it was started at an input port"""
-        return (
-            self._start_port is not None
-            and self._start_branch is None
-            and self._start_port.is_input()
+    def can_end_on_wire(self, wire: Wire) -> bool:
+        """
+        Can the wire end on a drawn wire: if it connects two lines (see ModelWires) of the
+        same width. Where it can't, a click there is a corner of the wire.
+        """
+        if self._start_port is None or self._start_port.width != wire[0].width:
+            return False
+        start: Node = (
+            ("port", self._start_port)
+            if self._start_branch is None
+            else ("wire", self._start_branch[0])
         )
+        return not self._app_model.objects.wires.lines().same(start, ("wire", wire))
 
-    def end_at_corner(self, wire: Port, corner: int) -> None:
+    def end_at_corner(self, wire: Wire, corner: int) -> None:
+        """End the wire at a corner of a drawn wire"""
+        self._end_on_wire(wire, corner)
+
+    def end_at_joint(self, wire: Wire, segment: int, point: Point) -> None:
         """
-        End a wire drawn from an input port at a corner of the wire to the input port
-        'wire', a branch of the wire tree from that wire's output port
+        End the wire on a segment of a drawn wire: a joint is added there (see
+        ModelWires.add_joint), where the wire ends
+        """
+        self._end_on_wire(wire, (segment, point))
+
+    def _end_on_wire(self, wire: Wire, at: At) -> None:
+        """
+        A wire from an input port is a branch of the drawn wire, a wire from an output
+        port joins its line, and a wire from a corner of another line connects the lines
         """
         if self._start_port is None:
             raise PortConnectionError("No wire started")
-        if not self.can_end_at_corner():
-            raise PortConnectionError("A wire to a wire must start at an input port")
-        src_port = wire.get_driver()
-        if src_port is None:
-            raise PortConnectionError("The wire has no output port")
-        self._connect(src_port, self._start_port, (wire, corner))
+        wires = self._app_model.objects.wires
+        if self._start_branch is not None:
+            self._change(partial(wires.connect_wires, self._start_branch, wire, at, self._clicks))
+        elif self._start_port.is_input():
+            self._change(
+                partial(wires.connect_branch, wire, at, self._start_port, self._clicks, False)
+            )
+        else:
+            self._change(partial(wires.connect_join, self._start_port, wire, at, self._clicks))
 
-    def end_at_joint(self, wire: Port, segment: int, point: Point) -> None:
+    def _change(self, connect: Callable[[], None]) -> None:
         """
-        End a wire drawn from an input port on a segment of the wire to the input port
-        'wire': a joint is added there (see ModelWires.add_joint), where the wire starts
+        Connect the new wire, an undo step. Raises PortConnectionError, and nothing
+        changes, if it can't be connected.
         """
-        if self._start_port is None:
-            raise PortConnectionError("No wire started")
-        if not self.can_end_at_corner():
-            raise PortConnectionError("A wire to a wire must start at an input port")
-        src_port = wire.get_driver()
-        if src_port is None:
-            raise PortConnectionError("The wire has no output port")
-        self._connect(src_port, self._start_port, None, joint=(wire, segment, point))
-
-    def _connect(
-        self,
-        src_port: Port,
-        dst_port: Port,
-        branch: tuple[Port, int] | None,
-        joint: tuple[Port, int, Point] | None = None,
-    ) -> None:
         undo_state = self._app_model.circuit_to_model()
-        # Raises PortConnectionError if the ports can't be connected: nothing to undo then
-        src_port.wire = dst_port
+        connect()
         self._app_model.objects.add_undo_state(undo_state)
-        if joint is not None:
-            # In the same undo step as the new wire
-            wire, segment, point = joint
-            branch = (wire, self._app_model.objects.wires.add_joint(wire, segment, point, False))
-        self._app_model.objects.wires.new_wire(
-            src_port,
-            dst_port,
-            self._clicks,
-            from_source=src_port is self._start_port,
-            branch=branch,
-        )
         self._app_model.sig_update_wires.emit()
         self._app_model.model_changed()
         self.abort()

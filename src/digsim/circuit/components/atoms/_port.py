@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import abc
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Literal, NoReturn
 
 from ._digsim_exception import DigsimException
@@ -15,7 +16,37 @@ if TYPE_CHECKING:
     from ._component import Component
 
 
-VALUE_TYPE = int | Literal["X"]
+# A value: a number, undefined ("X"), or not driven, high impedance ("Z")
+VALUE_TYPE = int | Literal["X", "Z"]
+
+
+def resolve(values: list[VALUE_TYPE]) -> VALUE_TYPE:
+    """
+    The value of a wire with several drivers: the value of the ones that drive it (all
+    but those that are "Z"), "Z" if none does, and "X" if they drive different values
+    (contention) or one of them drives "X"
+    """
+    driven = [value for value in values if value != "Z"]
+    if not driven:
+        return "Z"
+    first = driven[0]
+    return first if all(value == first for value in driven) else "X"
+
+
+class _Drivers:
+    """
+    The drivers of a port with more than one (see Port.wire). The port gets its
+    value from all of them: set_value() of the port is replaced, and each driver that
+    changes sets the value of them all (a driver has its new value before it sets its
+    wires). Ports with one driver don't have this, so they work as fast as before.
+    """
+
+    def __init__(self, set_value: Callable[[VALUE_TYPE], None]) -> None:
+        self.drivers: list[Port] = []
+        self._set_value = set_value
+
+    def set_value(self, value: VALUE_TYPE) -> None:
+        self._set_value(resolve([driver.value for driver in self.drivers]))
 
 
 class PortConnectionError(DigsimException):
@@ -50,6 +81,8 @@ class Port(abc.ABC):
         self._wired_ports: list[Port] = []  # The ports that this port drives
         self._value: VALUE_TYPE = "X"  # The value of this port
         self._edge_detect_value: VALUE_TYPE = "X"  # Last edge detect value
+        self._tristate = False  # Can this port drive "Z", and share a wire with others
+        self._drivers: _Drivers | None = None  # The drivers, if more than one
         self.init()  # Initialize the port
 
     def init(self) -> None:
@@ -85,12 +118,23 @@ class Port(abc.ABC):
 
     @wire.setter
     def wire(self, port: Port) -> None:
-        """Wire setter, connect this port to an input port (of same width)"""
-        if port.has_driver():
-            raise PortConnectionError(f"The port {port.path()}.{port.name()} already has a driver")
+        """
+        Wire setter, connect this port to an input port (of same width). An input port can
+        have several drivers: its value is the value they drive, "X" if they drive
+        different values, and a tristate driver that drives "Z" doesn't count (see
+        resolve()).
+        """
         if self.width != port.width:
             raise PortConnectionError("Cannot connect ports with different widths")
-        port.set_driver(self)
+        if port.has_driver():
+            drivers = port.get_drivers()
+            if self in drivers:
+                raise PortConnectionError(
+                    f"The port {port.path()}.{port.name()} is already connected"
+                )
+            port.add_driver(self)
+        else:
+            port.set_driver(self)
         self._wired_ports.append(port)
         connection_generation.value += 1
         port.value = self._value  # Update wires when port is connected
@@ -98,9 +142,50 @@ class Port(abc.ABC):
     def remove_wires(self) -> None:
         """Remove wires port"""
         for port in self._wired_ports:
-            port.set_driver(None)
+            port.remove_driver(self)
         self._wired_ports = []
         connection_generation.value += 1
+
+    def set_tristate(self, tristate: bool = True) -> None:
+        """Let the port drive "Z" (high impedance), when it doesn't drive its wires"""
+        self._tristate = tristate
+
+    def is_tristate(self) -> bool:
+        """Can the port drive "Z" (high impedance), when it doesn't drive its wires"""
+        return self._tristate
+
+    def get_drivers(self) -> list[Port]:
+        """The ports that drive this port: none, one, or several"""
+        if self._drivers is not None:
+            return list(self._drivers.drivers)
+        driver = self.get_driver()
+        return [] if driver is None else [driver]
+
+    def add_driver(self, port: Port) -> None:
+        """Add one more driver to a port that has one"""
+        if self._drivers is None:
+            # From now on the port gets its value from all its drivers
+            existing = self.get_drivers()
+            self._drivers = _Drivers(self.set_value)
+            self._drivers.drivers = existing
+            self.set_value = self._drivers.set_value  # type: ignore[method-assign]
+        self._drivers.drivers.append(port)
+
+    def remove_driver(self, port: Port) -> None:
+        """Remove a driver of the port, the others keep driving it"""
+        if self._drivers is None:
+            self.set_driver(None)
+            return
+        if port in self._drivers.drivers:
+            self._drivers.drivers.remove(port)
+        drivers = self._drivers.drivers
+        if len(drivers) < 2:
+            # A port with one driver (or none) again, a new driver is checked against it
+            del self.set_value
+            self._drivers = None
+        self.set_driver(drivers[0] if drivers else None)
+        # The value of the drivers that are left, "Z" if there are none
+        self.set_value("Z" if not drivers else drivers[0].value)
 
     def name(self) -> str:
         """Get port name"""
@@ -186,23 +271,24 @@ class Port(abc.ABC):
         return None
 
     def can_add_wire(self) -> bool:
-        """Return True if it is possible to add a wire to this port"""
-        if self.is_output():
-            return True
-        return bool(not self.has_driver())
+        """
+        Return True if it is possible to add a wire to this port: always, an input port
+        can have several drivers
+        """
+        return True
 
     def disconnect(self, port: Port) -> None:
         """Disconnect 'port' if this port drives it"""
         # Only then: the port could be driven by another port, that keeps its connection
         if port in self._wired_ports:
             self._wired_ports.remove(port)
-            port.set_driver(None)
+            port.remove_driver(self)
             connection_generation.value += 1
 
     def strval(self) -> str:
         """Return value as string"""
-        if self.value == "X":
-            return "X"
+        if isinstance(self.value, str):
+            return self.value
         if self.width > 1:
             return f"0x{self.value:x}"
         return f"{self.value}"
@@ -368,6 +454,9 @@ class PortMultiBitWire(Port):
 
     def set_value(self, value: VALUE_TYPE) -> None:
         if isinstance(value, str):
+            # Undefined, or not driven: none of the bits is
+            for bit in self._bits:
+                bit.value = value
             return
         for bit_id, bit in enumerate(self._bits):
             bit_val = (value >> bit_id) & 1
@@ -401,14 +490,26 @@ class PortMultiBitWire(Port):
     def update_value_from_bits(self) -> None:
         """Update the port with the value of the bits"""
         value = 0
+        not_driven = 0
         for bit_id, bit in enumerate(self._bits):
-            if bit.value == "X":
+            bit_value = bit.value
+            if bit_value == "X":
                 if self._value != "X":
                     self.update_wires("X")
                     # Send event just to update waves, also when the bus becomes undefined
                     self.parent().add_event(self, "X", 0)
                 return
-            value = value | (bit.value << bit_id)
+            if bit_value == "Z":
+                not_driven += 1
+                continue
+            value = value | (bit_value << bit_id)
+        if not_driven:
+            # Not driven if no bit is, and undefined if only some are
+            bus_value: VALUE_TYPE = "Z" if not_driven == len(self._bits) else "X"
+            if self._value != bus_value:
+                self.update_wires(bus_value)
+                self.parent().add_event(self, bus_value, 0)
+            return
         self.update_wires(value)
         # Send event just to update waves
         self.parent().add_event(self, value, 0)

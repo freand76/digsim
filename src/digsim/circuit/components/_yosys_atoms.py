@@ -87,7 +87,7 @@ def _or(a: VALUE_TYPE, b: VALUE_TYPE) -> VALUE_TYPE:
 
 
 def _xor(a: VALUE_TYPE, b: VALUE_TYPE) -> VALUE_TYPE:
-    if a == "X" or b == "X":
+    if not isinstance(a, int) or not isinstance(b, int):
         return "X"
     return 0 if a == b else 1
 
@@ -415,11 +415,24 @@ class _OAI4_(Component):
 
 
 class _TBUF_(Component):
-    """module _TBUF_ (A, E, Y)"""
+    """module _TBUF_ (A, E, Y): A while enabled, otherwise not driven ("Z")"""
 
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
-        raise YosysNotImplementedException("NOT IMPLEMENTED: Tri-state buffer")
+        self.add_port(PortIn(self, "A"))
+        self.add_port(PortIn(self, "E"))
+        output = PortOutDelta(self, "Y")
+        output.set_tristate()
+        self.add_port(output)
+
+    def update(self) -> None:
+        enable = self.E.value
+        if enable == 1:
+            self.Y.value = self.A.value
+        elif enable == 0:
+            self.Y.value = "Z"
+        else:
+            self.Y.value = "X"
 
 
 class _SR_(ClassNameParameterComponent):

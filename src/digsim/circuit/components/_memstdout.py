@@ -49,7 +49,7 @@ class MemStdOut(Component):
             return
         if rising_edge:
             datain = self.DataIn.value
-            if datain == "X":
+            if not isinstance(datain, int):
                 return
             if datain == 0x0A:
                 print(f"StringOutput [line]: '{self._str}'")

@@ -29,12 +29,18 @@ class GuiWireDataClass:
     The shape of a wire in the GUI: the position of each segment between the first and
     the last, [x, y, x, ..., x], see digsim.app._wire_path. A wire that starts at a
     corner of another wire from the same output port (a branch, see digsim.app._wire_tree)
-    has that wire, by the input port it drives, and the number of the corner.
+    has that wire, by the input port it drives, and the number of the corner. A wire that
+    ends at a corner of another wire (it joins its line, see digsim.app._wire_lines) has
+    that wire and corner as its joint. A connection that is not drawn, but implied by the
+    line that its ports are on, is not 'drawn'.
     """
 
     path: list[int]
     branch: str | None = None
     corner: int | None = None
+    joint: str | None = None
+    joint_corner: int | None = None
+    drawn: bool = True
 
     @field_validator("path", mode="before")
     @classmethod

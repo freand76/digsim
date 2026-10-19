@@ -103,6 +103,23 @@ class NamedBoxObject(ImageObject):
         self.paint_component_name(painter)
 
 
+class ImageObjectTristateBuffer(ImageObject):
+    """The class for a tristate buffer placed in the GUI, with its port names (A, OE, Y)"""
+
+    IMAGE_FILENAME = "images/TRISTATE.png"
+    SHOW_NAME = False
+    PORT_TO_IMAGE_DIST = 5
+
+    def setup_size(self) -> None:
+        width = self.component.port("A").width
+        if width == 1:
+            return
+        # Wider for the bus port names, like "A[3:0]", on each side of the symbol
+        self._get_pixmaps()
+        str_pixels_w, _ = self.get_string_metrics(f"A[{width - 1}:0]")
+        self.width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._image().width()
+
+
 class GateImageObject(ImageObject):
     """The base class for gate components placed in the GUI"""
 

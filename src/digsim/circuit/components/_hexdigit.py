@@ -72,7 +72,7 @@ class HexDigit(CallbackComponent):
         if not self.parameter_get("dot"):
             return False
         dot = self.dot.value
-        if dot == "X":
+        if not isinstance(dot, int):
             return False
         dot_value = dot >> (self.dot.width - (digit_id + 1)) & 1
         return dot_value == 1
@@ -80,7 +80,7 @@ class HexDigit(CallbackComponent):
     def segments(self, digit_id: int = 0) -> str:
         """Which segments are active for the selected digit_id?"""
         value = self.value()
-        if value == "X":
+        if not isinstance(value, int):
             segments = ""
         else:
             digit_value = (value >> (self.val.width - (digit_id + 1) * 4)) & 0xF

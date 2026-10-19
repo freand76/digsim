@@ -1,0 +1,339 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "StaticValue",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {
+                    "width": 4,
+                    "value": 3
+                }
+            },
+            {
+                "name": "TristateBuffer",
+                "type": "digsim.circuit.components.TristateBuffer",
+                "display_name": "TristateBuffer",
+                "settings": {
+                    "width": 4,
+                    "active_low": false
+                }
+            },
+            {
+                "name": "StaticValue_1",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {
+                    "width": 4,
+                    "value": 7
+                }
+            },
+            {
+                "name": "TristateBuffer_1",
+                "type": "digsim.circuit.components.TristateBuffer",
+                "display_name": "TristateBuffer",
+                "settings": {
+                    "width": 4,
+                    "active_low": false
+                }
+            },
+            {
+                "name": "StaticValue_2",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {
+                    "width": 4,
+                    "value": 10
+                }
+            },
+            {
+                "name": "TristateBuffer_2",
+                "type": "digsim.circuit.components.TristateBuffer",
+                "display_name": "TristateBuffer",
+                "settings": {
+                    "width": 4,
+                    "active_low": false
+                }
+            },
+            {
+                "name": "StaticValue_3",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {
+                    "width": 4,
+                    "value": 14
+                }
+            },
+            {
+                "name": "TristateBuffer_3",
+                "type": "digsim.circuit.components.TristateBuffer",
+                "display_name": "TristateBuffer",
+                "settings": {
+                    "width": 4,
+                    "active_low": false
+                }
+            },
+            {
+                "name": "DipSwitch",
+                "type": "digsim.circuit.components.DipSwitch",
+                "display_name": "DipSwitch",
+                "settings": {
+                    "bits": 4
+                }
+            },
+            {
+                "name": "HexDigit",
+                "type": "digsim.circuit.components.HexDigit",
+                "display_name": "HexDigit",
+                "settings": {
+                    "digits": 1,
+                    "dot": false
+                }
+            },
+            {
+                "name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {
+                    "text": "Four tristate buffers drive one bus to the hex digit.\nEach switch of the DIP switch enables one buffer.\nWith no buffer enabled the bus is not driven (Z, blue),\nwith two or more it is undefined (X, red): the digit is blank."
+                }
+            }
+        ],
+        "wires": [
+            {
+                "src": "StaticValue.O",
+                "dst": "TristateBuffer.A"
+            },
+            {
+                "src": "TristateBuffer.Y",
+                "dst": "HexDigit.val"
+            },
+            {
+                "src": "StaticValue_1.O",
+                "dst": "TristateBuffer_1.A"
+            },
+            {
+                "src": "TristateBuffer_1.Y",
+                "dst": "HexDigit.val"
+            },
+            {
+                "src": "StaticValue_2.O",
+                "dst": "TristateBuffer_2.A"
+            },
+            {
+                "src": "TristateBuffer_2.Y",
+                "dst": "HexDigit.val"
+            },
+            {
+                "src": "StaticValue_3.O",
+                "dst": "TristateBuffer_3.A"
+            },
+            {
+                "src": "TristateBuffer_3.Y",
+                "dst": "HexDigit.val"
+            },
+            {
+                "src": "DipSwitch.0",
+                "dst": "TristateBuffer.OE"
+            },
+            {
+                "src": "DipSwitch.1",
+                "dst": "TristateBuffer_1.OE"
+            },
+            {
+                "src": "DipSwitch.2",
+                "dst": "TristateBuffer_2.OE"
+            },
+            {
+                "src": "DipSwitch.3",
+                "dst": "TristateBuffer_3.OE"
+            }
+        ]
+    },
+    "gui": {
+        "StaticValue": {
+            "x": 100,
+            "y": 60,
+            "z": 0
+        },
+        "TristateBuffer": {
+            "x": 360,
+            "y": 70,
+            "z": 0
+        },
+        "StaticValue_1": {
+            "x": 100,
+            "y": 190,
+            "z": 0
+        },
+        "TristateBuffer_1": {
+            "x": 360,
+            "y": 200,
+            "z": 0
+        },
+        "StaticValue_2": {
+            "x": 100,
+            "y": 320,
+            "z": 0
+        },
+        "TristateBuffer_2": {
+            "x": 360,
+            "y": 330,
+            "z": 0
+        },
+        "StaticValue_3": {
+            "x": 100,
+            "y": 450,
+            "z": 0
+        },
+        "TristateBuffer_3": {
+            "x": 360,
+            "y": 460,
+            "z": 0
+        },
+        "DipSwitch": {
+            "x": 100,
+            "y": 580,
+            "z": 0
+        },
+        "HexDigit": {
+            "x": 640,
+            "y": 260,
+            "z": 0
+        },
+        "Note": {
+            "x": 640,
+            "y": 450,
+            "z": 0
+        }
+    },
+    "wires": {
+        "TristateBuffer.A": {
+            "path": [
+                349
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": null,
+            "joint_corner": null,
+            "drawn": true
+        },
+        "HexDigit.val<TristateBuffer.Y": {
+            "path": [
+                568
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": "HexDigit.val<TristateBuffer_1.Y",
+            "joint_corner": 1,
+            "drawn": true
+        },
+        "TristateBuffer_1.A": {
+            "path": [
+                349
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": null,
+            "joint_corner": null,
+            "drawn": true
+        },
+        "HexDigit.val<TristateBuffer_1.Y": {
+            "path": [
+                568
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": null,
+            "joint_corner": null,
+            "drawn": true
+        },
+        "TristateBuffer_2.A": {
+            "path": [
+                349
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": null,
+            "joint_corner": null,
+            "drawn": true
+        },
+        "HexDigit.val<TristateBuffer_2.Y": {
+            "path": [
+                568
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": "HexDigit.val<TristateBuffer_1.Y",
+            "joint_corner": 2,
+            "drawn": true
+        },
+        "TristateBuffer_3.A": {
+            "path": [
+                349
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": null,
+            "joint_corner": null,
+            "drawn": true
+        },
+        "HexDigit.val<TristateBuffer_3.Y": {
+            "path": [
+                568
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": "HexDigit.val<TristateBuffer_2.Y",
+            "joint_corner": 1,
+            "drawn": true
+        },
+        "TristateBuffer.OE": {
+            "path": [
+                270
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": null,
+            "joint_corner": null,
+            "drawn": true
+        },
+        "TristateBuffer_1.OE": {
+            "path": [
+                285
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": null,
+            "joint_corner": null,
+            "drawn": true
+        },
+        "TristateBuffer_2.OE": {
+            "path": [
+                300
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": null,
+            "joint_corner": null,
+            "drawn": true
+        },
+        "TristateBuffer_3.OE": {
+            "path": [
+                315
+            ],
+            "branch": null,
+            "corner": null,
+            "joint": null,
+            "joint_corner": null,
+            "drawn": true
+        }
+    },
+    "shortcuts": {},
+    "settings": {
+        "real_time": true,
+        "color_wires": true,
+        "update_frequency": 20
+    }
+}

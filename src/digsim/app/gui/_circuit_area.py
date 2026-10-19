@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from digsim.app._wire_key import Wire
 from digsim.app._wire_path import (
     Point,
     Rect,
@@ -216,7 +217,7 @@ class WirePartGraphicsItem(QGraphicsRectItem):
             corner = self._corner_at(event.scenePos())
             new_wire = self._app_model.objects.new_wire
             if self._drag_segment is None and corner is not None and not new_wire.ongoing():
-                self._app_model.objects.new_wire.start_at_corner(self._parent.dst_port, corner)
+                self._app_model.objects.new_wire.start_at_corner(self._parent.wire, corner)
                 self._handled_press = True
                 self.unsetCursor()
                 event.accept()
@@ -238,17 +239,22 @@ class WirePartGraphicsItem(QGraphicsRectItem):
     def _corner_at(self, scene_pos: QPointF) -> int | None:
         """
         The corner at a position, if a new wire can be started there, or the wire being
-        drawn (from an input port) can end there
+        drawn can end there
         """
         new_wire = self._app_model.objects.new_wire
-        if self._app_model.is_running or (new_wire.ongoing() and not new_wire.can_end_at_corner()):
+        if self._app_model.is_running or (
+            new_wire.ongoing() and not new_wire.can_end_on_wire(self._parent.wire)
+        ):
             return None
         return self._parent.corner_at(scene_pos, self.CORNER_RADIUS)
 
     def _can_end_at(self, scene_pos: QPointF) -> bool:
-        """Can the wire being drawn (from an input port) end on the segment here"""
+        """
+        Can the wire being drawn end on the segment here: if it connects another line to
+        the line of this wire
+        """
         return (
-            self._app_model.objects.new_wire.can_end_at_corner()
+            self._app_model.objects.new_wire.can_end_on_wire(self._parent.wire)
             and self.distance(scene_pos) <= self.CORNER_RADIUS
         )
 
@@ -282,6 +288,9 @@ class WirePartGraphicsItem(QGraphicsRectItem):
     def _get_wire_color(self, port_value: VALUE_TYPE, bus_width: int) -> QColor | Qt.GlobalColor:
         if port_value == "X":
             return Qt.GlobalColor.red
+        if port_value == "Z":
+            # Not driven, high impedance
+            return QColor(64, 112, 255)
         if port_value == 0:
             return Qt.GlobalColor.darkGray
         assert isinstance(port_value, int)
@@ -310,8 +319,8 @@ class WirePartGraphicsItem(QGraphicsRectItem):
         if not self._app_model.is_running and self._selected:
             pen.setColor(Qt.GlobalColor.black)
         elif self._app_model.settings.get("color_wires"):
-            port_value = self._src_port.value
-            pen.setColor(self._get_wire_color(port_value, bus_width))
+            # All wires of a line have its value, "X" when its outputs drive different values
+            pen.setColor(self._get_wire_color(self._parent.line_value(), bus_width))
 
         painter.setPen(pen)
         painter.drawLine(self._start, self._end)
@@ -327,6 +336,12 @@ class WirePartGraphicsItem(QGraphicsRectItem):
                 painter.setBrush(pen.color())
             radius = self.JUNCTION_RADIUS + extra_radius
             painter.drawEllipse(QPointF(*self._parent.start_point()), radius, radius)
+        if self._segment == self._parent.segment_count() - 1 and self._parent.is_joined():
+            # Where the wire ends on the line it joins, in its color
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(pen.color())
+            radius = self.JUNCTION_RADIUS + extra_radius
+            painter.drawEllipse(QPointF(*self._parent.end_point()), radius, radius)
         if self._is_joint() and self._selected and not self._app_model.is_running:
             # A corner of a straight part of the wire, where a new wire can start
             painter.setPen(QPen(Qt.GlobalColor.black, 2))
@@ -356,7 +371,8 @@ class WirePartGraphicsItem(QGraphicsRectItem):
 class WireGraphicsItem(QGraphicsPathItem):
     """
     A wire graphics item, drawn from the wire's path in the model. A branch of a wire tree
-    starts at a corner of another wire item, its parent.
+    starts at a corner of another wire item, its parent. A joined wire ends at a corner of
+    the wire item of the line it joins.
     """
 
     def __init__(
@@ -366,19 +382,27 @@ class WireGraphicsItem(QGraphicsPathItem):
         src_port_item: PortGraphicsItem,
         dst_port_item: PortGraphicsItem,
         branch: tuple[WireGraphicsItem, int] | None = None,
+        join: tuple[WireGraphicsItem, int] | None = None,
+        line_outputs: list[Port] | None = None,
     ) -> None:
         super().__init__()
         self._app_model = app_model
         self._src_port, self._dst_port = connection
+        # The output ports of the wire's line, that give it its value
+        self._line_outputs = line_outputs or []
         self._src_port_item = src_port_item
         self._dst_port_item = dst_port_item
         self._branch = branch
-        # The branches that start on this wire, they follow it while it is dragged
+        self._join = join
+        # The branches that start on this wire, and the joined wires that end on it, they
+        # follow it while it is dragged
         self._child_items: list[WireGraphicsItem] = []
         if branch is not None:
             branch[0].add_child_item(self)
+        if join is not None:
+            join[0].add_child_item(self)
         # A copy, changed while a segment is dragged and stored in the model afterwards
-        self._path = list(app_model.objects.wires.path(self._src_port, self._dst_port))
+        self._path = list(app_model.objects.wires.path(connection))
         self._part_items: list[WirePartGraphicsItem] = []
         self.setZValue(-1)
         self._selected = False
@@ -388,6 +412,15 @@ class WireGraphicsItem(QGraphicsPathItem):
     def dst_port(self) -> Port:
         """The input port that the wire drives"""
         return self._dst_port
+
+    def line_value(self) -> VALUE_TYPE:
+        """The value of the wire's line: what its output ports drive together"""
+        return self._app_model.objects.wires.value(self._line_outputs)
+
+    @property
+    def wire(self) -> Wire:
+        """The wire, by its two ports (see Wire), as the model knows it"""
+        return self._src_port, self._dst_port
 
     def highlight(self, first: int | None) -> None:
         """Show the wire as selected from a segment to its input port, or not (None)"""
@@ -404,10 +437,10 @@ class WireGraphicsItem(QGraphicsPathItem):
         self._part_items[min(segment, len(self._part_items) - 1)].setSelected(True)
 
     def select_tree(self) -> None:
-        """Select all wires from the same output port"""
+        """Select all wires of the line"""
         scene = self.scene()
         if isinstance(scene, _CircuitAreaScene):
-            scene.select_wire_tree(self._dst_port)
+            scene.select_wire_tree(self.wire)
 
     def is_selected(self) -> bool:
         """Is a part of the wire selected"""
@@ -441,8 +474,12 @@ class WireGraphicsItem(QGraphicsPathItem):
         """True if the wire starts on another wire, not at the output port"""
         return self._branch is not None
 
+    def is_joined(self) -> bool:
+        """True if the wire ends on another wire (it joins its line), not at its port"""
+        return self._join is not None
+
     def add_child_item(self, item: WireGraphicsItem) -> None:
-        """A branch that starts on this wire"""
+        """A branch that starts on this wire, or a joined wire that ends on it"""
         self._child_items.append(item)
 
     def start_point(self) -> Point:
@@ -452,8 +489,15 @@ class WireGraphicsItem(QGraphicsPathItem):
             return parent.corner_points()[corner]
         return _point(self._src_port_item.portPos())
 
+    def end_point(self) -> Point:
+        """Where the wire ends: at the input port, or at a corner of the line it joins"""
+        if self._join is not None:
+            line, corner = self._join
+            return line.corner_points()[corner]
+        return _point(self._dst_port_item.portPos())
+
     def _port_points(self) -> tuple[Point, Point]:
-        return self.start_point(), _point(self._dst_port_item.portPos())
+        return self.start_point(), self.end_point()
 
     def corner_points(self) -> list[Point]:
         """The points of the wire, from where it starts to the input port"""
@@ -495,7 +539,7 @@ class WireGraphicsItem(QGraphicsPathItem):
 
     def drag_finished(self) -> None:
         """Store the new path in the model (an undo step)"""
-        self._app_model.objects.wires.set_path(self._dst_port, self._path)
+        self._app_model.objects.wires.set_path(self.wire, self._path)
 
     def context_menu(self, segment: int, scene_pos: QPointF, screen_pos: QPoint) -> None:
         """The context menu of a segment, to split it or merge it with its neighbors"""
@@ -514,7 +558,7 @@ class WireGraphicsItem(QGraphicsPathItem):
         tree_action = menu.addAction("Select wire tree")
         tree_action.triggered.connect(self.select_tree)
         menu.addSeparator()
-        automatic = self._app_model.objects.wires.automatic_path(self._src_port, self._dst_port)
+        automatic = self._app_model.objects.wires.automatic_path(self.wire)
         automatic_action = menu.addAction("Automatic route")
         automatic_action.setEnabled(automatic != self._path)
         automatic_action.triggered.connect(partial(self._change_path, automatic))
@@ -528,7 +572,7 @@ class WireGraphicsItem(QGraphicsPathItem):
     def _add_joint(self, segment: int, scene_pos: QPointF) -> None:
         """A corner on the straight segment, where a new wire can be started"""
         point = (round(scene_pos.x()), round(scene_pos.y()))
-        self._app_model.objects.wires.add_joint(self._dst_port, segment, point)
+        self._app_model.objects.wires.add_joint(self.wire, segment, point)
         # Not now: the wire items are replaced, and this one is handling an event
         QTimer.singleShot(0, self._app_model.sig_update_wires.emit)
 
@@ -539,7 +583,7 @@ class WireGraphicsItem(QGraphicsPathItem):
     def _change_path(
         self, path: list[float], corner_map: Callable[[int], int] | None = None
     ) -> None:
-        self._app_model.objects.wires.set_path(self._dst_port, path, corner_map)
+        self._app_model.objects.wires.set_path(self.wire, path, corner_map)
         # Not now: the wire items are replaced, and this one is handling an event
         QTimer.singleShot(0, self._app_model.sig_update_wires.emit)
 
@@ -612,13 +656,13 @@ class _CircuitAreaScene(QGraphicsScene):
         self._app_model.sig_audio_start.connect(self._audio_start)
         self._app_model.sig_audio_notify.connect(self._audio_notify)
         self._wire_items: list[WireGraphicsItem] = []
-        # The wires to these input ports are selected
-        self._selected_wires: set[Port] = set()
+        # These wires are selected
+        self._selected_wires: set[Wire] = set()
         self._updating_wires = False
         self._select_start_pos: QPointF | None = None
         # The component being dragged, where it was, and the paths of the wires that move
         # with it (between components that move together)
-        self._group_move: tuple[ComponentObject, QPointF, dict[Port, list[float]]] | None = None
+        self._group_move: tuple[ComponentObject, QPointF, dict[Wire, list[float]]] | None = None
         self._synchronize_gui()
 
     def _repaint(self) -> None:
@@ -691,21 +735,18 @@ class _CircuitAreaScene(QGraphicsScene):
         }
         moving.add(grabber.component)
         wires = self._app_model.objects.wires
-        paths = {
-            dst_port: list(wires.path(src_port, dst_port))
-            for src_port, dst_port in wires.connections()
-            if src_port.parent() in moving and dst_port.parent() in moving
-        }
+        paths = {wire: list(wires.path(wire)) for wire in wires.moving_wires(moving)}
         self._group_move = (grabber, grabber.pos(), paths)
         self._app_model.objects.components.set_move_undo_state(self._app_model.circuit_to_model())
 
-    def wire_end_at(self, pos: QPointF) -> tuple[Port, int, Point | None] | None:
+    def wire_end_at(self, pos: QPointF) -> tuple[Wire, int, Point | None] | None:
         """
-        Where the wire being drawn can end on another wire, if it was started at an input
-        port: the wire (its input port) on top at a position, and its corner close by
-        (wire, corner, None), or the segment and the point for a new joint there
+        Where the wire being drawn can end on another wire, of another line: the wire on
+        top at a position, and its corner close by (wire, corner, None), or the segment
+        and the point for a new joint there
         """
-        if not self._app_model.objects.new_wire.can_end_at_corner():
+        new_wire = self._app_model.objects.new_wire
+        if not new_wire.ongoing():
             return None
         items = [item for item in self.items(pos) if not isinstance(item, NewWireGraphicsItem)]
         if items and isinstance(items[0], PortGraphicsItem):
@@ -714,11 +755,13 @@ class _CircuitAreaScene(QGraphicsScene):
             if not isinstance(item, WirePartGraphicsItem):
                 continue
             wire = item.wire_item
+            if not new_wire.can_end_on_wire(wire.wire):
+                continue
             corner = wire.corner_at(pos, WirePartGraphicsItem.CORNER_RADIUS)
             if corner is not None:
-                return wire.dst_port, corner, None
+                return wire.wire, corner, None
             if item.distance(pos) <= WirePartGraphicsItem.CORNER_RADIUS:
-                return wire.dst_port, item.segment, (round(pos.x()), round(pos.y()))
+                return wire.wire, item.segment, (round(pos.x()), round(pos.y()))
         return None
 
     def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
@@ -782,28 +825,47 @@ class _CircuitAreaScene(QGraphicsScene):
             return
         wires = self._app_model.objects.wires
         # The first selected segment of each wire
-        shown: dict[Port, int] = {}
+        shown: dict[Wire, int] = {}
         for item in self._wire_items:
             for segment in item.selected_segments():
-                for wire, first in wires.selection(item.dst_port, segment).items():
+                for wire, first in wires.selection(item.wire, segment).items():
                     shown[wire] = min(first, shown.get(wire, first))
         self._selected_wires = set(shown)
         for item in self._wire_items:
-            item.highlight(shown.get(item.dst_port))
+            item.highlight(shown.get(item.wire))
 
-    def select_wire_tree(self, dst_port: Port) -> None:
-        """Select all wires from the same output port as a wire"""
-        root = self._app_model.objects.wires.tree(dst_port)[0]
+    def select_wire_tree(self, wire: Wire) -> None:
+        """Select all drawn wires of the line of a wire"""
+        line = set(self._app_model.objects.wires.line_wires(wire))
         self.clearSelection()
         for item in self._wire_items:
-            if item.dst_port == root:
-                # The first segment of the wire from the port is on the way to them all
+            if item.wire in line:
                 item.select_segment(0)
+
+    def _drawing_order(self, drawn: list[Wire]) -> list[Wire]:
+        """The drawn wires, each after the wires that it starts or ends on"""
+        wires = self._app_model.objects.wires
+        ordered: list[Wire] = []
+        done: set[Wire] = set()
+        pending = list(drawn)
+        while pending:
+            left = []
+            for wire in pending:
+                anchors = [wires.branch(wire), wires.join(wire)]
+                if all(anchor is None or anchor[0] in done for anchor in anchors):
+                    ordered.append(wire)
+                    done.add(wire)
+                else:
+                    left.append(wire)
+            if len(left) == len(pending):
+                raise ValueError(f"Wires that start or end on each other: {left}")
+            pending = left
+        return ordered
 
     def _update_wires(self) -> None:
         # The wires are created again, and stay selected (a segment can be gone)
         selected = {
-            (item.dst_port, segment)
+            (item.wire, segment)
             for item in self._wire_items
             for segment in item.selected_segments()
         }
@@ -814,28 +876,30 @@ class _CircuitAreaScene(QGraphicsScene):
         self._wire_items = []
         components = self._app_model.objects.components
         wires = self._app_model.objects.wires
-        items: dict[Port, WireGraphicsItem] = {}
-        # A branch after the wire it starts on
-        connections = sorted(wires.connections(), key=lambda pair: len(wires.route(pair[1])))
-        for src_port, dst_port in connections:
+        items: dict[Wire, WireGraphicsItem] = {}
+        line_outputs = wires.line_outputs()
+        for src_port, dst_port in self._drawing_order(wires.drawn()):
             src_port_item = components.get_object(src_port.parent()).get_port_item(src_port)
             dst_port_item = components.get_object(dst_port.parent()).get_port_item(dst_port)
-            branch = wires.branch(dst_port)
+            branch = wires.branch((src_port, dst_port))
+            join = wires.join((src_port, dst_port))
             item = WireGraphicsItem(
                 self._app_model,
                 (src_port, dst_port),
                 src_port_item,
                 dst_port_item,
                 None if branch is None else (items[branch[0]], branch[1]),
+                None if join is None else (items[join[0]], join[1]),
+                line_outputs[(src_port, dst_port)],
             )
-            items[dst_port] = item
+            items[(src_port, dst_port)] = item
             self.addItem(item)
             self._wire_items.append(item)
         self._updating_wires = False
         self._selected_wires = set()
         for item in self._wire_items:
-            for dst_port, segment in selected:
-                if item.dst_port == dst_port:
+            for wire, segment in selected:
+                if item.wire == wire:
                     item.select_segment(segment)
         self.wire_selection_changed()
 

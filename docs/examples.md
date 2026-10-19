@@ -456,6 +456,18 @@ register and watch them move along the LEDs.
 
 ![Shift register circuit](images/examples/shift_register.png)
 
+### Tristate bus
+
+`tristate.circuit` has four static values (3, 7, 10 and 14) that share one 4-bit bus to a
+hex digit, each through a tristate buffer. The four switches of the DIP switch enable one
+buffer each.
+
+- With one buffer enabled, the hex digit shows its value.
+- With no buffer enabled, the bus is not driven (high impedance) and blue. With two or
+  more enabled, it is undefined and red. The hex digit is blank in both cases.
+
+![Tristate bus circuit](images/examples/tristate.png)
+
 ### Buzzers
 
 `buzzers.circuit` has five push buttons, each connected to a buzzer with its own tone

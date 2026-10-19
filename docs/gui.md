@@ -70,6 +70,13 @@ the port, so that the wire reaches the port horizontally. A wire drawn without c
 a port behind the output port gets an automatic route around the component instead.
 
 - One output port can drive any number of input ports, see [Wire trees](#wire-trees).
+- Any number of outputs can drive the same input port, like the outputs of the chips on
+  a bus: with a wire of its own to the port, or ending on the line of another output, see
+  [Lines](#lines). The input has the value that they drive, and it is
+  undefined if they drive different values. A [tristate buffer](#bus-and-wire-components)
+  that is disabled doesn't drive, so the others decide.
+- A wire can also connect two input ports, or two output ports. Their lines become one,
+  so an output on either line drives the inputs of both, see [Lines](#lines).
 - Both ends must be of the same kind: a single-bit wire, or a bus of the same width.
   Use the [bus/wire converters](#bus-and-wire-components) to split or merge buses.
 - **Wire Source** and **Wire Sink** components connect signals by label instead of with a
@@ -106,6 +113,29 @@ A new branch leaves a joint, or reaches it, across the wire and not along it: up
 from a horizontal wire, and to the side from a vertical one. A branch keeps its corner
 when the wire it starts on is reshaped: it follows when a segment is dragged, split or
 merged.
+
+### Lines
+
+Wires that are connected, at a port or where one starts or ends on another, make a line,
+like one wire of a real circuit. Each output port on a line drives each input port on it.
+The inputs have the value that the outputs drive, and it is undefined if they drive
+different values.
+
+A new wire can end on any wire, at a corner or anywhere along it, and the pointer shows a
+crosshair where it can. A wire from an input port is a branch there, and a wire from an
+output port joins the line, like a chip that is connected to a bus. A wire can also be
+drawn from a corner of a line to an output port, or to a wire of another line. A dot
+shows where a wire starts or ends on another wire.
+
+- A new wire connects two lines, which become one line: all their outputs drive all
+  their inputs. This is the same for a wire between two ports, of any kind, when one of
+  them is on a line already.
+- The lines must have the same width. On a wire of its own line, or of another width, a
+  click is a corner of the wire.
+- **Select wire tree** selects all wires of the line.
+- When wires are deleted, the ports that no line connects any more are disconnected. A
+  wire that ended on a deleted wire ends on another wire of its line that runs where it
+  ended, if there is one, and is deleted otherwise.
 
 ### Shaping wires
 
@@ -146,7 +176,12 @@ While the simulation runs:
 
 - click a **push button** to press it, and click a **switch** to toggle it,
 - use keyboard [shortcuts](#keyboard-shortcuts-for-inputs) to operate buttons and switches,
-- the current simulation time is shown in the control area.
+- the current simulation time is shown in the control area,
+- the wires show their values: gray for 0, green for 1 (brighter for a higher bus
+  value), red for an undefined value and blue for a wire that is not driven (high
+  impedance, all its tristate drivers are disabled). All wires of a [line](#lines) have
+  the value that its outputs drive together, so the whole line is red when they drive
+  different values, also when it has no input.
 
 The circuit cannot be edited while the simulation is running.
 
@@ -237,6 +272,14 @@ The multiplexer has 2, 4 or 8 inputs and a data width between 1 and 32 bits.
 - **Wires2Bus** merges individual bits into a bus.
 - **Wire Source** / **Wire Sink** connect signals by label, see [Wires](#wires).
 
+![Tristate buffer](images/components/TRISTATE.png)
+
+The **Tristate Buffer** drives its input A to its output Y while its output enable OE is
+high, or low if it is set to be active low. Otherwise it does not drive Y at all (high
+impedance). It is a wire or a bus of 1–32 bits. The outputs of several tristate buffers
+can be connected to the same input, and the one that is enabled drives it. If more than
+one is enabled with different values, the value is undefined.
+
 ### IC components
 
 ![IC](images/components/IC.png)
@@ -257,7 +300,7 @@ to add the selected IC. Pins with names ending in `_bar` are active low.
 | 74162 | Synchronous decade counter with parallel load |
 | 74193 | Up/down binary counter with separate up and down clocks |
 | 74194 | 4-bit bidirectional universal shift register |
-| 74595 | 8-bit shift register with an output register (always enabled) |
+| 74595 | 8-bit shift register with an output register and tristate outputs (output enable OE_bar) |
 | 7448 | BCD to 7-segment decoder |
 | 4017 | Decade counter with 10 decoded outputs |
 | 4511 | BCD to 7-segment latch and decoder |

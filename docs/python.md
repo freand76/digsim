@@ -94,6 +94,17 @@ circuit.run(ms=1)
 print(dut.cnt.value)
 ```
 
+Several outputs can drive the same input. It then has the value that they drive, and
+`"X"` (undefined) if they drive different values or one of them drives `"X"`. A
+tristate output, like the output of a `TristateBuffer` or a Verilog output that can be
+`'bz`, is `"Z"` (high impedance) when it doesn't drive, and the other outputs decide:
+
+```python
+first.Y.wire = led.I
+second.Y.wire = led.I  # Both are TristateBuffer outputs
+button.O.wire = led.I  # Its value, unless an enabled buffer drives another one
+```
+
 Interactive components have methods for controlling them, such as `PushButton.push()`
 and `.release()`. Output components such as `Led` accept a `callback` that is called
 whenever their value changes.
@@ -106,7 +117,7 @@ The available components are:
 | Outputs | `Led`, `LedBar`, `HexDigit`, `SevenSegment`, `Buzzer`, `LogicAnalyzer` |
 | Gates | `AND`, `OR`, `NOT`, `XOR`, `XNOR`, `NAND`, `NOR`, `MUX` |
 | Flip-flops | `DFF`, `SR`, `FlipFlop`, `SRFF`, `ClockedSRFF`, `ClockedJKFF`, `ClockedTFF` |
-| Buses | `Bus2Wires`, `Wires2Bus`, `LabelWireIn`, `LabelWireOut` |
+| Buses | `Bus2Wires`, `Wires2Bus`, `TristateBuffer`, `LabelWireIn`, `LabelWireOut` |
 | Complex | `IntegratedCircuit`, `YosysComponent`, `Mem64kByte`, `MemStdOut` |
 
 ## Verilog components

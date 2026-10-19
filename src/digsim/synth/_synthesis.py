@@ -178,7 +178,9 @@ class Synthesis:
         top = self._verilog_top_module
         script = f"read -sv {_script_files(self._verilog_files)}; "
         script += f"hierarchy -top {top}; "
-        script += "proc; flatten; "
+        # Tristate buffers ('bz) become tristate cells: several on one net are merged into
+        # one, and the ones that don't drive an output port of the design become logic
+        script += "proc; flatten; tribuf -merge -logic; "
         if self._functional:
             # The coarse synthesis only, without mapping to gates. Without alumacc, an
             # adder stays an $add cell instead of an $alu, and the memories are mapped to

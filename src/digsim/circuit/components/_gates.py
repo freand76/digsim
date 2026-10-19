@@ -148,13 +148,13 @@ class XOR(ConfigPortsComponent):
         super().__init__(circuit, name, ports)
 
     def update(self) -> None:
-        if any(port.value == "X" for port in self._inports):
+        if any(not isinstance(port.value, int) for port in self._inports):
             self.Y.value = "X"
         else:
             count = 0
             for port in self._inports:
                 value = port.value
-                assert value != "X"
+                assert isinstance(value, int)
                 count += value
             self.Y.value = count % 2
 
@@ -177,13 +177,13 @@ class XNOR(ConfigPortsComponent):
         super().__init__(circuit, name, ports)
 
     def update(self) -> None:
-        if any(port.value == "X" for port in self._inports):
+        if any(not isinstance(port.value, int) for port in self._inports):
             self.Y.value = "X"
         else:
             count = 0
             for port in self._inports:
                 value = port.value
-                assert value != "X"
+                assert isinstance(value, int)
                 count += value
             self.Y.value = 1 - count % 2
 
@@ -350,7 +350,7 @@ class MUX(Component):
 
     def update(self) -> None:
         select = self.S.value
-        if select == "X":
+        if not isinstance(select, int):
             self.Y.value = "X"
             return
         self.Y.value = self._inports[select].value

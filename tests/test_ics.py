@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import IntegratedCircuit, YosysComponent
+from digsim.circuit.components import Bus2Wires, IntegratedCircuit, YosysComponent
 from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
 
@@ -382,7 +382,7 @@ def test_74194_shift_register(kind):
 @pytest.mark.parametrize("kind", KINDS)
 def test_74595_shift_register(kind):
     bench = Bench("74595", kind)
-    bench.set(SRCLK=0, RCLK=0, SRCLR_bar=0)
+    bench.set(SRCLK=0, RCLK=0, SRCLR_bar=0, OE_bar=0)
     bench.set(SRCLR_bar=1)
     bench.pulse("RCLK")
     shift = outputs = 0
@@ -403,6 +403,54 @@ def test_74595_shift_register(kind):
         # The outputs only change with RCLK
         assert bench.get("Q") == outputs, operation
         assert bench.get("QH_serial") == shift >> 7
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_74595_output_enable(kind):
+    """OE_bar high puts the outputs in high impedance, the serial output stays on"""
+    bench = Bench("74595", kind)
+    bench.set(SRCLK=0, RCLK=0, SRCLR_bar=1, OE_bar=1, SER=1)
+    assert bench.chip.Q.is_tristate()
+    assert not bench.chip.QH_serial.is_tristate()
+    for _ in range(8):
+        bench.pulse("SRCLK")
+    bench.pulse("RCLK")
+    assert bench.get("Q") == "Z"
+    assert bench.get("QH_serial") == 1
+    bench.set(OE_bar=0)
+    assert bench.get("Q") == 0xFF
+    bench.set(OE_bar=1)
+    assert bench.get("Q") == "Z"
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_74595_shared_bus(kind):
+    """Two 74595 on one bus, the one with its outputs enabled drives it"""
+    circuit = Circuit()
+    chips = [_chip(circuit, "74595", kind, name=f"U{i}") for i in range(2)]
+    bus = Bus2Wires(circuit, "bus", width=8)
+    for chip in chips:
+        chip.Q.wire = bus.bus
+    circuit.init()
+    # Shift 0xA5 into U0 and 0x3C into U1, and latch them
+    for chip, value in zip(chips, (0xA5, 0x3C), strict=True):
+        chip.SRCLR_bar.value = 1
+        chip.OE_bar.value = 1
+        for bit in range(7, -1, -1):
+            chip.SER.value = (value >> bit) & 1
+            chip.SRCLK.value = 1
+            circuit.run(us=1)
+            chip.SRCLK.value = 0
+            circuit.run(us=1)
+        chip.RCLK.value = 1
+        circuit.run(us=1)
+        chip.RCLK.value = 0
+        circuit.run(us=1)
+    for oe0, oe1, expected in [(0, 1, 0xA5), (1, 0, 0x3C), (1, 1, "Z"), (0, 0, "X")]:
+        chips[0].OE_bar.value = oe0
+        chips[1].OE_bar.value = oe1
+        circuit.run(us=1)
+        assert bus.bus.value == expected, (oe0, oe1)
 
 
 @pytest.mark.parametrize("kind", KINDS)

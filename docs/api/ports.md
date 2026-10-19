@@ -2,7 +2,13 @@
 
 The ports of a component are attributes with the name of the port, like `gate.A` and
 `gate.Y`. Connect an output to an input with `output.wire = input`, and read or set a value
-with `port.value`, either 0 or 1 (or a number for a bus), or `"X"` when it is unknown.
+with `port.value`, either 0 or 1 (or a number for a bus), `"X"` when it is unknown, or `"Z"`
+when it is not driven (high impedance).
+
+Several outputs can drive the same input (see `get_drivers()`). The input has the value
+that they drive, and `"X"` when they drive different values. A tristate port (see
+`set_tristate()`), like the output of `TristateBuffer`, is `"Z"` when it doesn't drive, and
+then the other drivers decide. When none drives, the input is `"Z"`.
 
 All port classes have the methods of `Port`. The other classes are used to write
 [your own components](../components.md): they decide how a port updates its component and
@@ -22,6 +28,9 @@ the ports it drives.
         - is_output
         - has_driver
         - get_driver
+        - get_drivers
+        - set_tristate
+        - is_tristate
         - disconnect
         - remove_wires
         - is_rising_edge

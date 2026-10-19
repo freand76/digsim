@@ -806,7 +806,7 @@ def screenshots() -> None:
     from digsim.app.gui import MainWindow
     from digsim.app.gui._circuit_area import CircuitArea
     from digsim.app.model import AppModel
-    from digsim.circuit.components import OnOffSwitch, PushButton
+    from digsim.circuit.components import DipSwitch, OnOffSwitch, PushButton
 
     app = QApplication.instance() or QApplication([])
     assert app is not None  # keep the application alive while taking screenshots
@@ -851,6 +851,14 @@ def screenshots() -> None:
             simulate(250)
             button.release()
             simulate(500)
+        elif name == "tristate":
+            # Enable the second buffer: its value drives the bus to the hex digit
+            dip_switch = circuit.get_component("DipSwitch")
+            assert isinstance(dip_switch, DipSwitch)
+            simulate(300)
+            dip_switch.select(1)
+            dip_switch.onpress()
+            simulate(300)
         elif name == "buzzers":
             # Press the third button (screenshot while pressed)
             button = circuit.get_component("PushButton_2")

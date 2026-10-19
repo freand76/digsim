@@ -22,6 +22,7 @@ the same seed repeats the same actions.
 from __future__ import annotations
 
 import argparse
+import math
 import os
 import random
 import sys
@@ -37,6 +38,8 @@ from PySide6.QtGui import QContextMenuEvent, QMouseEvent
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QGraphicsItem, QMenu
 
+from digsim.app._wire_key import Wire, drawn_key, port_key, wire_key
+from digsim.app._wire_lines import Lines, Node
 from digsim.app._wire_path import (
     X_OFFSET,
     arrival_offset,
@@ -54,7 +57,6 @@ from digsim.app.gui._circuit_area import (
 from digsim.app.gui_objects import ComponentObject
 from digsim.app.gui_objects._component_port_item import PortGraphicsItem
 from digsim.app.model import AppModel
-from digsim.app.model._model_wires import port_key
 from digsim.circuit.components.atoms import Port
 
 
@@ -74,6 +76,10 @@ COMPONENTS: list[tuple[str, dict[str, Any]]] = [
     ("HexDigit", {"digits": 1, "dot": False}),
     ("Wires2Bus", {"width": 4}),
     ("Bus2Wires", {"width": 4}),
+    ("TristateBuffer", {"width": 1}),
+    ("TristateBuffer", {"width": 1}),
+    ("TristateBuffer", {"width": 4}),
+    ("TristateBuffer", {"width": 4}),
 ]
 # Components are placed in the cells of a grid, so that they don't overlap
 GRID_COLUMNS, GRID_ROWS = 6, 4
@@ -97,16 +103,19 @@ def check(condition: bool, message: str) -> None:
 
 
 def simplify(points: list[tuple[float, float]]) -> list[tuple[float, float]]:
-    """The corners of a line, without repeated points and points in the middle of a line"""
+    """
+    The corners of a line, without repeated points, points in the middle of a line, and
+    stubs where the line goes back the way it came
+    """
     result: list[tuple[float, float]] = []
     for point in [(round(x, 1), round(y, 1)) for x, y in points]:
+        while len(result) >= 2:
+            (x1, y1), (x2, y2) = result[-2], result[-1]
+            if not (x1 == x2 == point[0] or y1 == y2 == point[1]):
+                break
+            result.pop()
         if result and result[-1] == point:
             continue
-        if len(result) >= 2:
-            (x1, y1), (x2, y2) = result[-2], result[-1]
-            if x1 == x2 == point[0] or y1 == y2 == point[1]:
-                result[-1] = point
-                continue
         result.append(point)
     return result
 
@@ -260,10 +269,10 @@ class GuiFuzzer:
 
     # The state of the GUI and the circuit
 
-    def wire_items(self) -> dict[Port, WireGraphicsItem]:
-        """The wire items, by the input port they drive (in a fixed order, for the seed)"""
+    def wire_items(self) -> dict[Wire, WireGraphicsItem]:
+        """The wire items, by (output, input) port (in a fixed order, for the seed)"""
         items = [item for item in self.scene.items() if isinstance(item, WireGraphicsItem)]
-        return {item.dst_port: item for item in sorted(items, key=lambda i: port_key(i.dst_port))}
+        return {item.wire: item for item in sorted(items, key=lambda i: drawn_key(i.wire))}
 
     def component_objects(self) -> list[ComponentObject]:
         """The components in the GUI"""
@@ -296,6 +305,60 @@ class GuiFuzzer:
         start = len(parent_route) - len(parent.corner_points())
         return parent_route[: start + corner] + points
 
+    def gui_lines(self) -> tuple[Lines, dict[Node, tuple[list[Port], list[Port]]]]:
+        """
+        The lines that the wire items make, connected through their ports and the corners
+        where they start or end, and the output and input ports of each line
+        """
+        items = self.wire_items().values()
+        nodes: list[tuple[Node, Node]] = []
+        for item in items:
+            start: Node = (
+                ("port", item._src_port)
+                if item._branch is None
+                else ("wire", item._branch[0].wire)
+            )
+            end: Node = (
+                ("port", item.dst_port) if item._join is None else ("wire", item._join[0].wire)
+            )
+            nodes.append((start, end))
+        lines = Lines((item.wire, *pair) for item, pair in zip(items, nodes, strict=True))
+        ports: dict[Node, tuple[list[Port], list[Port]]] = {}
+        for start, end in nodes:
+            for node in (start, end):
+                port = node[1]
+                if node[0] == "port" and isinstance(port, Port):
+                    outputs, inputs = ports.setdefault(lines.find(node), ([], []))
+                    group = outputs if port.is_output() else inputs
+                    if port not in group:
+                        group.append(port)
+        return lines, ports
+
+    def same_line(self, first: Node, second: Node) -> bool:
+        """Are two ports or wires on the same line in the GUI"""
+        return self.gui_lines()[0].same(first, second)
+
+    def line_items(self, wire: Wire) -> set[Wire]:
+        """The wires of the line of a wire in the GUI"""
+        lines, _ = self.gui_lines()
+        return {
+            other for other in self.wire_items() if lines.same(("wire", other), ("wire", wire))
+        }
+
+    def attached(self, wires: set[Wire]) -> set[Wire]:
+        """The wires that start or end on some wires, and those that start or end on them..."""
+        model = self.model.objects.wires
+        found = set(wires)
+        added = True
+        while added:
+            added = False
+            for wire in self.wire_items():
+                anchors = [model.branch(wire), model.join(wire)]
+                if wire not in found and any(a is not None and a[0] in found for a in anchors):
+                    found.add(wire)
+                    added = True
+        return found - wires
+
     def snapshot(self) -> Any:
         """What undo must restore: the components, connections, wires' lines and paths"""
         gui = self.model.objects.components.get_gui_dict()
@@ -304,16 +367,18 @@ class GuiFuzzer:
             (port_key(src_port), port_key(dst_port)) for src_port, dst_port in self.connections()
         )
         routes = {
-            port_key(dst_port): simplify(self.route(item))
-            for dst_port, item in self.wire_items().items()
+            drawn_key(wire): simplify(self.route(item)) for wire, item in self.wire_items().items()
         }
         # The paths too: a change can keep the line, like merging a step without length
         paths = self.model.objects.wires.to_dict()
         return components, connections, routes, paths
 
-    def routes(self) -> dict[str, list[tuple[float, float]]]:
-        """The line of each wire, from the output port to the input port"""
-        return self.snapshot()[2]
+    def routes(self) -> dict[Wire, list[tuple[float, float]]]:
+        """
+        The line of each wire, from the output port to the input port. By wire, not by its
+        name in the file: that changes when a wire to a shared input is added or deleted.
+        """
+        return {wire: simplify(self.route(item)) for wire, item in self.wire_items().items()}
 
     def check_invariants(self) -> None:
         """The GUI matches the circuit, and the wires are drawn where they belong"""
@@ -329,37 +394,55 @@ class GuiFuzzer:
         )
         for component in toplevel:
             for port in component.ports:
-                driver = port.get_driver() if not port.is_output() else None
+                drivers = port.get_drivers() if not port.is_output() else []
                 check(
-                    driver is None or driver.parent() in toplevel,
+                    all(driver.parent() in toplevel for driver in drivers),
                     f"{port_key(port)} is driven by a deleted component",
+                )
+                check(
+                    len(set(drivers)) == len(drivers),
+                    f"{port_key(port)} has the same driver twice",
                 )
                 for wired in port.wired_ports if port.is_output() else []:
                     check(wired.parent() in toplevel, f"{port_key(port)} drives a deleted port")
         items = self.wire_items()
         wire_items = [i for i in self.scene.items() if isinstance(i, WireGraphicsItem)]
-        check(len(wire_items) == len(items), "two wire items drive the same input port")
-        gui = {(item._src_port, dst_port) for dst_port, item in items.items()}
+        check(len(wire_items) == len(items), "two wire items for the same wire")
+        gui = set(items)
         connections = self.connections()
+        wires = self.model.objects.wires
+        drawn = set(wires.drawn())
         check(
-            gui == connections,
-            "GUI wires != circuit connections: "
-            + str(sorted(f"{port_key(s)}->{port_key(d)}" for s, d in gui ^ connections)),
+            gui == drawn,
+            "GUI wires != drawn wires: "
+            + str(sorted(f"{port_key(s)}->{port_key(d)}" for s, d in gui ^ drawn)),
         )
+        implied = {wire for wire in connections if wires.is_implied(wire)}
+        check(
+            connections <= drawn | implied,
+            "connections that are neither drawn nor implied: "
+            + str(sorted(map(wire_key, connections - drawn - implied))),
+        )
+        self.check_lines(connections)
         for part in [i for i in self.scene.items() if isinstance(i, WirePartGraphicsItem)]:
             check(part.parentItem() in wire_items, "a wire segment without its wire")
-        wires = self.model.objects.wires
         check(
-            set(wires.to_dict()) == {port_key(d) for _, d in connections},
-            "the saved wires are not the connections",
+            set(wires.to_dict())
+            == {wire_key(wire) for wire in implied} | {drawn_key(wire) for wire in drawn},
+            "the saved wires are not the drawn and the implied wires",
         )
-        for dst_port, item in items.items():
-            name = port_key(dst_port)
+        for wire, item in items.items():
+            name = drawn_key(wire)
             points = item.corner_points()
             check(len(item._path) % 2 == 1, f"{name}: invalid path {item._path}")
-            check(points == wires.corner_points(dst_port), f"{name}: GUI and model differ")
-            check(points[-1] == self.port_pos(dst_port), f"{name}: doesn't end at its port")
-            branch = wires.branch(dst_port)
+            check(points == wires.corner_points(wire), f"{name}: GUI and model differ")
+            joint = wires.join(wire)
+            if joint is None:
+                check(points[-1] == self.port_pos(wire[1]), f"{name}: doesn't end at its port")
+                check(item._join is None, f"{name}: joins a line in the GUI only")
+            else:
+                self.check_joined(wire, item, items)
+            branch = wires.branch(wire)
             if branch is None:
                 check(item._branch is None, f"{name}: a branch in the GUI only")
                 check(
@@ -369,11 +452,11 @@ class GuiFuzzer:
             else:
                 parent, corner = branch
                 check(
-                    item._branch is not None and item._branch[0].dst_port == parent,
+                    item._branch is not None and item._branch[0].wire == parent,
                     f"{name}: starts on another wire in the GUI",
                 )
                 check(
-                    parent.get_driver() is item._src_port,
+                    parent[0] is item._src_port,
                     f"{name}: starts on a wire from another output",
                 )
                 parent_points = items[parent].corner_points()
@@ -386,26 +469,77 @@ class GuiFuzzer:
                     f"{name}: doesn't start at its corner",
                 )
                 check(
-                    port_key(dst_port) not in [port_key(w) for w in wires.route(parent)],
+                    wire not in wires.route(parent),
                     f"{name}: starts on itself",
                 )
         selected = self.scene._selected_wires
         check(selected <= set(items), "a deleted wire is selected")
 
+    def check_lines(self, connections: set[Wire]) -> None:
+        """
+        Each output port of a line drives each input port of it, and a connection is
+        between ports of the same line
+        """
+        lines, ports = self.gui_lines()
+        for src_port, dst_port in connections:
+            check(
+                lines.same(("port", src_port), ("port", dst_port)),
+                f"{port_key(src_port)} drives {port_key(dst_port)}, not on its line",
+            )
+        for outputs, inputs in ports.values():
+            for src_port in outputs:
+                for dst_port in inputs:
+                    check(
+                        (src_port, dst_port) in connections,
+                        f"{port_key(src_port)} doesn't drive {port_key(dst_port)} of its line",
+                    )
+
+    def check_joined(
+        self, wire: Wire, item: WireGraphicsItem, items: dict[Wire, WireGraphicsItem]
+    ) -> None:
+        """A joined wire ends at a corner of another wire"""
+        wires = self.model.objects.wires
+        name = drawn_key(wire)
+        joint = wires.join(wire)
+        assert joint is not None
+        host, corner = joint
+        check(host in items, f"{name}: joins a deleted wire")
+        check(host != wire, f"{name}: ends on itself")
+        check(
+            item._join is not None and item._join[0].wire == host,
+            f"{name}: joins another line in the GUI",
+        )
+        host_points = items[host].corner_points()
+        check(1 <= corner <= len(host_points) - 2, f"{name}: ends at corner {corner} of its line")
+        check(
+            item.corner_points()[-1] == host_points[corner],
+            f"{name}: doesn't end at its corner of the line",
+        )
+        check(
+            self.same_line(("port", wire[1]), ("wire", wire)),
+            f"{name}: is known by {port_key(wire[1])}, not on its line",
+        )
+
     # Choices
 
-    def free_inputs(self, width: int | None = None) -> list[Port]:
-        """Input ports without a driver"""
+    def free_inputs(self, width: int | None = None, wire: Wire | None = None) -> list[Port]:
+        """Input ports without a driver (not on the line of a wire)"""
         return [
             port
             for obj in self.component_objects()
             for port in obj.component.inports()
-            if not port.has_driver() and (width is None or port.width == width)
+            if not port.has_driver()
+            and (width is None or port.width == width)
+            and (wire is None or not self.same_line(("port", port), ("wire", wire)))
         ]
 
     def outputs(self) -> list[Port]:
         """All output ports"""
         return [port for obj in self.component_objects() for port in obj.component.outports()]
+
+    def inputs(self) -> list[Port]:
+        """All input ports"""
+        return [port for obj in self.component_objects() for port in obj.component.inports()]
 
     def port_click_pos(self, port: Port) -> tuple[float, float]:
         """Where a click hits a port, Skip if another item is on top of it"""
@@ -447,12 +581,21 @@ class GuiFuzzer:
                 pass
         return choose()
 
-    def segment_pos(self) -> tuple[WirePartGraphicsItem, tuple[float, float]]:
-        """A position on a random wire segment, and the segment that a click there hits"""
-        return self.retry(self._segment_pos)
+    def segment_pos(
+        self, wanted: Callable[[Wire], bool] | None = None
+    ) -> tuple[WirePartGraphicsItem, tuple[float, float]]:
+        """
+        A position on a random wire segment (of the wires that are 'wanted'), and the
+        segment that a click there hits
+        """
+        return self.retry(lambda: self._segment_pos(wanted))
 
-    def _segment_pos(self) -> tuple[WirePartGraphicsItem, tuple[float, float]]:
-        items = list(self.wire_items().values())
+    def _segment_pos(
+        self, wanted: Callable[[Wire], bool] | None = None
+    ) -> tuple[WirePartGraphicsItem, tuple[float, float]]:
+        items = [
+            item for wire, item in self.wire_items().items() if wanted is None or wanted(wire)
+        ]
         if not items:
             raise Skip("no wires")
         item = self.rng.choice(items)
@@ -531,22 +674,18 @@ class GuiFuzzer:
         return clicks, not failed
 
     def check_drawn_shape(
-        self, dst_port: Port, clicks: list[tuple[float, float]], from_source: bool
+        self, wire: Wire, clicks: list[tuple[float, float]], from_source: bool
     ) -> None:
         """
         A finished wire has the shape it was drawn with: across to each click and up or
         down to it, and then to the other end, with its last bend just before that end
         """
         wires = self.model.objects.wires
-        points = wires.corner_points(dst_port)
-        if (
-            not clicks
-            and not is_forwards(points[0], points[-1])
-            and wires.branch(dst_port) is None
-        ):
+        points = wires.corner_points(wire)
+        if not clicks and not is_forwards(points[0], points[-1]) and wires.branch(wire) is None:
             # Backwards without clicks: the automatic route around the component
             return
-        branch = wires.branch(dst_port)
+        branch = wires.branch(wire)
         if branch is not None:
             # Drawn on along the wire it starts on, at the same height: a step down instead
             joint, port = points[0], points[-1]
@@ -570,6 +709,9 @@ class GuiFuzzer:
         drawn = drawing_points(start, [*clicks, end])
         if from_source:
             step = -X_OFFSET
+            if branch is not None and not clicks and end[0] + step == start[0]:
+                # The port is just beside the corner: up or down halfway to it
+                step = math.floor((start[0] + end[0]) / 2) - end[0]
         elif branch is not None:
             # A wire reaches another wire without the step that a port needs, unless it
             # would reach it along the other wire
@@ -580,22 +722,22 @@ class GuiFuzzer:
         expected = [*drawn[:-2], (end[0] + step, drawn[-3][1]), (end[0] + step, end[1]), end]
         check(points == expected, f"the wire doesn't keep its drawn shape: {points} != {expected}")
 
-    def check_across(self, dst_port: Port) -> None:
+    def check_across(self, wire: Wire) -> None:
         """A new branch leaves (or reaches) a joint across the wire, not along it"""
         wires = self.model.objects.wires
-        branch = wires.branch(dst_port)
-        check(branch is not None, f"{port_key(dst_port)} is not a branch")
+        branch = wires.branch(wire)
+        check(branch is not None, f"{drawn_key(wire)} is not a branch")
         assert branch is not None
         taken = wires.taken_directions(*branch)
         if taken not in ({"left", "right"}, {"up", "down"}):
             return  # a corner: the user's clicks may lead along the wire
-        start, *rest = wires.corner_points(dst_port)
+        start, *rest = wires.corner_points(wire)
         other = next(point for point in rest if point != start)
         if other[0] != start[0]:
             way = "right" if other[0] > start[0] else "left"
         else:
             way = "down" if other[1] > start[1] else "up"
-        check(way not in taken, f"{port_key(dst_port)} runs {way} along the wire from the joint")
+        check(way not in taken, f"{drawn_key(wire)} runs {way} along the wire from the joint")
 
     def connect_ports(self) -> str:
         outputs = self.outputs()
@@ -613,12 +755,142 @@ class GuiFuzzer:
             lambda: self.click(start_pos), end_port, self.rng.randint(0, 3), expect_ok=True
         )
         check((src_port, dst_port) in self.connections(), "the wire is not in the circuit")
-        self.check_drawn_shape(dst_port, clicks, from_output)
+        self.check_drawn_shape((src_port, dst_port), clicks, from_output)
         check(
-            self.model.objects.wires.branch(dst_port) is None,
+            self.model.objects.wires.branch((src_port, dst_port)) is None,
             "a wire from a port starts on a wire",
         )
         return f"wire {port_key(start_port)} -> {port_key(end_port)} corners {clicks}"
+
+    def connect_shared(self) -> str:
+        """An output to an input that other outputs drive: a wire of its own"""
+        outputs = self.outputs()
+        if not outputs:
+            raise Skip("no outputs")
+        src_port = self.rng.choice(outputs)
+        inputs = [
+            port
+            for obj in self.component_objects()
+            for port in obj.component.inports()
+            if port.width == src_port.width
+            and port.has_driver()
+            and not self.same_line(("port", src_port), ("port", port))
+        ]
+        if not inputs:
+            raise Skip("no shared input")
+        dst_port = self.rng.choice(inputs)
+        drivers = dst_port.get_drivers()
+        before = self.routes()
+        from_output = self.rng.random() < 0.6
+        start_port, end_port = (src_port, dst_port) if from_output else (dst_port, src_port)
+        start_pos = self.port_click_pos(start_port)
+        clicks, _ = self._draw(
+            lambda: self.click(start_pos), end_port, self.rng.randint(0, 3), expect_ok=True
+        )
+        check(
+            dst_port.get_drivers()[: len(drivers) + 1] == [*drivers, src_port],
+            f"{port_key(dst_port)} is driven by {list(map(port_key, dst_port.get_drivers()))}",
+        )
+        wire = (src_port, dst_port)
+        check(self.model.objects.wires.branch(wire) is None, "a wire from a port is a branch")
+        self.check_drawn_shape(wire, clicks, from_output)
+        after = self.routes()
+        changed = [drawn_key(key) for key in before if before[key] != after.get(key)]
+        check(not changed, f"other wires changed: {changed}")
+        return f"shared wire {port_key(start_port)} -> {port_key(end_port)} corners {clicks}"
+
+    def connect_join(self) -> str:
+        """
+        A wire from an output to the line of another output: it drives all the line's
+        inputs then. On a line that can't be joined, the click is a corner.
+        """
+        outputs = self.outputs()
+        if not outputs:
+            raise Skip("no outputs")
+        src_port = self.rng.choice(outputs)
+        wires = self.model.objects.wires
+
+        def can_join(line: Wire) -> bool:
+            return src_port.width == line[0].width and not self.same_line(
+                ("port", src_port), ("wire", line)
+            )
+
+        # Mostly a line that can be joined, sometimes any line (a corner then)
+        if self.rng.random() < 0.8:
+            part, pos = self.segment_pos(can_join)
+        else:
+            part, pos = self.segment_pos()
+        line = part.wire_item.wire
+        expect_ok = can_join(line)
+        start_pos = self.port_click_pos(src_port)
+        self.clear_selection()
+        before = self.routes()
+        connections = self.connections()
+        targets: list[Any] = []
+        if not expect_ok:
+            return self._corner_on_line(start_pos, drawn_key(line), pos, connections)
+
+        def start() -> None:
+            self.click(start_pos)
+            target = self.scene.wire_end_at(QPointF(*pos))
+            # At the edge of an item, the view and the scene may see different items
+            if target is None or target[0] != line:
+                raise Skip("another item at the edge")
+            targets.append(target)
+
+        self._draw(start, pos, self.rng.randint(0, 2), expect_ok=True)
+        after = self.routes()
+        changed = [drawn_key(key) for key in before if before[key] != after.get(key)]
+        check(not changed, f"other wires changed: {changed}")
+        wire = (src_port, line[1])
+        check(wire in self.wire_items(), f"no wire {drawn_key(wire)}")
+        check(connections <= self.connections(), "a connection is gone")
+        joint = wires.join(wire)
+        check(joint is not None and joint[0] == line, f"joins {joint}, not {drawn_key(line)}")
+        assert joint is not None
+        end = wires.corner_points(wire)[-1]
+        _, number, point = targets[0]
+        if point is None:
+            check(joint[1] == number, f"ends at corner {joint[1]}, not {number}")
+        else:
+            check(
+                abs(end[0] - pos[0]) <= 1 and abs(end[1] - pos[1]) <= 1,
+                f"ends at {end}, not {pos}",
+            )
+        return f"join {port_key(src_port)} -> {drawn_key(line)} at {end}"
+
+    def _corner_on_line(
+        self,
+        start_pos: tuple[float, float],
+        name: str,
+        pos: tuple[float, float],
+        connections: set[Wire],
+    ) -> str:
+        """A click on a line that the wire being drawn can't end on: a corner"""
+        items = self.scene.items(QPointF(*pos))
+        if any(isinstance(item, PortGraphicsItem) for item in items):
+            raise Skip("a port at the line")
+        self.click(start_pos)
+        new_wire = self.model.objects.new_wire
+        check(new_wire.ongoing(), "the wire didn't start")
+        if self.scene.wire_end_at(QPointF(*pos)) is not None:
+            # Another line there, that can be joined
+            QTest.keyClick(self.window, Qt.Key.Key_Escape)
+            raise Skip("a line that can be joined at the same place")
+        before = len(self.errors)
+        self.click(pos)
+        self.spin()
+        check(len(self.errors) == before, f"an error: {self.errors[before:]}")
+        check(new_wire.ongoing(), "a click on a line that can't be joined ended the wire")
+        clicks = new_wire.clicks()
+        check(
+            bool(clicks) and abs(clicks[-1][0] - pos[0]) <= 1 and abs(clicks[-1][1] - pos[1]) <= 1,
+            f"the corners are {clicks}, not ending at {pos}",
+        )
+        QTest.keyClick(self.window, Qt.Key.Key_Escape)
+        self.spin()
+        check(self.connections() == connections, "a line that can't be shared was joined")
+        return f"corner on {name}, that the wire can't end on"
 
     def _corner_pos(self) -> tuple[WirePartGraphicsItem, tuple[float, float], int]:
         """A position on a random corner, the segment that a click there hits, its corner"""
@@ -652,10 +924,10 @@ class GuiFuzzer:
 
     def connect_from_corner(self) -> str:
         top, pos, hit = self.retry(self._corner_pos)
-        anchor = (top._parent.dst_port, hit)
+        anchor = (top._parent.wire, hit)
         corner_point = top._parent.corner_points()[hit]
         src_port = top._parent._src_port
-        inputs = self.free_inputs(src_port.width)
+        inputs = self.free_inputs(src_port.width, anchor[0])
         if not inputs:
             raise Skip("no free input")
         dst_port = self.rng.choice(inputs)
@@ -664,63 +936,169 @@ class GuiFuzzer:
             lambda: self.click(pos), dst_port, self.rng.randint(0, 2), expect_ok=True
         )
         wires = self.model.objects.wires
-        check((src_port, dst_port) in self.connections(), "the branch is not in the circuit")
-        self.check_drawn_shape(dst_port, clicks, from_source=True)
+        wire = (src_port, dst_port)
+        check(wire in self.wire_items(), "the branch is not drawn")
+        self.check_drawn_shape(wire, clicks, from_source=True)
         check(
-            wires.branch(dst_port) == anchor,
-            f"the branch starts at {wires.branch(dst_port)}, not {anchor}",
+            wires.branch(wire) == anchor,
+            f"the branch starts at {wires.branch(wire)}, not {anchor}",
         )
         check(
-            wires.corner_points(dst_port)[0] == corner_point,
+            wires.corner_points(wire)[0] == corner_point,
             "the branch doesn't start at the clicked corner",
         )
-        self.check_across(dst_port)
+        self.check_across(wire)
         after = self.routes()
-        changed = [key for key in before if before[key] != after.get(key)]
+        changed = [drawn_key(key) for key in before if before[key] != after.get(key)]
         check(not changed, f"other wires changed: {changed}")
-        return f"branch from {port_key(anchor[0])} corner {hit} -> {port_key(dst_port)}"
+        return f"branch from {drawn_key(anchor[0])} corner {hit} -> {port_key(dst_port)}"
+
+    def connect_join_from_line(self) -> str:
+        """
+        A wire drawn from a corner of a line to an output port: the output joins the line,
+        and drives all its inputs
+        """
+        top, pos, hit = self.retry(self._corner_pos)
+        line = top._parent.wire
+        wires = self.model.objects.wires
+        outputs = [
+            port
+            for port in self.outputs()
+            if port.width == line[0].width and not self.same_line(("port", port), ("wire", line))
+        ]
+        if not outputs:
+            raise Skip("no output that can join")
+        src_port = self.rng.choice(outputs)
+        corner_point = top._parent.corner_points()[hit]
+        before = self.routes()
+        connections = self.connections()
+        clicks, _ = self._draw(
+            lambda: self.click(pos), src_port, self.rng.randint(0, 2), expect_ok=True
+        )
+        after = self.routes()
+        changed = [drawn_key(key) for key in before if before[key] != after.get(key)]
+        check(not changed, f"other wires changed: {changed}")
+        wire = (src_port, line[1])
+        check(wire in self.wire_items(), f"no wire {drawn_key(wire)}")
+        check(connections <= self.connections(), "a connection is gone")
+        check(wires.join(wire) == (line, hit), f"joins {wires.join(wire)}")
+        check(
+            wires.corner_points(wire)[-1] == corner_point,
+            "the wire doesn't end at the clicked corner",
+        )
+        points = wires.corner_points(wire)
+        check(
+            all(
+                any(abs(x - cx) <= 1 and abs(y - cy) <= 1 for x, y in points) for cx, cy in clicks
+            ),
+            f"the wire {points} doesn't run through the clicks {clicks}",
+        )
+        return f"join {port_key(src_port)} from {drawn_key(line)} corner {hit} corners {clicks}"
+
+    def connect_lines(self) -> str:
+        """A wire from a corner of a wire to a wire of another line: the lines become one"""
+        # Before choosing: a selected wire is on top of the others
+        self.clear_selection()
+        top, pos, hit = self.retry(self._corner_pos)
+        start = (top._parent.wire, hit)
+        width = start[0][0].width
+
+        def other_line(wire: Wire) -> bool:
+            return wire[0].width == width and not self.same_line(
+                ("wire", wire), ("wire", start[0])
+            )
+
+        part, end_pos = self.segment_pos(other_line)
+        line = part.wire_item.wire
+        before = self.routes()
+        connections = self.connections()
+        targets: list[Any] = []
+
+        def start_wire() -> None:
+            self.click(pos)
+            target = self.scene.wire_end_at(QPointF(*end_pos))
+            # At the edge of an item, the view and the scene may see different items
+            if target is None or target[0] != line:
+                raise Skip("another item at the edge")
+            targets.append(target)
+
+        clicks, _ = self._draw(start_wire, end_pos, self.rng.randint(0, 2), expect_ok=True)
+        after = self.routes()
+        changed = [drawn_key(key) for key in before if before[key] != after.get(key)]
+        check(not changed, f"other wires changed: {changed}")
+        wires = self.model.objects.wires
+        wire = (start[0][0], line[1])
+        check(wire in self.wire_items(), f"no wire {drawn_key(wire)}")
+        check(connections <= self.connections(), "a connection is gone")
+        check(wires.branch(wire) == start, f"starts at {wires.branch(wire)}, not {start}")
+        joint = wires.join(wire)
+        check(joint is not None and joint[0] == line, f"ends on {joint}, not {drawn_key(line)}")
+        assert joint is not None
+        points = wires.corner_points(wire)
+        _, number, point = targets[0]
+        if point is None:
+            check(joint[1] == number, f"ends at corner {joint[1]}, not {number}")
+        else:
+            check(
+                abs(points[-1][0] - end_pos[0]) <= 1 and abs(points[-1][1] - end_pos[1]) <= 1,
+                f"ends at {points[-1]}, not {end_pos}",
+            )
+        check(
+            all(
+                any(abs(x - cx) <= 1 and abs(y - cy) <= 1 for x, y in points) for cx, cy in clicks
+            ),
+            f"the wire {points} doesn't run through the clicks {clicks}",
+        )
+        return f"wire from {drawn_key(start[0])} corner {hit} to {drawn_key(line)} at {points[-1]}"
 
     def connect_to_corner(self) -> str:
         """A wire drawn from an input port to a corner of a wire, also of another width"""
         top, pos, hit = self.retry(self._corner_pos)
-        anchor = (top.wire_item.dst_port, hit)
+        anchor = (top.wire_item.wire, hit)
         corner_point = top.wire_item.corner_points()[hit]
         src_port = top.wire_item._src_port
         same_width = self.rng.random() < 0.85
-        inputs = [p for p in self.free_inputs() if (p.width == src_port.width) == same_width]
+        inputs = [
+            p
+            for p in self.free_inputs(wire=anchor[0])
+            if (p.width == src_port.width) == same_width
+        ]
         if not inputs:
             raise Skip("no free input")
         dst_port = self.rng.choice(inputs)
         start_pos = self.port_click_pos(dst_port)
+        if not same_width:
+            # Not on a wire of another width, the click is a corner of the wire
+            self.clear_selection()
+            name = f"{drawn_key(anchor[0])} corner {hit} of another width"
+            return self._corner_on_line(start_pos, name, pos, self.connections())
         before = self.routes()
         clicks, _ = self._draw(
-            lambda: self.click(start_pos), pos, self.rng.randint(0, 2), expect_ok=same_width
+            lambda: self.click(start_pos), pos, self.rng.randint(0, 2), expect_ok=True
         )
         after = self.routes()
-        changed = [key for key in before if before[key] != after.get(key)]
+        changed = [drawn_key(key) for key in before if before[key] != after.get(key)]
         check(not changed, f"other wires changed: {changed}")
-        if not same_width:
-            check(dst_port.get_driver() is None, "a wire of another width was connected")
-            return f"invalid (width) {port_key(dst_port)} -> {port_key(anchor[0])} corner {hit}"
         wires = self.model.objects.wires
-        check((src_port, dst_port) in self.connections(), "the branch is not in the circuit")
+        wire = (src_port, dst_port)
+        check(wire in self.wire_items(), "the branch is not drawn")
         check(
-            wires.branch(dst_port) == anchor,
-            f"the branch starts at {wires.branch(dst_port)}, not {anchor}",
+            wires.branch(wire) == anchor,
+            f"the branch starts at {wires.branch(wire)}, not {anchor}",
         )
         check(
-            wires.corner_points(dst_port)[0] == corner_point,
+            wires.corner_points(wire)[0] == corner_point,
             "the branch doesn't start at the clicked corner",
         )
-        self.check_drawn_shape(dst_port, clicks, from_source=False)
-        self.check_across(dst_port)
-        return f"branch {port_key(dst_port)} -> {port_key(anchor[0])} corner {hit}"
+        self.check_drawn_shape(wire, clicks, from_source=False)
+        self.check_across(wire)
+        return f"branch {port_key(dst_port)} -> {drawn_key(anchor[0])} corner {hit}"
 
     def connect_to_segment(self) -> str:
         """A wire drawn from an input port to a straight part of a wire, at a new joint"""
         part, pos = self.retry(self.segment_pos)
         src_port = part.wire_item._src_port
-        inputs = self.free_inputs(src_port.width)
+        inputs = self.free_inputs(src_port.width, part.wire_item.wire)
         if not inputs:
             raise Skip("no free input")
         dst_port = self.rng.choice(inputs)
@@ -733,7 +1111,7 @@ class GuiFuzzer:
             self.click(start_pos)
             target = self.scene.wire_end_at(QPointF(*pos))
             # At the edge of an item, the view and the scene may see different items
-            if target is None or target[0] is not part.wire_item.dst_port:
+            if target is None or target[0] != part.wire_item.wire:
                 raise Skip("another item at the edge")
             targets.append(target)
 
@@ -741,43 +1119,85 @@ class GuiFuzzer:
         # The wire on top, at its corner close by or on the segment
         wire, number, point = targets[0]
         wires = self.model.objects.wires
-        check((src_port, dst_port) in self.connections(), "the branch is not in the circuit")
-        branch = wires.branch(dst_port)
-        start_point = wires.corner_points(dst_port)[0]
+        check((src_port, dst_port) in self.wire_items(), "the branch is not drawn")
+        branch = wires.branch((src_port, dst_port))
+        start_point = wires.corner_points((src_port, dst_port))[0]
         if point is None:
             check(branch == (wire, number), f"the branch starts at {branch}, not corner {number}")
         else:
-            check(branch is not None and branch[0] is wire, f"the branch starts on {branch}")
+            check(branch is not None and branch[0] == wire, f"the branch starts on {branch}")
             check(
                 abs(start_point[0] - pos[0]) <= 1 and abs(start_point[1] - pos[1]) <= 1,
                 f"the branch starts at {start_point}, not {pos}",
             )
         after = self.routes()
-        changed = [key for key in before if before[key] != after.get(key)]
+        changed = [drawn_key(key) for key in before if before[key] != after.get(key)]
         check(not changed, f"other wires changed: {changed}")
-        self.check_drawn_shape(dst_port, drawn, from_source=False)
-        self.check_across(dst_port)
-        return f"branch {port_key(dst_port)} -> {port_key(wire)} at {start_point}"
+        self.check_drawn_shape((src_port, dst_port), drawn, from_source=False)
+        self.check_across((src_port, dst_port))
+        return f"branch {port_key(dst_port)} -> {drawn_key(wire)} at {start_point}"
 
     def connect_invalid(self) -> str:
-        """A connection that must fail: to a driven input, another width, or two outputs"""
+        """A connection that must fail: to a driven input, another width, or the same port"""
         outputs = self.outputs()
-        if len(outputs) < 2:
-            raise Skip("too few outputs")
+        if not outputs:
+            raise Skip("no outputs")
         src_port = self.rng.choice(outputs)
-        kind = self.rng.choice(["driven", "width", "output"])
+        kind = self.rng.choice(["driven", "width", "itself"])
         if kind == "driven":
-            candidates = sorted((d for _, d in self.connections()), key=port_key)
+            # An input that the output drives already
+            candidates = sorted((d for s, d in self.connections() if s is src_port), key=port_key)
         elif kind == "width":
             candidates = [p for p in self.free_inputs() if p.width != src_port.width]
         else:
-            candidates = [p for p in outputs if p is not src_port]
+            candidates = [src_port]
         if not candidates:
             raise Skip("no candidate")
         end_port = self.rng.choice(candidates)
         start_pos = self.port_click_pos(src_port)
         self._draw(lambda: self.click(start_pos), end_port, 0, expect_ok=False)
         return f"invalid ({kind}) {port_key(src_port)} -> {port_key(end_port)}"
+
+    def connect_same_kind(self) -> str:
+        """A wire between two output ports, or two input ports: their lines become one"""
+        ports = self.outputs() if self.rng.random() < 0.5 else self.inputs()
+        if len(ports) < 2:
+            raise Skip("too few ports")
+        start_port = self.rng.choice(ports)
+        others = [
+            port
+            for port in ports
+            if port is not start_port
+            and port.width == start_port.width
+            and not self.same_line(("port", start_port), ("port", port))
+        ]
+        if not others:
+            raise Skip("no port on another line")
+        end_port = self.rng.choice(others)
+        start_pos = self.port_click_pos(start_port)
+        before = self.routes()
+        connections = self.connections()
+        clicks, _ = self._draw(
+            lambda: self.click(start_pos), end_port, self.rng.randint(0, 2), expect_ok=True
+        )
+        wire = (start_port, end_port)
+        check(wire in self.wire_items(), f"no wire {drawn_key(wire)}")
+        check(connections <= self.connections(), "a connection is gone")
+        check(
+            self.same_line(("port", start_port), ("port", end_port)),
+            f"{port_key(start_port)} and {port_key(end_port)} are not on one line",
+        )
+        points = self.model.objects.wires.corner_points(wire)
+        check(
+            all(
+                any(abs(x - cx) <= 1 and abs(y - cy) <= 1 for x, y in points) for cx, cy in clicks
+            ),
+            f"the wire {points} doesn't run through the clicks {clicks}",
+        )
+        after = self.routes()
+        changed = [drawn_key(key) for key in before if before[key] != after.get(key)]
+        check(not changed, f"other wires changed: {changed}")
+        return f"wire {port_key(start_port)} -> {port_key(end_port)} corners {clicks}"
 
     def draw_and_abort(self) -> str:
         outputs = self.outputs()
@@ -792,43 +1212,64 @@ class GuiFuzzer:
         check(not self.model.objects.new_wire.ongoing(), "Esc didn't stop the wire")
         return "draw and abort with Esc"
 
-    def _delete_selected(self, expected: set[Port]) -> None:
+    def check_deleted(
+        self,
+        before: dict[Wire, list[tuple[float, float]]],
+        connections: set[Wire],
+        deleted: set[Wire],
+        gone: set[Wire],
+    ) -> None:
+        """
+        The deleted wires are gone, and the connections whose ports aren't on the same
+        line any more ('gone' go anyway). The other wires keep their shape, a joined wire
+        can be known by another input port of its line.
+        """
+        after = self.routes()
+        for wire in deleted:
+            check(
+                wire not in after or after[wire] != before.get(wire),
+                f"the deleted wire {drawn_key(wire)} is still there",
+            )
+        lines = self.gui_lines()[0]
+        for wire in connections - self.connections() - gone:
+            check(
+                not lines.same(("port", wire[0]), ("port", wire[1])),
+                f"{wire_key(wire)} is disconnected, but its ports are on one line",
+            )
+        for key, line in after.items():
+            if key in before:
+                check(before[key] == line, f"the wire {drawn_key(key)} changed shape")
+
+    def _delete_selected(self, expected: set[Wire]) -> None:
         before = self.routes()
         connections = self.connections()
         self.model.objects.delete_selected()
         self.spin()
-        removed = {d for _, d in connections - self.connections()}
-        check(
-            removed == expected,
-            f"deleted {sorted(map(port_key, removed))}, expected {sorted(map(port_key, expected))}",
-        )
-        after = self.routes()
-        for key, line in after.items():
-            check(before.get(key) == line, f"the wire to {key} changed shape")
+        self.check_deleted(before, connections, expected, set())
 
     def delete_route(self) -> str:
         self.clear_selection()
         part, pos = self.segment_pos()
         self.click(pos)
         wires = self.model.objects.wires
-        expected = set(wires.sinks_through(part._parent.dst_port, part.segment))
+        expected = set(wires.sinks_through(part._parent.wire, part.segment))
         selected = set(self.scene._selected_wires)
         check(
             selected == expected,
-            f"click selected {sorted(map(port_key, selected))}, "
-            f"expected {sorted(map(port_key, expected))}",
+            f"click selected {sorted(map(wire_key, selected))}, "
+            f"expected {sorted(map(wire_key, expected))}",
         )
         # Selected from the closest split before the clicked segment
-        firsts = wires.selection(part._parent.dst_port, part.segment)
-        for dst_port, item in self.wire_items().items():
-            first = firsts.get(dst_port)
+        firsts = wires.selection(part._parent.wire, part.segment)
+        for wire, item in self.wire_items().items():
+            first = firsts.get(wire)
             shown = [p.is_wire_selected() for p in item._part_items]
             check(
                 shown == [first is not None and p.segment >= first for p in item._part_items],
-                f"{port_key(dst_port)} shows {shown} selected, from segment {first} expected",
+                f"{drawn_key(wire)} shows {shown} selected, from segment {first} expected",
             )
         self._delete_selected(expected)
-        return f"delete {port_key(part._parent.dst_port)} segment {part.segment}"
+        return f"delete {drawn_key(part._parent.wire)} segment {part.segment}"
 
     def delete_tree(self) -> str:
         self.clear_selection()
@@ -844,15 +1285,16 @@ class GuiFuzzer:
             state = self.context_menu(pos, "Select wire tree")
             check(state.get("Select wire tree", False), f"no Select wire tree in {state}")
             how = "menu"
-        expected = set(self.model.objects.wires.tree(part._parent.dst_port))
+        # The whole line
+        expected = self.line_items(part._parent.wire)
         selected = set(self.scene._selected_wires)
         check(
             selected == expected,
-            f"{how} selected {sorted(map(port_key, selected))}, "
-            f"expected the tree {sorted(map(port_key, expected))}",
+            f"{how} selected {sorted(map(wire_key, selected))}, "
+            f"expected the tree {sorted(map(wire_key, expected))}",
         )
         self._delete_selected(expected)
-        return f"delete tree of {port_key(part._parent.dst_port)} by {how}"
+        return f"delete tree of {drawn_key(part._parent.wire)} by {how}"
 
     def delete_component(self) -> str:
         objects = self.component_objects()
@@ -863,25 +1305,18 @@ class GuiFuzzer:
         self.clear_selection()
         obj.setSelected(True)
         self.spin(5)
-        expected = {d for s, d in self.connections() if component in (s.parent(), d.parent())}
+        gone = {w for w in self.connections() if component in (w[0].parent(), w[1].parent())}
         # Wires that start on a deleted wire stay, the routes of the others don't change
         before = self.routes()
         connections = self.connections()
         self.model.objects.delete_selected()
         self.spin()
-        removed = {d for _, d in connections - self.connections()}
-        check(
-            removed == expected,
-            f"deleting {component.name()} removed {sorted(map(port_key, removed))}, "
-            f"expected {sorted(map(port_key, expected))}",
-        )
+        check(not gone & self.connections(), "a connection of the component is still there")
         check(
             component not in self.model.objects.circuit.get_toplevel_components(),
             "the component is still in the circuit",
         )
-        after = self.routes()
-        for key, line in after.items():
-            check(before.get(key) == line, f"the wire to {key} changed shape")
+        self.check_deleted(before, connections, set(), gone)
         return f"delete component {component.name()}"
 
     def drag_segment(self) -> str:
@@ -904,53 +1339,53 @@ class GuiFuzzer:
         item = top._parent
         segment = top._handle_at(QPointF(*dot))
         assert segment is not None
-        dst_port = item.dst_port
-        others = {
-            key: line
-            for key, line in self.routes().items()
-            if key not in [port_key(w) for w in self.model.objects.wires.tree(dst_port)]
-        }
+        wire = item.wire
+        wires = self.model.objects.wires
+        tree = set(wires.tree(wire))
+        # The wires that start or end on the tree follow it
+        following = tree | self.attached(tree)
+        others = {key: line for key, line in self.routes().items() if key not in following}
         delta = self.rng.choice([-60, -30, 30, 60])
         vertical = segment % 2 == 1
         end = self.snap((dot[0] + delta, dot[1]) if vertical else (dot[0], dot[1] + delta))
-        old = list(self.model.objects.wires.path(item._src_port, dst_port))
+        old = list(self.model.objects.wires.path(wire))
         self.drag(dot, end)
-        new = self.model.objects.wires.path(item._src_port, dst_port)
+        new = self.model.objects.wires.path(wire)
         check(
             new[segment - 1] == round(end[0] if vertical else end[1]),
-            f"segment {segment} of {port_key(dst_port)} not moved: {old} -> {new}",
+            f"segment {segment} of {drawn_key(wire)} not moved: {old} -> {new}",
         )
         after = self.routes()
         for key, line in others.items():
-            check(after.get(key) == line, f"another tree's wire {key} changed")
-        return f"drag {port_key(dst_port)} segment {segment} by {delta}"
+            check(after.get(key) == line, f"another tree's wire {drawn_key(key)} changed")
+        return f"drag {drawn_key(wire)} segment {segment} by {delta}"
 
     def edit_segment(self) -> str:
         self.clear_selection()
         part, pos = self.segment_pos()
         item = part._parent
-        dst_port = item.dst_port
+        wire = item.wire
         wires = self.model.objects.wires
-        old = list(wires.path(item._src_port, dst_port))
+        old = list(wires.path(wire))
         old_routes = self.routes()
         text = self.rng.choice(["Split segment", "Add joint", "Merge segments", "Automatic route"])
         state = self.context_menu(pos, text)
         check(text in state, f"no {text} in the menu {state}")
         check(
-            dst_port in self.scene._selected_wires,
+            wire in self.scene._selected_wires,
             "the wire is not selected after the right-click",
         )
-        new = wires.path(item._src_port, dst_port)
+        new = wires.path(wire)
         if not state[text]:
             check(new == old, f"{text} was disabled but the wire changed")
-            return f"{text} (disabled) on {port_key(dst_port)}"
+            return f"{text} (disabled) on {drawn_key(wire)}"
         if text == "Split segment":
             check(len(new) == len(old) + 2, f"split: {old} -> {new}")
         elif text == "Add joint":
             check(len(new) == len(old) + 2, f"joint: {old} -> {new}")
             check(self.routes() == old_routes, "a joint changed the shape of a wire")
             # The menu works on the nearest segment, maybe another one through the point
-            new_points = wires.corner_points(dst_port)
+            new_points = wires.corner_points(wire)
             check(
                 any(abs(x - pos[0]) <= 1 and abs(y - pos[1]) <= 1 for x, y in new_points),
                 f"no joint at {pos}: {new_points}",
@@ -958,8 +1393,8 @@ class GuiFuzzer:
         elif text == "Merge segments":
             check(len(new) == len(old) - 2, f"merge: {old} -> {new}")
         else:
-            check(new == wires.automatic_path(item._src_port, dst_port), "not the automatic route")
-        return f"{text} on {port_key(dst_port)} segment {part.segment}"
+            check(new == wires.automatic_path(wire), "not the automatic route")
+        return f"{text} on {drawn_key(wire)} segment {part.segment}"
 
     def move_component(self) -> str:
         objects = self.component_objects()
@@ -980,23 +1415,28 @@ class GuiFuzzer:
             member.setSelected(True)
         moving = {member.component for member in group}
         wires = self.model.objects.wires
-        old_paths = {
-            dst: (list(wires.path(src, dst)), src.parent() in moving and dst.parent() in moving)
-            for src, dst in wires.connections()
-        }
+
+        def between(wire: Wire) -> bool:
+            """Between components that move together, or from one to a line that moves"""
+            joint = wires.join(wire)
+            if joint is not None:
+                return wire[0].parent() in moving and between(joint[0])
+            return wire[0].parent() in moving and wire[1].parent() in moving
+
+        old_paths = {wire: (list(wires.path(wire)), between(wire)) for wire in wires.drawn()}
         self.drag(pos, (pos[0] + delta[0], pos[1] + delta[1]))
         after = (obj.pos().x(), obj.pos().y())
         check(after != before, f"{obj.component.name()} didn't move")
         moved = (round(after[0] - before[0]), round(after[1] - before[1]))
-        for src, dst in wires.connections():
-            old, between = old_paths[dst]
+        for wire in wires.drawn():
+            old, between = old_paths[wire]
             # The wires between components that move together move with them
             expected = [
                 value + (moved[index % 2] if between else 0) for index, value in enumerate(old)
             ]
             check(
-                wires.path(src, dst) == expected,
-                f"{port_key(dst)}: {old} -> {wires.path(src, dst)}, not {expected}",
+                wires.path(wire) == expected,
+                f"{drawn_key(wire)}: {old} -> {wires.path(wire)}, not {expected}",
             )
         names = "+".join(member.component.name() for member in group)
         return f"move {names} by {delta}"
@@ -1060,6 +1500,11 @@ class GuiFuzzer:
         ("connect_from_corner", 4),
         ("connect_to_corner", 3),
         ("connect_to_segment", 3),
+        ("connect_shared", 6),
+        ("connect_join", 5),
+        ("connect_join_from_line", 4),
+        ("connect_lines", 4),
+        ("connect_same_kind", 4),
         ("connect_invalid", 1),
         ("draw_and_abort", 1),
         ("delete_route", 3),

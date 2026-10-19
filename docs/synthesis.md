@@ -73,10 +73,18 @@ file is used the way it was synthesized.
 A netlist made with another Yosys flow can be loaded too. DigSim simulates all the
 functional cells of Yosys that can be simulated, also the ones that the functional
 synthesis doesn't make: the adders and multipliers of `alumacc` (`$alu`, `$macc_v2`,
-`$lcu`, `$fa`), lookup tables (`$lut`, `$sop`) and `$tribuf`, which gives "X" when it is
-not enabled. Memories (`$mem_v2`) and extracted state machines (`$fsm`) are not simulated.
+`$lcu`, `$fa`) and lookup tables (`$lut`, `$sop`). Memories (`$mem_v2`) and extracted state machines (`$fsm`) are not simulated.
 Synthesize with `memory_map`, and without the FSM passes (`synth -nofsm`) or with
 `fsm_map`, like the functional synthesis does.
+
+## Tristate outputs
+
+An output that is not always driven, like `assign y = oe ? a : 'bz;`, is a tristate output
+of the component: it is `"Z"` (high impedance) when it doesn't drive, so other outputs on
+the same wire decide its value, see [Python Circuits](python.md#components-and-ports).
+Inside a design, several tristate drivers on one bus are merged into one, and tristate
+buses that don't reach an output port become ordinary logic (the Yosys pass
+`tribuf -merge -logic`). DigSim components have no bidirectional (`inout`) ports.
 
 ## Internal signals and states
 

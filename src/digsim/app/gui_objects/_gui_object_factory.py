@@ -24,6 +24,7 @@ from ._image_objects import (
     ImageObjectNOT,
     ImageObjectOR,
     ImageObjectStaticValue,
+    ImageObjectTristateBuffer,
     ImageObjectXNOR,
     ImageObjectXOR,
 )
@@ -72,6 +73,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "ClockedJKFF": ImageObjectFlipFlop,
     "ClockedTFF": ImageObjectFlipFlop,
     "Buzzer": BuzzerObject,
+    "TristateBuffer": ImageObjectTristateBuffer,
 }
 
 

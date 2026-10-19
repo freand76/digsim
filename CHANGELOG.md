@@ -4,6 +4,11 @@
  - New ICs, written from their datasheets and tested against them: the 74181 ALU, 74182 carry look-ahead, 74283 adder, 7485 comparator, 74138 decoder, 74151 multiplexer, 74193 up/down counter, 74194 and 74595 shift registers, the 4017 decade counter and the 4511 BCD to 7-segment driver
  - The 74162 IC is a new implementation, written from its datasheet. The earlier one came from a GPL-3.0 licensed project, which doesn't fit the license of DigSim.
  - The IC selector has a search field: type a number, or words of the description like counter or shift, also with skipped letters, and pick from the ICs that match
+ - Several outputs can drive the same input: it has the value they drive, and "X" when they drive different values or one of them drives "X". Tristate outputs don't count while they don't drive ("Z", high impedance). New component: TristateBuffer.
+ - Verilog outputs that can be 'bz are tristate outputs of Yosys components. Tristate buses inside a design are merged by Yosys.
+ - The 74595 IC has its output enable (OE_bar): the outputs QA–QH are tristate and can share a bus
+ - GUI: wires that are connected make one line, and every output on it drives every input on it. A new wire can start or end on any wire, and connect any two ports, also two inputs or two outputs. The whole line shows the value its outputs drive together: blue when nothing drives it, red when they drive different values. New component: Tristate Buffer.
+ - New GUI example circuit, tristate.circuit: four values share one bus to a hex digit through tristate buffers, enabled with a DIP switch
 
 ## v1.6.0
  - Add "Verilog Testbench with pytest" to the documentation, a walkthrough of testing a Verilog design with DigSim and pytest, with waveforms of the tests

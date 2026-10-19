@@ -74,8 +74,8 @@ class StatePort(SignalPort):
     def state(self) -> str:
         """The name of the value, the value as a number if it has no name, or X"""
         value = self.value
-        if value == "X":
-            return "X"
+        if not isinstance(value, int):
+            return value
         return self._names.get(value, str(value))
 
     def vcd_text(self) -> str:
@@ -344,6 +344,17 @@ class YosysComponent(MultiComponent):
         self._connect_cells(components_dict, nets, linked)
         # Connect external input ports
         self._connect_external_input(components_dict, nets)
+        # An output driven only by tristate cells is a tristate output (it can share a wire)
+        for portname, port in self._module().ports.items():
+            if port.is_output:
+                bus_port = self._bus_port(portname)
+                drivers = [bus_port.get_bit(bit).get_drivers() for bit in range(bus_port.width)]
+                bus_port.set_tristate(
+                    all(
+                        bit_drivers and all(d.is_tristate() for d in bit_drivers)
+                        for bit_drivers in drivers
+                    )
+                )
         if self._signals:
             self._create_signals(components_dict, nets)
 

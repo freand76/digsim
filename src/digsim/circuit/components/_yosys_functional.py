@@ -1487,20 +1487,37 @@ class Slice(FunctionalCell):
 
 
 class Tribuf(FunctionalCell):
-    """
-    module \\$tribuf (A, EN, Y): A when enabled, otherwise high impedance, which is "X"
-    in DigSim (it has no high impedance value)
-    """
+    """module \\$tribuf (A, EN, Y): A when enabled, otherwise not driven, high impedance ("Z")"""
 
     def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
         super().__init__(circuit, name, cell)
         self.add_input("A")
         self.add_input("EN")
         self.add_output("Y")
+        for port in self._bits["Y"]:
+            port.set_tristate()
         self._width = self.width("Y")
+        self._driving = True
+
+    def init(self) -> None:
+        super().init()
+        self._driving = True
 
     def update(self) -> None:
         enable = self.read_bit("EN")
+        if enable == 0:
+            if self._driving:
+                # Not driven: the bits are "Z" (for a cell it drives as a word, "X")
+                self._driving = False
+                for port in self._bits["Y"]:
+                    port.value = "Z"
+                word_output = self._word_outputs.get("Y")
+                if word_output is not None:
+                    word_output.value = _mask(self._width) << self._width
+                # All bits get an event when it drives again
+                self._outputs["Y"] = None
+            return
+        self._driving = True
         self.write("Y", self.read("A") if enable == 1 else _undefined(self._width))
 
 

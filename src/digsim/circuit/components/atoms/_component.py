@@ -192,11 +192,11 @@ class Component(abc.ABC):
         """Remove component connections"""
         for src_port in self.outports():
             for dst_port in src_port.wired_ports:
-                dst_port.set_driver(None)
+                # Its other drivers keep driving it
+                dst_port.remove_driver(src_port)
 
         for dst_port in self.inports():
-            driver = dst_port.get_driver()
-            if driver is not None:
+            for driver in dst_port.get_drivers():
                 driver.disconnect(dst_port)
 
     def add_event(

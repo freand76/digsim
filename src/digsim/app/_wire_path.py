@@ -21,6 +21,7 @@ digsim.app._wire_tree.
 """
 
 import math
+from collections.abc import Sequence
 from itertools import pairwise
 
 
@@ -179,7 +180,7 @@ def arrival_offset(taken: set[str], end: Point, coming_from: Point) -> float:
     return X_OFFSET if coming_from[0] >= end[0] else -X_OFFSET
 
 
-def is_valid_path(path: list[float]) -> bool:
+def is_valid_path(path: Sequence[float]) -> bool:
     """A path has an x position first and last, so an odd length"""
     return len(path) % 2 == 1
 

@@ -62,7 +62,7 @@ class Mem64kByte(Component):
 
     def update(self) -> None:
         rising_edge = self.clk.is_rising_edge()
-        if not rising_edge or self.Address.value == "X":
+        if not rising_edge or not isinstance(self.Address.value, int):
             return
         addr = self.Address.value
         assert isinstance(addr, int)
