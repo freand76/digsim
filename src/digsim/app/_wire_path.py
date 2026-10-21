@@ -311,8 +311,10 @@ def split_at_port(
         port, other = dest, points[-2]
     else:
         raise ValueError(f"Segment {segment} is not at a port")
+    x: float
     if abs(other[0] - port[0]) <= 2 * X_OFFSET:
-        x = (port[0] + other[0]) / 2
+        # On a whole pixel, as the circuit file stores it
+        x = round((port[0] + other[0]) / 2)
     else:
         x = port[0] + (X_OFFSET if other[0] > port[0] else -X_OFFSET)
     new_path = split_segment(source, dest, path, segment, (x, port[1]), step_size=0)

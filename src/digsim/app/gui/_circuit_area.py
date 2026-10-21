@@ -718,7 +718,12 @@ class WireGraphicsItem(QGraphicsPathItem):
         the segment, where a joint is added when the wire is finished
         """
         corner = self.corner_at(scene_pos, WirePartGraphicsItem.CORNER_RADIUS)
-        at: At = corner if corner is not None else (segment, _point(scene_pos))
+        # On whole pixels, as the circuit file stores them
+        at: At = (
+            corner
+            if corner is not None
+            else (segment, (round(scene_pos.x()), round(scene_pos.y())))
+        )
         new_wire = self._app_model.objects.new_wire
         new_wire.start_at_corner(self.wire, at)
         new_wire.set_end_pos(scene_pos)

@@ -484,5 +484,8 @@ def test_split_at_port():
     # A short segment is split in the middle
     path_short, _ = split_at_port(source, (200, 100), [12], 0)
     assert path_short[0] == 6
+    # On a whole pixel, also where the middle isn't
+    path_odd, _ = split_at_port(source, (200, 100), [13], 0)
+    assert path_odd[0] in (6, 7) and isinstance(path_odd[0], int)
     with pytest.raises(ValueError, match="not at a port"):
         split_at_port(source, dest, path, 1)
