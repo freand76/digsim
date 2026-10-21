@@ -39,6 +39,7 @@ from digsim.app._wire_path import (
     corner_directions,
     corner_points,
     exits_vertically,
+    follow_joint,
     is_forwards,
     is_inner_corner,
     is_movable,
@@ -503,18 +504,19 @@ class WireDrawing:
         keeps doing so. On a vertical run they do that by themselves.
         """
         old = self.path(wire)[segment - 1]
-        corners = {segment, segment + 1}
         followers: dict[Wire, list[float]] = {}
-        if not is_vertical(segment):
-            return followers
-        for other, (parent, corner) in self._branches.items():
-            path = self.path(other)
-            if parent == wire and corner in corners and path[0] == old:
-                followers[other] = [position, *path[1:]]
-        for other, (host, corner) in self._joins.items():
-            path = followers.get(other) or self.path(other)
-            if host == wire and corner in corners and path[-1] == old:
-                followers[other] = [*path[:-1], position]
+        for other in dict.fromkeys([*self._branches, *self._joins]):
+            branch, join = self._branches.get(other), self._joins.get(other)
+            path = follow_joint(
+                segment,
+                old,
+                position,
+                self.path(other),
+                branch[1] if branch is not None and branch[0] == wire else None,
+                join[1] if join is not None and join[0] == wire else None,
+            )
+            if path is not None:
+                followers[other] = path
         return followers
 
     def point_move(self, point: Point) -> PointMove | None:

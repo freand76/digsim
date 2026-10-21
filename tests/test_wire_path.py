@@ -19,6 +19,7 @@ from digsim.app._wire_path import (
     corner_points,
     drawing_points,
     exits_vertically,
+    follow_joint,
     handle_at,
     is_forwards,
     is_inner_corner,
@@ -489,3 +490,15 @@ def test_split_at_port():
     assert path_odd[0] in (6, 7) and isinstance(path_odd[0], int)
     with pytest.raises(ValueError, match="not at a port"):
         split_at_port(source, dest, path, 1)
+
+
+def test_follow_joint():
+    """
+    A wire that starts or ends at a joint that moves along a horizontal run follows it,
+    one that starts elsewhere, or a joint on a vertical run, doesn't
+    """
+    assert follow_joint(1, 100, 120, [100, 50], start=1, end=None) == [120, 50]
+    assert follow_joint(1, 100, 120, [30, 100], start=None, end=2) == [30, 120]
+    assert follow_joint(1, 100, 120, [90, 50], start=1, end=None) is None
+    assert follow_joint(1, 100, 120, [100, 50], start=3, end=None) is None
+    assert follow_joint(2, 100, 120, [100, 50], start=2, end=None) is None

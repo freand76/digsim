@@ -52,6 +52,7 @@ from digsim.app._wire_path import (
     corner_points,
     drawing_points,
     exits_vertically,
+    follow_joint,
     handle_at,
     is_movable,
     is_vertical,
@@ -653,18 +654,20 @@ class WireGraphicsItem(QGraphicsPathItem):
         position = min(max(round(position), move.bounds[0]), move.bounds[1])
         old = self._path[segment - 1]
         self._path = move_segment(self._path, segment, position)
-        if is_vertical(segment):
-            # The wires that leave or reach the point across a horizontal wire follow it,
-            # like ModelWires.joint_followers() (with the path shown, maybe split)
-            corners = (segment, segment + 1)
-            for child in self._child_items:
-                branch, join = child._branch, child._join
-                starts = branch is not None and branch[0] is self and branch[1] in corners
-                if starts and child._path[0] == old:
-                    child._path = [position, *child._path[1:]]
-                ends = join is not None and join[0] is self and join[1] in corners
-                if ends and child._path[-1] == old:
-                    child._path = [*child._path[:-1], position]
+        # The wires that start or end at the point follow it, like
+        # ModelWires.joint_followers() (with the path shown, maybe split)
+        for child in self._child_items:
+            branch, join = child._branch, child._join
+            path = follow_joint(
+                segment,
+                old,
+                position,
+                child._path,
+                branch[1] if branch is not None and branch[0] is self else None,
+                join[1] if join is not None and join[0] is self else None,
+            )
+            if path is not None:
+                child._path = path
         self._move_parts()
         scene = self.scene()
         if isinstance(scene, _CircuitAreaScene):

@@ -258,6 +258,31 @@ def is_movable(path: list[float], segment: int) -> bool:
     return 1 <= segment <= len(path)
 
 
+def follow_joint(
+    segment: int,
+    old: float,
+    position: float,
+    path: list[float],
+    start: int | None,
+    end: int | None,
+) -> list[float] | None:
+    """
+    The new path of a wire that starts at corner 'start', or ends at corner 'end', of a
+    wire whose joint 'segment' moves along it from 'old' to 'position': a wire that leaves
+    or reaches the joint across the wire keeps doing so. None if it doesn't follow (on a
+    vertical run it does that by itself).
+    """
+    if not is_vertical(segment):
+        return None
+    corners = (segment, segment + 1)
+    new = path
+    if start in corners and new[0] == old:
+        new = [position, *new[1:]]
+    if end in corners and new[-1] == old:
+        new = [*new[:-1], position]
+    return None if new is path else new
+
+
 def move_segment(path: list[float], segment: int, position: float) -> list[float]:
     """
     Move a segment: a vertical segment to x = position, a horizontal segment to
