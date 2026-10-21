@@ -906,7 +906,8 @@ class _CircuitAreaScene(QGraphicsScene):
     def _wire_point_at(self, pos: QPointF) -> Point | None:
         """
         The point at a position (see point_at()) if a wire is on top there: not on a port
-        or a component, or closer to the dot of a segment that can be dragged
+        or a component, or closer to the dot of a segment that can be dragged (unless the
+        point is selected, or its wires)
         """
         point = self.point_at(pos)
         if point is None:
@@ -915,7 +916,8 @@ class _CircuitAreaScene(QGraphicsScene):
         if top is None:
             return None
         segment = top.handle_at(pos)
-        if segment is not None:
+        # While the clicks go through the selections of the point, it stays the point
+        if segment is not None and point != self._point:
             points = top.wire_item.corner_points()
             (x1, y1), (x2, y2) = points[segment], points[segment + 1]
             x, y = _point(pos)
