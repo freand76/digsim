@@ -242,6 +242,24 @@ def on_segment(start: Point, end: Point, point: Point) -> bool:
     )
 
 
+def ways(point: Point, segments: Iterable[tuple[Point, Point]]) -> set[tuple[int, int]]:
+    """
+    The ways that segments go from a point (see _direction()): the segments that end at it
+    one way, the ones that run through it both ways. Segments without length don't count.
+    """
+    found: set[tuple[int, int]] = set()
+    for start, end in segments:
+        if start == end:
+            continue
+        if point in (start, end):
+            found.add(_direction(point, end if point == start else start))
+        elif on_segment(start, end, point):
+            # Through the point
+            found.add(_direction(point, start))
+            found.add(_direction(point, end))
+    return found
+
+
 def junctions(segments: Iterable[tuple[Point, Point]]) -> list[Point]:
     """
     Where the segments of a line meet: the ends of segments where the line goes three or
@@ -250,17 +268,7 @@ def junctions(segments: Iterable[tuple[Point, Point]]) -> list[Point]:
     lengths = [(start, end) for start, end in segments if start != end]
     found: list[Point] = []
     for point in [end for segment in lengths for end in segment]:
-        if point in found:
-            continue
-        ways: set[tuple[int, int]] = set()
-        for start, end in lengths:
-            if point in (start, end):
-                ways.add(_direction(point, end if point == start else start))
-            elif on_segment(start, end, point):
-                # Through the point
-                ways.add(_direction(point, start))
-                ways.add(_direction(point, end))
-        if len(ways) >= 3:
+        if point not in found and len(ways(point, lengths)) >= 3:
             found.append(point)
     return found
 

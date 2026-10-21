@@ -816,3 +816,24 @@ def test_port_of_another_width_is_left_off_a_line():
     assert drawing.drawn() == [(a, led)]
     assert wide.wired_ports == []
     assert drawing.to_lines()[0].ports == ["A.O", "L.I"]
+
+
+def test_move_a_point_that_another_line_runs_through():
+    """
+    A wire of another line, drawn first, runs straight through the dot at a corner: the
+    dot is of its own line, and moves as without the other wire
+    """
+    drawing = Drawing()
+    p = drawing.button("P", 0, -100)
+    q = drawing.led("Q", 400, 50)
+    a = drawing.button("A", 0, 0)
+    led1 = drawing.led("L1", 400, 100)
+    led2 = drawing.led("L2", 600, 0)
+    drawing.connect_ports(p, q)
+    assert drawing.corner_points((p, q)) == [(40, -100), (390, -100), (390, 50), (400, 50)]
+    drawing.connect_ports(a, led1)
+    drawing.connect_branch((a, led1), 1, led2)
+    assert drawing.drawn()[0] == (p, q)
+    move = drawing.point_move((390, 0))
+    assert move is not None
+    assert move.wire == (a, led1) and move.segment == 1

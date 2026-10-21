@@ -542,8 +542,18 @@ class WireDrawing:
                     legs.append((wire, segment, start, end))
         if not legs:
             return None
-        root = lines.find(("wire", legs[0][0]))
-        legs = [leg for leg in legs if lines.find(("wire", leg[0])) == root]
+        # The point is of the line that goes the most ways there (where a wire of another
+        # line runs through a dot)
+        by_line: dict[Node, list[tuple[Wire, int, Point, Point]]] = {}
+        for leg in legs:
+            by_line.setdefault(lines.find(("wire", leg[0])), []).append(leg)
+
+        legs = max(
+            by_line.values(),
+            key=lambda line_legs: len(
+                _line_graph.ways(point, [(start, end) for _, _, start, end in line_legs])
+            ),
+        )
         for wire, segment, start, end in legs:
             at_port = self._is_port_segment(wire, segment)
             if point not in (start, end) or not (is_movable(self.path(wire), segment) or at_port):
