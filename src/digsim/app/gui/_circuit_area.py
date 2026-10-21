@@ -572,13 +572,34 @@ class WireGraphicsItem(QGraphicsPathItem):
             if child._join is not None and child._join[0] is self:
                 child._join = (self, split_corner(segment, child._join[1]))
         self._path = path
-        selected = self._selected
+
+        def new_segments(old: int) -> list[int]:
+            # The split segment is three now: the step next to the port, and the rest
+            if old < segment:
+                return [old]
+            return [segment, segment + 1, segment + 2] if old == segment else [old + 2]
+
+        clicked = [
+            new
+            for part in self._part_items
+            if part.isSelected()
+            for new in new_segments(part.segment)
+        ]
+        shown = {
+            new
+            for part in self._part_items
+            if part.is_wire_selected()
+            for new in new_segments(part.segment)
+        }
         scene = self.scene()
         for part in self._part_items:
             if scene is not None:
                 scene.removeItem(part)
         self.update_wire()
-        self.highlight(0 if selected else None)
+        # Selected as before
+        if isinstance(scene, _CircuitAreaScene):
+            scene.select_parts([self._part_items[new] for new in clicked])
+        self.highlight_segments(shown)
         return moving
 
     def corner_at(self, scene_pos: QPointF, radius: float) -> int | None:
@@ -1203,6 +1224,13 @@ class _CircuitAreaScene(QGraphicsScene):
             item.highlight_segments(shown)
             if shown:
                 self._selected_wires.add(item.wire)
+
+    def select_parts(self, parts: list[WirePartGraphicsItem]) -> None:
+        """Select segments of wires, without changing what is shown as selected"""
+        self._selecting = True
+        for part in parts:
+            part.setSelected(True)
+        self._selecting = False
 
     def select_wire_tree(self, wire: Wire) -> None:
         """Select all drawn wires of the line of a wire"""

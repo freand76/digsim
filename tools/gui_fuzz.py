@@ -1477,9 +1477,14 @@ class GuiFuzzer:
         end = self.snap((dot[0] + delta, dot[1]) if vertical else (dot[0], dot[1] + delta))
         old = list(self.model.objects.wires.path(wire))
         at_port = item.is_port_segment(segment)
+        was_selected = item.is_selected()
         self.drag(dot, end)
         self.spin()
         new = self.model.objects.wires.path(wire)
+        check(
+            not was_selected or self.wire_items()[wire].is_selected(),
+            f"{drawn_key(wire)} isn't selected after the drag",
+        )
         if at_port:
             # Split next to the port: a step there, and the part away from it moved
             moving = segment + 2 if segment == 0 else segment
