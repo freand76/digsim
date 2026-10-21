@@ -1738,6 +1738,31 @@ class GuiFuzzer:
         self.future.append(current)
         return "undo"
 
+    def undo_while_dragging(self) -> str:
+        """
+        An undo while a point is dragged (the mouse button still held): the undo is done,
+        and the rest of the drag does nothing
+        """
+        if not self.history:
+            raise Skip("nothing to undo")
+        self.clear_selection()
+        point = self.retry(self._point_pos)
+        start = self.snap(point)
+        expected = self.history[-1]
+        current = self.snapshot()
+        self.press(start)
+        self.move((start[0] + 20, start[1]))
+        self.move((start[0] + 20, start[1] + 20))
+        self.model.objects.undo()
+        self.spin()
+        self.move((start[0] + 40, start[1] + 40))
+        self.release((start[0] + 40, start[1] + 40))
+        self.spin()
+        check(self.snapshot() == expected, "the drag changed the circuit after the undo")
+        self.history.pop()
+        self.future.append(current)
+        return f"undo while dragging {point}"
+
     def redo(self) -> str:
         if not self.future:
             raise Skip("nothing to redo")
@@ -1825,12 +1850,19 @@ class GuiFuzzer:
         ("edit_segment", 3),
         ("move_component", 2),
         ("undo", 3),
+        ("undo_while_dragging", 1),
         ("redo", 2),
         ("save_and_load", 1),
         ("run_simulation", 1),
     ]
     # These don't change the circuit by themselves, or check undo themselves
-    NO_UNDO_CHECK: ClassVar[set[str]] = {"undo", "redo", "save_and_load", "run_simulation"}
+    NO_UNDO_CHECK: ClassVar[set[str]] = {
+        "undo",
+        "undo_while_dragging",
+        "redo",
+        "save_and_load",
+        "run_simulation",
+    }
 
     def step(self, number: int) -> None:
         """One random action, and the checks after it"""
@@ -1838,6 +1870,7 @@ class GuiFuzzer:
         # Undo and redo when there is something to undo or redo, redo mostly after an undo
         if not self.history:
             del actions["undo"]
+            del actions["undo_while_dragging"]
         if self.future:
             actions["redo"] = 5
         else:

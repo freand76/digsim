@@ -908,6 +908,15 @@ class _CircuitAreaScene(QGraphicsScene):
         self._point, self._point_stage = None, 0
         self._point_marker.setVisible(False)
 
+    def _drop_drags(self) -> None:
+        """
+        Forget a drag of a point or a segment at a port, when its wire items are gone (an
+        undo while the mouse button is held): its wire can be of the circuit before
+        """
+        self._pressed_point = None
+        self._point_drag = None
+        self._port_drag = None
+
     def selected_point(self) -> Point | None:
         """The point that is selected (not its wires), None if there is none"""
         return self._point if self._point_stage == 1 else None
@@ -1238,6 +1247,7 @@ class _CircuitAreaScene(QGraphicsScene):
             for segment in item.selected_segments()
         }
         self._updating_wires = True
+        self._drop_drags()
         for item in self._wire_items:
             self.removeItem(item)
 
@@ -1296,6 +1306,7 @@ class _CircuitAreaScene(QGraphicsScene):
         """Remove everything from scene"""
         # A new circuit, nothing is selected
         self._updating_wires = True
+        self._drop_drags()
         self.clear()
         # Let the scene size follow the new circuit
         self.setSceneRect(QRectF())
