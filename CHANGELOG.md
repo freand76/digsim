@@ -12,6 +12,7 @@
  - Circuit files store each line of wires as a graph: its ports, the points where its wires turn or meet, and the segments between them. The connections follow from the lines. Files from older versions load as before and are saved in the new form, which is also more compact. The example circuits are saved with lines. Circuit.from_json_file() also loads the connections of a GUI circuit file.
  - GUI: a dot is drawn where a line goes three or more ways. A click on a wire selects the piece between the closest ports and dots, a second click the whole line, and Del deletes just the selected pieces. A click on a dot selects it, the next click the wires that meet there, and the next the whole line.
  - GUI: dots, joints and segments at ports can be dragged, and the wires that meet there go with them. A new wire starts on a wire from the context menu, Start wire here (it replaces Add joint). Merge segments removes a joint where the wire runs straight.
+ - Synthesis always uses the bundled Yosys (YoWASP), also when another yosys is installed
 
 ## v1.6.0
  - Add "Verilog Testbench with pytest" to the documentation, a walkthrough of testing a Verilog design with DigSim and pytest, with waveforms of the tests

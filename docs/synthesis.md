@@ -6,8 +6,8 @@ connected. This is done with [Yosys](https://github.com/YosysHQ/yosys), an open-
 Verilog synthesis tool.
 
 DigSim ships with [YoWASP](https://github.com/YoWASP/yosys), a portable WebAssembly build
-of Yosys, so nothing extra needs to be installed. If a native `yosys` is found on your
-`PATH`, it is used instead.
+of Yosys, so nothing extra needs to be installed. DigSim always uses it, also when
+another `yosys` is installed.
 
 You don't always need to synthesize by hand: the GUI and `YosysComponent` both accept
 `.v` files and synthesize them on load. Creating a netlist yourself is useful when the

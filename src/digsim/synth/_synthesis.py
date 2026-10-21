@@ -9,8 +9,6 @@ import gc
 import json
 import os
 import pathlib
-import shutil
-import subprocess
 import sys
 import tempfile
 from collections.abc import Iterator, Sequence
@@ -99,28 +97,21 @@ class Synthesis:
     @staticmethod
     def _run_yosys(script: str, work_dir: pathlib.Path, log: list[str]) -> None:
         """
-        Run a Yosys script, with a native Yosys if one is installed and otherwise with
-        the WebAssembly Yosys in this process. The Yosys log is added to 'log'.
+        Run a Yosys script with the WebAssembly Yosys (YoWASP) in this process. The
+        Yosys log is added to 'log'.
         """
         log_file = work_dir / "yosys.log"
         console_file = work_dir / "console.txt"
         # Everything Yosys writes goes to the log file. The WebAssembly Yosys only
         # understands absolute paths with forward slashes, also on Windows (C:/...).
         args = ["-qq", "-l", log_file.as_posix(), "-p", script]
-        native_yosys = shutil.which("yosys")
-        if native_yosys is not None:
-            with open(console_file, mode="w", encoding="utf-8") as console:
-                returncode = subprocess.run(
-                    [native_yosys, *args], stdout=console, stderr=console, check=False
-                ).returncode
-        else:
-            with _console_to_file(console_file):
-                returncode = yowasp_yosys.run_yosys(args)
-            if returncode != 0:
-                # When Yosys fails, the WebAssembly instance is kept alive by a reference
-                # cycle (in yowasp-runtime) and keeps its files open; on Windows the
-                # work folder can then not be removed. Collect it to close the files.
-                gc.collect()
+        with _console_to_file(console_file):
+            returncode = yowasp_yosys.run_yosys(args)
+        if returncode != 0:
+            # When Yosys fails, the WebAssembly instance is kept alive by a reference
+            # cycle (in yowasp-runtime) and keeps its files open; on Windows the
+            # work folder can then not be removed. Collect it to close the files.
+            gc.collect()
         if log_file.exists():
             log.extend(log_file.read_text(encoding="utf-8").splitlines())
         if returncode != 0:

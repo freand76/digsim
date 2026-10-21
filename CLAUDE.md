@@ -95,8 +95,8 @@ own section and two blank lines after imports, no relative imports from parent p
   queued. GUI objects must not connect to model signals themselves, since a queued call to a
   removed object runs on freed memory. The circuit area receives them and forwards them to
   the current objects.
-- **Yosys** runs in-process (`yowasp_yosys.run_yosys`, WebAssembly) unless a native `yosys`
-  is on `PATH`. In the sandbox `/tmp` is a private folder, so work files go in a temp
+- **Yosys** always runs in-process (`yowasp_yosys.run_yosys`, WebAssembly), never a native
+  `yosys`. In the sandbox `/tmp` is a private folder, so work files go in a temp
   folder in the user cache. Paths given to Yosys must use forward slashes (`C:/...` on
   Windows). After a failed run, Yosys keeps its files open until garbage collection, which
   breaks cleanup on Windows. Things like this only show up in the Windows CI.
