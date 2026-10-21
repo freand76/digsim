@@ -22,25 +22,23 @@ with the same seed repeats the same actions.
 
 ## How to run it
 
-Run all requested runs in one Bash call, with a timeout of 600000 ms. Each 300 step run
-takes about 20 seconds. Filter out Qt's offscreen noise:
+Run all requested seeds in one command, with a timeout of 600000 ms. They run in
+parallel, and each prints one line, `gui_fuzz OK ...`, or the failure and its repeat
+command:
 
 ```sh
-for seed in $(shuf -i 1-999999 -n 3); do
-    uv run python tools/gui_fuzz.py --seed "$seed" --steps 300 2>&1 | grep -v "This plugin does not support"
-done
+uv run python tools/gui_fuzz.py --seeds $(shuf -i 1-999999 -n 3 | paste -sd,) --steps 300
 ```
 
 - By default, run 3 random seeds with 300 steps each.
 - If the prompt gives seeds, steps or a number of runs, use those.
-- Use `-v` (every action) only when the prompt asks to look into one failure, and then
-  report only the last 20 lines.
+- To look into one failure, run its repeat command (`--seed` with `-v`, every action),
+  and report only the last 20 lines.
 
 ## What to report
 
-- One line per run: the `gui_fuzz OK ...` or `gui_fuzz FAILED ...` line as printed.
-- For each failure: the failed check, the last actions, the saved circuit and the
-  repeat command, exactly as printed.
+- One line per run, as printed.
+- For each failure: the failed check and the repeat command, exactly as printed.
 - If a run crashes with a Python traceback instead, report the last 15 lines of it.
 
 Don't try to fix anything, and don't edit, create or commit files. A traceback that

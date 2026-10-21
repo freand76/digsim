@@ -4,140 +4,105 @@
         "components": [
             {
                 "name": "PushButton",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "PushButton_1",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "PushButton_2",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "PushButton_3",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "PushButton_4",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "Buzzer_2",
-                "display_name": "Buzzer",
                 "type": "digsim.circuit.components.Buzzer",
-                "settings": {
-                    "tone": "C"
-                }
+                "display_name": "Buzzer",
+                "settings": {"tone": "C"}
             },
             {
                 "name": "Buzzer_3",
-                "display_name": "Buzzer",
                 "type": "digsim.circuit.components.Buzzer",
-                "settings": {
-                    "tone": "D"
-                }
+                "display_name": "Buzzer",
+                "settings": {"tone": "D"}
             },
             {
                 "name": "Buzzer_4",
-                "display_name": "Buzzer",
                 "type": "digsim.circuit.components.Buzzer",
-                "settings": {
-                    "tone": "E"
-                }
+                "display_name": "Buzzer",
+                "settings": {"tone": "E"}
             },
             {
                 "name": "Buzzer_5",
-                "display_name": "Buzzer",
                 "type": "digsim.circuit.components.Buzzer",
-                "settings": {
-                    "tone": "F"
-                }
+                "display_name": "Buzzer",
+                "settings": {"tone": "F"}
             },
             {
                 "name": "Buzzer",
-                "display_name": "Buzzer",
                 "type": "digsim.circuit.components.Buzzer",
-                "settings": {
-                    "tone": "G"
-                }
-            }
-        ],
-        "wires": [
-            {
-                "src": "PushButton.O",
-                "dst": "Buzzer_2.I"
-            },
-            {
-                "src": "PushButton_1.O",
-                "dst": "Buzzer_3.I"
-            },
-            {
-                "src": "PushButton_2.O",
-                "dst": "Buzzer_4.I"
-            },
-            {
-                "src": "PushButton_3.O",
-                "dst": "Buzzer_5.I"
-            },
-            {
-                "src": "PushButton_4.O",
-                "dst": "Buzzer.I"
+                "display_name": "Buzzer",
+                "settings": {"tone": "G"}
             }
         ]
     },
     "gui": {
-        "PushButton": {
-            "x": 0,
-            "y": 20
-        },
-        "PushButton_1": {
-            "x": 0,
-            "y": 120
-        },
-        "PushButton_2": {
-            "x": 0,
-            "y": 220
-        },
-        "PushButton_3": {
-            "x": 0,
-            "y": 320
-        },
-        "PushButton_4": {
-            "x": 0,
-            "y": 420
-        },
-        "Buzzer_2": {
-            "x": 260,
-            "y": 20
-        },
-        "Buzzer_3": {
-            "x": 260,
-            "y": 120
-        },
-        "Buzzer_4": {
-            "x": 260,
-            "y": 220
-        },
-        "Buzzer_5": {
-            "x": 260,
-            "y": 320
-        },
-        "Buzzer": {
-            "x": 260,
-            "y": 420
-        }
+        "PushButton": {"x": 0, "y": 20, "z": 0},
+        "PushButton_1": {"x": 0, "y": 120, "z": 0},
+        "PushButton_2": {"x": 0, "y": 220, "z": 0},
+        "PushButton_3": {"x": 0, "y": 320, "z": 0},
+        "PushButton_4": {"x": 0, "y": 420, "z": 0},
+        "Buzzer_2": {"x": 260, "y": 20, "z": 0},
+        "Buzzer_3": {"x": 260, "y": 120, "z": 0},
+        "Buzzer_4": {"x": 260, "y": 220, "z": 0},
+        "Buzzer_5": {"x": 260, "y": 320, "z": 0},
+        "Buzzer": {"x": 260, "y": 420, "z": 0}
     },
+    "lines": [
+        {
+            "ports": ["PushButton.O", "Buzzer_2.I"],
+            "points": {},
+            "segments": [["PushButton.O", "Buzzer_2.I"]]
+        },
+        {
+            "ports": ["PushButton_1.O", "Buzzer_3.I"],
+            "points": {},
+            "segments": [["PushButton_1.O", "Buzzer_3.I"]]
+        },
+        {
+            "ports": ["PushButton_2.O", "Buzzer_4.I"],
+            "points": {},
+            "segments": [["PushButton_2.O", "Buzzer_4.I"]]
+        },
+        {
+            "ports": ["PushButton_3.O", "Buzzer_5.I"],
+            "points": {},
+            "segments": [["PushButton_3.O", "Buzzer_5.I"]]
+        },
+        {
+            "ports": ["PushButton_4.O", "Buzzer.I"],
+            "points": {},
+            "segments": [["PushButton_4.O", "Buzzer.I"]]
+        }
+    ],
     "shortcuts": {
         "1": "PushButton",
         "2": "PushButton_1",
@@ -145,9 +110,5 @@
         "4": "PushButton_3",
         "5": "PushButton_4"
     },
-    "settings": {
-        "real_time": true,
-        "color_wires": true,
-        "update_frequency": 20
-    }
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 20}
 }

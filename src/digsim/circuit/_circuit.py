@@ -456,3 +456,6 @@ class Circuit:
         if folder is None:
             folder = str(Path(filename).parent)
         self.from_dataclass(file_dc.circuit, folder)
+        # A GUI circuit file has the connections in its lines
+        for line in file_dc.lines:
+            line.connect(self)

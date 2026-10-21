@@ -27,7 +27,7 @@ from functools import partial
 from itertools import pairwise
 from typing import TYPE_CHECKING, NamedTuple
 
-from digsim.app import _wire_tree
+from digsim.app import _line_graph, _wire_tree
 from digsim.app._wire_key import Wire, drawn_key, is_connection, port_key, wire_key
 from digsim.app._wire_path import (
     X_OFFSET,
@@ -41,15 +41,20 @@ from digsim.app._wire_path import (
     exits_vertically,
     is_forwards,
     is_inner_corner,
+    is_movable,
     is_valid_path,
+    is_vertical,
+    joint_bounds,
+    move_segment,
     nearest_corner,
     point_on_segment,
+    split_at_port,
     split_corner,
     split_segment,
     step_aside,
 )
 from digsim.circuit.components.atoms import VALUE_TYPE, Port, PortConnectionError, resolve
-from digsim.storage_model import GuiWireDataClass
+from digsim.storage_model import GuiWireDataClass, LineDataClass
 
 
 if TYPE_CHECKING:
@@ -63,6 +68,22 @@ Node = tuple[str, object]
 
 # Where a new wire ends on a drawn wire: a corner, or a segment and the point of a new joint
 At = int | tuple[int, Point]
+
+# A segment of a line's graph: the number of the line, and its two nodes
+GraphSegment = tuple[int, frozenset[str]]
+
+
+class PointMove(NamedTuple):
+    """
+    How a point where wires meet moves: a segment of a wire moves across, a joint (a
+    segment without length) or a segment at a corner, between bounds. A segment at a port
+    is split next to the port first ('split', see _wire_path.split_at_port()).
+    """
+
+    wire: Wire
+    segment: int
+    bounds: tuple[float, float]
+    split: bool = False
 
 
 class Line(NamedTuple):
@@ -205,6 +226,25 @@ class WireDrawing:
             assert isinstance(port, Port)
             return Line([], [port] if port.is_output() else [], [port] if port.is_input() else [])
         return Line(wires, outputs, inputs)
+
+    def drawing_order(self, wires: list[Wire] | None = None) -> list[Wire]:
+        """The drawn wires (or some of them), each after the wires it starts or ends on"""
+        pending = self.drawn() if wires is None else list(wires)
+        ordered: list[Wire] = []
+        done: set[Wire] = set()
+        while pending:
+            left = []
+            for wire in pending:
+                anchors = [self._branches.get(wire), self._joins.get(wire)]
+                if all(anchor is None or anchor[0] in done for anchor in anchors):
+                    ordered.append(wire)
+                    done.add(wire)
+                else:
+                    left.append(wire)
+            if len(left) == len(pending):
+                raise ValueError(f"Wires that start or end on each other: {left}")
+            pending = left
+        return ordered
 
     def line_outputs(self) -> dict[Wire, list[Port]]:
         """The output ports of the line of each drawn wire"""
@@ -434,6 +474,146 @@ class WireDrawing:
                     added = True
         return wires
 
+    def anchor_point(self, wire: Wire, at: At) -> Point:
+        """Where a new wire starts on a wire: a corner, or a point on a segment"""
+        if isinstance(at, int):
+            return self.corner_points(wire)[at]
+        segment, point = at
+        return point_on_segment(
+            self.start_point(wire), self.end_point(wire), self.path(wire), segment, point
+        )
+
+    def anchor_directions(self, wire: Wire, at: At) -> set[str]:
+        """The directions that a wire runs in from where a new wire starts on it"""
+        if isinstance(at, int):
+            return self.taken_directions(wire, at)
+        # Along the segment, both ways
+        return {"up", "down"} if is_vertical(at[0]) else {"left", "right"}
+
+    def joint_bounds(self, wire: Wire, segment: int) -> tuple[float, float] | None:
+        """How far a joint of a wire can move along it, see _wire_path.joint_bounds()"""
+        return joint_bounds(self.start_point(wire), self.end_point(wire), self.path(wire), segment)
+
+    def joint_followers(
+        self, wire: Wire, segment: int, position: float
+    ) -> dict[Wire, list[float]]:
+        """
+        The new paths of the wires that start or end at a joint of a wire that moves
+        along it to 'position': a wire that leaves or reaches the joint across the wire
+        keeps doing so. On a vertical run they do that by themselves.
+        """
+        old = self.path(wire)[segment - 1]
+        corners = {segment, segment + 1}
+        followers: dict[Wire, list[float]] = {}
+        if not is_vertical(segment):
+            return followers
+        for other, (parent, corner) in self._branches.items():
+            path = self.path(other)
+            if parent == wire and corner in corners and path[0] == old:
+                followers[other] = [position, *path[1:]]
+        for other, (host, corner) in self._joins.items():
+            path = followers.get(other) or self.path(other)
+            if host == wire and corner in corners and path[-1] == old:
+                followers[other] = [*path[:-1], position]
+        return followers
+
+    def point_move(self, point: Point) -> PointMove | None:
+        """
+        How a point where wires meet, or a joint, can move along the straight line through
+        it: a joint of a wire on a straight run moves along it, and at a corner of a wire,
+        where other wires go on straight, the corner's segment across moves with it.
+        Between the next corners or points on each side. None if it can't move.
+        """
+        drawn = self.drawn()
+        for wire in drawn:
+            points = self.corner_points(wire)
+            for segment in range(1, len(self.path(wire)) + 1):
+                if points[segment] == point:
+                    bounds = self.joint_bounds(wire, segment)
+                    if bounds is not None:
+                        return PointMove(wire, segment, bounds)
+        # The segments of the line at the point
+        lines = self.lines(drawn)
+        legs: list[tuple[Wire, int, Point, Point]] = []
+        for wire in drawn:
+            points = self.corner_points(wire)
+            for segment, (start, end) in enumerate(pairwise(points)):
+                if start != end and _line_graph.on_segment(start, end, point):
+                    legs.append((wire, segment, start, end))
+        if not legs:
+            return None
+        root = lines.find(("wire", legs[0][0]))
+        legs = [leg for leg in legs if lines.find(("wire", leg[0])) == root]
+        for wire, segment, start, end in legs:
+            at_port = self._is_port_segment(wire, segment)
+            if point not in (start, end) or not (is_movable(self.path(wire), segment) or at_port):
+                continue
+            if at_port and point == (start if segment == 0 else end):
+                # The port itself doesn't move
+                continue
+            # The segment moves across: along the other axis, the line must go both ways
+            axis = 0 if is_vertical(segment) else 1
+            reach: dict[int, float] = {}
+            for _, _, first, second in legs:
+                if first[1 - axis] != second[1 - axis] or first[1 - axis] != point[1 - axis]:
+                    continue
+                for end_point in (first, second):
+                    way = (end_point[axis] > point[axis]) - (end_point[axis] < point[axis])
+                    if way:
+                        distance = abs(end_point[axis] - point[axis])
+                        reach[way] = min(reach.get(way, distance), distance)
+            if 1 in reach and -1 in reach and reach[1] + reach[-1] >= 2:
+                bounds = (point[axis] - reach[-1] + 1, point[axis] + reach[1] - 1)
+                return PointMove(wire, segment, bounds, at_port)
+        return None
+
+    def _is_port_segment(self, wire: Wire, segment: int) -> bool:
+        """Is a segment of a wire attached to a port: the first or the last, at the port"""
+        return (segment == 0 and wire not in self._branches) or (
+            segment == len(self.path(wire)) + 1 and wire not in self._joins
+        )
+
+    def move_point(self, move: PointMove, position: float) -> None:
+        """
+        Move a point where wires meet, or a joint (see point_move()), an undo step. The
+        wires that start or end there follow it.
+        """
+        wire, segment, (low, high), split = move
+        position = min(max(position, low), high)
+        if not split and position == self.path(wire)[segment - 1]:
+            return
+        self._push_undo()
+        if split:
+            # Next to the port, the part away from it moves
+            path, moving = split_at_port(
+                self.start_point(wire), self.end_point(wire), self.path(wire), segment
+            )
+            self._paths[wire] = path
+            for other, anchors in self._anchored(wire):
+                anchors[other] = (wire, split_corner(segment, anchors[other][1]))
+            segment = moving
+        followers = self.joint_followers(wire, segment, position)
+        self._paths[wire] = move_segment(self.path(wire), segment, position)
+        self._paths.update(followers)
+        self._changed()
+
+    def move_joint(self, wire: Wire, segment: int, position: float) -> None:
+        """
+        Move a joint of a wire along it, between the corners of its straight run (an
+        undo step). The wires that start or end there follow it.
+        """
+        bounds = self.joint_bounds(wire, segment)
+        if bounds is None:
+            raise ValueError(f"Segment {segment} of {wire_key(wire)} is not a joint")
+        position = min(max(position, bounds[0]), bounds[1])
+        if position == self.path(wire)[segment - 1]:
+            return
+        self._push_undo()
+        followers = self.joint_followers(wire, segment, position)
+        self._paths[wire] = move_segment(self.path(wire), segment, position)
+        self._paths.update(followers)
+        self._changed()
+
     def add_joint(self, wire: Wire, segment: int, point: Point, undo: bool = True) -> int:
         """
         Add a joint to a segment of a wire, at the point of the segment closest to 'point':
@@ -456,14 +636,6 @@ class WireDrawing:
     def route(self, wire: Wire) -> dict[Wire, int | None]:
         """The wires on the way from the output port, see _wire_tree.route()"""
         return _wire_tree.route(self._branches, wire)
-
-    def sinks_through(self, wire: Wire, segment: int) -> list[Wire]:
-        """The wires that go with a segment of a wire, see _wire_tree.sinks_through()"""
-        return _wire_tree.sinks_through(self._branches, wire, segment)
-
-    def selection(self, wire: Wire, segment: int) -> dict[Wire, int]:
-        """The part of a tree that a click on a segment selects, see _wire_tree.selection()"""
-        return _wire_tree.selection(self._branches, wire, segment)
 
     # New wires
 
@@ -593,20 +765,21 @@ class WireDrawing:
 
     def connect_wires(
         self,
-        start: tuple[Wire, int],
+        start: tuple[Wire, At],
         line_wire: Wire,
         at: At,
         clicks: Sequence[Point] = (),
     ) -> None:
         """
         A wire drawn from a corner of a drawn wire to a corner of a drawn wire of another
-        line ('at', or a new joint on a segment). The lines become one.
+        line (or from and to a new joint on a segment). The lines become one.
         """
         self._check_new(("wire", start[0]), ("wire", line_wire), "The wires")
         wire = (start[0][0], line_wire[1])
         self._connect(wire)
+        branch = (start[0], self._corner(*start))
         corner = self._corner(line_wire, at)
-        self._add(wire, clicks, True, branch=start, join=(line_wire, corner))
+        self._add(wire, clicks, True, branch=branch, join=(line_wire, corner))
         self._complete(wire[0])
 
     # Deleting wires
@@ -629,12 +802,16 @@ class WireDrawing:
         """
         Where a joined wire ends after wires are removed: at the same point, on a wire of
         its line from before. Its own wire if it is still there (its corners can have
-        moved), or the wire that took its place, or another wire that runs there.
+        moved), or the wire that took its place, or another wire that runs there. Not on a
+        wire that the joined wire's ports reach without it: the wires would make a loop.
         """
         dependents = self._dependents(wire)
+        others = self.lines(w for w in self._paths if w != wire and w not in dependents)
         best: tuple[int, Wire, int | None, int] | None = None
         for other in candidates:
             if other == wire or other in dependents or other not in self._paths:
+                continue
+            if others.same(self._start_node(wire), ("wire", other)):
                 continue
             points = self.corner_points(other)
             corner: int | None = None
@@ -718,6 +895,8 @@ class WireDrawing:
         }
         removing = [wire for wire in wires if wire in self._paths]
         removed: set[Wire] = set()
+        # Where the wires start and end, to find the wires that lose a joint
+        anchors = {wire: (self._branches.get(wire), self._joins.get(wire)) for wire in self._paths}
         while True:
             if removing:
                 # The wires that joined wires end on can go first
@@ -771,7 +950,98 @@ class WireDrawing:
             self._paths.pop(wire, None)
             self._branches.pop(wire, None)
             self._joins.pop(wire, None)
+        # The wires where removed wires started or ended, or that start or end elsewhere
+        # now, or that took the place of a removed wire
+        changed = set()
+        for wire, (branch, joint) in anchors.items():
+            now = (self._branches.get(wire), self._joins.get(wire))
+            if wire in removed or now != (branch, joint):
+                changed |= {anchor[0] for anchor in (branch, joint) if anchor is not None}
+                changed.add(wire)
+        for wire in changed:
+            if wire in self._paths:
+                self._tidy(wire)
         return disconnect
+
+    def _anchored(self, wire: Wire) -> list[tuple[Wire, dict[Wire, tuple[Wire, int]]]]:
+        """The wires that start or end on a wire, and the dict of where (branch or join)"""
+        return [
+            (other, anchors)
+            for anchors in (self._branches, self._joins)
+            for other, (parent, _) in anchors.items()
+            if parent == wire
+        ]
+
+    def _is_unused_joint(self, wire: Wire, segment: int) -> bool:
+        """
+        Is a segment a joint that no wire starts or ends on: without length, between two
+        segments in a straight line that have a length
+        """
+        path = self.path(wire)
+        if not 1 <= segment <= len(path):
+            return False
+        points = corner_points(self.start_point(wire), self.end_point(wire), path)
+        before, at, after = points[segment - 1], points[segment], points[segment + 2]
+        # Segment k runs from corner k to corner k + 1
+        if points[segment] != points[segment + 1] or at in (before, after):
+            return False
+        straight = (before[0] == at[0] == after[0]) or (before[1] == at[1] == after[1])
+        used = {anchors[other][1] for other, anchors in self._anchored(wire)}
+        return straight and not used & {segment, segment + 1}
+
+    def _drop_joint(self, wire: Wire, segment: int) -> None:
+        """
+        Remove a joint, its segments on each side become one. The only vertical segment
+        of a straight wire, that a wire keeps, goes to the end of the wire instead.
+        """
+        path = list(self._paths[wire])
+        if segment < len(path):
+            del path[segment - 1 : segment + 1]
+        elif len(path) >= 3:
+            # The last vertical segment: the one before it reaches the end
+            del path[segment - 2 : segment]
+        else:
+            self._paths[wire] = [self.end_point(wire)[0]]
+            return
+        self._paths[wire] = path
+        for other, anchors in self._anchored(wire):
+            parent, corner = anchors[other]
+            if corner > segment:
+                anchors[other] = (parent, corner - 2)
+
+    def unused_joint(self, wire: Wire, segment: int) -> int | None:
+        """
+        The joint of a segment, or next to it, that no wire starts or ends on (see
+        remove_joint()), None if there is none
+        """
+        for joint in (segment, segment + 1, segment - 1):
+            if self._is_unused_joint(wire, joint):
+                return joint
+        return None
+
+    def remove_joint(self, wire: Wire, segment: int) -> None:
+        """
+        Remove a joint of a segment, or next to it, that no wire starts or ends on: the
+        segments in a straight line on each side become one (an undo step)
+        """
+        joint = self.unused_joint(wire, segment)
+        if joint is None:
+            raise ValueError(f"No joint to remove at segment {segment} of {wire_key(wire)}")
+        self._push_undo()
+        self._drop_joint(wire, joint)
+        self._changed()
+
+    def _tidy(self, wire: Wire) -> None:
+        """
+        Remove the joints of a wire that no wire starts or ends on. The wire keeps its
+        shape.
+        """
+        segment = 1
+        while segment <= len(self._paths[wire]):
+            if self._is_unused_joint(wire, segment):
+                self._drop_joint(wire, segment)
+            else:
+                segment += 1
 
     def _settle_joins(
         self, points: dict[Wire, Point], line_of: dict[Wire, Node], removed: set[Wire]
@@ -844,6 +1114,194 @@ class WireDrawing:
             src_port.disconnect(dst_port)
 
     # The circuit file
+
+    def to_lines(self) -> list[LineDataClass]:
+        """
+        The lines of the drawn wires as graphs, for the circuit file: their ports, the
+        points where the wires turn or meet, and the segments between them
+        """
+        return self._graphs()[0]
+
+    def _graphs(self) -> tuple[list[LineDataClass], dict[tuple[Wire, int], GraphSegment]]:
+        """
+        The lines as graphs (see to_lines()), and the segment of a graph that each
+        segment of a drawn wire is a part of: the number of the line and its two nodes.
+        Not for a segment without length at a node.
+        """
+        drawn = self.drawing_order()
+        lines = self.lines(drawn)
+        anchors: dict[Wire, set[int]] = {}
+        for wire, (parent, corner) in [*self._branches.items(), *self._joins.items()]:
+            anchors.setdefault(parent, set()).add(corner)
+        # The node of each corner of a drawn wire, that other wires start or end at
+        node_of: dict[tuple[Wire, int], str] = {}
+        graphs: dict[Node, LineDataClass] = {}
+        segments: dict[Node, set[tuple[str, str]]] = {}
+        segment_of: dict[tuple[Wire, int], GraphSegment] = {}
+        for wire in drawn:
+            root = lines.find(("wire", wire))
+            graph = graphs.setdefault(root, LineDataClass(ports=[]))
+            number_of_graph = list(graphs).index(root)
+            branch, joint = self._branches.get(wire), self._joins.get(wire)
+            ends = [
+                port_key(wire[0]) if branch is None else node_of[branch],
+                port_key(wire[1]) if joint is None else node_of[joint],
+            ]
+            for end, anchor in zip(ends, (branch, joint), strict=True):
+                if anchor is None and end not in graph.ports:
+                    graph.ports.append(end)
+            points = self.corner_points(wire)
+            places = _line_graph.wire_nodes(points, anchors.get(wire, set()))
+            nodes = []
+            for number, place in enumerate(places):
+                if number == 0:
+                    node = ends[0]
+                elif number == len(places) - 1:
+                    node = ends[1]
+                else:
+                    node = str(len(graph.points) + 1)
+                    x, y = points[place[0]]
+                    graph.points[node] = [round(x), round(y)]
+                for corner in place:
+                    node_of[(wire, corner)] = node
+                nodes.append(node)
+            pairs = segments.setdefault(root, set())
+            for first, second in pairwise(nodes):
+                if (
+                    first != second
+                    and (second, first) not in pairs
+                    and (first, second) not in pairs
+                ):
+                    pairs.add((first, second))
+                    graph.segments.append([first, second])
+            # Segment k of the wire runs from corner k to corner k + 1
+            for segment in range(len(points) - 1):
+                inside = next(
+                    (i for i, place in enumerate(places) if place[0] <= segment < place[-1]),
+                    None,
+                )
+                if inside is not None:
+                    continue
+                before = max(i for i, place in enumerate(places) if place[-1] <= segment)
+                if before + 1 < len(nodes) and nodes[before] != nodes[before + 1]:
+                    pair = frozenset((nodes[before], nodes[before + 1]))
+                    segment_of[(wire, segment)] = (number_of_graph, pair)
+        return list(graphs.values()), segment_of
+
+    def runs(self) -> dict[tuple[Wire, int], GraphSegment]:
+        """
+        The piece of its line that each segment of a drawn wire is on: the segments of a
+        line's graph between its ports and the points where three or more of them meet
+        (a click on a wire selects the piece). A piece is known by one of its segments.
+        """
+        graphs, segment_of = self._graphs()
+        pieces = _line_graph.pieces(graphs)
+        return {key: pieces[segment] for key, segment in segment_of.items()}
+
+    def delete_runs(self, wires: Iterable[tuple[Wire, int]]) -> None:
+        """
+        Delete the pieces of lines (see runs()) that segments of drawn wires are on (the
+        undo step is the caller's, like for delete_wires()). What is left of a line is one
+        line or several, and the ports that no line connects any more are disconnected.
+        The drawn wires are made again from the lines, like when a circuit file is loaded.
+        """
+        graphs, segment_of = self._graphs()
+        pieces = _line_graph.pieces(graphs)
+        gone = {pieces[segment_of[key]] for key in wires if key in segment_of}
+        if not gone:
+            return
+        new_lines: list[LineDataClass] = []
+        for number, graph in enumerate(graphs):
+            left = [
+                pair for pair in graph.segments if pieces[(number, frozenset(pair))] not in gone
+            ]
+            new_lines.extend(_line_graph.split_line(graph, left))
+        line_of = {name: number for number, line in enumerate(new_lines) for name in line.ports}
+        for src_port, dst_port in self.connections():
+            src, dst = port_key(src_port), port_key(dst_port)
+            if src not in line_of or line_of[src] != line_of.get(dst):
+                src_port.disconnect(dst_port)
+        self.from_lines(new_lines)
+        self._changed()
+
+    def from_lines(self, lines: list[LineDataClass]) -> None:
+        """
+        Set the drawn wires from the lines of a circuit file, after the components are
+        placed and the lines connected (LineDataClass.connect)
+        """
+        self.clear()
+        ports = {port_key(port): port for port in self.ports()}
+        for line in lines:
+            self._add_line(line, ports)
+        # The connections that the lines don't draw are implied by them
+        lines_of = self.lines(list(self._paths))
+        for wire in self.connections():
+            if wire not in self._paths and self.is_connected(wire, lines_of):
+                self._implied.add(wire)
+
+    def _add_line(self, line: LineDataClass, ports: dict[str, Port]) -> None:
+        """The drawn wires of a line from a circuit file, see _line_graph.decompose()"""
+        names = [name for name in line.ports if name in ports]
+        places: dict[str, Point] = {name: self.port_pos(ports[name]) for name in names}
+        for node, point in line.points.items():
+            if node not in places and len(point) == 2:
+                places[node] = (point[0], point[1])
+        segments = [(pair[0], pair[1]) for pair in line.segments if len(pair) == 2]
+        outputs = {name for name in names if ports[name].is_output()}
+        chains = _line_graph.decompose(names, outputs, places, segments)
+        # The wire of each chain, and its nodes from where the wire starts
+        wires: list[tuple[Wire, list[str]] | None] = []
+        for chain in chains:
+            nodes = chain.nodes
+            end = ports[nodes[-1]]
+            if chain.parent is None:
+                start = ports[nodes[0]]
+                wire = (start, end)
+                if start.is_input() and end.is_output():
+                    # From the output port, like a wire drawn between them
+                    wire, nodes = (end, start), nodes[::-1]
+            else:
+                parent = wires[chain.parent]
+                wire = (parent[0][0], end) if parent is not None else (end, end)
+            if wire[0] is wire[1] or wire in self._paths:
+                # Can't be drawn (a wire to its own port)
+                wires.append(None)
+                continue
+            wires.append((wire, nodes))
+            self._paths[wire] = []
+        keep: dict[int, set[int]] = {}
+        for number, chain in enumerate(chains):
+            parent = None if chain.parent is None else wires[chain.parent]
+            if wires[number] is not None and parent is not None:
+                assert chain.parent is not None
+                keep.setdefault(chain.parent, set()).add(parent[1].index(chain.nodes[0]))
+        corners: dict[int, dict[int, int]] = {}
+        for number, chain in enumerate(chains):
+            drawn = wires[number]
+            if drawn is None:
+                continue
+            wire, nodes = drawn
+            path, corners[number] = _line_graph.polyline_path(
+                [places[node] for node in nodes], keep.get(number, set())
+            )
+            self._paths[wire] = path
+            if chain.parent is not None:
+                parent = wires[chain.parent]
+                assert parent is not None
+                corner = corners[chain.parent][parent[1].index(nodes[0])]
+                self._branches[wire] = (parent[0], corner)
+        # A port that no segment reaches is drawn to another port of the line
+        reached = {port for drawn in wires if drawn is not None for port in drawn[0]}
+        for name in names:
+            port = ports[name]
+            other = next((p for p in (ports[n] for n in names) if p in reached), None)
+            if port in reached or other is None:
+                reached.add(port)
+                continue
+            wire = (port, other) if port.is_output() and other.is_input() else (other, port)
+            if wire not in self._paths:
+                self._paths[wire] = self.automatic_path(wire)
+                reached.add(port)
 
     def from_dict(self, wires: dict[str, GuiWireDataClass]) -> None:
         """

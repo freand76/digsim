@@ -222,16 +222,24 @@ def nearest_segment(source: Point, dest: Point, path: list[float], point: Point)
 
 
 def handle_at(
-    source: Point, dest: Point, path: list[float], point: Point, radius: float
+    source: Point,
+    dest: Point,
+    path: list[float],
+    point: Point,
+    radius: float,
+    at_ports: tuple[bool, bool] = (False, False),
 ) -> int | None:
     """
     The movable segment whose handle, at the middle of the segment, is within 'radius'
-    of a point, like the mouse position. None if there is none.
+    of a point, like the mouse position. None if there is none. The segments at the ports
+    have a handle too if 'at_ports' says so, for the first and the last segment (see
+    split_at_port()).
     """
     point_x, point_y = point
     segments = list(pairwise(corner_points(source, dest, path)))
     for segment, ((start_x, start_y), (end_x, end_y)) in enumerate(segments):
-        if not is_movable(path, segment) or (start_x, start_y) == (end_x, end_y):
+        at_port = (segment == 0 and at_ports[0]) or (segment == len(path) + 1 and at_ports[1])
+        if not (is_movable(path, segment) or at_port) or (start_x, start_y) == (end_x, end_y):
             # Segments at the ports, and segments without length, have no handle
             continue
         middle_x, middle_y = (start_x + end_x) / 2, (start_y + end_y) / 2
@@ -260,6 +268,55 @@ def move_segment(path: list[float], segment: int, position: float) -> list[float
     new_path = list(path)
     new_path[segment - 1] = position
     return new_path
+
+
+def joint_bounds(
+    source: Point, dest: Point, path: list[float], segment: int
+) -> tuple[float, float] | None:
+    """
+    How far a joint can move along its wire: a segment without length between two
+    segments in a straight line, that moves between the corners at the ends of the
+    straight run (a pixel from them). None if the segment isn't such a joint.
+    """
+    if not is_movable(path, segment):
+        return None
+    points = corner_points(source, dest, path)
+    before, at, after = points[segment - 1], points[segment], points[segment + 2]
+    if points[segment] != points[segment + 1]:
+        return None
+    # A vertical joint is on a horizontal run, it moves across, and the other way round
+    axis = 0 if is_vertical(segment) else 1
+    other = 1 - axis
+    if not before[other] == at[other] == after[other]:
+        return None
+    low, high = sorted((before[axis], after[axis]))
+    if not low < at[axis] < high or high - low < 2:
+        return None
+    return low + 1, high - 1
+
+
+def split_at_port(
+    source: Point, dest: Point, path: list[float], segment: int
+) -> tuple[list[float], int]:
+    """
+    A segment at a port, the first or the last, that is dragged: it is split next to the
+    port, with a step without length, so that the wire still leaves or reaches the port
+    horizontally. Returns the new path, and the segment that moves: the part away from
+    the port.
+    """
+    points = corner_points(source, dest, path)
+    if segment == 0:
+        port, other = source, points[1]
+    elif segment == len(path) + 1:
+        port, other = dest, points[-2]
+    else:
+        raise ValueError(f"Segment {segment} is not at a port")
+    if abs(other[0] - port[0]) <= 2 * X_OFFSET:
+        x = (port[0] + other[0]) / 2
+    else:
+        x = port[0] + (X_OFFSET if other[0] > port[0] else -X_OFFSET)
+    new_path = split_segment(source, dest, path, segment, (x, port[1]), step_size=0)
+    return new_path, segment + 2 if segment == 0 else segment
 
 
 def split_segment(

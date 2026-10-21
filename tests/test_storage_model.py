@@ -3,6 +3,8 @@
 
 """Pytest module to test the storage model data classes"""
 
+import json
+
 import pytest
 
 from digsim.circuit import Circuit
@@ -14,8 +16,10 @@ from digsim.storage_model import (
     CircuitFileDataClass,
     ComponentDataClass,
     GuiWireDataClass,
+    LineDataClass,
     ModelDataClass,
 )
+from digsim.storage_model._circuit import JSON_WIDTH, json_text
 
 
 def test_model_dataclass_keeps_shortcuts():
@@ -141,3 +145,57 @@ def test_positions_saved_as_whole_numbers(tmp_path):
     text = filename.read_text()
     assert "469" not in text
     assert ".0" not in text and ".5" not in text
+
+
+def test_line_connects_its_ports():
+    """Each output port of a line drives each input port of it"""
+    circuit = Circuit(name="c")
+    buttons = [PushButton(circuit, f"B{i}") for i in range(2)]
+    leds = [Led(circuit, f"L{i}") for i in range(2)]
+    line = LineDataClass(ports=["B0.O", "L0.I", "B1.O", "L1.I"])
+    line.connect(circuit)
+    for button in buttons:
+        assert button.O.wired_ports == [led.I for led in leds]
+    # Again: nothing more
+    line.connect(circuit)
+    assert len(leds[0].I.get_drivers()) == 2
+
+
+def test_circuit_file_with_lines(tmp_path):
+    """
+    A GUI circuit file has its connections in its lines: no list of wires, and no wire
+    shapes of the old format. A Python circuit loads it with its connections.
+    """
+    line = LineDataClass(
+        ports=["B.O", "L.I"], points={"1": [150, 100]}, segments=[["B.O", "1"], ["1", "L.I"]]
+    )
+    app_file_dc = AppFileDataClass(circuit=CircuitDataClass(name="c"), lines=[line])
+    app_file_dc.circuit.components = [
+        ComponentDataClass(name="B", type="digsim.circuit.components.PushButton"),
+        ComponentDataClass(name="L", type="digsim.circuit.components.Led"),
+    ]
+    filename = tmp_path / "c.circuit"
+    app_file_dc.save(filename)
+    saved = json.loads(filename.read_text())
+    assert "wires" not in saved
+    assert "wires" not in saved["circuit"]
+    assert AppFileDataClass.load(filename) == app_file_dc
+    assert ModelDataClass.from_app_file_dc(app_file_dc).lines == [line]
+    circuit = Circuit()
+    circuit.from_json_file(filename)
+    assert circuit.get_component("B").O.wired_ports == [circuit.get_component("L").I]
+
+
+def test_compact_json_text():
+    """A circuit file is compact: what fits on a line is on one line"""
+    data = {"name": "c", "point": [10, 20], "nested": {"a": [1, 2], "b": "text"}}
+    assert json_text(data) == json.dumps(data)
+    lines = {"segments": [[f"Component_{i}.O", str(i)] for i in range(20)], "ports": []}
+    text = json_text(lines)
+    assert json.loads(text) == lines
+    assert all(len(line) <= JSON_WIDTH for line in text.splitlines())
+    # The short items of a long list fill the lines, a fraction of json.dumps(indent=4)
+    assert len(text.splitlines()) * 5 < len(json.dumps(lines, indent=4).splitlines())
+    # Objects in a list are one on each line, or on one line if they fit
+    objects = [{"x": i, "text": "a" * 40} for i in range(3)]
+    assert json.loads(json_text(objects)) == objects

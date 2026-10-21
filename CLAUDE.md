@@ -35,7 +35,7 @@ uv run -m digsim.app             # start the GUI
 uv tool run --with mkdocs-material --with mkdocstrings-python --with ruff mkdocs build --strict   # check the docs build
 uv run --with pytest python docs/scripts/generate_examples.py  # regenerate example images
 uv run python docs/scripts/generate_tutorial.py  # regenerate GUI tutorial screenshots
-uv run python tools/gui_fuzz.py --seed 7 --steps 300  # randomized GUI test, offscreen
+uv run python tools/gui_fuzz.py --seeds 3,11,21 --steps 300  # randomized GUI test, offscreen
 ```
 
 The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test.sh`,

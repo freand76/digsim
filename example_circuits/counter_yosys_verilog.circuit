@@ -4,512 +4,269 @@
         "components": [
             {
                 "name": "counter",
-                "display_name": "counter",
                 "type": "digsim.circuit.components.YosysComponent",
-                "settings": {
-                    "path": "../examples/yosys_counter/counter.v"
-                }
+                "display_name": "counter",
+                "settings": {"path": "../examples/yosys_counter/counter.v"}
             },
             {
                 "name": "Clock_1",
-                "display_name": "Clock",
                 "type": "digsim.circuit.components.Clock",
-                "settings": {
-                    "frequency": 5
-                }
+                "display_name": "Clock",
+                "settings": {"frequency": 5}
             },
             {
                 "name": "PushButton_2",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "HexDigit_4",
-                "display_name": "HexDigit",
                 "type": "digsim.circuit.components.HexDigit",
-                "settings": {
-                    "digits": 1,
-                    "dot": true
-                }
+                "display_name": "HexDigit",
+                "settings": {"digits": 1, "dot": true}
             },
             {
                 "name": "OnOffSwitch",
-                "display_name": "OnOffSwitch",
                 "type": "digsim.circuit.components.OnOffSwitch",
+                "display_name": "OnOffSwitch",
                 "settings": {}
             },
             {
                 "name": "Led",
-                "display_name": "Led",
                 "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
                 "settings": {}
             },
             {
                 "name": "Note",
-                "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
                 "settings": {
                     "text": "The counter component is a \"Netlist-component\" \ngenerated from verilog with the Yosys synthesis tool."
                 }
             },
             {
                 "name": "Note_1",
-                "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
                 "settings": {
                     "text": "Start simulation by pressing the \"Start Simulation\" button above..."
                 }
             },
             {
                 "name": "Note_2",
-                "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
                 "settings": {
                     "text": "Enable the counter with this switch\nUse shortcut key 2 to toggle."
                 }
             },
             {
                 "name": "Note_3",
-                "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
                 "settings": {
                     "text": "This push-button will reset the counter\nUse shortcut key 1 to push."
                 }
             },
             {
                 "name": "Note_4",
-                "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
                 "settings": {
                     "text": "This is a clock generator, \nThe clock frequency can be changed,\n\"right-click\" and select \"Settings\""
                 }
             },
             {
                 "name": "Note_5",
-                "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
-                "settings": {
-                    "text": "This LED will light up when the clock is High"
-                }
+                "display_name": "Note",
+                "settings": {"text": "This LED will light up when the clock is High"}
             },
             {
                 "name": "Note_6",
-                "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
-                "settings": {
-                    "text": "This hex-digit will show the current counter value"
-                }
+                "display_name": "Note",
+                "settings": {"text": "This hex-digit will show the current counter value"}
             },
             {
                 "name": "LogicAnalyzer",
-                "display_name": "LogicAnalyzer",
                 "type": "digsim.circuit.components.LogicAnalyzer",
-                "settings": {
-                    "sample_rate": 20
-                }
+                "display_name": "LogicAnalyzer",
+                "settings": {"sample_rate": 20}
             },
             {
                 "name": "Bus2Wires",
-                "display_name": "Bus2Wires",
                 "type": "digsim.circuit.components.Bus2Wires",
-                "settings": {
-                    "width": 4,
-                    "enable": [
-                        0,
-                        1,
-                        2,
-                        3
-                    ]
-                }
+                "display_name": "Bus2Wires",
+                "settings": {"width": 4, "enable": [0, 1, 2, 3]}
             },
             {
                 "name": "LabelWireIn",
-                "display_name": "LabelWireIn",
                 "type": "digsim.circuit.components.LabelWireIn",
-                "settings": {
-                    "label": "SWITCH",
-                    "width": 1
-                }
+                "display_name": "LabelWireIn",
+                "settings": {"label": "SWITCH", "width": 1}
             },
             {
                 "name": "LabelWireIn_1",
-                "display_name": "LabelWireIn",
                 "type": "digsim.circuit.components.LabelWireIn",
-                "settings": {
-                    "label": "BUTTON",
-                    "width": 1
-                }
+                "display_name": "LabelWireIn",
+                "settings": {"label": "BUTTON", "width": 1}
             },
             {
                 "name": "LabelWireIn_2",
-                "display_name": "LabelWireIn",
                 "type": "digsim.circuit.components.LabelWireIn",
-                "settings": {
-                    "label": "CLOCK",
-                    "width": 1
-                }
+                "display_name": "LabelWireIn",
+                "settings": {"label": "CLOCK", "width": 1}
             },
             {
                 "name": "LabelWireOut",
-                "display_name": "LabelWireOut",
                 "type": "digsim.circuit.components.LabelWireOut",
-                "settings": {
-                    "label": "CLOCK",
-                    "width": 1
-                }
+                "display_name": "LabelWireOut",
+                "settings": {"label": "CLOCK", "width": 1}
             },
             {
                 "name": "LabelWireOut_1",
-                "display_name": "LabelWireOut",
                 "type": "digsim.circuit.components.LabelWireOut",
-                "settings": {
-                    "label": "BUTTON",
-                    "width": 1
-                }
+                "display_name": "LabelWireOut",
+                "settings": {"label": "BUTTON", "width": 1}
             },
             {
                 "name": "LabelWireOut_2",
-                "display_name": "LabelWireOut",
                 "type": "digsim.circuit.components.LabelWireOut",
-                "settings": {
-                    "label": "SWITCH",
-                    "width": 1
-                }
+                "display_name": "LabelWireOut",
+                "settings": {"label": "SWITCH", "width": 1}
             },
             {
                 "name": "Note_7",
-                "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
                 "settings": {
                     "text": "A Logic Analyzer showing a live \nview of the connected signals"
                 }
             },
             {
                 "name": "Buzzer",
-                "display_name": "Buzzer",
                 "type": "digsim.circuit.components.Buzzer",
-                "settings": {
-                    "tone": "A"
-                }
+                "display_name": "Buzzer",
+                "settings": {"tone": "A"}
             },
             {
                 "name": "LabelWireOut_3",
-                "display_name": "LabelWireOut",
                 "type": "digsim.circuit.components.LabelWireOut",
-                "settings": {
-                    "label": "BUTTON",
-                    "width": 1
-                }
+                "display_name": "LabelWireOut",
+                "settings": {"label": "BUTTON", "width": 1}
             },
             {
                 "name": "Note_8",
-                "display_name": "Note",
                 "type": "digsim.circuit.components.Note",
-                "settings": {
-                    "text": "A buzzer that will sound when the button is pressed."
-                }
-            }
-        ],
-        "wires": [
-            {
-                "src": "counter.cnt",
-                "dst": "HexDigit_4.val"
-            },
-            {
-                "src": "counter.cnt",
-                "dst": "Bus2Wires.bus"
-            },
-            {
-                "src": "Clock_1.O",
-                "dst": "counter.clk"
-            },
-            {
-                "src": "Clock_1.O",
-                "dst": "Led.I"
-            },
-            {
-                "src": "Clock_1.O",
-                "dst": "LabelWireIn_2.CLOCK"
-            },
-            {
-                "src": "PushButton_2.O",
-                "dst": "counter.reset"
-            },
-            {
-                "src": "PushButton_2.O",
-                "dst": "LabelWireIn_1.BUTTON"
-            },
-            {
-                "src": "OnOffSwitch.O",
-                "dst": "counter.up"
-            },
-            {
-                "src": "OnOffSwitch.O",
-                "dst": "HexDigit_4.dot"
-            },
-            {
-                "src": "OnOffSwitch.O",
-                "dst": "LabelWireIn.SWITCH"
-            },
-            {
-                "src": "Bus2Wires.bus_0",
-                "dst": "LogicAnalyzer.E"
-            },
-            {
-                "src": "Bus2Wires.bus_1",
-                "dst": "LogicAnalyzer.F"
-            },
-            {
-                "src": "Bus2Wires.bus_2",
-                "dst": "LogicAnalyzer.G"
-            },
-            {
-                "src": "Bus2Wires.bus_3",
-                "dst": "LogicAnalyzer.H"
-            },
-            {
-                "src": "LabelWireIn.SWITCH",
-                "dst": "LabelWireOut_2.SWITCH"
-            },
-            {
-                "src": "LabelWireIn_1.BUTTON",
-                "dst": "LabelWireOut_1.BUTTON"
-            },
-            {
-                "src": "LabelWireIn_1.BUTTON",
-                "dst": "LabelWireOut_3.BUTTON"
-            },
-            {
-                "src": "LabelWireIn_2.CLOCK",
-                "dst": "LabelWireOut.CLOCK"
-            },
-            {
-                "src": "LabelWireOut.CLOCK",
-                "dst": "LogicAnalyzer.A"
-            },
-            {
-                "src": "LabelWireOut_1.BUTTON",
-                "dst": "LogicAnalyzer.B"
-            },
-            {
-                "src": "LabelWireOut_2.SWITCH",
-                "dst": "LogicAnalyzer.C"
-            },
-            {
-                "src": "LabelWireOut_3.BUTTON",
-                "dst": "Buzzer.I"
+                "display_name": "Note",
+                "settings": {"text": "A buzzer that will sound when the button is pressed."}
             }
         ]
     },
     "gui": {
-        "counter": {
-            "x": 595,
-            "y": 280,
-            "z": 0
+        "counter": {"x": 595, "y": 280, "z": 0},
+        "Clock_1": {"x": 265, "y": 135, "z": 0},
+        "PushButton_2": {"x": 265, "y": 285, "z": 0},
+        "HexDigit_4": {"x": 895, "y": 410, "z": 0},
+        "OnOffSwitch": {"x": 265, "y": 425, "z": 0},
+        "Led": {"x": 595, "y": 135, "z": 0},
+        "Note": {"x": 492, "y": 386, "z": 0},
+        "Note_1": {"x": 73, "y": 42, "z": 0},
+        "Note_2": {"x": 53, "y": 445, "z": 0},
+        "Note_3": {"x": 37, "y": 305, "z": 0},
+        "Note_4": {"x": 34, "y": 154, "z": 0},
+        "Note_5": {"x": 513, "y": 89, "z": 0},
+        "Note_6": {"x": 825, "y": 520, "z": 0},
+        "LogicAnalyzer": {"x": 965, "y": 21, "z": 0},
+        "Bus2Wires": {"x": 788, "y": 116, "z": 0},
+        "LabelWireIn": {"x": 403, "y": 532, "z": 0},
+        "LabelWireIn_1": {"x": 401, "y": 390, "z": 0},
+        "LabelWireIn_2": {"x": 405, "y": 231, "z": 0},
+        "LabelWireOut": {"x": 819, "y": 36, "z": 0},
+        "LabelWireOut_1": {"x": 751, "y": 56, "z": 0},
+        "LabelWireOut_2": {"x": 819, "y": 76, "z": 0},
+        "Note_7": {"x": 1007, "y": 227, "z": 0},
+        "Buzzer": {"x": 655, "y": 510, "z": 0},
+        "LabelWireOut_3": {"x": 512, "y": 540, "z": 0},
+        "Note_8": {"x": 569, "y": 604, "z": 0}
+    },
+    "lines": [
+        {
+            "ports": ["counter.cnt", "HexDigit_4.val", "Bus2Wires.bus"],
+            "points": {"1": [734, 325], "2": [788, 325], "3": [788, 445], "4": [734, 156]},
+            "segments": [
+                ["counter.cnt", "1"], ["1", "2"], ["2", "3"], ["3", "HexDigit_4.val"], ["1", "4"],
+                ["4", "Bus2Wires.bus"]
+            ]
         },
-        "Clock_1": {
-            "x": 265,
-            "y": 135,
-            "z": 0
+        {
+            "ports": ["Clock_1.O", "Led.I", "LabelWireIn_2.CLOCK", "counter.clk"],
+            "points": {"1": [374, 175], "2": [469, 175], "3": [374, 241], "4": [469, 305]},
+            "segments": [
+                ["Clock_1.O", "1"], ["1", "2"], ["2", "Led.I"], ["1", "3"],
+                ["3", "LabelWireIn_2.CLOCK"], ["2", "4"], ["4", "counter.clk"]
+            ]
         },
-        "PushButton_2": {
-            "x": 265,
-            "y": 285,
-            "z": 0
+        {
+            "ports": ["PushButton_2.O", "counter.reset", "LabelWireIn_1.BUTTON"],
+            "points": {"1": [372, 325], "2": [372, 400]},
+            "segments": [
+                ["PushButton_2.O", "1"], ["1", "counter.reset"], ["1", "2"],
+                ["2", "LabelWireIn_1.BUTTON"]
+            ]
         },
-        "HexDigit_4": {
-            "x": 895,
-            "y": 410,
-            "z": 0
+        {
+            "ports": ["OnOffSwitch.O", "HexDigit_4.dot", "LabelWireIn.SWITCH", "counter.up"],
+            "points": {"1": [373, 465], "2": [469, 465], "3": [373, 542], "4": [469, 345]},
+            "segments": [
+                ["OnOffSwitch.O", "1"], ["1", "2"], ["2", "HexDigit_4.dot"], ["1", "3"],
+                ["3", "LabelWireIn.SWITCH"], ["2", "4"], ["4", "counter.up"]
+            ]
         },
-        "OnOffSwitch": {
-            "x": 265,
-            "y": 425,
-            "z": 0
+        {
+            "ports": ["Bus2Wires.bus_0", "LogicAnalyzer.E"],
+            "points": {"1": [938, 141], "2": [938, 126]},
+            "segments": [["Bus2Wires.bus_0", "1"], ["1", "2"], ["2", "LogicAnalyzer.E"]]
         },
-        "Led": {
-            "x": 595,
-            "y": 135,
-            "z": 0
+        {
+            "ports": ["Bus2Wires.bus_1", "LogicAnalyzer.F"],
+            "points": {"1": [938, 151], "2": [938, 146]},
+            "segments": [["Bus2Wires.bus_1", "1"], ["1", "2"], ["2", "LogicAnalyzer.F"]]
         },
-        "Note": {
-            "x": 492,
-            "y": 386,
-            "z": 0
+        {
+            "ports": ["Bus2Wires.bus_2", "LogicAnalyzer.G"],
+            "points": {"1": [938, 161], "2": [938, 166]},
+            "segments": [["Bus2Wires.bus_2", "1"], ["1", "2"], ["2", "LogicAnalyzer.G"]]
         },
-        "Note_1": {
-            "x": 73,
-            "y": 42,
-            "z": 0
+        {
+            "ports": ["Bus2Wires.bus_3", "LogicAnalyzer.H"],
+            "points": {"1": [938, 171], "2": [938, 186]},
+            "segments": [["Bus2Wires.bus_3", "1"], ["1", "2"], ["2", "LogicAnalyzer.H"]]
         },
-        "Note_2": {
-            "x": 53,
-            "y": 445,
-            "z": 0
+        {
+            "ports": ["LabelWireOut.CLOCK", "LogicAnalyzer.A"],
+            "points": {},
+            "segments": [["LabelWireOut.CLOCK", "LogicAnalyzer.A"]]
         },
-        "Note_3": {
-            "x": 37,
-            "y": 305,
-            "z": 0
+        {
+            "ports": ["LabelWireOut_1.BUTTON", "LogicAnalyzer.B"],
+            "points": {},
+            "segments": [["LabelWireOut_1.BUTTON", "LogicAnalyzer.B"]]
         },
-        "Note_4": {
-            "x": 34,
-            "y": 154,
-            "z": 0
+        {
+            "ports": ["LabelWireOut_2.SWITCH", "LogicAnalyzer.C"],
+            "points": {},
+            "segments": [["LabelWireOut_2.SWITCH", "LogicAnalyzer.C"]]
         },
-        "Note_5": {
-            "x": 513,
-            "y": 89,
-            "z": 0
-        },
-        "Note_6": {
-            "x": 825,
-            "y": 520,
-            "z": 0
-        },
-        "LogicAnalyzer": {
-            "x": 965,
-            "y": 21,
-            "z": 0
-        },
-        "Bus2Wires": {
-            "x": 788,
-            "y": 116,
-            "z": 0
-        },
-        "LabelWireIn": {
-            "x": 403,
-            "y": 532,
-            "z": 0
-        },
-        "LabelWireIn_1": {
-            "x": 401,
-            "y": 390,
-            "z": 0
-        },
-        "LabelWireIn_2": {
-            "x": 405,
-            "y": 231,
-            "z": 0
-        },
-        "LabelWireOut": {
-            "x": 819,
-            "y": 36,
-            "z": 0
-        },
-        "LabelWireOut_1": {
-            "x": 751,
-            "y": 56,
-            "z": 0
-        },
-        "LabelWireOut_2": {
-            "x": 819,
-            "y": 76,
-            "z": 0
-        },
-        "Note_7": {
-            "x": 1007,
-            "y": 227,
-            "z": 0
-        },
-        "Buzzer": {
-            "x": 655,
-            "y": 510,
-            "z": 0
-        },
-        "LabelWireOut_3": {
-            "x": 512,
-            "y": 540,
-            "z": 0
-        },
-        "Note_8": {
-            "x": 569,
-            "y": 604,
-            "z": 0
+        {
+            "ports": ["LabelWireOut_3.BUTTON", "Buzzer.I"],
+            "points": {},
+            "segments": [["LabelWireOut_3.BUTTON", "Buzzer.I"]]
         }
-    },
-    "wires": {
-        "Led.I": {
-            "path": [
-                374,
-                175,
-                469
-            ]
-        },
-        "LabelWireIn_2.CLOCK": {
-            "path": [
-                374
-            ],
-            "branch": "Led.I",
-            "corner": 1
-        },
-        "counter.clk": {
-            "path": [
-                469
-            ],
-            "branch": "Led.I",
-            "corner": 3
-        },
-        "HexDigit_4.dot": {
-            "path": [
-                373,
-                465,
-                469,
-                465,
-                619
-            ]
-        },
-        "LabelWireIn.SWITCH": {
-            "path": [
-                373
-            ],
-            "branch": "HexDigit_4.dot",
-            "corner": 1
-        },
-        "counter.up": {
-            "path": [
-                469
-            ],
-            "branch": "HexDigit_4.dot",
-            "corner": 3
-        },
-        "counter.reset": {
-            "path": [
-                372,
-                325,
-                469
-            ]
-        },
-        "LabelWireIn_1.BUTTON": {
-            "path": [
-                372
-            ],
-            "branch": "counter.reset",
-            "corner": 1
-        },
-        "HexDigit_4.val": {
-            "path": [
-                734,
-                325,
-                788
-            ]
-        },
-        "Bus2Wires.bus": {
-            "path": [
-                734
-            ],
-            "branch": "HexDigit_4.val",
-            "corner": 1
-        }
-    },
-    "shortcuts": {
-        "1": "PushButton_2",
-        "2": "OnOffSwitch"
-    },
-    "settings": {
-        "real_time": true,
-        "color_wires": true,
-        "update_frequency": 20
-    }
+    ],
+    "shortcuts": {"1": "PushButton_2", "2": "OnOffSwitch"},
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 20}
 }

@@ -32,14 +32,15 @@ class NewWire:
         self._end_pos: QPointF | None = None
         # The positions clicked between the ports, the wire's corners
         self._clicks: list[Point] = []
-        # For a wire started at a corner of another wire: that wire and the corner
-        self._start_branch: tuple[Wire, int] | None = None
+        # For a wire started on another wire: that wire, and its corner or a segment and
+        # a point on it (a joint there when the wire is finished)
+        self._start_branch: tuple[Wire, At] | None = None
 
     def start_port(self) -> Port | None:
         """Get start port for unfinished new wire object"""
         return self._start_port
 
-    def start_branch(self) -> tuple[Wire, int] | None:
+    def start_branch(self) -> tuple[Wire, At] | None:
         """The wire and corner where the new wire started, None if it started at a port"""
         return self._start_branch
 
@@ -67,10 +68,13 @@ class NewWire:
             self._start_branch = None
             self._clicks = []
 
-    def start_at_corner(self, wire: Wire, corner: int) -> None:
-        """Start a new wire at a corner of a drawn wire"""
+    def start_at_corner(self, wire: Wire, at: At) -> None:
+        """
+        Start a new wire on a drawn wire: at a corner, or at a point on a segment, where
+        a joint is added when the wire is finished
+        """
         self._start_port = wire[0]
-        self._start_branch = (wire, corner)
+        self._start_branch = (wire, at)
         self._clicks = []
 
     def end(self, component: Component, portname: str) -> None:

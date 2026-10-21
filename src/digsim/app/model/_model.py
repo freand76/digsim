@@ -218,8 +218,17 @@ class AppModel(QThread):
             )
             # Add component positions
             self.objects.components.add_gui_positions(dc.gui)
-            # Wire paths, after the components are placed
-            self.objects.wires.from_dict(dc.wires)
+            # The wires, after the components are placed: lines, or the wires of files
+            # from before lines (and of undo states)
+            if dc.lines:
+                for line in dc.lines:
+                    try:
+                        line.connect(self.objects.circuit)
+                    except DigsimException as exc:
+                        exception_str_list.append(f"{exc.__class__.__name__}:{exc!s}")
+                self.objects.wires.from_lines(dc.lines)
+            else:
+                self.objects.wires.from_dict(dc.wires)
         except DigsimException as exc:
             self.sig_error.emit(f"Circuit error: {exc!s}")
             return exception_str_list
@@ -240,11 +249,13 @@ class AppModel(QThread):
         # Paths in the circuit are stored relative to the circuit file
         self._circuit_folder = str(Path(path).parent)
         model_dataclass = self.circuit_to_model()
+        # The lines have the connections
+        model_dataclass.circuit.wires = []
         appfile_dataclass = AppFileDataClass(
             circuit=model_dataclass.circuit,
             gui=model_dataclass.gui,
+            lines=self.objects.wires.to_lines(),
             shortcuts=model_dataclass.shortcuts,
-            wires=model_dataclass.wires,
             settings=self.settings.get_all(),
         )
         try:

@@ -37,11 +37,81 @@ def read_json_file(filename: str | Path) -> dict[str, Any]:
     return file_dict
 
 
+# The layout of a circuit file: the indent of each level, and the width of its lines
+JSON_INDENT = 4
+JSON_WIDTH = 99
+
+
+def json_text(value: Any, level: int = 0, used: int = 0) -> str:
+    """
+    The JSON text of a value, compact: a list or an object that fits on a line is on one
+    line, and the short items of a long list fill the lines. Otherwise indented like
+    json.dumps(indent=4). 'used' is the length of the line before the value.
+    """
+    line = json.dumps(value)
+    # Room for a comma after the value
+    if not isinstance(value, dict | list) or used + len(line) + 1 <= JSON_WIDTH:
+        return line
+    inner = " " * (JSON_INDENT * (level + 1))
+    end = " " * (JSON_INDENT * level)
+    if isinstance(value, dict):
+        items = []
+        for key, item in value.items():
+            start = f"{inner}{json.dumps(key)}: "
+            items.append(start + json_text(item, level + 1, len(start)))
+        return "{\n" + ",\n".join(items) + "\n" + end + "}"
+    texts = [json.dumps(item) for item in value]
+    if all(len(inner) + len(text) + 1 <= JSON_WIDTH for text in texts) and not any(
+        isinstance(item, dict) for item in value
+    ):
+        # Short items, as many on a line as fit
+        lines = [inner]
+        for text in texts:
+            if lines[-1] != inner and len(lines[-1]) + len(text) + 2 > JSON_WIDTH:
+                lines[-1] = lines[-1].rstrip()
+                lines.append(inner)
+            lines[-1] += text + ", "
+        lines[-1] = lines[-1][:-2]
+        return "[\n" + ",\n".join(line.rstrip(",") for line in lines) + "\n" + end + "]"
+    items = [inner + json_text(item, level + 1, len(inner)) for item in value]
+    return "[\n" + ",\n".join(items) + "\n" + end + "]"
+
+
 def write_json_file(filename: str | Path, data: Any) -> None:
-    """Write a data class to a circuit file"""
-    json_object = json.dumps(asdict(data), indent=4)
+    """Write a data class (or a dict of it) to a circuit file"""
+    text = json_text(data if isinstance(data, dict) else asdict(data))
     with open(filename, mode="w", encoding="utf-8") as json_file:
-        json_file.write(json_object)
+        json_file.write(text + "\n")
+
+
+def find_port(circuit: Circuit, name: str) -> Port:
+    """A port by its name, "component.port" """
+    # The component name can contain dots but a port name can't
+    component_name, _, port_name = name.rpartition(".")
+    return circuit.get_component(component_name).port(port_name)
+
+
+@dataclass
+class LineDataClass:
+    """
+    A line of wires in the GUI, where each output port drives each input port: its ports
+    ("component.port"), the points where its segments turn or meet ({id: [x, y]}), and its
+    horizontal and vertical segments, each between two ports or points.
+    """
+
+    ports: list[str]
+    points: dict[str, list[int]] = Field(default_factory=dict)
+    segments: list[list[str]] = Field(default_factory=list)
+
+    def connect(self, circuit: Circuit) -> None:
+        """Connect each output port of the line to each of its input ports"""
+        ports = [find_port(circuit, name) for name in self.ports]
+        for src_port in ports:
+            if not src_port.is_output():
+                continue
+            for dst_port in ports:
+                if dst_port.is_input() and dst_port not in src_port.wired_ports:
+                    src_port.wire = dst_port
 
 
 @dataclass
@@ -50,12 +120,7 @@ class WireDataClass:
     dst: str
 
     def connect(self, circuit: Circuit) -> None:
-        # "component.port", the component name can contain dots but a port name can't
-        src_comp_name, _, src_port_name = self.src.rpartition(".")
-        dst_comp_name, _, dst_port_name = self.dst.rpartition(".")
-        src_comp = circuit.get_component(src_comp_name)
-        dst_comp = circuit.get_component(dst_comp_name)
-        src_comp.port(src_port_name).wire = dst_comp.port(dst_port_name)
+        find_port(circuit, self.src).wire = find_port(circuit, self.dst)
 
     @classmethod
     def list_from_port(cls, src_port: Port) -> list[WireDataClass]:
@@ -144,11 +209,17 @@ class CircuitDataClass:
 
 @dataclass
 class CircuitFileDataClass:
+    """A circuit file. A GUI circuit file has lines (see LineDataClass) for its wires."""
+
     circuit: CircuitDataClass
+    lines: list[LineDataClass] = Field(default_factory=list)
 
     @staticmethod
     def load(filename: str | Path) -> CircuitFileDataClass:
         return CircuitFileDataClass(**read_json_file(filename))
 
     def save(self, filename: str | Path) -> None:
-        write_json_file(filename, self)
+        data = asdict(self)
+        if not self.lines:
+            del data["lines"]
+        write_json_file(filename, data)

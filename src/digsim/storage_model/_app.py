@@ -7,13 +7,14 @@ Module that handles the dataclasses for application
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
 from pydantic import Field, field_validator
 from pydantic.dataclasses import dataclass
 
-from ._circuit import CircuitDataClass, read_json_file, write_json_file
+from ._circuit import CircuitDataClass, LineDataClass, read_json_file, write_json_file
 
 
 @dataclass
@@ -53,9 +54,16 @@ class GuiWireDataClass:
 
 @dataclass
 class AppFileDataClass:
+    """
+    A GUI circuit file: the components, their positions, and the lines of wires that
+    connect them (see LineDataClass). Files from before lines have the connections in
+    'circuit' and the shapes of the wires in 'wires'.
+    """
+
     circuit: CircuitDataClass
     gui: dict[str, GuiPositionDataClass] = Field(default_factory=dict)
-    # The wire shapes, by the input port each wire drives, like "Led.I"
+    lines: list[LineDataClass] = Field(default_factory=list)
+    # The wire shapes of files from before lines, by the input port each wire drives
     wires: dict[str, GuiWireDataClass] = Field(default_factory=dict)
     shortcuts: dict[str, str] = Field(default_factory=dict)
     settings: dict[str, Any] = Field(default_factory=dict)
@@ -65,15 +73,27 @@ class AppFileDataClass:
         return AppFileDataClass(**read_json_file(filename))
 
     def save(self, filename: str | Path) -> None:
-        write_json_file(filename, self)
+        data = asdict(self)
+        # Not in files with lines, the lines have the connections and the wires
+        if not self.wires:
+            del data["wires"]
+        if not self.circuit.wires:
+            del data["circuit"]["wires"]
+        write_json_file(filename, data)
 
 
 @dataclass
 class ModelDataClass:
+    """
+    The state of the GUI model, of a loaded file or for undo. The undo states have the
+    wires as the model knows them ('wires'), loaded files have lines or wires.
+    """
+
     circuit: CircuitDataClass
     gui: dict[str, GuiPositionDataClass]
     shortcuts: dict[str, str] = Field(default_factory=dict)
     wires: dict[str, GuiWireDataClass] = Field(default_factory=dict)
+    lines: list[LineDataClass] = Field(default_factory=list)
 
     @staticmethod
     def from_app_file_dc(app_file_dc: AppFileDataClass) -> ModelDataClass:
@@ -82,4 +102,5 @@ class ModelDataClass:
             gui=app_file_dc.gui,
             shortcuts=app_file_dc.shortcuts,
             wires=app_file_dc.wires,
+            lines=app_file_dc.lines,
         )

@@ -26,6 +26,7 @@ from digsim.app._wire_path import (
     is_valid_path,
     is_vertical,
     join_paths,
+    joint_bounds,
     merge_corner,
     merge_segments,
     move_segment,
@@ -33,6 +34,7 @@ from digsim.app._wire_path import (
     nearest_segment,
     point_on_segment,
     segment_count,
+    split_at_port,
     split_corner,
     split_segment,
     step_aside,
@@ -454,3 +456,33 @@ def test_step_aside():
     # Up or down, or away from the wire: no step
     assert step_aside([100], joint, (20, 120), horizontal) == [100]
     assert step_aside([100], joint, port, {"up", "down"}) == [100]
+
+
+def test_joint_bounds():
+    """A joint moves along its straight run, between the corners at its ends"""
+    source, dest = (0, 0), (200, 100)
+    # Across to 50 (a joint there), on to 150, down, across to the port
+    path = [50, 0, 150]
+    assert corner_points(source, dest, path)[1:3] == [(50, 0), (50, 0)]
+    assert joint_bounds(source, dest, path, 1) == (1, 149)
+    # Not a joint: a segment with length, or a corner that turns
+    assert joint_bounds(source, dest, path, 3) is None
+    assert joint_bounds(source, dest, [150], 1) is None
+
+
+def test_split_at_port():
+    """A segment at a port is split next to the port, the part away from it moves"""
+    source, dest = (0, 0), (200, 100)
+    path = [150]
+    path_0, moving = split_at_port(source, dest, path, 0)
+    assert moving == 2
+    assert corner_points(source, dest, path_0)[:4] == [(0, 0), (10, 0), (10, 0), (150, 0)]
+    assert move_segment(path_0, moving, 30)[:2] == [10, 30]
+    path_2, moving = split_at_port(source, dest, path, 2)
+    assert moving == 2
+    assert corner_points(source, dest, path_2)[-3:] == [(190, 100), (190, 100), (200, 100)]
+    # A short segment is split in the middle
+    path_short, _ = split_at_port(source, (200, 100), [12], 0)
+    assert path_short[0] == 6
+    with pytest.raises(ValueError, match="not at a port"):
+        split_at_port(source, dest, path, 1)

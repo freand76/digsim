@@ -5,6 +5,7 @@
 
 import pytest
 
+from digsim.app._line_graph import on_segment
 from digsim.app._wire_key import drawn_key, wire_key
 from digsim.app._wire_lines import WireDrawing
 from digsim.circuit import Circuit
@@ -447,3 +448,327 @@ def test_value_of_a_line_without_outputs():
     led2 = drawing.led("L2", 400, 200)
     drawing.connect_ports(led1, led2)
     assert drawing.line_value((led1, led2)) == "Z"
+
+
+def shape(drawing):
+    """The lines of a drawing as sets of segments between places, and their ports"""
+    shapes = set()
+    for line in drawing.to_lines():
+        ports = {f"{port.parent().name()}.{port.name()}": port for port in drawing.ports()}
+
+        def place(node, line=line, ports=ports):
+            if node in ports:
+                return drawing.port_pos(ports[node])
+            return tuple(line.points[node])
+
+        segments = frozenset(frozenset((place(a), place(b))) for a, b in line.segments)
+        shapes.add((frozenset(line.ports), segments))
+    return shapes
+
+
+def round_trip(drawing):
+    """
+    Save the lines and load them again: the same lines, the same connections. The drawn
+    wires can be others (a joined wire can be a branch then), the next time they are the
+    same.
+    """
+    before = shape(drawing)
+    connections = set(drawing.connections())
+    drawing.from_lines(drawing.to_lines())
+    assert shape(drawing) == before
+    assert set(drawing.connections()) == connections
+    for wire in drawing.connections():
+        assert drawing.is_connected(wire)
+    lines = drawing.to_lines()
+    drawing.from_lines(lines)
+    assert drawing.to_lines() == lines
+
+
+def test_lines_of_a_bus(bus):
+    """The bus as a graph: B's wire ends where the branch to LED 2 starts"""
+    drawing, *_ = bus
+    (line,) = drawing.to_lines()
+    assert line.ports == ["A.O", "L1.I", "L2.I", "B.O"]
+    joint = next(node for node, point in line.points.items() if point == [390, 50])
+    assert sum(joint in segment for segment in line.segments) == 4
+    assert all(
+        line.points.get(a, [0, 0])[0] == line.points.get(b, [1, 0])[0]
+        or line.points.get(a, [0, 0])[1] == line.points.get(b, [0, 1])[1]
+        for a, b in line.segments
+        if a in line.points and b in line.points
+    )
+    round_trip(drawing)
+
+
+def test_lines_round_trip(bus):
+    """Every kind of wire: branches, joins, wires between lines and between inputs"""
+    drawing, a, b, led1, _ = bus
+    led3 = drawing.led("L3", 400, 300)
+    drawing.connect_branch((b, led1), middle(drawing, (b, led1), 0), led3)
+    c = drawing.button("C", 0, 400)
+    drawing.connect_join(c, (b, led1), middle(drawing, (b, led1), 0))
+    d = drawing.button("D", 0, 500)
+    led4 = drawing.led("L4", 400, 500)
+    drawing.connect_ports(d, led4, clicks=[(150, 520)])
+    drawing.connect_wires(((d, led4), 1), (a, led1), middle(drawing, (a, led1), 0))
+    led5 = drawing.led("L5", 400, 600)
+    led6 = drawing.led("L6", 400, 700)
+    drawing.connect_ports(led5, led6)
+    round_trip(drawing)
+
+
+def test_lines_of_wires_drawn_twice():
+    """Two outputs each drawn to the same two inputs: a loop, cut, the line stays"""
+    drawing = Drawing()
+    a = drawing.button("A", 0, 0)
+    b = drawing.button("B", 0, 300)
+    led1 = drawing.led("L1", 400, 100)
+    led2 = drawing.led("L2", 400, 200)
+    for src_port in (a, b):
+        for dst_port in (led1, led2):
+            src_port.wire = dst_port
+    drawing.from_dict({})
+    drawing.from_lines(drawing.to_lines())
+    assert drawing.drivers(led1) == drawing.drivers(led2) == ["A", "B"]
+    for wire in drawing.connections():
+        assert drawing.is_connected(wire)
+    lines = drawing.to_lines()
+    drawing.from_lines(lines)
+    assert drawing.to_lines() == lines
+
+
+def test_delete_a_branch_removes_its_joint():
+    """The joint where a deleted branch started goes too, the wire keeps its shape"""
+    drawing = Drawing()
+    a = drawing.button("A", 0, 0)
+    led1 = drawing.led("L1", 400, 100)
+    led2 = drawing.led("L2", 400, 200)
+    drawing.connect_ports(a, led1)
+    path = list(drawing.path((a, led1)))
+    drawing.connect_branch((a, led1), middle(drawing, (a, led1), 1), led2)
+    assert drawing.path((a, led1)) != path
+    drawing.delete_wires([(a, led2)])
+    assert drawing.path((a, led1)) == path
+
+
+def test_delete_keeps_the_joints_in_use(bus):
+    """A joint that another wire still starts or ends on stays"""
+    drawing, a, b, led1, led2 = bus
+    corner = drawing.join((b, led1))[1]
+    drawing.delete_wires([(a, led2)])
+    assert drawing.join((b, led1)) is not None
+    host, at = drawing.join((b, led1))
+    assert drawing.corner_points(host)[at] == drawing.corner_points((b, led1))[-1]
+    assert at <= corner
+
+
+def test_move_a_joint():
+    """A joint moves along its wire, between its corners, and its branch goes with it"""
+    drawing = Drawing()
+    a = drawing.button("A", 0, 0)
+    led1 = drawing.led("L1", 400, 100)
+    led2 = drawing.led("L2", 400, 200)
+    drawing.connect_ports(a, led1)
+    # A joint on the first horizontal run, from (40, 0) to (390, 0), and a branch down
+    drawing.connect_branch((a, led1), (0, (200, 0)), led2, clicks=[(200, 200)])
+    wire, branch = (a, led1), (a, led2)
+    assert drawing.corner_points(branch)[:2] == [(200, 0), (200, 0)]
+    assert drawing.joint_bounds(wire, 1) == (41, 389)
+    drawing.move_joint(wire, 1, 120)
+    assert drawing.corner_points(wire)[1] == (120, 0)
+    # The branch still leaves down, from the joint
+    assert drawing.corner_points(branch)[:3] == [(120, 0), (120, 0), (120, 200)]
+    # Not past the corners
+    drawing.move_joint(wire, 1, 1000)
+    assert drawing.corner_points(wire)[1] == (389, 0)
+    with pytest.raises(ValueError, match="not a joint"):
+        drawing.move_joint(wire, 3, 50)
+
+
+def test_move_a_point_at_a_corner():
+    """
+    A wire turns at a corner, and a branch from the corner goes on straight: the point
+    moves along the straight line, the segment of the corner across moves with it
+    """
+    drawing = Drawing()
+    a = drawing.button("A", 0, 0)
+    led1 = drawing.led("L1", 400, 100)
+    led2 = drawing.led("L2", 600, 0)
+    drawing.connect_ports(a, led1)
+    wire = (a, led1)
+    assert drawing.corner_points(wire) == [(40, 0), (390, 0), (390, 100), (400, 100)]
+    drawing.connect_branch(wire, 1, led2)
+    branch = (a, led2)
+    assert drawing.corner_points(branch)[0] == (390, 0)
+    move = drawing.point_move((390, 0))
+    assert move is not None
+    assert move.wire == wire and move.segment == 1
+    # From the output port on the left to the branch's next corner on the right
+    low, high = move.bounds
+    assert low == 41
+    assert high > 390
+    drawing.move_point(move, 300)
+    assert drawing.corner_points(wire)[1:3] == [(300, 0), (300, 100)]
+    assert drawing.corner_points(branch)[0] == (300, 0)
+    # A joint moves the same way
+    drawing.connect_branch(wire, (0, (100, 0)), drawing.led("L3", 400, 300), clicks=[(100, 300)])
+    joint_move = drawing.point_move((100, 0))
+    assert joint_move is not None
+    assert drawing.joint_bounds(joint_move.wire, joint_move.segment) == joint_move.bounds
+
+
+def test_point_that_cannot_move():
+    """A corner of a single wire, without a straight line through it, doesn't move"""
+    drawing = Drawing()
+    a = drawing.button("A", 0, 0)
+    led = drawing.led("L", 400, 100)
+    drawing.connect_ports(a, led)
+    assert drawing.point_move((390, 0)) is None
+    assert drawing.point_move((1000, 1000)) is None
+
+
+def test_merge_segments_at_a_joint():
+    """Two segments in a straight line, with a joint between: the joint can be removed"""
+    drawing = Drawing()
+    a = drawing.button("A", 0, 0)
+    led1 = drawing.led("L1", 400, 100)
+    led2 = drawing.led("L2", 400, 300)
+    drawing.connect_ports(a, led1)
+    wire = (a, led1)
+    path = list(drawing.path(wire))
+    drawing.add_joint(wire, 0, (200, 0))
+    # The segments on each side of the joint, and the joint itself
+    assert [drawing.unused_joint(wire, segment) for segment in (0, 1, 2)] == [1, 1, 1]
+    drawing.remove_joint(wire, 2)
+    assert drawing.path(wire) == path
+    # A joint where a wire starts stays
+    drawing.connect_branch(wire, (0, (200, 0)), led2)
+    assert drawing.unused_joint(wire, 0) is None
+    with pytest.raises(ValueError, match="No joint"):
+        drawing.remove_joint(wire, 0)
+
+
+def test_merge_a_straight_wire():
+    """
+    A straight wire keeps one vertical segment, without length: merging moves it to the
+    end of the wire, where it isn't a joint
+    """
+    drawing = Drawing()
+    a = drawing.button("A", 0, 0)
+    led = drawing.led("L", 400, 0)
+    drawing.connect_ports(a, led)
+    wire = (a, led)
+    drawing.set_path(wire, [200])
+    assert drawing.unused_joint(wire, 0) == 1
+    drawing.remove_joint(wire, 0)
+    assert drawing.path(wire) == [400]
+    assert drawing.unused_joint(wire, 0) is None
+    # Several vertical segments, the last one without length
+    drawing.set_path(wire, [100, 50, 200, 0, 300])
+    assert drawing.unused_joint(wire, 4) == 5
+    drawing.remove_joint(wire, 4)
+    assert drawing.path(wire) == [100, 50, 200]
+
+
+def test_move_a_point_at_the_end_of_a_port_segment():
+    """
+    A point that moves its wire's segment at a port: the segment is split next to the
+    port, so that the wire still leaves the port straight
+    """
+    drawing = Drawing()
+    a = drawing.button("A", 0, 100)
+    led1 = drawing.led("L1", 400, 300)
+    led2 = drawing.led("L2", 400, 0)
+    drawing.connect_ports(a, led1, clicks=[(200, 300)])
+    wire = (a, led1)
+    assert drawing.corner_points(wire)[:3] == [(40, 100), (200, 100), (200, 300)]
+    # Up from the corner where the wire turns down: a straight line up and down
+    drawing.connect_branch(wire, 1, led2, clicks=[(200, 0)])
+    move = drawing.point_move((200, 100))
+    assert move is not None and move.split
+    drawing.move_point(move, 150)
+    points = drawing.corner_points(wire)
+    assert points[:4] == [(40, 100), (50, 100), (50, 150), (200, 150)]
+    assert drawing.corner_points((a, led2))[0] == (200, 150)
+
+
+def pieces_of(drawing):
+    """The drawn segments on each piece of the lines"""
+    found = {}
+    for key, run in drawing.runs().items():
+        found.setdefault(run, set()).add(key)
+    return found
+
+
+def test_pieces_of_a_line(bus):
+    """
+    The pieces of a line are between its ports and where wires meet: B's wire ends where
+    the branch to LED 2 starts, so A to there, on to LED 1, the branch, and B's wire
+    """
+    drawing, a, _b, led1, led2 = bus
+    runs = drawing.runs()
+    assert len(set(runs.values())) == 4
+    # The first segment of A's wire, and the one from its port down to the joint
+    assert runs[((a, led1), 0)] == runs[((a, led1), 1)]
+    assert runs[((a, led1), 0)] != runs[((a, led2), 1)]
+
+
+def test_delete_a_piece_at_the_output(bus):
+    """Without the piece from A, A drives nothing, B still drives both LEDs"""
+    drawing, a, _b, led1, led2 = bus
+    before = shape(drawing)
+    drawing.delete_runs([((a, led1), 0)])
+    assert a.wired_ports == []
+    assert drawing.drivers(led1) == drawing.drivers(led2) == ["B"]
+    # The other pieces are where they were
+    ((_, segments_after),) = shape(drawing)
+    ((_, segments_before),) = before
+    assert len(segments_after) < len(segments_before)
+    for wire in drawing.connections():
+        assert drawing.is_connected(wire)
+
+
+def test_delete_a_piece_to_an_input(bus):
+    """Without the piece to LED 2, LED 2 isn't driven, the rest of the line stays"""
+    drawing, a, _b, led1, led2 = bus
+    drawing.delete_runs([((a, led2), 1)])
+    assert drawing.drivers(led2) == []
+    assert drawing.drivers(led1) == ["A", "B"]
+
+
+def test_delete_a_piece_in_the_middle():
+    """A piece between two points: the line is two lines after"""
+    drawing = Drawing()
+    a = drawing.button("A", 0, 0)
+    led1 = drawing.led("L1", 400, 300)
+    led2 = drawing.led("L2", 400, 100)
+    led3 = drawing.led("L3", 400, 200)
+    drawing.connect_ports(a, led1, clicks=[(200, 300)])
+    wire = (a, led1)
+    # The lower one first: segment 1 is from (200, 0) down to it then
+    drawing.connect_branch(wire, (1, (200, 200)), led3)
+    drawing.connect_branch(wire, (1, (200, 100)), led2)
+    points = drawing.corner_points(wire)
+    middle_piece = next(
+        (wire, segment)
+        for segment in range(len(points) - 1)
+        if points[segment] != points[segment + 1]
+        and on_segment(points[segment], points[segment + 1], (200, 150))
+    )
+    drawing.delete_runs([middle_piece])
+    assert drawing.drivers(led2) == ["A"]
+    assert drawing.drivers(led1) == drawing.drivers(led3) == []
+
+
+def test_point_at_a_port_does_not_move():
+    """A point where wires meet at a port: the port can't move"""
+    drawing = Drawing()
+    a = drawing.button("A", 0, 0)
+    led1 = drawing.led("L1", 400, 100)
+    led2 = drawing.led("L2", 400, -100)
+    b = drawing.button("B", -200, 0)
+    drawing.connect_ports(a, led1)
+    drawing.connect_ports(a, led2)
+    # Into A's output port from the left: three ways at the port
+    drawing.connect_ports(b, a)
+    assert drawing.point_move((40, 0)) is None

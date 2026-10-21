@@ -4,371 +4,209 @@
         "components": [
             {
                 "name": "SevenSegment",
-                "display_name": "SevenSegment",
                 "type": "digsim.circuit.components.SevenSegment",
+                "display_name": "SevenSegment",
                 "settings": {}
             },
             {
                 "name": "ic7448",
-                "display_name": "ic7448",
                 "type": "digsim.circuit.components.IntegratedCircuit",
-                "settings": {
-                    "ic_name": "7448"
-                }
+                "display_name": "ic7448",
+                "settings": {"ic_name": "7448"}
             },
             {
                 "name": "ttl_74162",
-                "display_name": "ttl_74162",
                 "type": "digsim.circuit.components.IntegratedCircuit",
-                "settings": {
-                    "ic_name": "74162"
-                }
+                "display_name": "ttl_74162",
+                "settings": {"ic_name": "74162"}
             },
             {
                 "name": "Clock",
-                "display_name": "Clock",
                 "type": "digsim.circuit.components.Clock",
-                "settings": {
-                    "frequency": 5
-                }
+                "display_name": "Clock",
+                "settings": {"frequency": 5}
             },
             {
                 "name": "OnOffSwitch",
-                "display_name": "OnOffSwitch",
                 "type": "digsim.circuit.components.OnOffSwitch",
+                "display_name": "OnOffSwitch",
                 "settings": {}
             },
             {
                 "name": "Led",
-                "display_name": "Led",
                 "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
                 "settings": {}
             },
             {
                 "name": "PushButton",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "DipSwitch",
-                "display_name": "DipSwitch",
                 "type": "digsim.circuit.components.DipSwitch",
-                "settings": {
-                    "bits": 4
-                }
+                "display_name": "DipSwitch",
+                "settings": {"bits": 4}
             },
             {
                 "name": "Wires2Bus",
-                "display_name": "Wires2Bus",
                 "type": "digsim.circuit.components.Wires2Bus",
-                "settings": {
-                    "width": 4
-                }
+                "display_name": "Wires2Bus",
+                "settings": {"width": 4}
             },
             {
                 "name": "PushButton_1",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "PushButton_2",
-                "display_name": "PushButton",
                 "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
                 "settings": {}
             },
             {
                 "name": "NOT",
-                "display_name": "NOT",
                 "type": "digsim.circuit.components.NOT",
+                "display_name": "NOT",
                 "settings": {}
             },
             {
                 "name": "NOT_1",
-                "display_name": "NOT",
                 "type": "digsim.circuit.components.NOT",
+                "display_name": "NOT",
                 "settings": {}
-            }
-        ],
-        "wires": [
-            {
-                "src": "ic7448.a",
-                "dst": "SevenSegment.A"
-            },
-            {
-                "src": "ic7448.b",
-                "dst": "SevenSegment.B"
-            },
-            {
-                "src": "ic7448.c",
-                "dst": "SevenSegment.C"
-            },
-            {
-                "src": "ic7448.d",
-                "dst": "SevenSegment.D"
-            },
-            {
-                "src": "ic7448.e",
-                "dst": "SevenSegment.E"
-            },
-            {
-                "src": "ic7448.f",
-                "dst": "SevenSegment.F"
-            },
-            {
-                "src": "ic7448.g",
-                "dst": "SevenSegment.G"
-            },
-            {
-                "src": "ttl_74162.RCO",
-                "dst": "Led.I"
-            },
-            {
-                "src": "ttl_74162.Q",
-                "dst": "ic7448.bcd"
-            },
-            {
-                "src": "Clock.O",
-                "dst": "ttl_74162.Clk"
-            },
-            {
-                "src": "OnOffSwitch.O",
-                "dst": "ttl_74162.ENP"
-            },
-            {
-                "src": "OnOffSwitch.O",
-                "dst": "ttl_74162.ENT"
-            },
-            {
-                "src": "PushButton.O",
-                "dst": "ic7448.lt"
-            },
-            {
-                "src": "DipSwitch.0",
-                "dst": "Wires2Bus.bus_0"
-            },
-            {
-                "src": "DipSwitch.1",
-                "dst": "Wires2Bus.bus_1"
-            },
-            {
-                "src": "DipSwitch.2",
-                "dst": "Wires2Bus.bus_2"
-            },
-            {
-                "src": "DipSwitch.3",
-                "dst": "Wires2Bus.bus_3"
-            },
-            {
-                "src": "Wires2Bus.bus",
-                "dst": "ttl_74162.D"
-            },
-            {
-                "src": "PushButton_1.O",
-                "dst": "NOT_1.A"
-            },
-            {
-                "src": "PushButton_2.O",
-                "dst": "NOT.A"
-            },
-            {
-                "src": "NOT.Y",
-                "dst": "ttl_74162.Load_bar"
-            },
-            {
-                "src": "NOT_1.Y",
-                "dst": "ttl_74162.Clear_bar"
             }
         ]
     },
     "gui": {
-        "SevenSegment": {
-            "x": 760,
-            "y": 215,
-            "z": 0
-        },
-        "ic7448": {
-            "x": 580,
-            "y": 185,
-            "z": 0
-        },
-        "ttl_74162": {
-            "x": 380,
-            "y": 175,
-            "z": 0
-        },
-        "Clock": {
-            "x": 0,
-            "y": 400,
-            "z": 0
-        },
-        "OnOffSwitch": {
-            "x": 0,
-            "y": 200,
-            "z": 0
-        },
-        "Led": {
-            "x": 580,
-            "y": 60,
-            "z": 0
-        },
-        "PushButton": {
-            "x": 0,
-            "y": 500,
-            "z": 0
-        },
-        "DipSwitch": {
-            "x": 30,
-            "y": 300,
-            "z": 0
-        },
-        "Wires2Bus": {
-            "x": 120,
-            "y": 300,
-            "z": 0
-        },
-        "PushButton_1": {
-            "x": 0,
-            "y": 0,
-            "z": 0
-        },
-        "PushButton_2": {
-            "x": 0,
-            "y": 100,
-            "z": 0
-        },
-        "NOT": {
-            "x": 140,
-            "y": 100,
-            "z": 0
-        },
-        "NOT_1": {
-            "x": 140,
-            "y": 0,
-            "z": 0
-        }
+        "SevenSegment": {"x": 760, "y": 215, "z": 0},
+        "ic7448": {"x": 580, "y": 185, "z": 0},
+        "ttl_74162": {"x": 380, "y": 175, "z": 0},
+        "Clock": {"x": 0, "y": 400, "z": 0},
+        "OnOffSwitch": {"x": 0, "y": 200, "z": 0},
+        "Led": {"x": 580, "y": 60, "z": 0},
+        "PushButton": {"x": 0, "y": 500, "z": 0},
+        "DipSwitch": {"x": 30, "y": 300, "z": 0},
+        "Wires2Bus": {"x": 120, "y": 300, "z": 0},
+        "PushButton_1": {"x": 0, "y": 0, "z": 0},
+        "PushButton_2": {"x": 0, "y": 100, "z": 0},
+        "NOT": {"x": 140, "y": 100, "z": 0},
+        "NOT_1": {"x": 140, "y": 0, "z": 0}
     },
-    "wires": {
-        "NOT_1.A": {
-            "path": [
-                110
+    "lines": [
+        {
+            "ports": ["ic7448.a", "SevenSegment.A"],
+            "points": {"1": [720, 210], "2": [720, 240]},
+            "segments": [["ic7448.a", "1"], ["1", "2"], ["2", "SevenSegment.A"]]
+        },
+        {
+            "ports": ["ic7448.b", "SevenSegment.B"],
+            "points": {"1": [700, 230], "2": [700, 250]},
+            "segments": [["ic7448.b", "1"], ["1", "2"], ["2", "SevenSegment.B"]]
+        },
+        {
+            "ports": ["ic7448.c", "SevenSegment.C"],
+            "points": {"1": [680, 250], "2": [680, 260]},
+            "segments": [["ic7448.c", "1"], ["1", "2"], ["2", "SevenSegment.C"]]
+        },
+        {
+            "ports": ["ic7448.d", "SevenSegment.D"],
+            "points": {},
+            "segments": [["ic7448.d", "SevenSegment.D"]]
+        },
+        {
+            "ports": ["ic7448.e", "SevenSegment.E"],
+            "points": {"1": [680, 290], "2": [680, 280]},
+            "segments": [["ic7448.e", "1"], ["1", "2"], ["2", "SevenSegment.E"]]
+        },
+        {
+            "ports": ["ic7448.f", "SevenSegment.F"],
+            "points": {"1": [700, 310], "2": [700, 290]},
+            "segments": [["ic7448.f", "1"], ["1", "2"], ["2", "SevenSegment.F"]]
+        },
+        {
+            "ports": ["ic7448.g", "SevenSegment.G"],
+            "points": {"1": [720, 330], "2": [720, 300]},
+            "segments": [["ic7448.g", "1"], ["1", "2"], ["2", "SevenSegment.G"]]
+        },
+        {
+            "ports": ["ttl_74162.RCO", "Led.I"],
+            "points": {"1": [530, 240], "2": [530, 100]},
+            "segments": [["ttl_74162.RCO", "1"], ["1", "2"], ["2", "Led.I"]]
+        },
+        {
+            "ports": ["ttl_74162.Q", "ic7448.bcd"],
+            "points": {},
+            "segments": [["ttl_74162.Q", "ic7448.bcd"]]
+        },
+        {
+            "ports": ["Clock.O", "ttl_74162.Clk"],
+            "points": {"1": [330, 440], "2": [330, 300]},
+            "segments": [["Clock.O", "1"], ["1", "2"], ["2", "ttl_74162.Clk"]]
+        },
+        {
+            "ports": ["OnOffSwitch.O", "ttl_74162.ENT", "ttl_74162.ENP"],
+            "points": {"1": [350, 240], "2": [350, 260]},
+            "segments": [
+                ["OnOffSwitch.O", "1"], ["1", "ttl_74162.ENT"], ["1", "2"],
+                ["2", "ttl_74162.ENP"]
             ]
         },
-        "NOT.A": {
-            "path": [
-                110
-            ]
+        {
+            "ports": ["PushButton.O", "ic7448.lt"],
+            "points": {"1": [550, 540], "2": [550, 280]},
+            "segments": [["PushButton.O", "1"], ["1", "2"], ["2", "ic7448.lt"]]
         },
-        "ttl_74162.Clear_bar": {
-            "path": [
-                320
-            ]
+        {
+            "ports": ["DipSwitch.0", "Wires2Bus.bus_0"],
+            "points": {},
+            "segments": [["DipSwitch.0", "Wires2Bus.bus_0"]]
         },
-        "ttl_74162.Load_bar": {
-            "path": [
-                290
-            ]
+        {
+            "ports": ["DipSwitch.1", "Wires2Bus.bus_1"],
+            "points": {},
+            "segments": [["DipSwitch.1", "Wires2Bus.bus_1"]]
         },
-        "ttl_74162.ENT": {
-            "path": [
-                350,
-                240,
-                365
-            ]
+        {
+            "ports": ["DipSwitch.2", "Wires2Bus.bus_2"],
+            "points": {},
+            "segments": [["DipSwitch.2", "Wires2Bus.bus_2"]]
         },
-        "ttl_74162.ENP": {
-            "path": [
-                350
-            ],
-            "branch": "ttl_74162.ENT",
-            "corner": 1
+        {
+            "ports": ["DipSwitch.3", "Wires2Bus.bus_3"],
+            "points": {},
+            "segments": [["DipSwitch.3", "Wires2Bus.bus_3"]]
         },
-        "Wires2Bus.bus_0": {
-            "path": [
-                100
-            ]
+        {
+            "ports": ["Wires2Bus.bus", "ttl_74162.D"],
+            "points": {"1": [300, 340], "2": [300, 280]},
+            "segments": [["Wires2Bus.bus", "1"], ["1", "2"], ["2", "ttl_74162.D"]]
         },
-        "Wires2Bus.bus_1": {
-            "path": [
-                100
-            ]
+        {
+            "ports": ["PushButton_1.O", "NOT_1.A"],
+            "points": {},
+            "segments": [["PushButton_1.O", "NOT_1.A"]]
         },
-        "Wires2Bus.bus_2": {
-            "path": [
-                100
-            ]
+        {
+            "ports": ["PushButton_2.O", "NOT.A"],
+            "points": {},
+            "segments": [["PushButton_2.O", "NOT.A"]]
         },
-        "Wires2Bus.bus_3": {
-            "path": [
-                100
-            ]
+        {
+            "ports": ["NOT.Y", "ttl_74162.Load_bar"],
+            "points": {"1": [290, 140], "2": [290, 220]},
+            "segments": [["NOT.Y", "1"], ["1", "2"], ["2", "ttl_74162.Load_bar"]]
         },
-        "ttl_74162.D": {
-            "path": [
-                300
-            ]
-        },
-        "ttl_74162.Clk": {
-            "path": [
-                330
-            ]
-        },
-        "Led.I": {
-            "path": [
-                530
-            ]
-        },
-        "ic7448.bcd": {
-            "path": [
-                530
-            ]
-        },
-        "ic7448.lt": {
-            "path": [
-                550
-            ]
-        },
-        "SevenSegment.A": {
-            "path": [
-                720
-            ]
-        },
-        "SevenSegment.B": {
-            "path": [
-                700
-            ]
-        },
-        "SevenSegment.C": {
-            "path": [
-                680
-            ]
-        },
-        "SevenSegment.D": {
-            "path": [
-                690
-            ]
-        },
-        "SevenSegment.E": {
-            "path": [
-                680
-            ]
-        },
-        "SevenSegment.F": {
-            "path": [
-                700
-            ]
-        },
-        "SevenSegment.G": {
-            "path": [
-                720
-            ]
+        {
+            "ports": ["NOT_1.Y", "ttl_74162.Clear_bar"],
+            "points": {"1": [320, 40], "2": [320, 200]},
+            "segments": [["NOT_1.Y", "1"], ["1", "2"], ["2", "ttl_74162.Clear_bar"]]
         }
-    },
+    ],
     "shortcuts": {},
-    "settings": {
-        "real_time": true,
-        "color_wires": true,
-        "update_frequency": 20
-    }
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 20}
 }
