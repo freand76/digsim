@@ -12,6 +12,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal
 
+from digsim.app._wire_key import port_key
 from digsim.app.gui_objects import ComponentObject
 from digsim.circuit.components.atoms import Component, DigsimException
 from digsim.storage_model import AppFileDataClass, ModelDataClass
@@ -229,6 +230,12 @@ class AppModel(QThread):
                 self.objects.wires.from_lines(dc.lines)
             else:
                 self.objects.wires.from_dict(dc.wires)
+                if isinstance(model_dc, AppFileDataClass):
+                    # Every output of a line drives every input of it, as when it is saved
+                    for src_port, dst_port in self.objects.wires.complete_lines():
+                        exception_str_list.append(
+                            f"Line completed: {port_key(src_port)} drives {port_key(dst_port)}"
+                        )
         except DigsimException as exc:
             self.sig_error.emit(f"Circuit error: {exc!s}")
             return exception_str_list

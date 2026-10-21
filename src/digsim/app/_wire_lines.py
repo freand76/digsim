@@ -1382,6 +1382,28 @@ class WireDrawing:
         for wire in [w for w in self._implied if not self.is_connected(w, lines)]:
             self._implied.discard(wire)
 
+    def complete_lines(self) -> list[Wire]:
+        """
+        Connect each output port of a line to each of its input ports, where a circuit
+        file doesn't (a Python circuit file, or a file from before lines). Returns the new
+        connections, the ports of different widths are left as they are.
+        """
+        added: list[Wire] = []
+        done: set[Port] = set()
+        for port in self.ports():
+            if port in done:
+                continue
+            line = self.line(("port", port))
+            done.update(line.outputs, line.inputs)
+            for src_port in line.outputs:
+                for dst_port in line.inputs:
+                    if dst_port in src_port.wired_ports or src_port.width != dst_port.width:
+                        continue
+                    src_port.wire = dst_port
+                    self._implied.add((src_port, dst_port))
+                    added.append((src_port, dst_port))
+        return added
+
     def _without_cycles(self) -> None:
         """
         Drop where a wire starts or ends if that would make it start or end on itself,

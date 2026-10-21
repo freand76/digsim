@@ -772,3 +772,24 @@ def test_point_at_a_port_does_not_move():
     # Into A's output port from the left: three ways at the port
     drawing.connect_ports(b, a)
     assert drawing.point_move((40, 0)) is None
+
+
+def test_complete_a_line_of_a_file():
+    """
+    A file where B drives only L1 of the line that A draws to L1 and L2: once its wires
+    are drawn, B drives L2 too, as the line does when it is saved and loaded again
+    """
+    drawing = Drawing()
+    a = drawing.button("A", 0, 0)
+    b = drawing.button("B", 0, 300)
+    led1 = drawing.led("L1", 400, 100)
+    led2 = drawing.led("L2", 400, 200)
+    a.wire = led1
+    b.wire = led1
+    a.wire = led2
+    drawing.from_dict({})
+    assert drawing.complete_lines() == [(b, led2)]
+    assert drawing.drivers(led2) == ["A", "B"]
+    assert drawing.is_implied((b, led2))
+    assert drawing.complete_lines() == []
+    round_trip(drawing)
