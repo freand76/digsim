@@ -16,7 +16,7 @@ from digsim.circuit.components import (
     PushButton,
     StaticValue,
 )
-from digsim.storage_model import GuiWireDataClass
+from digsim.storage_model import GuiWireDataClass, LineDataClass
 
 
 class Drawing(WireDrawing):
@@ -793,3 +793,26 @@ def test_complete_a_line_of_a_file():
     assert drawing.is_implied((b, led2))
     assert drawing.complete_lines() == []
     round_trip(drawing)
+
+
+def test_port_of_another_width_is_left_off_a_line():
+    """
+    A line of a file with a port that no longer has the width of the line (a Verilog
+    module that was changed) connects and draws the other ports, not that one
+    """
+    drawing = Drawing()
+    a = drawing.button("A", 0, 0)
+    led = drawing.led("L", 400, 0)
+    wide = drawing.add(StaticValue(drawing.circuit, "S", width=4), 0, 200).O
+    line = LineDataClass(
+        ports=["A.O", "L.I", "S.O"],
+        points={"1": [200, 0], "2": [200, 200]},
+        segments=[["A.O", "1"], ["1", "L.I"], ["1", "2"], ["2", "S.O"]],
+    )
+    errors = []
+    line.connect(drawing.circuit, errors)
+    assert len(errors) == 1 and "S.O" in errors[0]
+    drawing.from_lines([line])
+    assert drawing.drawn() == [(a, led)]
+    assert wide.wired_ports == []
+    assert drawing.to_lines()[0].ports == ["A.O", "L.I"]

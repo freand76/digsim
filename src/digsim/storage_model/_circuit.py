@@ -103,13 +103,22 @@ class LineDataClass:
     points: dict[str, list[int]] = Field(default_factory=dict)
     segments: list[list[str]] = Field(default_factory=list)
 
+    @staticmethod
+    def width(ports: list[Port]) -> int | None:
+        """
+        The width of a line with these ports: the width of most of them, of the first
+        one where there are as many of two widths. A port of another width is not on it.
+        """
+        widths = [port.width for port in ports]
+        return max(widths, key=widths.count) if widths else None
+
     def connect(self, circuit: Circuit, errors: list[str] | None = None) -> None:
         """
         Connect each output port of the line to each of its input ports. With 'errors',
         a port that isn't there or a pair that can't be connected is added to it, and the
         others are connected, else the first error is raised.
         """
-        from digsim.circuit.components.atoms import DigsimException
+        from digsim.circuit.components.atoms import DigsimException, PortConnectionError
 
         def failed(exc: DigsimException) -> None:
             if errors is None:
@@ -122,6 +131,14 @@ class LineDataClass:
                 ports.append(find_port(circuit, name))
             except DigsimException as exc:
                 failed(exc)
+        width = LineDataClass.width(ports)
+        for port in [port for port in ports if port.width != width]:
+            failed(
+                PortConnectionError(
+                    f"{port.path()}.{port.name()} has width {port.width}, its line {width}"
+                )
+            )
+        ports = [port for port in ports if port.width == width]
         for src_port in ports:
             if not src_port.is_output():
                 continue

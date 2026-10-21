@@ -1242,6 +1242,9 @@ class WireDrawing:
     def _add_line(self, line: LineDataClass, ports: dict[str, Port]) -> None:
         """The drawn wires of a line from a circuit file, see _line_graph.decompose()"""
         names = [name for name in line.ports if name in ports]
+        # A port of another width isn't connected to the line (see LineDataClass.connect)
+        width = LineDataClass.width([ports[name] for name in names])
+        names = [name for name in names if ports[name].width == width]
         places: dict[str, Point] = {name: self.port_pos(ports[name]) for name in names}
         for node, point in line.points.items():
             if node not in places and len(point) == 2:
