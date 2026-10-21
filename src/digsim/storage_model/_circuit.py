@@ -103,15 +103,34 @@ class LineDataClass:
     points: dict[str, list[int]] = Field(default_factory=dict)
     segments: list[list[str]] = Field(default_factory=list)
 
-    def connect(self, circuit: Circuit) -> None:
-        """Connect each output port of the line to each of its input ports"""
-        ports = [find_port(circuit, name) for name in self.ports]
+    def connect(self, circuit: Circuit, errors: list[str] | None = None) -> None:
+        """
+        Connect each output port of the line to each of its input ports. With 'errors',
+        a port that isn't there or a pair that can't be connected is added to it, and the
+        others are connected, else the first error is raised.
+        """
+        from digsim.circuit.components.atoms import DigsimException
+
+        def failed(exc: DigsimException) -> None:
+            if errors is None:
+                raise exc
+            errors.append(f"{exc.__class__.__name__}:{exc!s}")
+
+        ports: list[Port] = []
+        for name in self.ports:
+            try:
+                ports.append(find_port(circuit, name))
+            except DigsimException as exc:
+                failed(exc)
         for src_port in ports:
             if not src_port.is_output():
                 continue
             for dst_port in ports:
                 if dst_port.is_input() and dst_port not in src_port.wired_ports:
-                    src_port.wire = dst_port
+                    try:
+                        src_port.wire = dst_port
+                    except DigsimException as exc:
+                        failed(exc)
 
 
 @dataclass

@@ -223,10 +223,7 @@ class AppModel(QThread):
             # from before lines (and of undo states)
             if dc.lines:
                 for line in dc.lines:
-                    try:
-                        line.connect(self.objects.circuit)
-                    except DigsimException as exc:
-                        exception_str_list.append(f"{exc.__class__.__name__}:{exc!s}")
+                    line.connect(self.objects.circuit, exception_str_list)
                 self.objects.wires.from_lines(dc.lines)
             else:
                 self.objects.wires.from_dict(dc.wires)

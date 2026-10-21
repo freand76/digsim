@@ -14,6 +14,7 @@
  - GUI: dots, joints and segments at ports can be dragged, and the wires that meet there go with them. A new wire starts on a wire from the context menu, Start wire here (it replaces Add joint). Merge segments removes a joint where the wire runs straight.
  - Synthesis always uses the bundled Yosys (YoWASP), also when another yosys is installed
  - GUI: a circuit file where an output of a line doesn't drive all of its inputs (a Python circuit file, or one from an older version) gets the missing connections when it is opened, with a warning that lists them
+ - GUI: when a component of a line can't be loaded, or a pair of its ports can't be connected, the other ports of the line are still connected
 
 ## v1.6.0
  - Add "Verilog Testbench with pytest" to the documentation, a walkthrough of testing a Verilog design with DigSim and pytest, with waveforms of the tests

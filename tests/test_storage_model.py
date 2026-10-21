@@ -161,6 +161,24 @@ def test_line_connects_its_ports():
     assert len(leds[0].I.get_drivers()) == 2
 
 
+def test_line_connects_the_ports_that_are_there():
+    """
+    A port that is missing (its component couldn't be loaded) is an error, and the
+    other ports of the line are connected. Without a list of errors, it is raised.
+    """
+    circuit = Circuit(name="c")
+    buttons = [PushButton(circuit, f"B{i}") for i in range(2)]
+    led = Led(circuit, "L0")
+    line = LineDataClass(ports=["B0.O", "Gone.I", "L0.I", "B1.O"])
+    errors: list[str] = []
+    line.connect(circuit, errors)
+    assert len(errors) == 1 and "Gone" in errors[0]
+    for button in buttons:
+        assert button.O.wired_ports == [led.I]
+    with pytest.raises(DigsimException):
+        line.connect(circuit)
+
+
 def test_circuit_file_with_lines(tmp_path):
     """
     A GUI circuit file has its connections in its lines: no list of wires, and no wire
