@@ -7,7 +7,7 @@ import pytest
 
 from digsim.app._line_graph import on_segment
 from digsim.app._wire_key import drawn_key, wire_key
-from digsim.app._wire_lines import WireDrawing
+from digsim.app._wire_lines import PointMove, WireDrawing
 from digsim.circuit import Circuit
 from digsim.circuit.components import (
     Led,
@@ -573,16 +573,17 @@ def test_move_a_joint():
     drawing.connect_branch((a, led1), (0, (200, 0)), led2, clicks=[(200, 200)])
     wire, branch = (a, led1), (a, led2)
     assert drawing.corner_points(branch)[:2] == [(200, 0), (200, 0)]
-    assert drawing.joint_bounds(wire, 1) == (41, 389)
-    drawing.move_joint(wire, 1, 120)
+    move = drawing.point_move((200, 0))
+    assert move == PointMove(wire, 1, (41, 389))
+    drawing.move_point(move, 120)
     assert drawing.corner_points(wire)[1] == (120, 0)
     # The branch still leaves down, from the joint
     assert drawing.corner_points(branch)[:3] == [(120, 0), (120, 0), (120, 200)]
     # Not past the corners
-    drawing.move_joint(wire, 1, 1000)
+    move = drawing.point_move((120, 0))
+    assert move is not None
+    drawing.move_point(move, 1000)
     assert drawing.corner_points(wire)[1] == (389, 0)
-    with pytest.raises(ValueError, match="not a joint"):
-        drawing.move_joint(wire, 3, 50)
 
 
 def test_move_a_point_at_a_corner():

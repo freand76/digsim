@@ -609,23 +609,6 @@ class WireDrawing:
         self._paths.update(followers)
         self._changed()
 
-    def move_joint(self, wire: Wire, segment: int, position: float) -> None:
-        """
-        Move a joint of a wire along it, between the corners of its straight run (an
-        undo step). The wires that start or end there follow it.
-        """
-        bounds = self.joint_bounds(wire, segment)
-        if bounds is None:
-            raise ValueError(f"Segment {segment} of {wire_key(wire)} is not a joint")
-        position = min(max(position, bounds[0]), bounds[1])
-        if position == self.path(wire)[segment - 1]:
-            return
-        self._push_undo()
-        followers = self.joint_followers(wire, segment, position)
-        self._paths[wire] = move_segment(self.path(wire), segment, position)
-        self._paths.update(followers)
-        self._changed()
-
     def add_joint(self, wire: Wire, segment: int, point: Point, undo: bool = True) -> int:
         """
         Add a joint to a segment of a wire, at the point of the segment closest to 'point':
