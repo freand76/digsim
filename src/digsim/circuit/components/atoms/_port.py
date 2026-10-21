@@ -351,6 +351,9 @@ class PortOutDelta(Port):
         super().__init__(parent, name, width, output=True)
         self._delay_ns = delay_ns  # Propagation delay for this port
         self._update_parent = False  # Should this port update parent on change
+        # The circuit's add_event() (a component's circuit doesn't change), called for
+        # every event without going through the component
+        self._add_event = parent.circuit.add_event
 
     def update_parent(self, update_parent: bool) -> None:
         """Set if the port updates its parent when it changes"""
@@ -361,7 +364,7 @@ class PortOutDelta(Port):
         self._delay_ns = delay_ns
 
     def set_value(self, value: VALUE_TYPE) -> None:
-        self._parent.add_event(self, value, self._delay_ns)
+        self._add_event(self, value, self._delay_ns)
 
     def update_port(self, value: VALUE_TYPE) -> None:
         """Update the port output and the connected wires"""
@@ -400,7 +403,7 @@ class PortOutImmediate(PortOutDelta):
         super().__init__(parent, name, width)
 
     def set_value(self, value: VALUE_TYPE) -> None:
-        self.parent().add_event(self, value, 0)
+        self._add_event(self, value, 0)
         super().update_port(value)
 
     def delta_cycle(self, value: VALUE_TYPE) -> None:

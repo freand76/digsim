@@ -6,6 +6,10 @@ Module with yosys atom component classes
 
 All components are implemented from the specification in:
 https://github.com/YosysHQ/yosys/blob/master/techlibs/common/simcells.v
+
+The cells update for every event of a gate-level netlist, so they read their ports'
+values directly (port._value) and set them with set_value(), not through the 'value'
+property.
 """
 
 from __future__ import annotations
@@ -117,7 +121,7 @@ class _BUF_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = self.A.value
+        self.Y.set_value(self.A._value)
 
 
 class _NOT_(Component):
@@ -129,7 +133,7 @@ class _NOT_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _not(self.A.value)
+        self.Y.set_value(_not(self.A._value))
 
 
 class _AND_(Component):
@@ -142,7 +146,7 @@ class _AND_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _and(self.A.value, self.B.value)
+        self.Y.set_value(_and(self.A._value, self.B._value))
 
 
 class _NAND_(Component):
@@ -155,7 +159,7 @@ class _NAND_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _not(_and(self.A.value, self.B.value))
+        self.Y.set_value(_not(_and(self.A._value, self.B._value)))
 
 
 class _OR_(Component):
@@ -168,7 +172,7 @@ class _OR_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _or(self.A.value, self.B.value)
+        self.Y.set_value(_or(self.A._value, self.B._value))
 
 
 class _NOR_(Component):
@@ -181,7 +185,7 @@ class _NOR_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _not(_or(self.A.value, self.B.value))
+        self.Y.set_value(_not(_or(self.A._value, self.B._value)))
 
 
 class _XOR_(Component):
@@ -194,7 +198,7 @@ class _XOR_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _xor(self.A.value, self.B.value)
+        self.Y.set_value(_xor(self.A._value, self.B._value))
 
 
 class _XNOR_(Component):
@@ -207,7 +211,7 @@ class _XNOR_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _not(_xor(self.A.value, self.B.value))
+        self.Y.set_value(_not(_xor(self.A._value, self.B._value)))
 
 
 class _ANDNOT_(Component):
@@ -220,7 +224,7 @@ class _ANDNOT_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _and(self.A.value, _not(self.B.value))
+        self.Y.set_value(_and(self.A._value, _not(self.B._value)))
 
 
 class _ORNOT_(Component):
@@ -233,7 +237,7 @@ class _ORNOT_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _or(self.A.value, _not(self.B.value))
+        self.Y.set_value(_or(self.A._value, _not(self.B._value)))
 
 
 class _MUX_(Component):
@@ -247,7 +251,7 @@ class _MUX_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _mux(self.S.value, self.A.value, self.B.value)
+        self.Y.set_value(_mux(self.S._value, self.A._value, self.B._value))
 
 
 class _NMUX_(Component):
@@ -261,7 +265,7 @@ class _NMUX_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _not(_mux(self.S.value, self.A.value, self.B.value))
+        self.Y.set_value(_not(_mux(self.S._value, self.A._value, self.B._value)))
 
 
 class _MUX4_(Component):
@@ -278,8 +282,15 @@ class _MUX4_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _mux4(
-            self.S.value, self.T.value, self.A.value, self.B.value, self.C.value, self.D.value
+        self.Y.set_value(
+            _mux4(
+                self.S._value,
+                self.T._value,
+                self.A._value,
+                self.B._value,
+                self.C._value,
+                self.D._value,
+            )
         )
 
 
@@ -302,11 +313,13 @@ class _MUX8_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        s, t = self.S.value, self.T.value
-        self.Y.value = _mux(
-            self.U.value,
-            _mux4(s, t, self.A.value, self.B.value, self.C.value, self.D.value),
-            _mux4(s, t, self.E.value, self.F.value, self.G.value, self.H.value),
+        s, t = self.S._value, self.T._value
+        self.Y.set_value(
+            _mux(
+                self.U._value,
+                _mux4(s, t, self.A._value, self.B._value, self.C._value, self.D._value),
+                _mux4(s, t, self.E._value, self.F._value, self.G._value, self.H._value),
+            )
         )
 
 
@@ -338,19 +351,21 @@ class _MUX16_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        s, t, u = self.S.value, self.T.value, self.U.value
-        self.Y.value = _mux(
-            self.V.value,
+        s, t, u = self.S._value, self.T._value, self.U._value
+        self.Y.set_value(
             _mux(
-                u,
-                _mux4(s, t, self.A.value, self.B.value, self.C.value, self.D.value),
-                _mux4(s, t, self.E.value, self.F.value, self.G.value, self.H.value),
-            ),
-            _mux(
-                u,
-                _mux4(s, t, self.I.value, self.J.value, self.K.value, self.L.value),
-                _mux4(s, t, self.M.value, self.N.value, self.O.value, self.P.value),
-            ),
+                self.V._value,
+                _mux(
+                    u,
+                    _mux4(s, t, self.A._value, self.B._value, self.C._value, self.D._value),
+                    _mux4(s, t, self.E._value, self.F._value, self.G._value, self.H._value),
+                ),
+                _mux(
+                    u,
+                    _mux4(s, t, self.I._value, self.J._value, self.K._value, self.L._value),
+                    _mux4(s, t, self.M._value, self.N._value, self.O._value, self.P._value),
+                ),
+            )
         )
 
 
@@ -365,7 +380,7 @@ class _AOI3_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _not(_or(_and(self.A.value, self.B.value), self.C.value))
+        self.Y.set_value(_not(_or(_and(self.A._value, self.B._value), self.C._value)))
 
 
 class _OAI3_(Component):
@@ -379,7 +394,7 @@ class _OAI3_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _not(_and(_or(self.A.value, self.B.value), self.C.value))
+        self.Y.set_value(_not(_and(_or(self.A._value, self.B._value), self.C._value)))
 
 
 class _AOI4_(Component):
@@ -394,8 +409,8 @@ class _AOI4_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _not(
-            _or(_and(self.A.value, self.B.value), _and(self.C.value, self.D.value))
+        self.Y.set_value(
+            _not(_or(_and(self.A._value, self.B._value), _and(self.C._value, self.D._value)))
         )
 
 
@@ -411,7 +426,9 @@ class _OAI4_(Component):
         self.add_port(PortOutDelta(self, "Y"))
 
     def update(self) -> None:
-        self.Y.value = _not(_and(_or(self.A.value, self.B.value), _or(self.C.value, self.D.value)))
+        self.Y.set_value(
+            _not(_and(_or(self.A._value, self.B._value), _or(self.C._value, self.D._value)))
+        )
 
 
 class _TBUF_(Component):
@@ -426,13 +443,13 @@ class _TBUF_(Component):
         self.add_port(output)
 
     def update(self) -> None:
-        enable = self.E.value
+        enable = self.E._value
         if enable == 1:
-            self.Y.value = self.A.value
+            self.Y.set_value(self.A._value)
         elif enable == 0:
-            self.Y.value = "Z"
+            self.Y.set_value("Z")
         else:
-            self.Y.value = "X"
+            self.Y.set_value("X")
 
 
 class _SR_(ClassNameParameterComponent):
@@ -447,13 +464,13 @@ class _SR_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.R.value == self._reset_level:
-            self.Q.value = 0
-        elif self.S.value == self._set_level:
-            self.Q.value = 1
+        if self.R._value == self._reset_level:
+            self.Q.set_value(0)
+        elif self.S._value == self._set_level:
+            self.Q.set_value(1)
 
 
 class _SR_NN_(_SR_):
@@ -491,15 +508,15 @@ class _DFF_(ClockedComponent):
         self.add_port(PortIn(self, "C"))
         self.add_port(PortWire(self, "D"))
         self.add_port(PortOutDelta(self, "Q"))
-        self._old_C_level = self.C.value
+        self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.C.value != self._old_C_level and self.C.value == self._clock_edge:
-            self.Q.value = self.D.value
-        self._old_C_level = self.C.value
+        if self.C._value != self._old_C_level and self.C._value == self._clock_edge:
+            self.Q.set_value(self.D._value)
+        self._old_C_level = self.C._value
 
 
 class _DFF_N_(_DFF_):
@@ -521,19 +538,19 @@ class _DFFE2_(ClockedComponent):
         self.add_port(PortWire(self, "D"))
         self.add_port(PortWire(self, "E"))
         self.add_port(PortOutDelta(self, "Q"))
-        self._old_C_level = self.C.value
+        self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
         if (
-            self.C.value != self._old_C_level
-            and self.C.value == self._clock_edge
-            and self.E.value == self._enable_level
+            self.C._value != self._old_C_level
+            and self.C._value == self._clock_edge
+            and self.E._value == self._enable_level
         ):
-            self.Q.value = self.D.value
-        self._old_C_level = self.C.value
+            self.Q.set_value(self.D._value)
+        self._old_C_level = self.C._value
 
 
 class _DFFE_NN_(_DFFE2_):
@@ -564,17 +581,17 @@ class _DFF3_(ClockedComponent):
         self.add_port(PortIn(self, "R"))
         self.add_port(PortWire(self, "D"))
         self.add_port(PortOutDelta(self, "Q"))
-        self._old_C_level = self.C.value
+        self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.R.value == self._reset_level:
-            self.Q.value = self._reset_value
-        elif self.C.value != self._old_C_level and self.C.value == self._clock_edge:
-            self.Q.value = self.D.value
-        self._old_C_level = self.C.value
+        if self.R._value == self._reset_level:
+            self.Q.set_value(self._reset_value)
+        elif self.C._value != self._old_C_level and self.C._value == self._clock_edge:
+            self.Q.set_value(self.D._value)
+        self._old_C_level = self.C._value
 
 
 class _DFF_NN0_(_DFF3_):
@@ -623,21 +640,21 @@ class _DFFE4_(ClockedComponent):
         self.add_port(PortWire(self, "E"))
         self.add_port(PortIn(self, "R"))
         self.add_port(PortOutDelta(self, "Q"))
-        self._old_C_level = self.C.value
+        self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.R.value == self._reset_level:
-            self.Q.value = self._reset_value
+        if self.R._value == self._reset_level:
+            self.Q.set_value(self._reset_value)
         elif (
-            self.C.value != self._old_C_level
-            and self.C.value == self._clock_edge
-            and self.E.value == self._enable_level
+            self.C._value != self._old_C_level
+            and self.C._value == self._clock_edge
+            and self.E._value == self._enable_level
         ):
-            self.Q.value = self.D.value
-        self._old_C_level = self.C.value
+            self.Q.set_value(self.D._value)
+        self._old_C_level = self.C._value
 
 
 class _DFFE_NN0N_(_DFFE4_):
@@ -716,17 +733,17 @@ class _ALDFF_(ClockedComponent):
         self.add_port(PortWire(self, "D"))
         self.add_port(PortIn(self, "L"))
         self.add_port(PortOutDelta(self, "Q"))
-        self._old_C_level = self.C.value
+        self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.L.value == self._load_level:
-            self.Q.value = self.AD.value
-        elif self.C.value != self._old_C_level and self.C.value == self._clock_edge:
-            self.Q.value = self.D.value
-        self._old_C_level = self.C.value
+        if self.L._value == self._load_level:
+            self.Q.set_value(self.AD._value)
+        elif self.C._value != self._old_C_level and self.C._value == self._clock_edge:
+            self.Q.set_value(self.D._value)
+        self._old_C_level = self.C._value
 
 
 class _ALDFF_NN_(_ALDFF_):
@@ -759,21 +776,21 @@ class _ALDFFE_(ClockedComponent):
         self.add_port(PortWire(self, "E"))
         self.add_port(PortIn(self, "L"))
         self.add_port(PortOutDelta(self, "Q"))
-        self._old_C_level = self.C.value
+        self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.L.value == self._load_level:
-            self.Q.value = self.AD.value
+        if self.L._value == self._load_level:
+            self.Q.set_value(self.AD._value)
         elif (
-            self.C.value != self._old_C_level
-            and self.C.value == self._clock_edge
-            and self.E.value == self._enable_level
+            self.C._value != self._old_C_level
+            and self.C._value == self._clock_edge
+            and self.E._value == self._enable_level
         ):
-            self.Q.value = self.D.value
-        self._old_C_level = self.C.value
+            self.Q.set_value(self.D._value)
+        self._old_C_level = self.C._value
 
 
 class _ALDFFE_NNN_(_ALDFFE_):
@@ -821,19 +838,19 @@ class _DFFSR_(ClockedComponent):
         self.add_port(PortIn(self, "S"))
         self.add_port(PortWire(self, "D"))
         self.add_port(PortOutDelta(self, "Q"))
-        self._old_C_level = self.C.value
+        self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.R.value == self._reset_level:
-            self.Q.value = 0
-        elif self.S.value == self._set_level:
-            self.Q.value = 1
-        elif self.C.value != self._old_C_level and self.C.value == self._clock_edge:
-            self.Q.value = self.D.value
-        self._old_C_level = self.C.value
+        if self.R._value == self._reset_level:
+            self.Q.set_value(0)
+        elif self.S._value == self._set_level:
+            self.Q.set_value(1)
+        elif self.C._value != self._old_C_level and self.C._value == self._clock_edge:
+            self.Q.set_value(self.D._value)
+        self._old_C_level = self.C._value
 
 
 class _DFFSR_NNN_(_DFFSR_):
@@ -883,23 +900,23 @@ class _DFFSRE_(ClockedComponent):
         self.add_port(PortWire(self, "E"))
         self.add_port(PortWire(self, "D"))
         self.add_port(PortOutDelta(self, "Q"))
-        self._old_C_level = self.C.value
+        self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.R.value == self._reset_level:
-            self.Q.value = 0
-        elif self.S.value == self._set_level:
-            self.Q.value = 1
+        if self.R._value == self._reset_level:
+            self.Q.set_value(0)
+        elif self.S._value == self._set_level:
+            self.Q.set_value(1)
         elif (
-            self.C.value != self._old_C_level
-            and self.C.value == self._clock_edge
-            and self.E.value == self._enable_level
+            self.C._value != self._old_C_level
+            and self.C._value == self._clock_edge
+            and self.E._value == self._enable_level
         ):
-            self.Q.value = self.D.value
-        self._old_C_level = self.C.value
+            self.Q.set_value(self.D._value)
+        self._old_C_level = self.C._value
 
 
 class _DFFSRE_NNNN_(_DFFSRE_):
@@ -978,18 +995,18 @@ class _SDFF_(ClockedComponent):
         self.add_port(PortWire(self, "R"))
         self.add_port(PortWire(self, "D"))
         self.add_port(PortOutDelta(self, "Q"))
-        self._old_C_level = self.C.value
+        self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.C.value != self._old_C_level and self.C.value == self._clock_edge:
-            if self.R.value == self._reset_level:
-                self.Q.value = self._reset_value
+        if self.C._value != self._old_C_level and self.C._value == self._clock_edge:
+            if self.R._value == self._reset_level:
+                self.Q.set_value(self._reset_value)
             else:
-                self.Q.value = self.D.value
-        self._old_C_level = self.C.value
+                self.Q.set_value(self.D._value)
+        self._old_C_level = self.C._value
 
 
 class _SDFF_NN0_(_SDFF_):
@@ -1038,18 +1055,18 @@ class _SDFFE_(ClockedComponent):
         self.add_port(PortWire(self, "E"))
         self.add_port(PortWire(self, "R"))
         self.add_port(PortOutDelta(self, "Q"))
-        self._old_C_level = self.C.value
+        self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.C.value != self._old_C_level and self.C.value == self._clock_edge:
-            if self.R.value == self._reset_level:
-                self.Q.value = self._reset_value
-            elif self.E.value == self._enable_level:
-                self.Q.value = self.D.value
-        self._old_C_level = self.C.value
+        if self.C._value != self._old_C_level and self.C._value == self._clock_edge:
+            if self.R._value == self._reset_level:
+                self.Q.set_value(self._reset_value)
+            elif self.E._value == self._enable_level:
+                self.Q.set_value(self.D._value)
+        self._old_C_level = self.C._value
 
 
 class _SDFFE_NN0N_(_SDFFE_):
@@ -1130,22 +1147,22 @@ class _SDFFCE_(ClockedComponent):
         self.add_port(PortWire(self, "E"))
         self.add_port(PortWire(self, "R"))
         self.add_port(PortOutDelta(self, "Q"))
-        self._old_C_level = self.C.value
+        self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
         if (
-            self.C.value != self._old_C_level
-            and self.C.value == self._clock_edge
-            and self.E.value == self._enable_level
+            self.C._value != self._old_C_level
+            and self.C._value == self._clock_edge
+            and self.E._value == self._enable_level
         ):
-            if self.R.value == self._reset_level:
-                self.Q.value = self._reset_value
+            if self.R._value == self._reset_level:
+                self.Q.set_value(self._reset_value)
             else:
-                self.Q.value = self.D.value
-        self._old_C_level = self.C.value
+                self.Q.set_value(self.D._value)
+        self._old_C_level = self.C._value
 
 
 class _SDFFCE_NN0N_(_SDFFCE_):
@@ -1223,11 +1240,11 @@ class _DLATCH_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.E.value == self._enable_level:
-            self.Q.value = self.D.value
+        if self.E._value == self._enable_level:
+            self.Q.set_value(self.D._value)
 
 
 class _DLATCH_N_(_DLATCH_):
@@ -1252,13 +1269,13 @@ class _DLATCH3_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.R.value == self._reset_level:
-            self.Q.value = self._reset_value
-        elif self.E.value == self._enable_level:
-            self.Q.value = self.D.value
+        if self.R._value == self._reset_level:
+            self.Q.set_value(self._reset_value)
+        elif self.E._value == self._enable_level:
+            self.Q.set_value(self.D._value)
 
 
 class _DLATCH_NN0_(_DLATCH3_):
@@ -1308,15 +1325,15 @@ class _DLATCHSR_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
 
     def default_state(self) -> None:
-        self.Q.value = 0
+        self.Q.set_value(0)
 
     def update(self) -> None:
-        if self.R.value == self._reset_level:
-            self.Q.value = 0
-        elif self.S.value == self._set_level:
-            self.Q.value = 1
-        elif self.E.value == self._enable_level:
-            self.Q.value = self.D.value
+        if self.R._value == self._reset_level:
+            self.Q.set_value(0)
+        elif self.S._value == self._set_level:
+            self.Q.set_value(1)
+        elif self.E._value == self._enable_level:
+            self.Q.set_value(self.D._value)
 
 
 class _DLATCHSR_NNN_(_DLATCHSR_):
@@ -1360,5 +1377,5 @@ class _StaticLevel_(Component):
         self.add_port(PortOutDelta(self, "H"))
 
     def default_state(self) -> None:
-        self.L.value = 0
-        self.H.value = 1
+        self.L.set_value(0)
+        self.H.set_value(1)
