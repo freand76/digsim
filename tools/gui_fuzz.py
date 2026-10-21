@@ -415,6 +415,11 @@ class GuiFuzzer:
             {obj.component for obj in scene_objects} == objects,
             "the scene doesn't show the model's components",
         )
+        # A click selects the piece of a line as the model has it now
+        check(
+            self.scene._runs == self.model.objects.wires.runs(),
+            "the scene's pieces of the lines are not the model's",
+        )
         for component in toplevel:
             for port in component.ports:
                 drivers = port.get_drivers() if not port.is_output() else []

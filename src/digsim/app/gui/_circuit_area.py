@@ -643,6 +643,9 @@ class WireGraphicsItem(QGraphicsPathItem):
         of the old ones, if the drag added corners
         """
         self._app_model.objects.wires.set_path(self.wire, self._path, corner_map)
+        # The pieces of the line can be others now (a segment got a length, or lost it).
+        # Not now: the wire items are replaced, and this one is handling an event.
+        QTimer.singleShot(0, self._app_model.sig_update_wires.emit)
 
     def drag_point(self, move: PointMove, scene_pos: QPointF) -> float:
         """
@@ -1180,7 +1183,6 @@ class _CircuitAreaScene(QGraphicsScene):
             self._port_drag = None
             if moving is not None:
                 item.drag_finished(partial(split_corner, segment))
-                QTimer.singleShot(0, self._app_model.sig_update_wires.emit)
             return
         super().mouseReleaseEvent(event)
         self._group_move = None
