@@ -28,3 +28,9 @@ def test_hexdigit_dot_default_digit():
     hexdigit.dot.value = 1
     assert hexdigit.dot_active()
     assert hexdigit.segments() == "."
+
+
+def test_hexdigit_gui_default():
+    """A hex digit added in the GUI has the decimal point of one made in Python"""
+    default = HexDigit.get_parameters()["dot"]["default"]
+    assert default == HexDigit(Circuit()).parameter_get("dot")

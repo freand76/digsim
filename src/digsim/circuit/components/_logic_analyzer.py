@@ -72,7 +72,7 @@ class LogicAnalyzer(CallbackComponent):
                 "type": "int",
                 "min": 10,
                 "max": 100,
-                "default": 20,
+                "default": 100,
                 "description": "Sample rate in Hz",
                 "reconfigurable": True,
             },

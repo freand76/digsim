@@ -29,3 +29,9 @@ def test_logic_analyzer_data_not_changed_in_place():
     analyzer.A.value = 1
     circuit.run(ms=50)
     assert samples == [0] * 100
+
+
+def test_logic_analyzer_gui_default():
+    """A logic analyzer added in the GUI samples at the rate of one made in Python"""
+    default = LogicAnalyzer.get_parameters()["sample_rate"]["default"]
+    assert default == LogicAnalyzer(Circuit()).parameter_get("sample_rate")

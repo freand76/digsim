@@ -101,7 +101,7 @@ class HexDigit(CallbackComponent):
             },
             "dot": {
                 "type": "bool",
-                "default": False,
+                "default": True,
                 "description": "Use decimal dot",
             },
         }
