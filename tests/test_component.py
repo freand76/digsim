@@ -6,7 +6,7 @@
 import pytest
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import AND, Led, PushButton, StaticValue
+from digsim.circuit.components import AND, Bus2Wires, Led, PushButton, StaticValue
 from digsim.circuit.components.atoms import ComponentException
 
 
@@ -62,3 +62,17 @@ def test_disconnect_only_own_wire():
     driver.O.disconnect(led.I)
     assert not led.I.has_driver()
     assert driver.O.wired_ports == []
+
+
+@pytest.mark.parametrize("width", [1, 4])
+def test_input_without_drivers_is_undefined(width):
+    """An input whose last wire is removed is "X", like one that was never connected"""
+    circuit = Circuit()
+    value = StaticValue(circuit, "value", width=width, value=1)
+    sink = Bus2Wires(circuit, "sink", width=width).bus if width > 1 else AND(circuit).A
+    value.O.wire = sink
+    circuit.init()
+    circuit.run(ns=10)
+    assert sink.value == 1
+    value.O.remove_wires()
+    assert sink.value == "X"

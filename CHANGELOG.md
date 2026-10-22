@@ -22,6 +22,7 @@
  - A loaded circuit keeps the wires of a component whose name is also the name of a part of another component, like a gate of an SR latch, instead of wiring that part
  - GUI: a new Hex Digit has the decimal point input and a new Logic Analyzer samples at 100 Hz, the same defaults as in Python
  - YosysComponent and IntegratedCircuit have no name argument: they always took the name of the Verilog module, whatever name was given. The arguments of YosysComponent after path are keyword-only.
+ - An input whose last wire is removed is "X", like an input that was never connected. It kept the last value it was driven with, so in the GUI a gate behind a deleted wire acted as if the wire were still there until Reset.
 
 ## v1.6.0
  - Add "Verilog Testbench with pytest" to the documentation, a walkthrough of testing a Verilog design with DigSim and pytest, with waveforms of the tests

@@ -240,6 +240,7 @@ def test_disconnect_one_driver():
     second.remove_wires()
     assert wire.sink.get_drivers() == []
     assert not wire.sink.has_driver()
+    assert wire.sink.value == "X"
 
 
 def test_new_drivers_after_the_shared_ones():

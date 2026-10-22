@@ -172,9 +172,13 @@ class Port(abc.ABC):
         self._drivers.drivers.append(port)
 
     def remove_driver(self, port: Port) -> None:
-        """Remove a driver of the port, the others keep driving it"""
+        """
+        Remove a driver of the port, the others keep driving it. A port without drivers is
+        "X", like a port that was never connected.
+        """
         if self._drivers is None:
             self.set_driver(None)
+            self.set_value("X")
             return
         if port in self._drivers.drivers:
             self._drivers.drivers.remove(port)
@@ -184,8 +188,8 @@ class Port(abc.ABC):
             del self.set_value
             self._drivers = None
         self.set_driver(drivers[0] if drivers else None)
-        # The value of the drivers that are left, "Z" if there are none
-        self.set_value("Z" if not drivers else drivers[0].value)
+        # The value of the drivers that are left
+        self.set_value(drivers[0].value if drivers else "X")
 
     def name(self) -> str:
         """Get port name"""
