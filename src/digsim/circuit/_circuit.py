@@ -211,7 +211,8 @@ class Circuit:
         time_ns += ms * 1e6 if ms is not None else 0
         time_ns += us * 1e3 if us is not None else 0
         time_ns += ns if ns is not None else 0
-        return int(time_ns)
+        # Rounded, since a time like 1.001 µs is 1000.9999999999999 ns as a float
+        return round(time_ns)
 
     def __enter__(self) -> Self:
         return self

@@ -289,3 +289,13 @@ def test_clear_removes_pending_events():
     button.push()
     circuit.clear()
     assert circuit.process_single_event() == (False, False)
+
+
+def test_run_time_rounded():
+    """A run time that isn't exact as a float runs for the nanoseconds it says"""
+    circuit = Circuit()
+    circuit.init()
+    circuit.run(us=1.001)
+    assert circuit.time_ns == 1001
+    circuit.run_until(ms=0.002003)
+    assert circuit.time_ns == 2003
