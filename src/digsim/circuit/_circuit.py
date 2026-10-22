@@ -34,30 +34,21 @@ class CircuitError(DigsimException):
     """A circuit error class"""
 
 
-class CircuitEvent:
+class CircuitEvent(float):
     """
     The circuit event class for storing the
     delta events in the simulation.
+
+    An event is its time as a float, so that the event queue compares events in C
+    instead of calling a Python __lt__ for every comparison. The comparisons give the
+    same results, so events at the same time keep their order.
     """
 
     __slots__ = ("_port", "_time_ns", "_value")
 
-    def __init__(self, time_ns: int, port: EventPort, value: VALUE_TYPE) -> None:
-        self._time_ns: int = time_ns
-        self._port: EventPort = port
-        self._value: VALUE_TYPE = value
-
-    def __lt__(self, other: CircuitEvent) -> bool:
-        # Called for every comparison in the event queue, so read the attributes directly
-        return self._time_ns < other._time_ns
-
-    def __eq__(self, other: object) -> bool:
-        return (
-            isinstance(other, CircuitEvent)
-            and self._port == other._port
-            and self._time_ns == other._time_ns
-            and self._value == other._value
-        )
+    _port: EventPort
+    _time_ns: int
+    _value: VALUE_TYPE
 
 
 class Circuit:
@@ -251,7 +242,11 @@ class Circuit:
             event = heapq.heappop(events)
             port = event._port
             latest = events_by_port.get(port)
-            if latest is not event and latest != event:
+            if latest is not event and (
+                latest is None
+                or latest._time_ns != event._time_ns
+                or latest._value != event._value
+            ):
                 # A stale event, a later event for the same port replaced it
                 continue
             if stop_time_ns is not None and event._time_ns > stop_time_ns:
@@ -300,7 +295,11 @@ class Circuit:
             event = heappop(events)
             port = event._port
             latest = events_by_port.get(port)
-            if latest is not event and latest != event:
+            if latest is not event and (
+                latest is None
+                or latest._time_ns != event._time_ns
+                or latest._value != event._value
+            ):
                 # A stale event, a later event for the same port replaced it
                 continue
             time_ns = event._time_ns
@@ -346,7 +345,11 @@ class Circuit:
     def add_event(self, port: EventPort, value: VALUE_TYPE, propagation_delay_ns: int) -> None:
         """Add an event for a port, used by the components"""
         event_time_ns = self._time_ns + propagation_delay_ns
-        event = CircuitEvent(event_time_ns, port, value)
+        # Set without an __init__, to save a Python call for every event
+        event = CircuitEvent(event_time_ns)
+        event._time_ns = event_time_ns
+        event._port = port
+        event._value = value
         self._events_by_port[port] = event
         heapq.heappush(self._circuit_events, event)
 

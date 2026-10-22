@@ -16,7 +16,7 @@
  - GUI: a circuit file where an output of a line doesn't drive all of its inputs (a Python circuit file, or one from an older version) gets the missing connections when it is opened, with a warning that lists them
  - GUI: when a component of a line can't be loaded, or a pair of its ports can't be connected, the other ports of the line are still connected
  - GUI: a port whose width no longer matches its line (a Verilog module that was changed) is left off the line when the file is opened, with a warning, instead of being drawn on it unconnected
- - Gate-level Yosys netlists simulate about 8% faster, with the same events in the same order
+ - Yosys netlists simulate faster, about 35% for gate-level netlists and 8% for functional ones, with the same events in the same order
 
 ## v1.6.0
  - Add "Verilog Testbench with pytest" to the documentation, a walkthrough of testing a Verilog design with DigSim and pytest, with waveforms of the tests
