@@ -1,124 +1,140 @@
 # CLAUDE.md
 
-## Project
-
 DigSim (`digsim-logic-simulator` on PyPI): an interactive digital logic simulator with a
 PySide6 GUI, a Python simulation API, and Yosys (via `yowasp-yosys`) for synthesizing
-Verilog into simulatable netlists.
+Verilog into simulatable netlists. Python >= 3.11 (CI tests 3.11–3.14), so no newer-only
+syntax. Dependencies in `pyproject.toml` are pinned to exact versions.
 
-- `src/digsim/circuit/` — simulation core (`Circuit`, components in `components/`,
-  low-level ports/atoms in `components/atoms/`, bundled ICs in `components/ic/`)
-- `src/digsim/app/` — GUI application (`cli.py` entry point, `gui/`, `gui_objects/`,
-  `model/`, `settings/`)
-- `src/digsim/synth/` — Yosys synthesis helper (`python -m digsim.synth`)
-- `src/digsim/storage_model/` — pydantic models for saving/loading circuits
-- `src/digsim/utils/` — Yosys netlist parsing
-- `tests/` — pytest suite
-- `examples/` — runnable examples, incl. pytest testbenches in `examples/pytest_tb/`
-- `example_circuits/` — circuits for the GUI
-- `docs/` — user documentation, published to https://freand76.github.io/digsim/ with
-  MkDocs Material (`mkdocs.yml`). `docs/documentation.md` is only a pointer to the site.
+## Layout
 
-Python >= 3.11 is supported (CI tests 3.11–3.14), so don't use newer-only syntax.
-Dependencies in `pyproject.toml` are pinned to exact versions.
+- `src/digsim/circuit/`: simulation core (`Circuit`, components in `components/`, ports and
+  atoms in `components/atoms/`, bundled IC netlists in `components/ic/`)
+- `src/digsim/app/`: GUI (`cli.py` entry point, `gui/`, `gui_objects/`, `model/`, `settings/`)
+- `src/digsim/synth/`: Yosys synthesis (`python -m digsim.synth`)
+- `src/digsim/storage_model/`: pydantic models for saving and loading circuits
+- `src/digsim/utils/`: Yosys netlist parsing
+- `tests/`, `examples/` (runnable, with pytest testbenches in `examples/pytest_tb/`),
+  `example_circuits/` (GUI circuits), `tools/gui_fuzz.py` (randomized GUI test)
+- `docs/`: MkDocs Material site (`mkdocs.yml`), published to https://freand76.github.io/digsim/
 
-## Tooling
+## Commands
 
 Use `uv` for everything. Ruff runs via `uv tool run`, not as a project dependency.
 
 ```sh
-uv tool run ruff format          # format
-uv tool run ruff check           # lint (add --fix for autofixes)
-uv run --with pytest pytest      # run all tests (tests/ and examples/pytest_tb/)
-uv run --with mypy mypy          # type check (config in pyproject.toml)
+uv tool run ruff format && uv tool run ruff check   # format, lint (--fix for autofixes)
+uv run --with pytest pytest      # all tests (tests/ and examples/pytest_tb/)
+uv run --with mypy mypy          # type check, local only
 uv run -m digsim.app             # start the GUI
-uv tool run --with mkdocs-material --with mkdocstrings-python --with ruff mkdocs build --strict   # check the docs build
+uv tool run --with mkdocs-material --with mkdocstrings-python --with ruff mkdocs build --strict
 uv run --with pytest python docs/scripts/generate_examples.py  # regenerate example images
 uv run python docs/scripts/generate_tutorial.py  # regenerate GUI tutorial screenshots
-uv run python tools/gui_fuzz.py --seeds 3,11,21 --steps 300  # randomized GUI test, offscreen
+uv run python tools/gui_fuzz.py --seeds 3,11,21 --steps 300  # GUI test, offscreen
 ```
 
-The `uv_*.sh` scripts do the same in throwaway venvs (`uv_ruff.sh`, `uv_run_test.sh`,
-`uv_run_app.sh`). Run ruff format + check, mypy and pytest before committing.
+Run ruff format and check, mypy and pytest before committing. `uv run` rebuilds the
+package, but `uv run --with .` from another project can use a stale build (`--reinstall`).
 
-CI (`.github/workflows/`) runs ruff, and pytest plus `examples/yosys_counter/*.py` on Linux
-(Python 3.11–3.14) and Windows. The test workflows run on push only, not on pull requests.
-mypy is local only. The docs site is rebuilt and deployed by `docs.yaml` on every push to
-`main` that touches `docs/`, `src/digsim/`, `mkdocs.yml` or `CHANGELOG.md` (included in the site's
-Changelog page).
+## CI
 
-- CI runners can't load Qt's GUI libraries (no `libEGL`): tests must not import `QtGui` or
-  `QtWidgets`. Keep testable logic in Qt-free modules (like `app/_desktop_entry.py`). The
-  GUI has no automated tests in CI, so check GUI changes by running the app (offscreen with
-  `QT_QPA_PLATFORM=offscreen` for scripted checks). `tools/gui_fuzz.py` builds and edits
+`.github/workflows/` runs ruff, and pytest plus `examples/yosys_counter/*.py`, on Linux
+(3.11–3.14) and Windows, on push only. `docs.yaml` deploys the site on pushes to `main`
+that touch `docs/`, `src/digsim/`, `mkdocs.yml` or `CHANGELOG.md`. Don't watch CI after
+a push, the maintainer reports failures.
+
+- CI can't load Qt's GUI libraries (no `libEGL`): tests must not import `QtGui` or
+  `QtWidgets`. Keep testable logic in Qt-free modules (like `app/_desktop_entry.py`).
+- The GUI has no tests in CI. Check GUI changes by running the app
+  (`QT_QPA_PLATFORM=offscreen` for scripts) and with `tools/gui_fuzz.py`, which edits
   circuits with random mouse actions and checks the GUI against the circuit after each
-  step, and the `gui-tester` agent (`.claude/agents/`) runs it and reports the result.
-- Ruff 0.17 also formats Python code blocks in Markdown files, and CI checks that.
-- Documentation prose doesn't use semicolons unless one is really called for. Split the
-  sentence or join the parts with a word instead. Code examples are exempt.
-- Component images in `docs/images/components/` are copies of
-  `src/digsim/app/gui_objects/images/` (except `LedBar.png`, a screenshot of the drawn
-  component), and `docs/images/app_icon.png` of `src/digsim/app/images/app_icon.png`.
-- The API Reference (`docs/api/`) is generated from the docstrings with mkdocstrings. Public
-  classes and methods use Google style docstrings, and components list their ports under
-  `Ports:` (they are created at runtime, so only the docstring can show them). The API pages
-  list the members to show, so the reference only has the supported API: add a new public
-  method there, and leave out internal plumbing that is only public by name.
-- `docs/components.md` (Python) and `docs/gui-components.md` (GUI) walk through the real
-  `XNOR` and `LedBar` code. Keep them in sync when changing them. Regenerate the example
-  images when an example changes.
-
-Ruff config is in `pyproject.toml`: line length 99, isort with PySide6 imports in their
-own section and two blank lines after imports, no relative imports from parent packages.
+  step. The `gui-tester` agent (`.claude/agents/`) runs it.
+- Things like Windows path and file locking problems only show up in the Windows CI.
 
 ## Code conventions
 
-- Each source file starts with the copyright header
-  `# Copyright (c) Fredrik Andersson, 2023-2025` / `# All rights reserved`, followed by a
-  module docstring.
+- Each source file starts with `# Copyright (c) Fredrik Andersson, 2023-2025` /
+  `# All rights reserved`, then a module docstring.
 - Private modules are prefixed `_` and re-exported through the package `__init__.py`.
-- Everything is type annotated. mypy runs with `disallow_untyped_defs`, so new functions need
-  full signatures. Component ports are attached at runtime and typed via
-  `Component.__getattr__`, and GUI objects narrow their `component` property to the concrete
-  type.
-- Use fully qualified Qt enums (`Qt.GlobalColor.red`, not `Qt.red`), and pass `int()` to Qt
-  APIs that only take ints.
+- Ruff (config in `pyproject.toml`): line length 99, isort with PySide6 in its own
+  section, two blank lines after imports, no relative imports from parent packages.
+- Everything is type annotated (mypy `disallow_untyped_defs`). Component ports are added
+  at runtime and typed via `Component.__getattr__`. GUI objects narrow their `component`
+  property to the concrete type.
+- Fully qualified Qt enums (`Qt.GlobalColor.red`), and `int()` for Qt APIs that take ints.
+- Public classes and methods have Google style docstrings, and components list their
+  ports under `Ports:`. The API Reference (`docs/api/`) is generated from them with
+  mkdocstrings and lists the members to show: add new public API there, leave out
+  internal plumbing that is only public by name.
 
-## Things that have bitten before
+## Simulation core
 
-- **Simulation core**: changes to `circuit/` (events, ports, VCD) must keep every example's
-  output and VCD files byte-identical, including the order of events at the same time:
-  Yosys gate-level designs have races where that order is visible. Compare before/after.
-  Don't change class attributes of hot classes (like `Port`) repeatedly at runtime: after
+- Changes to `circuit/` (events, ports, VCD) must keep every example's output and VCD files
+  byte-identical, including the order of events at the same time: Yosys gate-level designs
+  have races where that order is visible. Compare a `git archive` copy of `main` with the
+  changed tree by running each example in both and diffing their output and VCD files.
+  `examples/yosys_6502` prints its run time, so that line always differs.
+- Events are `CircuitEvent`, a `float` subclass (the time) on a heap, so comparisons run in
+  C. The tie order must not change. An event that a later one for the same port replaced
+  is skipped.
+- `Port` is hot: don't change class attributes of hot classes repeatedly at runtime, after
   enough changes CPython stops optimizing attribute access on that class.
-- **GUI threading**: the model's signals are emitted from the simulation thread, so they are
-  queued. GUI objects must not connect to model signals themselves, since a queued call to a
-  removed object runs on freed memory. The circuit area receives them and forwards them to
-  the current objects.
-- **Yosys** always runs in-process (`yowasp_yosys.run_yosys`, WebAssembly), never a native
-  `yosys`. In the sandbox `/tmp` is a private folder, so work files go in a temp
-  folder in the user cache. Paths given to Yosys must use forward slashes (`C:/...` on
-  Windows). After a failed run, Yosys keeps its files open until garbage collection, which
-  breaks cleanup on Windows. Things like this only show up in the Windows CI.
+- Values are an int, "X" (undefined) or "Z" (not driven). Every port is "X" after
+  `Circuit.init()`, and an input is "X" again when its last driver is removed. An input
+  with several drivers gets its value from `resolve()`: its `set_value` is replaced while
+  it has more than one.
+- `Circuit.add_component` adds a suffix when a name is taken. Parts of a component (the
+  gates of an SR latch or a Yosys netlist) are in the circuit too but not saved, so on
+  load a part can hold the saved name of a component: `change_component_name` handles it.
+- Storage and the GUI create components as `cls(circuit, **settings)` and set the name
+  afterwards. The defaults in `get_parameters()` (GUI) must match the `__init__` defaults
+  (Python). `YosysComponent` and `IntegratedCircuit` take the Verilog module's name.
+- Yosys always runs in-process (`yowasp_yosys.run_yosys`, WebAssembly), never a native
+  `yosys`. Work files go in a temp folder in the user cache (in the sandbox `/tmp` is
+  private). Paths given to Yosys use forward slashes (`C:/...`). After a failed run Yosys
+  keeps its files open until garbage collection, which breaks cleanup on Windows.
+- Synthesis changes can be checked against Icarus Verilog (`iverilog`, if installed): random
+  Verilog synthesized as gates and with `functional=True` must agree with it.
+
+## GUI
+
+- The model's signals are emitted from the simulation thread, so they are queued. GUI
+  objects must not connect to model signals themselves (a queued call to a removed object
+  runs on freed memory). The circuit area receives them and forwards them.
+- Reset, adding a component, undo, redo and loading call `model_init()`, which restarts
+  the simulation at time 0 and starts the VCD file over.
+
+## Docs
+
+- `docs/documentation.md` only points to the site.
+- Prose doesn't use semicolons unless one is really called for. Code examples are exempt.
+- Ruff also formats Python code blocks in Markdown, and CI checks that.
+- `docs/images/components/` are copies of `src/digsim/app/gui_objects/images/` (except
+  `LedBar.png`, a screenshot), and `docs/images/app_icon.png` of
+  `src/digsim/app/images/app_icon.png`.
+- `docs/components.md` (Python) and `docs/gui-components.md` (GUI) walk through the real
+  `XNOR` and `LedBar` code, keep them in sync. Regenerate the example images when an
+  example changes.
+
+## Commits and git
+
+- One commit per single-purpose change, don't bundle unrelated fixes.
+- Messages are tight and say **why**: what was wrong or missing for the user, not how the
+  code changes. Imperative subject, short body.
+- **Never** add a `Co-Authored-By` trailer or any other attribution line.
+- Commit only when asked or when the task asks for commits. Push only when asked, ask
+  before a force push, and don't amend a pushed commit (a follow-up is a new commit).
+- Never commit the untracked files in the root (`dist/`, `requirements.txt`, `uv.lock`,
+  `test.circuit`, `plans/`).
+- Never use `git stash`: the maintainer keeps WIP stashes. To test old code, use a
+  `git archive` copy.
+- Add user-visible changes as a line in the `## vx.x.x` section at the top of
+  `CHANGELOG.md`.
 
 ## Releases
 
-1. Bump `version` in `pyproject.toml` and turn the `## vx.x.x` heading in
-   `CHANGELOG.md` into the new version ("Prepare for release x.y.z" commit).
-2. `bash create_dist_pkg.sh` builds sdist + wheel into `dist/` (it also regenerates
+1. Bump `version` in `pyproject.toml` and turn `## vx.x.x` in `CHANGELOG.md` into the new
+   version ("Prepare for release x.y.z" commit).
+2. `bash create_dist_pkg.sh` builds sdist and wheel into `dist/` (and regenerates
    `requirements.txt` with pip-compile).
-3. Uploading to PyPI with `twine upload dist/*` is **always done manually by the
-   maintainer**. Never run twine or upload anything yourself.
-
-Add user-visible changes to the `## vx.x.x` section at the top of `CHANGELOG.md`.
-
-## Commits
-
-- One commit per single-purpose change. Don't bundle unrelated fixes, even small ones.
-- Commit messages are tight and answer **why**: what was wrong or missing for the
-  user, not how the code changes. Imperative subject line, short body.
-- **Never** add a `Co-Authored-By` trailer or any other attribution line.
-- Don't amend a pushed commit unless asked. A follow-up fix is a new commit.
-- Commit only when asked, or as part of a task that asks for commits. Push only when
-  asked, and ask before a force push.
-- Never commit the untracked files in the root.
+3. `twine upload dist/*` is **always done by the maintainer**. Never run twine or upload
+   anything.
