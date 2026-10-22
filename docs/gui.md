@@ -207,6 +207,11 @@ Check **VCD output** in the control area to record all signals to a
 [VCD file](https://en.wikipedia.org/wiki/Value_change_dump) while simulating. Open the
 file in [GTKWave](https://gtkwave.sourceforge.net/) or a similar waveform viewer.
 
+The file starts over when the simulation restarts from time 0: on **Reset**, when a
+component is added, on undo and redo, and when a circuit is opened. The file lists its
+signals at the top, so it can't go on after the circuit changes. Copy the file first to
+keep the waves recorded so far.
+
 ![GTKWave](images/screenshot_gtkwave.png){ width="85%" }
 
 ## Navigation and keyboard
