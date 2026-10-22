@@ -89,14 +89,13 @@ class _Signals(Component):
 
 class YosysComponent(MultiComponent):
     """
-    A component built from a Verilog file or a Yosys JSON netlist.
+    A component built from a Verilog file or a Yosys JSON netlist, named after its module.
 
     Ports:
         The ports of the Verilog module, with the same names and widths.
 
     Args:
         circuit: The circuit to add the component to.
-        name: The component name, the class name if not given.
         path: A Verilog file (.v, or SystemVerilog .sv) or Yosys netlist (.json) with one
             module, or None to create the component later with create_from_netlist().
         functional: Synthesize a Verilog file into functional blocks, like adders and
@@ -114,12 +113,12 @@ class YosysComponent(MultiComponent):
         self,
         circuit: Circuit,
         path: str | Path | None = None,
-        name: str | None = None,
+        *,
         functional: bool = False,
         signals: bool = False,
         states: str | list[str] | None = None,
     ) -> None:
-        super().__init__(circuit, name)
+        super().__init__(circuit)
         self._path = str(path) if path is not None else None
         self._functional = functional
         self._signals = signals

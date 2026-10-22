@@ -38,22 +38,22 @@ IC_DESCRIPTIONS = {
 
 class IntegratedCircuit(YosysComponent):
     """
-    A classic logic chip, from the Yosys netlists in digsim/circuit/components/ic.
+    A classic logic chip, from the Yosys netlists in digsim/circuit/components/ic. It is
+    named after the netlist's module, like ttl_74162.
 
     Ports:
         The ports of the chip.
 
     Args:
         circuit: The circuit to add the component to.
-        name: The component name, the class name if not given.
         ic_name: The netlist's file name without .json, like "74162" or "7448".
     """
 
-    def __init__(self, circuit: Circuit, name: str = "IC", ic_name: str | None = None) -> None:
+    def __init__(self, circuit: Circuit, ic_name: str | None = None) -> None:
         if ic_name is None:
             raise ComponentException("No IC selected")
         path = f"{self.folder()}/{ic_name}.json"
-        super().__init__(circuit, name=name, path=path)
+        super().__init__(circuit, path=path)
         self.parameter_set("ic_name", ic_name)
 
     @classmethod

@@ -21,6 +21,7 @@
  - `Circuit.run()` and `run_until()` round the time to whole nanoseconds, `run(us=1.001)` ran for 1000 ns
  - A loaded circuit keeps the wires of a component whose name is also the name of a part of another component, like a gate of an SR latch, instead of wiring that part
  - GUI: a new Hex Digit has the decimal point input and a new Logic Analyzer samples at 100 Hz, the same defaults as in Python
+ - YosysComponent and IntegratedCircuit have no name argument: they always took the name of the Verilog module, whatever name was given. The arguments of YosysComponent after path are keyword-only.
 
 ## v1.6.0
  - Add "Verilog Testbench with pytest" to the documentation, a walkthrough of testing a Verilog design with DigSim and pytest, with waveforms of the tests

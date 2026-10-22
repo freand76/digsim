@@ -37,12 +37,12 @@ SOURCES = {
 KINDS = ["netlist", "functional"]
 
 
-def _chip(circuit, ic_name, kind, name=None):
+def _chip(circuit, ic_name, kind):
     if kind == "netlist":
-        return IntegratedCircuit(circuit, name=name or f"IC{ic_name}", ic_name=ic_name)
+        return IntegratedCircuit(circuit, ic_name=ic_name)
     path, top = SOURCES[ic_name]
     synthesis = Synthesis([str(VERILOG / path)], top, functional=True)
-    component = YosysComponent(circuit, name=name)
+    component = YosysComponent(circuit)
     component.create_from_netlist(YosysNetlist(**synthesis.synth_to_dict(silent=True)))
     return component
 
@@ -155,8 +155,8 @@ def test_74181_74182_16_bit(kind, active_low):
     active-high), as the datasheets say they work
     """
     circuit = Circuit()
-    alus = [_chip(circuit, "74181", kind, name=f"ALU{index}") for index in range(4)]
-    lookahead = _chip(circuit, "74182", kind, name="lookahead")
+    alus = [_chip(circuit, "74181", kind) for index in range(4)]
+    lookahead = _chip(circuit, "74182", kind)
     # The carry look-ahead: generate and propagate from each ALU, the carries into them
     for index, alu in enumerate(alus):
         alu.G_bar.wire = lookahead.G_bar.get_bit(index)
@@ -427,7 +427,7 @@ def test_74595_output_enable(kind):
 def test_74595_shared_bus(kind):
     """Two 74595 on one bus, the one with its outputs enabled drives it"""
     circuit = Circuit()
-    chips = [_chip(circuit, "74595", kind, name=f"U{i}") for i in range(2)]
+    chips = [_chip(circuit, "74595", kind) for i in range(2)]
     bus = Bus2Wires(circuit, "bus", width=8)
     for chip in chips:
         chip.Q.wire = bus.bus

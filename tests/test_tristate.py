@@ -369,9 +369,9 @@ def test_save_and_load_shared_wire(tmp_path):
 VERILOG = Path(__file__).parent / "verilog" / "tristate.v"
 
 
-def _design(circuit, top, functional, name=None):
+def _design(circuit, top, functional):
     synthesis = Synthesis([str(VERILOG)], top, functional=functional)
-    component = YosysComponent(circuit, name=name)
+    component = YosysComponent(circuit)
     component.create_from_netlist(YosysNetlist(**synthesis.synth_to_dict(silent=True)))
     return component
 
@@ -409,7 +409,7 @@ def test_verilog_tristate_bus(functional):
 def test_verilog_outputs_share_a_wire(functional):
     """The tristate outputs of two designs drive the same bus"""
     circuit = Circuit()
-    designs = [_design(circuit, "tristate_output", functional, f"D{i}") for i in range(2)]
+    designs = [_design(circuit, "tristate_output", functional) for i in range(2)]
     bus = Bus2Wires(circuit, "bus", width=4)
     for design in designs:
         design.y.wire = bus.bus
