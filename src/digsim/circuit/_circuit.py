@@ -367,6 +367,15 @@ class Circuit:
         """Change component name"""
         comp = self._components[component.name()]
         del self._components[component.name()]
+        other = self._components.get(name)
+        if other is not None and comp.is_toplevel() and not other.is_toplevel():
+            # The name of a part of another component (like a gate of an SR) is not saved,
+            # the part gets another name: the wires of a loaded file are to the component
+            del self._components[name]
+            comp.set_name(name, update_circuit=False)
+            self._components[name] = comp
+            self.add_component(other)
+            return
         comp.set_name(name, update_circuit=False)
         self.add_component(comp)
 

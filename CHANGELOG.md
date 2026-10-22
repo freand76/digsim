@@ -19,6 +19,7 @@
  - Yosys netlists simulate faster, about 35% for gate-level netlists and 8% for functional ones, with the same events in the same order
  - A component deleted with `Circuit.delete_component()` no longer sets its old wires from an event it had in the queue
  - `Circuit.run()` and `run_until()` round the time to whole nanoseconds, `run(us=1.001)` ran for 1000 ns
+ - A loaded circuit keeps the wires of a component whose name is also the name of a part of another component, like a gate of an SR latch, instead of wiring that part
 
 ## v1.6.0
  - Add "Verilog Testbench with pytest" to the documentation, a walkthrough of testing a Verilog design with DigSim and pytest, with waveforms of the tests

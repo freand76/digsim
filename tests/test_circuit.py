@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import AND, SR, Led, PushButton, YosysComponent
+from digsim.circuit.components import AND, NOR, SR, Led, PushButton, YosysComponent
 from digsim.storage_model import CircuitDataClass, ComponentDataClass
 
 
@@ -299,3 +299,26 @@ def test_run_time_rounded():
     assert circuit.time_ns == 1001
     circuit.run_until(ms=0.002003)
     assert circuit.time_ns == 2003
+
+
+def test_load_name_of_a_sub_component(tmp_path):
+    """
+    A component of a file gets its name also when a part of another component has it,
+    and its wires are to it
+    """
+    circuit = Circuit("names")
+    old = NOR(circuit)
+    SR(circuit)  # Its gates are NOR_1 and NOR_2
+    circuit.delete_component(old)
+    gate = NOR(circuit)  # NOR again, after the SR in the file
+    button = PushButton(circuit, "button")
+    led = Led(circuit, "led")
+    button.O.wire = gate.A
+    button.O.wire = gate.B
+    gate.Y.wire = led.I
+    circuit.to_json_file(tmp_path / "names.json")
+
+    loaded = Circuit("names")
+    loaded.from_json_file(tmp_path / "names.json")
+    assert loaded.get_component("NOR").is_toplevel()
+    assert loaded.get_component("led").I.get_driver() is loaded.get_component("NOR").Y
