@@ -23,6 +23,23 @@ def test_delete_component():
     assert button.O.wired_ports == []
 
 
+def test_deleted_component_events_dont_drive():
+    """An event that a deleted component had in the queue doesn't set its old wires"""
+    circuit = Circuit()
+    button = PushButton(circuit, "button")
+    gate = AND(circuit, "gate")
+    led = Led(circuit, "led")
+    button.O.wire = gate.A
+    button.O.wire = gate.B
+    gate.Y.wire = led.I
+    circuit.init()
+    button.push()
+    circuit.run(ns=0)  # The gate's output event is in the queue
+    circuit.delete_component(gate)
+    circuit.run(ms=1)
+    assert led.I.value == "X"
+
+
 def test_delete_multi_component():
     """Deleting a component built from other components removes them too"""
     circuit = Circuit()
