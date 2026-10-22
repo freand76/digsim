@@ -4,7 +4,7 @@
 """The main class module of the digsim.app namespace"""
 
 import argparse
-import importlib
+import importlib.metadata
 import sys
 from pathlib import Path
 
