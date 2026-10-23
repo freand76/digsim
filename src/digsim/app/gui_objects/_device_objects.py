@@ -32,6 +32,8 @@ class DeviceObject(ComponentObject):
 
     SHOW_PORT_NAMES = False
     SIZE = (40.0, 40.0)
+    # A light in the corner, green while the component is active
+    STATUS_LIGHT = False
 
     def __init__(
         self, app_model: AppModel, component: Component, xpos: float, ypos: float
@@ -44,15 +46,25 @@ class DeviceObject(ComponentObject):
     def paint_face(cls, painter: QPainter, rect: QRectF, active: bool) -> None:
         """The symbol in the body, of a component that is active or not"""
 
+    @classmethod
+    def paint_status_light(cls, painter: QPainter, rect: QRectF, active: bool) -> None:
+        """The light in the top right corner"""
+        if cls.STATUS_LIGHT:
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(theme.ON if active else theme.OFF)
+            painter.drawEllipse(QPointF(rect.right() - 6, rect.top() + 6), 2.5, 2.5)
+
     def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter)
         self.paint_face(painter, QRectF(self.rect()), self.component.active)
+        self.paint_status_light(painter, QRectF(self.rect()), self.component.active)
 
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         def paint(rect: QRectF) -> None:
             theme.paint_body(painter, rect)
             cls.paint_face(painter, rect, False)
+            cls.paint_status_light(painter, rect, False)
             port_dots(painter, [QPointF(rect.right(), rect.center().y())])
 
         paint_icon(painter, size, cls.SIZE, paint, scale=1.3)
@@ -78,6 +90,8 @@ class ButtonObject(DeviceObject):
     contacts. Pushed, the bridge is down on the contacts, in green.
     """
 
+    STATUS_LIGHT = True
+
     @classmethod
     def paint_face(cls, painter: QPainter, rect: QRectF, active: bool) -> None:
         left, right = _contacts(painter, rect.center())
@@ -96,6 +110,8 @@ class ButtonObject(DeviceObject):
 
 class OnOffSwitchObject(DeviceObject):
     """An on/off switch, as the symbol of a switch, its lever closed and green when on"""
+
+    STATUS_LIGHT = True
 
     @property
     def component(self) -> OnOffSwitch:
@@ -129,6 +145,8 @@ class OnOffSwitchObject(DeviceObject):
 
 class ClockObject(DeviceObject):
     """A clock: a square wave, green while the output is 1"""
+
+    STATUS_LIGHT = True
 
     @classmethod
     def paint_face(cls, painter: QPainter, rect: QRectF, active: bool) -> None:
