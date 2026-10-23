@@ -40,7 +40,8 @@ def _format(args: argparse.Namespace) -> int:
                 Path(name).write_text(formatted, encoding="utf-8", newline="")
                 print(f"Formatted {name}")
         else:
-            sys.stdout.write(formatted)
+            # Text mode makes each \n the newline of the system, also the \n of \r\n
+            sys.stdout.write(formatted.replace("\r\n", "\n"))
     return returncode
 
 

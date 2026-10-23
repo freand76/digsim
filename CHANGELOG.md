@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## vx.x.x
+ - `python -m digsim.verilog format` without -i writes a file with Windows newlines (\r\n) to the terminal without an extra \r on each line on Windows
+
 ## v1.7.0
  - The LED bar is a column of LEDs drawn like the DIP switch, with one input for each LED instead of a bus input, so it can be wired straight to a DIP switch. A LED bar in a circuit file from before loses its wire.
  - GUI: a Verilog editor, Edit Verilog... in the context menu of a Yosys component. It colors Verilog like Emacs verilog-mode, and has line numbers, find and replace, go to line, indenting and commenting out lines. It notices when the file changes on disk.

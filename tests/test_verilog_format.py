@@ -225,6 +225,14 @@ def test_main_stdout(tmp_path, capsys):
     assert path.read_text(encoding="utf-8") == "module m;\nwire a;\nendmodule\n"
 
 
+def test_main_stdout_of_windows_newlines(tmp_path, capsys):
+    """The newlines of a file with \r\n are written as \n, the system's text mode makes them"""
+    path = tmp_path / "m.v"
+    path.write_bytes(b"module m;\r\nwire a;\r\nendmodule\r\n")
+    assert main(["format", "--indent", "2", str(path)]) == 0
+    assert capsys.readouterr().out == "module m;\n  wire a;\nendmodule\n"
+
+
 def test_main_errors(tmp_path, capsys, monkeypatch):
     assert main(["format", str(tmp_path / "missing.v")]) == 2
     assert "ERROR" in capsys.readouterr().err
