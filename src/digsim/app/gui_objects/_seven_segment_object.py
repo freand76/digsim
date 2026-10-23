@@ -8,7 +8,7 @@ from __future__ import annotations
 import typing
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPoint, QPointF, QRectF, QSize
+from PySide6.QtCore import QPoint, QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import QPainter, QPainterPath
 
 from digsim.circuit.components import HexDigit, SevenSegment
@@ -23,7 +23,14 @@ if TYPE_CHECKING:
 
 
 class SevenSegmentObject(ComponentObject):
-    """The class for a 7-segment component placed in the GUI"""
+    """
+    A 7-segment digit: the display without a body, a lead from each input to it with the
+    name of the input on it
+    """
+
+    SHOW_PORT_NAMES = False
+    # From the display to the digits
+    DISPLAY_MARGIN = 6
 
     SEGMENT_TYPE_AND_POS: typing.ClassVar[dict[str, tuple[str, QPoint]]] = {
         "A": ("H", QPoint(3, 0)),
@@ -84,23 +91,51 @@ class SevenSegmentObject(ComponentObject):
         assert isinstance(component, (SevenSegment, HexDigit))
         return component
 
+    def lead_length(self) -> float:
+        """From the inputs to the display: room for the names of the inputs"""
+        longest = max((self._port_names[port] for port in self.component.inports()), key=len)
+        text_width, _ = self.get_string_metrics(longest, theme.font(6))
+        return text_width + 10
+
     def setup_size(self) -> None:
         """Setup the size of the component"""
-        str_pixels_w, _ = self.get_string_metrics("dot")
-        self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
-        self.width = (
-            self.digit_left + self.DIGIT_WIDTH * self.SCALE + self.RECT_TO_DIGIT_RECT_MARGIN
-        )
+        self.digit_left = self.lead_length()
+        self.width = self.digit_left + self.DIGIT_WIDTH * self.SCALE + 2 * self.DISPLAY_MARGIN
         self.update_ports()
 
-    def paint_component(self, painter: QPainter) -> None:
-        self.paint_component_base(painter)
-        digit_ypos = self.height / 2 - self.DIGIT_HEIGHT * self.SCALE / 2
+    def paint_display(self, painter: QPainter, segments: list[str]) -> None:
+        """The leads with the names of the inputs, the display and its digits"""
+        rect = QRectF(self.rect())
+        display = QRectF(rect.left() + self.digit_left, rect.top(), 0, rect.height())
+        display.setRight(rect.right())
+        for port in self.component.inports():
+            y = self.get_port_item(port).rect().center().y()
+            width = 3.0 if port.width > 1 else theme.LINE_WIDTH
+            theme.lead(painter, QPointF(rect.left() - 1, y), QPointF(display.left(), y), width)
+            theme.paint_text(
+                painter,
+                QRectF(rect.left() + 4, y - 9, self.digit_left - 6, 8),
+                self._port_names[port],
+                6,
+                theme.MUTED,
+                Qt.AlignmentFlag.AlignLeft,
+            )
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(theme.outline_pen(True) if self.selected else Qt.PenStyle.NoPen)
+        painter.setBrush(theme.DISPLAY)
+        painter.drawRoundedRect(display, theme.CORNER, theme.CORNER)
+        digits_width = len(segments) * self.DIGIT_WIDTH * self.SCALE
         self.paint_digits(
             painter,
-            QPointF(self.object_pos.x() + self.digit_left, self.object_pos.y() + digit_ypos),
-            [self.component.segments()],
+            QPointF(
+                display.center().x() - digits_width / 2,
+                display.center().y() - self.DIGIT_HEIGHT * self.SCALE / 2,
+            ),
+            segments,
         )
+
+    def paint_component(self, painter: QPainter) -> None:
+        self.paint_display(painter, [self.component.segments()])
 
     @classmethod
     def paint_digits(cls, painter: QPainter, pos: QPointF, segments: list[str]) -> None:
@@ -124,12 +159,20 @@ class SevenSegmentObject(ComponentObject):
         """Paint a digit (for the component selector)"""
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.translate(size.width() / 2, 10)
+        painter.translate(size.width() / 2 + 6, 10)
         painter.scale(0.58, 0.58)
         xpos = -cls.DIGIT_WIDTH / 2
-        theme.paint_body(painter, QRectF(xpos - 5, 0, cls.DIGIT_WIDTH + 10, cls.DIGIT_HEIGHT + 10))
-        cls.paint_digit_rect(painter, xpos, 5)
-        cls.draw_digit(painter, xpos, 5, segments)
+        for y in (20, 45, 70):
+            theme.lead(painter, QPointF(xpos - 34, y), QPointF(xpos - 6, y), 2.5)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(theme.INK)
+            painter.drawEllipse(QPointF(xpos - 34, y), 4, 4)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(theme.DISPLAY)
+        painter.drawRoundedRect(
+            QRectF(xpos - 6, -4, cls.DIGIT_WIDTH + 12, cls.DIGIT_HEIGHT + 8), 6, 6
+        )
+        cls.draw_digit(painter, xpos, 0, segments)
         painter.restore()
         cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)
 
