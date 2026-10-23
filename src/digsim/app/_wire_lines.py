@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -1245,6 +1245,7 @@ class WireDrawing:
             if node not in places and len(point) == 2:
                 places[node] = (point[0], point[1])
         segments = [(pair[0], pair[1]) for pair in line.segments if len(pair) == 2]
+        segments = _line_graph.align_to_ports(places, set(names), segments)
         outputs = {name for name in names if ports[name].is_output()}
         chains = _line_graph.decompose(names, outputs, places, segments)
         # The wire of each chain, and its nodes from where the wire starts

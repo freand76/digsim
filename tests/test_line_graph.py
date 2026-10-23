@@ -7,6 +7,7 @@ import pytest
 
 from digsim.app._line_graph import (
     Chain,
+    align_to_ports,
     decompose,
     junctions,
     polyline_path,
@@ -174,3 +175,39 @@ def test_without_ports_keeps_a_port_without_segments():
     line.ports.append("L3.I")
     (result,) = without_ports([line], {"L2.I"})
     assert result.ports == ["A.O", "L1.I", "L3.I"]
+
+
+def test_align_to_ports():
+    """
+    A port that moved up: a step close to it, to its corner, which stays where it was
+    """
+    places = {"A.O": (40, 20), "p1": (100, 40), "p2": (100, 100), "B.I": (200, 100)}
+    segments = [("A.O", "p1"), ("p1", "p2"), ("p2", "B.I")]
+    segments = align_to_ports(places, {"A.O", "B.I"}, segments)
+    assert segments == [
+        ("A.O", "A.O~p1~0"),
+        ("A.O~p1~0", "A.O~p1~1"),
+        ("A.O~p1~1", "p1"),
+        ("p1", "p2"),
+        ("p2", "B.I"),
+    ]
+    assert places["A.O~p1~0"] == (50, 20)
+    assert places["A.O~p1~1"] == (50, 40)
+    assert places["p1"] == (100, 40)
+
+
+def test_align_to_ports_close():
+    """A corner close to the port gets the step half way"""
+    places = {"A.O": (40, 20), "p1": (46, 40), "B.I": (46, 100)}
+    segments = align_to_ports(places, {"A.O", "B.I"}, [("p1", "A.O"), ("p1", "B.I")])
+    assert len(segments) == 4
+    assert places["A.O~p1~0"] == (43, 20)
+
+
+def test_align_to_ports_lined_up():
+    """A line whose points line up with its ports, and a vertical segment, stay"""
+    places = {"A.O": (40, 20), "p1": (100, 20), "p2": (100, 100), "B.I": (100, 140)}
+    segments = [("A.O", "p1"), ("p1", "p2"), ("p2", "B.I")]
+    before = dict(places)
+    assert align_to_ports(places, {"A.O", "B.I"}, segments) == segments
+    assert places == before
