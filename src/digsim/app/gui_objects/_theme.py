@@ -40,6 +40,8 @@ NOTE = QColor("#fff4b8")
 WIRE = QColor("#8c96a0")
 WIRE_X = QColor("#e5484d")
 WIRE_Z = QColor("#3e7bfa")
+# An LED that is off: gray plastic
+LED_OFF = QColor("#b4bcc4")
 # Switches that are on, and wires that are 1
 ON = QColor("#27a55a")
 OFF = QColor("#c3cad1")
@@ -123,16 +125,18 @@ def paint_led(
     white = QColor("#ffffff")
     half = 6.0
     body = QRectF(center_x - half, top, 2 * half, 18)
+    # Off, it is gray plastic with a hint of its color
+    plastic = dim(color, 0.3, LED_OFF)
     if lit:
-        glow = QRadialGradient(QPointF(center_x, top + half), 17)
+        glow = QRadialGradient(QPointF(center_x, top + half), 20)
         glow_color = QColor(color)
-        glow_color.setAlpha(120)
-        glow.setColorAt(0.3, glow_color)
+        glow_color.setAlpha(170)
+        glow.setColorAt(0.25, glow_color)
         glow_color.setAlpha(0)
         glow.setColorAt(1.0, glow_color)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(glow))
-        painter.drawEllipse(QPointF(center_x, top + half), 17, 17)
+        painter.drawEllipse(QPointF(center_x, top + half), 20, 20)
     # The dome and the body
     path = QPainterPath(QPointF(body.left(), body.bottom()))
     path.lineTo(body.left(), body.top() + half)
@@ -141,29 +145,31 @@ def paint_led(
     path.closeSubpath()
     fill = QLinearGradient(QPointF(body.left(), 0), QPointF(body.right(), 0))
     if lit:
-        fill.setColorAt(0.0, dim(color, 0.45, white))
+        fill.setColorAt(0.0, dim(color, 0.55, white))
         fill.setColorAt(0.5, color)
-        fill.setColorAt(1.0, dim(color, 0.75, INK))
-    else:
-        fill.setColorAt(0.0, dim(color, 0.25, white))
-        fill.setColorAt(0.5, dim(color, 0.5, white))
         fill.setColorAt(1.0, dim(color, 0.8, INK))
-    painter.setPen(outline_pen(True) if selected else ink_pen(1.0, dim(color, 0.4, INK)))
+        edge = dim(color, 0.5, INK)
+    else:
+        fill.setColorAt(0.0, dim(plastic, 0.6, white))
+        fill.setColorAt(0.5, plastic)
+        fill.setColorAt(1.0, dim(plastic, 0.8, INK))
+        edge = dim(plastic, 0.5, INK)
+    painter.setPen(outline_pen(True) if selected else ink_pen(1.0, edge))
     painter.setBrush(QBrush(fill))
     painter.drawPath(path)
     # Inside: the post, and the cup with the chip
-    painter.setPen(ink_pen(1.0, dim(color, 0.5, INK)))
+    painter.setPen(ink_pen(1.0, edge))
     painter.drawLine(QPointF(center_x - 2, body.bottom()), QPointF(center_x - 2, top + 10))
     painter.drawLine(QPointF(center_x + 2, body.bottom()), QPointF(center_x + 2, top + 11))
     painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(white if lit else dim(color, 0.5, INK))
+    painter.setBrush(white if lit else edge)
     painter.drawRect(QRectF(center_x + 1, top + 8.5, 3, 2))
     # The shine
-    painter.setBrush(QColor(255, 255, 255, 170))
+    painter.setBrush(QColor(255, 255, 255, 190 if lit else 110))
     painter.drawRoundedRect(QRectF(body.left() + 2, top + 4, 2.5, 11), 1, 1)
     # The rim at the base
-    painter.setPen(ink_pen(1.0, dim(color, 0.4, INK)))
-    painter.setBrush(dim(color, 0.75, INK) if lit else dim(color, 0.6, white))
+    painter.setPen(ink_pen(1.0, edge))
+    painter.setBrush(dim(color, 0.75, INK) if lit else plastic)
     painter.drawRect(QRectF(body.left() - 1.5, body.bottom(), 2 * half + 3, 3))
     return body.bottom() + 3
 
