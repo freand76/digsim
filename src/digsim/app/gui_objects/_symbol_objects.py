@@ -412,12 +412,17 @@ class LedObject(SymbolObject):
         port_y = rect.top() + cls.PORT_Y
         painter.setPen(theme.ink_pen())
         painter.setBrush(Qt.BrushStyle.NoBrush)
-        # The long leg (anode) to the input, the short one (cathode) beside it
+        # The long leg (anode) to the input, the short one (cathode) to ground
         anode = QPainterPath(QPointF(center_x - 2.5, base))
         anode.lineTo(center_x - 2.5, port_y)
         anode.lineTo(rect.left() - 1, port_y)
         painter.drawPath(anode)
-        painter.drawLine(QPointF(center_x + 2.5, base), QPointF(center_x + 2.5, port_y - 3))
+        ground_x, ground_y = center_x + 2.5, port_y + 2
+        painter.drawLine(QPointF(ground_x, base), QPointF(ground_x, ground_y))
+        painter.setPen(theme.ink_pen(1.2))
+        for step, half_width in enumerate((4.0, 2.5, 1.0)):
+            y = ground_y + 2.5 * step
+            painter.drawLine(QPointF(ground_x - half_width, y), QPointF(ground_x + half_width, y))
 
     def paint_component(self, painter: QPainter) -> None:
         self.paint_led(
