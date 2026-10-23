@@ -238,6 +238,10 @@ class FlipFlopObject(ComponentObject):
 
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
+        if name == "FlipFlop":
+            cls._paint_choice_icon(painter, size, name)
+            return
+
         def paint(rect: QRectF) -> None:
             theme.paint_body(painter, rect)
             mid = rect.center().y()
@@ -257,6 +261,39 @@ class FlipFlopObject(ComponentObject):
             path.lineTo(rect.left(), mid + 14)
             painter.setPen(theme.ink_pen(1.2))
             painter.drawPath(path)
+            port_dots(
+                painter,
+                [
+                    QPointF(rect.left() - 1, mid - 10),
+                    QPointF(rect.left() - 1, mid + 10),
+                    QPointF(rect.right(), mid),
+                ],
+            )
+
+        paint_icon(painter, size, (50, 40), paint, scale=1.2)
+        cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)
+
+    @classmethod
+    def _paint_choice_icon(cls, painter: QPainter, size: QSize, name: str) -> None:
+        """The icon of FlipFlop, where the type is chosen: the types, and the clock"""
+
+        def paint(rect: QRectF) -> None:
+            theme.paint_body(painter, rect)
+            theme.paint_text(painter, rect.adjusted(6, 0, 0, 0), "SR\nJK\nT", 7, bold=True)
+            mid = rect.center().y()
+            path = QPainterPath(QPointF(rect.left(), mid + 6))
+            path.lineTo(rect.left() + 6, mid + 10)
+            path.lineTo(rect.left(), mid + 14)
+            painter.setPen(theme.ink_pen(1.2))
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawPath(path)
+            theme.paint_text(
+                painter,
+                QRectF(rect.left() + 4, mid - 6, rect.width() - 8, 12),
+                "Q",
+                7,
+                align=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+            )
             port_dots(
                 painter,
                 [
