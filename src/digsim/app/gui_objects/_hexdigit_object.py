@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QSize
+from PySide6.QtCore import QPointF, QSize
 from PySide6.QtGui import QPainter
 
 from digsim.circuit.components import HexDigit
@@ -47,27 +47,20 @@ class HexDigitObject(SevenSegmentObject):
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
         self.digit_top = self.RECT_TO_DIGIT_RECT_MARGIN
         self.width = (
-            self.digit_left + self.digits * self.DIGIT_WIDTH + self.RECT_TO_DIGIT_RECT_MARGIN
+            self.digit_left
+            + self.digits * self.DIGIT_WIDTH * self.SCALE
+            + self.RECT_TO_DIGIT_RECT_MARGIN
         )
-        self.height = 2 * self.RECT_TO_DIGIT_RECT_MARGIN + self.DIGIT_HEIGHT
+        self.height = 2 * self.RECT_TO_DIGIT_RECT_MARGIN + self.DIGIT_HEIGHT * self.SCALE
         self.update_ports()
 
     def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter)
-        self.paint_digit_rect(
+        self.paint_digits(
             painter,
-            self.object_pos.x() + self.digit_left,
-            self.object_pos.y() + self.RECT_TO_DIGIT_RECT_MARGIN,
-            self.digits,
+            QPointF(self.object_pos.x() + self.digit_left, self.object_pos.y() + self.digit_top),
+            [self.component.segments(digit_id) for digit_id in range(self.digits)],
         )
-        for digit_id in range(self.digits):
-            active_segments = self.component.segments(digit_id)
-            self.draw_digit(
-                painter,
-                self.object_pos.x() + self.digit_left + self.DIGIT_WIDTH * digit_id,
-                self.object_pos.y() + self.digit_top,
-                active_segments,
-            )
 
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:

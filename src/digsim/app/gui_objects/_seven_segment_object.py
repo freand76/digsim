@@ -8,7 +8,7 @@ from __future__ import annotations
 import typing
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPoint, QRectF, QSize
+from PySide6.QtCore import QPoint, QPointF, QRectF, QSize
 from PySide6.QtGui import QPainter, QPainterPath
 
 from digsim.circuit.components import HexDigit, SevenSegment
@@ -60,6 +60,9 @@ class SevenSegmentObject(ComponentObject):
     DIGIT_WIDTH = 54
     DIGIT_HEIGHT = 80
 
+    # The digits are drawn smaller than the sizes above
+    SCALE = 0.75
+
     DOT_OFFSET_X = 40
     DOT_OFFSET_Y = 60
     DOT_RADIUS = 3
@@ -85,22 +88,30 @@ class SevenSegmentObject(ComponentObject):
         """Setup the size of the component"""
         str_pixels_w, _ = self.get_string_metrics("dot")
         self.digit_left = self.inport_x_pos() + str_pixels_w + self.PORT_TO_RECT_MARGIN
-        self.width = self.digit_left + self.DIGIT_WIDTH + self.RECT_TO_DIGIT_RECT_MARGIN
+        self.width = (
+            self.digit_left + self.DIGIT_WIDTH * self.SCALE + self.RECT_TO_DIGIT_RECT_MARGIN
+        )
         self.update_ports()
 
     def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter)
-        digit_ypos = self.height / 2 - self.DIGIT_HEIGHT / 2
-        self.paint_digit_rect(
-            painter, self.object_pos.x() + self.digit_left, self.object_pos.y() + digit_ypos
-        )
-        active_segments = self.component.segments()
-        self.draw_digit(
+        digit_ypos = self.height / 2 - self.DIGIT_HEIGHT * self.SCALE / 2
+        self.paint_digits(
             painter,
-            self.object_pos.x() + self.digit_left,
-            self.object_pos.y() + digit_ypos,
-            active_segments,
+            QPointF(self.object_pos.x() + self.digit_left, self.object_pos.y() + digit_ypos),
+            [self.component.segments()],
         )
+
+    @classmethod
+    def paint_digits(cls, painter: QPainter, pos: QPointF, segments: list[str]) -> None:
+        """The window and the digits in it, at SCALE, from the top left corner"""
+        painter.save()
+        painter.translate(pos)
+        painter.scale(cls.SCALE, cls.SCALE)
+        cls.paint_digit_rect(painter, 0, 0, len(segments))
+        for index, active_segments in enumerate(segments):
+            cls.draw_digit(painter, index * cls.DIGIT_WIDTH, 0, active_segments)
+        painter.restore()
 
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
@@ -113,8 +124,8 @@ class SevenSegmentObject(ComponentObject):
         """Paint a digit (for the component selector)"""
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.translate(size.width() / 2, 6)
-        painter.scale(0.7, 0.7)
+        painter.translate(size.width() / 2, 10)
+        painter.scale(0.58, 0.58)
         xpos = -cls.DIGIT_WIDTH / 2
         theme.paint_body(painter, QRectF(xpos - 5, 0, cls.DIGIT_WIDTH + 10, cls.DIGIT_HEIGHT + 10))
         cls.paint_digit_rect(painter, xpos, 5)

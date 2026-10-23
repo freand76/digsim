@@ -82,7 +82,7 @@
         "StaticValue_3": {"x": 100, "y": 480, "z": 0},
         "TristateBuffer_3": {"x": 360, "y": 480, "z": 0},
         "DipSwitch": {"x": 100, "y": 595, "z": 0},
-        "HexDigit": {"x": 640, "y": 260, "z": 0},
+        "HexDigit": {"x": 640, "y": 270, "z": 0},
         "Note": {"x": 640, "y": 450, "z": 0}
     },
     "lines": [
