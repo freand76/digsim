@@ -69,14 +69,14 @@ right side.
 
 ## 5. Add an LED
 
-Drag an **LED** from the **Output** group to the right of the AND gate. It has a single
-input on its left side.
+Drag an **LED** from the **Output** group to the right of the AND gate. It asks for its
+color: keep **red** and click **OK**. It has a single input on its left side.
 
 ![The LED in the circuit area](images/tutorial/06_led.png)
 
 ## 6. Connect the wires
 
-Wires connect the small squares on the sides of the components, called **ports**.
+Wires connect the small dots on the sides of the components, called **ports**.
 Outputs are on the right side of a component and inputs on the left side.
 
 To draw a wire, **click a port**, and then **click the port you want to connect it to**.

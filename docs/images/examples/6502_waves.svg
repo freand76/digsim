@@ -24,47 +24,30 @@
 <text x='10' y='67.0' fill='#1f2328'>cpu.AB</text>
 <polygon points='140.0,63.0 143.0,52.0 229.4,52.0 232.4,63.0 229.4,74.0 143.0,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='186.2' y='67.0' text-anchor='middle' fill='#1f2328' font-size='11'>F823</text>
-<polygon points='232.4,63.0 232.4,52.0 232.4,52.0 232.4,63.0 232.4,74.0 232.4,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
-<polygon points='232.4,63.0 232.4,52.0 232.4,52.0 232.4,63.0 232.4,74.0 232.4,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <polygon points='232.4,63.0 235.4,52.0 322.7,52.0 325.7,63.0 322.7,74.0 235.4,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='279.1' y='67.0' text-anchor='middle' fill='#1f2328' font-size='11'>F824</text>
 <polygon points='325.7,63.0 328.7,52.0 416.1,52.0 419.1,63.0 416.1,74.0 328.7,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='372.4' y='67.0' text-anchor='middle' fill='#1f2328' font-size='11'>F825</text>
-<polygon points='419.1,63.0 419.1,52.0 419.1,52.0 419.1,63.0 419.1,74.0 419.1,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <polygon points='419.1,63.0 422.1,52.0 509.4,52.0 512.4,63.0 509.4,74.0 422.1,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='465.7' y='67.0' text-anchor='middle' fill='#1f2328' font-size='11'>F826</text>
 <polygon points='512.4,63.0 515.4,52.0 602.7,52.0 605.7,63.0 602.7,74.0 515.4,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='559.1' y='67.0' text-anchor='middle' fill='#1f2328' font-size='11'>F827</text>
-<polygon points='605.7,63.0 605.7,52.0 605.7,52.0 605.7,63.0 605.7,74.0 605.7,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
-<polygon points='605.7,63.0 605.7,52.0 605.7,52.0 605.7,63.0 605.7,74.0 605.7,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
-<polygon points='605.7,63.0 605.7,52.0 605.7,52.0 605.7,63.0 605.7,74.0 605.7,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <polygon points='605.7,63.0 608.7,52.0 696.1,52.0 699.1,63.0 696.1,74.0 608.7,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='652.4' y='67.0' text-anchor='middle' fill='#1f2328' font-size='11'>F828</text>
 <polygon points='699.1,63.0 699.5,52.0 699.5,52.0 700.0,63.0 699.5,74.0 699.5,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
-<polygon points='700.0,63.0 700.0,52.0 700.0,52.0 700.0,63.0 700.0,74.0 700.0,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
-<polygon points='700.0,63.0 700.0,52.0 700.0,52.0 700.0,63.0 700.0,74.0 700.0,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
-<polygon points='700.0,63.0 700.0,52.0 700.0,52.0 700.0,63.0 700.0,74.0 700.0,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
-<polygon points='700.0,63.0 700.0,52.0 700.0,52.0 700.0,63.0 700.0,74.0 700.0,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <polygon points='700.0,63.0 703.0,52.0 790.2,52.0 793.2,63.0 790.2,74.0 703.0,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='746.6' y='67.0' text-anchor='middle' fill='#1f2328' font-size='11'>8000</text>
-<polygon points='793.2,63.0 793.2,52.0 793.2,52.0 793.2,63.0 793.2,74.0 793.2,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
-<polygon points='793.2,63.0 793.2,52.0 793.2,52.0 793.2,63.0 793.2,74.0 793.2,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
-<polygon points='793.2,63.0 793.2,52.0 793.2,52.0 793.2,63.0 793.2,74.0 793.2,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <polygon points='793.2,63.0 796.2,52.0 882.7,52.0 885.7,63.0 882.7,74.0 796.2,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='839.5' y='67.0' text-anchor='middle' fill='#1f2328' font-size='11'>F829</text>
-<polygon points='885.7,63.0 885.7,52.0 885.7,52.0 885.7,63.0 885.7,74.0 885.7,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <polygon points='885.7,63.0 888.7,52.0 976.1,52.0 979.1,63.0 976.1,74.0 888.7,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='932.4' y='67.0' text-anchor='middle' fill='#1f2328' font-size='11'>F82A</text>
 <polygon points='979.1,63.0 979.5,52.0 979.5,52.0 979.9,63.0 979.5,74.0 979.5,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
-<polygon points='979.9,63.0 979.9,52.0 979.9,52.0 979.9,63.0 979.9,74.0 979.9,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <polygon points='979.9,63.0 980.0,52.0 980.0,52.0 980.0,63.0 980.0,74.0 980.0,74.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='10' y='101.0' fill='#1f2328'>cpu.DO</text>
 <polygon points='140.0,97.0 143.0,86.0 229.6,86.0 232.6,97.0 229.6,108.0 143.0,108.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='186.3' y='101.0' text-anchor='middle' fill='#1f2328' font-size='11'>0</text>
-<polygon points='232.6,97.0 232.6,86.0 232.6,86.0 232.6,97.0 232.6,108.0 232.6,108.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <polygon points='232.6,97.0 235.6,86.0 976.6,86.0 979.6,97.0 976.6,108.0 235.6,108.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='606.1' y='101.0' text-anchor='middle' fill='#1f2328' font-size='11'>48</text>
-<polygon points='979.6,97.0 979.6,86.0 979.6,86.0 979.6,97.0 979.6,108.0 979.6,108.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <polygon points='979.6,97.0 979.8,86.0 979.8,86.0 980.0,97.0 979.8,108.0 979.8,108.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='10' y='135.0' fill='#1f2328'>cpu.WE</text>
 <polyline points='140.0,142.0 700.0,142.0 700.0,120.0 793.2,120.0 793.2,142.0 980.0,142.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>

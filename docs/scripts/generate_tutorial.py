@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -198,8 +198,15 @@ def main() -> None:
         "05_and_gate", [tutorial.rect_in_window(and_item), tutorial.object_rect(and_gate)]
     )
 
-    # 5. The LED
+    # 5. The LED, it asks for its color: red
     led_item = tutorial.selector_item("Led")
+
+    def accept_dialog() -> None:
+        dialog = QApplication.activeModalWidget()
+        assert dialog is not None
+        dialog.accept()
+
+    QTimer.singleShot(300, accept_dialog)
     led = tutorial.add("Led", 0.75, 0.47)
     tutorial.shot("06_led", [tutorial.rect_in_window(led_item), tutorial.object_rect(led)])
 
