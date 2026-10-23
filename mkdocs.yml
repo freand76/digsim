@@ -12,6 +12,7 @@ nav:
   - GUI Application:
       - Your First Circuit: first-circuit.md
       - GUI Reference: gui.md
+      - Editing a Verilog Component: verilog-tutorial.md
       - Adding Components to the GUI: gui-components.md
   - Python:
       - Python Circuits: python.md
@@ -26,6 +27,7 @@ nav:
       - Ports: api/ports.md
       - Synthesis: api/synthesis.md
       - Yosys Netlist: api/netlist.md
+      - Verilog: api/verilog.md
   - Project:
       - Contributing: contributing.md
       - Changelog: changelog.md

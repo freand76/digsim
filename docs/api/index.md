@@ -10,6 +10,7 @@ see [Python Circuits](../python.md).
 | [`digsim.circuit.components.atoms`](base-classes.md) | The [base classes](base-classes.md) of all components, and the [ports](ports.md) |
 | [`digsim.synth`](synthesis.md) | `Synthesis`, Verilog to netlist with Yosys |
 | [`digsim.utils`](netlist.md) | The Yosys netlist classes |
+| [`digsim.verilog`](verilog.md) | `VerilogFormatter` and the Verilog lexer |
 
 Modules with names that start with `_` are internal. Import everything from the modules
 above.

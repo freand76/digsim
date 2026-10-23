@@ -236,14 +236,14 @@ placed right away). The parameter's `type` selects the input:
 | `width_bool` | One checkbox per bit, following a `width` parameter | `default` |
 | `component_name` | Drop-down that selects another component class | `component_list` (class name to description) |
 | `ic_name` | Drop-down with the built-in ICs | |
-| `path` | File dialog (when it is the only parameter) | `fileinfo` (file filter) |
+| `path` | File dialog before the other parameters (it must be the first one) | `fileinfo` (file filter), `new_verilog` (asks first to open a file or to make a new Verilog file, which is created with a module). Another parameter with `file_types` (like `[".v", ".sv"]`) is only asked for a file of those types |
 
 Every parameter needs a `description`, the label shown in the dialog. In type-annotated code,
 `get_parameters()` returns `dict[str, Parameter]`, with `Parameter` from
 `digsim.circuit.components.atoms`, so mypy checks the keys and the `type`. Add
 `"reconfigurable": True` to let the user change the parameter later, with **Settings** in
-the component's context menu. Afterwards, the component's `reconfigure()` method and the GUI
-object's `update_size()` are called.
+the component's context menu. Afterwards, the component's `reconfigure()`
+method and the GUI object's `update_size()` are called.
 
 ## Interactive components
 

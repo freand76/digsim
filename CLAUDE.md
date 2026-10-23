@@ -29,7 +29,10 @@ uv run -m digsim.app             # start the GUI
 uv tool run --with mkdocs-material --with mkdocstrings-python --with ruff mkdocs build --strict
 uv run --with pytest python docs/scripts/generate_examples.py  # regenerate example images
 uv run python docs/scripts/generate_tutorial.py  # regenerate GUI tutorial screenshots
+uv run python docs/scripts/generate_editor_image.py  # regenerate the Verilog editor screenshot
+uv run python docs/scripts/generate_verilog_tutorial.py  # regenerate Verilog tutorial screenshots
 uv run python tools/gui_fuzz.py --seeds 3,11,21 --steps 300  # GUI test, offscreen
+uv run --with pytest pytest tools/gui_editor_check.py  # Verilog GUI checks, offscreen
 ```
 
 Run ruff format and check, mypy and pytest before committing. `uv run` rebuilds the
@@ -44,7 +47,8 @@ a push, the maintainer reports failures.
 
 - CI can't load Qt's GUI libraries (no `libEGL`): tests must not import `QtGui` or
   `QtWidgets`. Keep testable logic in Qt-free modules (like `app/_desktop_entry.py`).
-- The GUI has no tests in CI. Check GUI changes by running the app
+- The GUI has no tests in CI. `tools/gui_editor_check.py` has offscreen pytest checks of
+  the Verilog editor and Reload, run it by hand. Check GUI changes by running the app
   (`QT_QPA_PLATFORM=offscreen` for scripts) and with `tools/gui_fuzz.py`, which edits
   circuits with random mouse actions and checks the GUI against the circuit after each
   step. The `gui-tester` agent (`.claude/agents/`) runs it.
@@ -52,8 +56,9 @@ a push, the maintainer reports failures.
 
 ## Code conventions
 
-- Each source file starts with `# Copyright (c) Fredrik Andersson, 2023-2025` /
-  `# All rights reserved`, then a module docstring.
+- Each source file starts with `# Copyright (c) Fredrik Andersson, 2023-2026` /
+  `# All rights reserved`, then a module docstring. When you edit a file, make the second
+  year of its header the current year.
 - Private modules are prefixed `_` and re-exported through the package `__init__.py`.
 - Ruff (config in `pyproject.toml`): line length 99, isort with PySide6 in its own
   section, two blank lines after imports, no relative imports from parent packages.

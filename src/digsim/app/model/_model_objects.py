@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Handle objects in the model"""
@@ -9,7 +9,7 @@ from collections import deque
 from typing import TYPE_CHECKING
 
 from digsim.circuit import Circuit
-from digsim.storage_model import ModelDataClass
+from digsim.storage_model import LineDataClass, ModelDataClass
 
 from ._model_components import ModelComponents
 from ._model_new_wire import NewWire
@@ -98,16 +98,48 @@ class ModelObjects:
         if self._app_model.circuit_to_model() != undo_state:
             self.add_undo_state(undo_state)
 
-    def _restore_state(self, model_dc: ModelDataClass) -> None:
+    def _restore_state(self, model_dc: ModelDataClass) -> list[str]:
+        """Build the circuit from a state, returns the warnings"""
         self.clear()
         exception_str_list = self._app_model.model_to_circuit(model_dc)
         self._app_model.shortcuts.from_dict(model_dc.shortcuts)
         self._app_model.model_init()
         self._app_model.model_changed()
+        return exception_str_list
+
+    def _restore_and_warn(self, model_dc: ModelDataClass) -> None:
+        exception_str_list = self._restore_state(model_dc)
         if len(exception_str_list) > 0:
             self._app_model.sig_warning_log.emit(
                 "Load Circuit Warning", "\n".join(exception_str_list)
             )
+
+    def rebuild(self, lines: list[LineDataClass]) -> list[str]:
+        """
+        Build the circuit again, as when it is loaded: each component from its settings
+        (a Yosys component from its file, or a netlist given with
+        YosysComponent.given_netlists()), and the wires from lines. Used when the ports
+        of a component change, the lines must not have the ports that are gone. The undo
+        steps are dropped: they have wires to the ports from before. Returns the warnings.
+        """
+        before = {component.name() for component in self._circuit.get_toplevel_components()}
+        model_dc = self._app_model.circuit_to_model()
+        model_dc.circuit.wires = []
+        model_dc.wires = {}
+        model_dc.lines = lines
+        exception_str_list = self._restore_state(model_dc)
+        after = {component.name() for component in self._circuit.get_toplevel_components()}
+        missing = sorted(before - after)
+        if missing:
+            # Like a Yosys component whose file has an error now: keep the undo steps,
+            # they have the components
+            exception_str_list.insert(
+                0, f"Not built again: {', '.join(missing)}, undo brings them back"
+            )
+        else:
+            self.reset_undo_stack()
+        self._app_model.sig_synchronize_gui.emit()
+        return exception_str_list
 
     def reset_undo_stack(self) -> None:
         """Clear undo/redo stacks"""
@@ -144,7 +176,7 @@ class ModelObjects:
         if len(self._undo_stack) > 0:
             self.push_redo_state()
             model_dc = self._undo_stack.pop()
-            self._restore_state(model_dc)
+            self._restore_and_warn(model_dc)
             self._app_model.sig_control_notify.emit()
             self._app_model.sig_synchronize_gui.emit()
 
@@ -156,7 +188,7 @@ class ModelObjects:
         if len(self._redo_stack) > 0:
             self.push_undo_state(clear_redo_stack=False)
             model_dc = self._redo_stack.pop()
-            self._restore_state(model_dc)
+            self._restore_and_warn(model_dc)
             self._app_model.sig_control_notify.emit()
             self._app_model.sig_synchronize_gui.emit()
 

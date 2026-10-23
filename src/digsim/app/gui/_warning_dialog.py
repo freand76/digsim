@@ -15,6 +15,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from digsim.app.settings._dialog_flags import DIALOG_FLAGS
+
 
 class WarningDialog(QDialog):
     """WarningDialog"""
@@ -22,6 +24,8 @@ class WarningDialog(QDialog):
     def __init__(self, parent: QWidget | None, title: str, warning_message: str) -> None:
         super().__init__(parent)
         self.setWindowTitle(title)
+        # Only a close button: a dialog is not minimized or maximized
+        self.setWindowFlags(DIALOG_FLAGS)
         layout = QVBoxLayout(self)
         self.setLayout(layout)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)

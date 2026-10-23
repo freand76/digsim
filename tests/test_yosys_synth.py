@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pystest module to test functionality of yosys synthesis"""
@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from digsim.synth import Synthesis, SynthesisException
+from digsim.synth import Synthesis, SynthesisException, YosysMessage, parse_messages
 from digsim.synth._synthesis import _console_to_file
 
 
@@ -133,3 +133,54 @@ def test_console_file_that_cannot_be_opened(tmp_path):
         with pytest.raises(OSError), _console_to_file(tmp_path / "missing" / "console.txt"):
             pass
     assert len(os.listdir("/proc/self/fd")) == open_before
+
+
+def test_parse_messages():
+    log = [
+        "/path/file.v:3: ERROR: syntax error, unexpected ';'",
+        "C:/my files/file.v:2.5-2.9: Warning: Identifier `\\b' is implicitly declared.",
+        "Warning: Wire t.\\y is used but has no driver.",
+        "Warning: Wire t.\\y is used but has no driver.",
+        "Warnings: 2 unique messages, 2 total",
+        "ERROR: Module `\\top' not found!",
+        "Something else",
+    ]
+    assert parse_messages(log) == [
+        YosysMessage("error", "syntax error, unexpected ';'", "/path/file.v", 3),
+        YosysMessage(
+            "warning", "Identifier `\\b' is implicitly declared.", "C:/my files/file.v", 2
+        ),
+        YosysMessage("warning", "Wire t.\\y is used but has no driver."),
+        YosysMessage("error", "Module `\\top' not found!"),
+    ]
+
+
+def test_yosys_syntax_error_messages(verilog_path):
+    """A syntax error has its file and line, and the log"""
+    log = []
+    with pytest.raises(SynthesisException) as exc_info:
+        Synthesis.list_modules(verilog_path / "syntax_error.v", log=log)
+    exc = exc_info.value
+    assert exc.log == log
+    assert len(log) > 0
+    error = exc.messages[-1]
+    assert error.kind == "error"
+    assert error.line == 4
+    assert error.file is not None and error.file.endswith("syntax_error.v")
+    assert "syntax error" in error.text
+
+
+def test_yosys_error_without_log_is_a_message():
+    exc = SynthesisException("ERROR: Yosys failed with exit code 1")
+    assert exc.log == []
+    assert exc.messages == [YosysMessage("error", "Yosys failed with exit code 1")]
+
+
+def test_yosys_warnings(verilog_path):
+    path = verilog_path / "module_with_warning.v"
+    synthesis = Synthesis(path, "warning_module")
+    synthesis.synth_to_dict(silent=True)
+    messages = synthesis.get_messages()
+    assert all(message.kind == "warning" for message in messages)
+    assert any(message.line == 4 and "implicitly declared" in message.text for message in messages)
+    assert any(message.line is None and "y2" in message.text for message in messages)

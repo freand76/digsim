@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -7,12 +7,17 @@ A randomized test of the GUI circuit editor, run offscreen with real mouse event
 It builds a circuit from scratch: it adds components, draws wires (single bits and buses,
 from output and input ports, with corners, and from corners of other wires), selects and
 deletes wires, wire trees and components, drags, splits and merges segments, moves
-components, undoes and redoes, and saves and loads the circuit. After each step it checks
-that the GUI matches the circuit, and that exactly what should change, changed.
-Components are added through the model, like the GUI does after its settings dialog.
+components, zooms, undoes and redoes, saves and loads the circuit with the Save and Load
+buttons, loads the example circuits, clears the circuit, and runs the simulation (with
+Start, Stop, Single Step and Reset, with and without a VCD file, clicking buttons and
+switches). After each step it checks that the GUI matches the circuit, that exactly what
+should change, changed, and that the wires are painted where nothing covers them. The
+window has a random size: in a small one the view scrolls. Components are added through
+the model, like the GUI does after its settings dialog.
 
     uv run python tools/gui_fuzz.py                  # random seed, printed
     uv run python tools/gui_fuzz.py --seed 7 --steps 500 -v
+    uv run python tools/gui_fuzz.py --seeds 1,2,3 --max-components 40
 
 The output is one line when all is well. On a failure it prints the seed, the step, the
 last actions and the failed check, saves the circuit, and exits with status 1. A run with
@@ -46,9 +51,9 @@ from PySide6.QtCore import (
     QtMsgType,
     qInstallMessageHandler,
 )
-from PySide6.QtGui import QContextMenuEvent, QMouseEvent
+from PySide6.QtGui import QContextMenuEvent, QImage, QMouseEvent
 from PySide6.QtTest import QTest
-from PySide6.QtWidgets import QApplication, QGraphicsItem, QMenu
+from PySide6.QtWidgets import QApplication, QFileDialog, QGraphicsItem, QMenu
 
 from digsim.app._line_graph import on_segment
 from digsim.app._wire_key import Wire, drawn_key, port_key, wire_key
@@ -64,9 +69,11 @@ from digsim.app._wire_path import (
 from digsim.app.gui import MainWindow
 from digsim.app.gui._circuit_area import (
     CircuitArea,
+    NewWireGraphicsItem,
     WireGraphicsItem,
     WirePartGraphicsItem,
 )
+from digsim.app.gui._top_bar import LoadSaveWidget, SimControlWidget, VcdControlWidget
 from digsim.app.gui_objects import ComponentObject
 from digsim.app.gui_objects._component_port_item import PortGraphicsItem
 from digsim.app.model import AppModel
@@ -99,6 +106,11 @@ GRID_COLUMNS, GRID_ROWS = 6, 4
 CELL_WIDTH, CELL_HEIGHT = 240, 200
 MAX_COMPONENTS = 14
 UNDO_DEPTH = 100
+# Window sizes: the smaller ones don't show the whole circuit, the view scrolls
+WINDOW_SIZES = [(1700, 1100), (1200, 800), (900, 650)]
+# The background of the circuit area (Qt.GlobalColor.lightGray)
+BACKGROUND = (192, 192, 192)
+EXAMPLE_CIRCUITS = sorted((Path(__file__).parent.parent / "example_circuits").glob("*.circuit"))
 
 
 class FuzzFailure(Exception):
@@ -144,7 +156,7 @@ class GuiFuzzer:
         self.app = QApplication.instance() or QApplication([])
         self.model = AppModel()
         self.window = MainWindow(self.model, str(out_dir))
-        self.window.resize(1700, 1100)
+        self.window.resize(*self.rng.choice(WINDOW_SIZES))
         self.window.show()
         area = self.window.findChild(CircuitArea)
         assert area is not None
@@ -161,6 +173,9 @@ class GuiFuzzer:
         self.history: list[Any] = []
         self.future: list[Any] = []
         self.free_cells = [(col, row) for col in range(GRID_COLUMNS) for row in range(GRID_ROWS)]
+        self.vcd_files = 0
+        # The most components the circuit had
+        self.most = 0
         self.spin(200)
 
     # Qt helpers
@@ -403,6 +418,62 @@ class GuiFuzzer:
         """
         return {wire: simplify(self.route(item)) for wire, item in self.wire_items().items()}
 
+    def grab(self) -> QImage:
+        """The circuit area as it is painted now"""
+        return self.area.viewport().grab().toImage()
+
+    def painted(self, image: QImage, pos: tuple[float, float]) -> bool:
+        """Is anything but the background painted at (or next to) a scene position"""
+        view_pos = self.area.mapFromScene(QPointF(*pos))
+        for dx in (-1, 0, 1):
+            for dy in (-1, 0, 1):
+                x, y = view_pos.x() + dx, view_pos.y() + dy
+                if 0 <= x < image.width() and 0 <= y < image.height():
+                    color = image.pixelColor(x, y)
+                    if (color.red(), color.green(), color.blue()) != BACKGROUND:
+                        return True
+        return False
+
+    def on_top(self, pos: tuple[float, float], item: QGraphicsItem) -> bool:
+        """Is an item visible on top at a scene position, in the view"""
+        view_pos = self.area.mapFromScene(QPointF(*pos))
+        if not self.area.viewport().rect().adjusted(2, 2, -2, -2).contains(view_pos):
+            return False
+        return self.area.itemAt(view_pos) is item
+
+    def check_painted(self) -> None:
+        """Every segment with a length is painted, where nothing covers it"""
+        image = self.grab()
+        for item in self.wire_items().values():
+            for part in item.part_items:
+                start, end = part._start, part._end
+                if start == end:
+                    continue
+                mid = ((start.x() + end.x()) / 2, (start.y() + end.y()) / 2)
+                if self.on_top(mid, part):
+                    check(
+                        self.painted(image, mid),
+                        f"{drawn_key(item.wire)} segment {part.segment} is not painted at {mid}",
+                    )
+
+    def check_new_wire_painted(self, pos: tuple[float, float]) -> None:
+        """The wire being drawn goes to the mouse, and is painted"""
+        (item,) = [i for i in self.scene.items() if isinstance(i, NewWireGraphicsItem)]
+        # Painted first, as the user sees it
+        image = self.grab()
+        path = item.path()
+        check(path.elementCount() >= 2, "the wire being drawn has no path")
+        x, y = self.snap(pos)
+        last = path.elementAt(path.elementCount() - 1)
+        check(
+            (round(last.x), round(last.y)) == (round(x), round(y)),
+            f"the wire being drawn ends at {(last.x, last.y)}, not at the mouse {(x, y)}",
+        )
+        before = path.elementAt(path.elementCount() - 2)
+        mid = ((before.x + last.x) / 2, (before.y + last.y) / 2)
+        if abs(before.x - last.x) + abs(before.y - last.y) > 8 and self.on_top(mid, item):
+            check(self.painted(image, mid), f"the wire being drawn is not painted at {mid}")
+
     def check_invariants(self) -> None:
         """The GUI matches the circuit, and the wires are drawn where they belong"""
         circuit = self.model.objects.circuit
@@ -503,6 +574,7 @@ class GuiFuzzer:
                 )
         selected = self.scene._selected_wires
         check(selected <= set(items), "a deleted wire is selected")
+        self.check_painted()
 
     @staticmethod
     def ways(point: tuple[float, float], items: list[WireGraphicsItem]) -> set[tuple[int, int]]:
@@ -735,6 +807,10 @@ class GuiFuzzer:
             # Correct the last click with Backspace
             QTest.keyClick(self.window, Qt.Key.Key_Backspace)
             clicks.pop()
+        # On the way to the end: the wire follows the mouse
+        mouse = self.free_pos()
+        self.move(mouse)
+        self.check_new_wire_painted(mouse)
         self.click(end_pos)
         self.spin()
         check(not self.model.objects.new_wire.ongoing(), "the wire wasn't finished")
@@ -1550,7 +1626,16 @@ class GuiFuzzer:
             self.click(pos)
         lines, _ = self.gui_lines()
         items = self.wire_items()
-        owner = next(wire for wire, item in items.items() if point in item.corner_points())
+        # The line with the dot or the joint: another one can have a corner there too
+        marked = {
+            lines.find(("wire", wire))
+            for wire, item in items.items()
+            if any(point in part.dots or part.ring() == point for part in item.part_items)
+        }
+        cornered = [wire for wire, item in items.items() if point in item.corner_points()]
+        owner = next(
+            (wire for wire in cornered if lines.find(("wire", wire)) in marked), cornered[0]
+        )
         if clicks == 2:
             # The wires of the point's line there
             attached = {
@@ -1566,9 +1651,13 @@ class GuiFuzzer:
                 f"{sorted(map(drawn_key, attached - self.scene._selected_wires))}",
             )
         if clicks == 3:
+            line = self.line_items(owner)
+            selected = self.scene._selected_wires
             check(
-                self.scene._selected_wires == self.line_items(owner),
-                "the third click doesn't select the whole line",
+                selected == line,
+                f"the third click on {point} doesn't select the whole line: missing "
+                f"{sorted(map(drawn_key, line - selected))}, also "
+                f"{sorted(map(drawn_key, selected - line))}",
             )
         return f"select point {point} with {clicks} clicks"
 
@@ -1666,6 +1755,7 @@ class GuiFuzzer:
         wires = self.model.objects.wires
         old = list(wires.path(wire))
         old_routes = self.routes()
+        joint = wires.unused_joint(wire, part.segment)
         text = self.rng.choice(
             ["Split segment", "Start wire here", "Merge segments", "Automatic route"]
         )
@@ -1685,6 +1775,10 @@ class GuiFuzzer:
             check(len(new) == len(old) + 2, f"split: {old} -> {new}")
         elif text == "Start wire here":
             return self._finish_started_wire(wire, pos, old, old_routes)
+        elif text == "Merge segments" and joint is not None:
+            # Without the joint, in the same place: the only vertical segment of a
+            # straight wire goes to its end instead
+            check(self.routes()[wire] == old_routes[wire], f"joint removed: {old} -> {new}")
         elif text == "Merge segments":
             check(len(new) == len(old) - 2, f"merge: {old} -> {new}")
         else:
@@ -1807,23 +1901,136 @@ class GuiFuzzer:
         return components, connections, shapes
 
     def save_and_load(self) -> str:
+        """With the Save and Load buttons, the file dialogs give the file"""
         path = self.out_dir / "fuzz.circuit"
         before = self.file_snapshot()
-        self.model.save_circuit(path)
-        saved = path.read_text()
-        check('"lines"' in saved or not self.connections(), "the file has no lines")
-        check('"wires"' not in saved, "the file has the wires of the old format")
-        self.model.load_circuit(path)
+        buttons = self.window.findChild(LoadSaveWidget)
+        assert buttons is not None
+        dialogs = QFileDialog.getSaveFileName, QFileDialog.getOpenFileName
+        chosen = staticmethod(lambda *args, **kwargs: (str(path), ""))
+        QFileDialog.getSaveFileName = chosen  # type: ignore[method-assign]
+        QFileDialog.getOpenFileName = chosen  # type: ignore[method-assign]
+        try:
+            if buttons._save_button.isEnabled():
+                buttons._save_button.click()
+            else:
+                # Saved already: the button is off until the next change
+                self.model.save_circuit(path)
+            check(not self.model.is_changed, "the circuit is changed after it was saved")
+            check(not buttons._save_button.isEnabled(), "Save is on after saving")
+            saved = path.read_text()
+            check('"lines"' in saved or not self.connections(), "the file has no lines")
+            check('"wires"' not in saved, "the file has the wires of the old format")
+            buttons._load_button.click()
+        finally:
+            QFileDialog.getSaveFileName, QFileDialog.getOpenFileName = dialogs  # type: ignore[method-assign]
         self.spin(50)
+        check(not self.model.objects.can_undo(), "undo steps from before the load")
         check(self.file_snapshot() == before, "the loaded circuit differs from the saved one")
         self.history.clear()
         self.future.clear()
         return "save and load"
 
+    def wait_stopped(self, steps: int = 500) -> bool:
+        """
+        Until the simulation thread has stopped and the GUI knows it (Start is on again),
+        False if it runs after some steps
+        """
+        controls = self.window.findChild(SimControlWidget)
+        assert controls is not None
+        for _ in range(steps):
+            if not self.model.is_running and controls._start_button.isEnabled():
+                return True
+            self.spin(10)
+        check(steps < 500, "the simulation didn't stop")
+        return False
+
+    def check_vcd(self, path: Path) -> None:
+        """A VCD file that was closed has its header and the times"""
+        text = path.read_text()
+        check("$enddefinitions" in text, f"{path.name} has no header: {text[:200]!r}")
+        check("#0" in text, f"{path.name} has no time 0")
+
+    def set_vcd(self, enable: bool) -> Path | None:
+        """Turn the VCD output on (to a new file) or off with its checkbox"""
+        widget = self.window.findChild(VcdControlWidget)
+        assert widget is not None
+        if not enable:
+            path = widget._vcd_filename
+            was_on = widget._enable_vcd.isChecked()
+            widget._enable_vcd.setChecked(False)
+            self.spin()
+            if was_on and path is not None:
+                self.check_vcd(Path(path))
+            return None
+        self.vcd_files += 1
+        path = self.out_dir / f"fuzz{self.vcd_files}.vcd"
+        # As if chosen in the file dialog
+        widget._vcd_filename = str(path)
+        if widget._enable_vcd.isChecked():
+            widget._start_vcd(str(path))
+        else:
+            widget._enable_vcd.setChecked(True)
+        self.spin()
+        check(path.exists(), "the VCD file wasn't created")
+        return path
+
+    def toggle_inputs(self) -> int:
+        """Click buttons and switches, as while the simulation runs"""
+        clicked = 0
+        for obj in self.component_objects():
+            if obj.component.has_action and self.rng.random() < 0.5:
+                center = obj.rect().translated(obj.pos()).center()
+                pos = (center.x(), center.y())
+                if self.top_item(pos) is obj:
+                    self.click(pos)
+                    clicked += 1
+        return clicked
+
+    def start_stop(self, controls: SimControlWidget) -> None:
+        """Start or stop the simulation, with the button or with Space"""
+        if self.rng.random() < 0.5:
+            controls._start_button.click()
+        else:
+            QTest.keyClick(self.area, Qt.Key.Key_Space)
+
+    def wait_running_or_stopped(self) -> None:
+        """Until a start or a stop is done, and the GUI knows it"""
+        controls = self.window.findChild(SimControlWidget)
+        assert controls is not None
+        for _ in range(500):
+            stopping = not self.model._keep_running and self.model.isRunning()
+            if not stopping and controls._start_button.isEnabled():
+                return
+            self.spin(10)
+        raise FuzzFailure("the simulation didn't start or stop")
+
     def run_simulation(self) -> str:
         before = self.snapshot()
-        self.model.model_start()
-        self.spin(100)
+        controls = self.window.findChild(SimControlWidget)
+        assert controls is not None
+        vcd = self.rng.random() < 0.5
+        vcd_path = self.set_vcd(True) if vcd else None
+        if self.rng.random() < 0.3:
+            controls._single_step_button.click()
+            # Until the next event: in a circuit where nothing happens, until it is stopped
+            if not self.wait_stopped(50):
+                controls._start_button.click()
+                self.wait_stopped()
+        if self.rng.random() < 0.3:
+            # Start and stop quickly, with the button and with Space, without waiting
+            for _ in range(self.rng.randint(1, 4)):
+                self.start_stop(controls)
+                self.spin(self.rng.randint(0, 3))
+            self.wait_running_or_stopped()
+            if self.model.is_running:
+                self.start_stop(controls)
+            self.wait_stopped()
+        self.start_stop(controls)
+        self.spin(self.rng.randint(30, 200))
+        check(self.model.is_running, "the simulation didn't start")
+        clicked = self.toggle_inputs()
+        self.spin(self.rng.randint(10, 100))
         items = list(self.wire_items().values())
         if items:
             item = self.rng.choice(items)
@@ -1832,11 +2039,68 @@ class GuiFuzzer:
                 not self.model.objects.new_wire.ongoing(),
                 "a wire was started while the simulation runs",
             )
+        # The keys that change the circuit don't while it runs
         self.model.objects.delete_selected()
-        self.model.model_stop()
-        self.spin(50)
+        for key in (Qt.Key.Key_Z, Qt.Key.Key_Y):
+            QTest.keyClick(self.area, key, Qt.KeyboardModifier.ControlModifier)
+        QTest.keyClick(self.area, Qt.Key.Key_Delete)
+        self.spin()
+        self.check_painted()
+        self.start_stop(controls)
+        self.wait_stopped()
+        self.spin(30)
+        if self.rng.random() < 0.5:
+            controls._reset_button.click()
+            self.spin()
+            check(self.model.objects.circuit.time_ns == 0, "reset didn't go to time 0")
+        if vcd_path is not None and self.rng.random() < 0.6:
+            self.set_vcd(False)
         check(self.snapshot() == before, "the circuit changed while the simulation ran")
-        return "run the simulation"
+        return f"run the simulation (vcd={vcd}, {clicked} inputs clicked)"
+
+    def zoom(self) -> str:
+        """Zoom in or out and look around, check what is painted, and zoom back"""
+        steps = self.rng.choice([-3, -2, -1, 1, 2])
+        for _ in range(abs(steps)):
+            if steps > 0:
+                self.model.zoom_in()
+            else:
+                self.model.zoom_out()
+        self.area.centerOn(
+            QPointF(
+                self.rng.uniform(0, GRID_COLUMNS * CELL_WIDTH),
+                self.rng.uniform(0, GRID_ROWS * CELL_HEIGHT),
+            )
+        )
+        self.spin()
+        self.check_painted()
+        # The other actions click at whole scene positions
+        self.area.resetTransform()
+        self.spin()
+        return f"zoom {steps:+d} and back"
+
+    def load_example(self) -> str:
+        """Load an example circuit: many components, ICs and Yosys components"""
+        if not EXAMPLE_CIRCUITS:
+            raise Skip("no example circuits")
+        path = self.rng.choice(EXAMPLE_CIRCUITS)
+        self.model.load_circuit(path)
+        self.spin(100)
+        check(not self.errors[-1:] or "Could not" not in self.errors[-1], str(self.errors[-1:]))
+        self.history.clear()
+        self.future.clear()
+        return f"load {path.name}"
+
+    def clear_circuit(self) -> str:
+        """Start over with an empty circuit (an undo step)"""
+        if not self.component_objects():
+            raise Skip("empty")
+        if self.rng.random() < 0.7:
+            # Seldom, the circuit should grow too
+            raise Skip("not this time")
+        self.model.clear_circuit()
+        self.spin()
+        return "clear the circuit"
 
     ACTIONS: ClassVar[list[tuple[str, int]]] = [
         ("add_component", 4),
@@ -1863,7 +2127,10 @@ class GuiFuzzer:
         ("undo_while_dragging", 1),
         ("redo", 2),
         ("save_and_load", 1),
-        ("run_simulation", 1),
+        ("run_simulation", 2),
+        ("zoom", 1),
+        ("load_example", 1),
+        ("clear_circuit", 1),
     ]
     # These don't change the circuit by themselves, or check undo themselves
     NO_UNDO_CHECK: ClassVar[set[str]] = {
@@ -1872,6 +2139,8 @@ class GuiFuzzer:
         "redo",
         "save_and_load",
         "run_simulation",
+        "zoom",
+        "load_example",
     }
 
     def step(self, number: int) -> None:
@@ -1886,8 +2155,9 @@ class GuiFuzzer:
         else:
             del actions["redo"]
         names, weights = list(actions), list(actions.values())
-        # A new circuit starts with a few components
-        name = "add_component" if number < 4 else self.rng.choices(names, weights)[0]
+        # A new (or cleared) circuit starts with a few components
+        few = number < 4 or len(self.component_objects()) < 2
+        name = "add_component" if few else self.rng.choices(names, weights)[0]
         stack = self.model.objects._undo_stack
         before = self.snapshot()
         top = stack[-1] if stack else None
@@ -1910,6 +2180,7 @@ class GuiFuzzer:
         if self.verbose:
             print(self.log[-1])
         self.counts[name] += 1
+        self.most = max(self.most, len(self.component_objects()))
         self.check_invariants()
         if name in self.NO_UNDO_CHECK:
             return
@@ -1932,15 +2203,30 @@ class GuiFuzzer:
         return path
 
 
-def run_seeds(seeds: list[int], steps: int, jobs: int) -> int:
+def set_max_components(count: int) -> None:
+    """Room for more components: a grid with a cell for each, and some to spare"""
+    global MAX_COMPONENTS, GRID_COLUMNS, GRID_ROWS
+    MAX_COMPONENTS = count
+    while GRID_COLUMNS * GRID_ROWS < count * 3 // 2:
+        GRID_COLUMNS += 1
+        GRID_ROWS = max(GRID_ROWS, GRID_COLUMNS * 2 // 3)
+
+
+def run_seeds(seeds: list[int], steps: int, jobs: int, extra: list[str]) -> int:
     """
     Run seeds in parallel processes, and print one line for each: OK, or the failure
     and how to repeat it
     """
 
     def run(seed: int) -> list[str]:
-        command = [sys.executable, __file__, "--seed", str(seed), "--steps", str(steps)]
-        result = subprocess.run(command, capture_output=True, text=True, check=False)
+        command = [sys.executable, __file__, "--seed", str(seed), "--steps", str(steps), *extra]
+        try:
+            # A step takes a fraction of a second: much longer is a hang
+            result = subprocess.run(
+                command, capture_output=True, text=True, check=False, timeout=120 + steps
+            )
+        except subprocess.TimeoutExpired:
+            return [f"gui_fuzz HUNG seed={seed}: no result after {120 + steps} s"]
         lines = result.stdout.splitlines()
         found = [line for line in lines if line.startswith("gui_fuzz ")]
         if not found:
@@ -1984,9 +2270,17 @@ def main() -> int:
         "-v", "--verbose", action="store_true", help="print every action, and their counts"
     )
     parser.add_argument("--out", type=Path, default=None, help="folder for saved circuits")
+    parser.add_argument(
+        "--max-components",
+        type=int,
+        default=MAX_COMPONENTS,
+        help=f"the most components that are added (default {MAX_COMPONENTS})",
+    )
     args = parser.parse_args()
     if args.seeds:
-        return run_seeds(args.seeds, args.steps, args.jobs)
+        extra = ["--max-components", str(args.max_components)]
+        return run_seeds(args.seeds, args.steps, args.jobs, extra)
+    set_max_components(args.max_components)
     # Without a window on the screen (set before the QApplication is created)
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     quiet_qt()
@@ -2015,7 +2309,7 @@ def main() -> int:
         components = len(fuzzer.component_objects())
         wires = len(fuzzer.wire_items())
         counts = " ".join(f"{name}={count}" for name, count in sorted(fuzzer.counts.items()))
-        print(f"end: {components} components {wires} wires. {counts}")
+        print(f"end: {components} components {wires} wires, most {fuzzer.most}. {counts}")
     return 0
 
 

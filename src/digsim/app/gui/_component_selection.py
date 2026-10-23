@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Module for the component selection classes"""
@@ -61,20 +61,16 @@ class SelectableComponentWidget(QPushButton):
         pos = event.position().toPoint()
         if (pos - self._press_pos).manhattanLength() < QApplication.startDragDistance():
             return
-        hot_spot = self._press_pos
         self._press_pos = None
         drag = QDrag(self)
         mime = QMimeData()
         mime.setText(self._name)
         drag.setMimeData(mime)
-        # A transparent image of the whole widget, sharp on high-DPI screens
-        ratio = self.devicePixelRatioF()
-        pixmap = QPixmap(self.size() * ratio)
-        pixmap.setDevicePixelRatio(ratio)
+        # No drag image: the circuit area shows a preview of the component where it will
+        # be dropped. A drag without an image gets a default one on some platforms.
+        pixmap = QPixmap(1, 1)
         pixmap.fill(Qt.GlobalColor.transparent)
-        self.render(pixmap)
         drag.setPixmap(pixmap)
-        drag.setHotSpot(hot_spot)
         drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction)
 
     def mouseDoubleClickEvent(self, _: QMouseEvent) -> None:

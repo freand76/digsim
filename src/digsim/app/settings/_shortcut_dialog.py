@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """The shurtcut dialog"""
@@ -13,9 +13,12 @@ from PySide6.QtWidgets import (
     QDialog,
     QDialogButtonBox,
     QLabel,
+    QLayout,
     QVBoxLayout,
     QWidget,
 )
+
+from ._dialog_flags import DIALOG_FLAGS
 
 
 if TYPE_CHECKING:
@@ -31,6 +34,9 @@ class ShortcutDialog(QDialog):
         layout = QVBoxLayout(self)
         self.setLayout(layout)
         self.setWindowTitle("Add shortcut")
+        # Only a close button: a dialog is not minimized or maximized
+        self.setWindowFlags(DIALOG_FLAGS)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         layout.addWidget(QLabel("Select shortcut key for component"))

@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """This module contains the base classes for all component types"""
@@ -54,6 +54,10 @@ class Parameter(TypedDict):
     default_index: NotRequired[int]
     component_list: NotRequired[dict[str, str]]
     fileinfo: NotRequired[str]
+    # A new Verilog file can be made instead of opening one, it is created with a module
+    new_verilog: NotRequired[bool]
+    # Only asked when the file of the path parameter has one of these types, like ".v"
+    file_types: NotRequired[list[str]]
 
 
 class ComponentException(DigsimException):

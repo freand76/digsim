@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -759,6 +759,7 @@ def waves(vcd_dir: Path) -> None:
             ("reset", "reset.O"),
             ("request", "request.O"),
             ("state", "traffic_light.signals.state"),
+            ("state_name", "traffic_light.signals.state_name"),
             ("timer", "traffic_light.signals.timer"),
             ("red", "traffic_light.red"),
             ("yellow", "traffic_light.yellow"),

@@ -1,17 +1,21 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """The component settings dialog(s)"""
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
+
+import qtawesome as qta
 
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
+    QCommandLinkButton,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
@@ -19,9 +23,11 @@ from PySide6.QtWidgets import (
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QLayout,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
+    QMessageBox,
     QPushButton,
     QSlider,
     QTextEdit,
@@ -29,9 +35,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from digsim.app._editor_text import module_name, new_module_text
 from digsim.app._ic_search import search_ics
 from digsim.circuit.components import IntegratedCircuit
 from digsim.circuit.components.atoms import Parameter
+
+from ._dialog_flags import DIALOG_FLAGS
 
 
 if TYPE_CHECKING:
@@ -235,6 +244,7 @@ class ComponentSettingsCheckBox(ComponentSettingsBase):
 
     def _update(self, _: int) -> None:
         self._settings[self._parameter] = self._settings_checkbox.isChecked()
+        self.emit_signal()
 
 
 class ComponentSettingsIcSelector(ComponentSettingsBase):
@@ -429,6 +439,59 @@ _SETTINGS_WIDGETS: dict[str, type[ComponentSettingsBase]] = {
 }
 
 
+class OpenOrNewDialog(QDialog):
+    """Asks if a component is made from a file, or from a new Verilog file"""
+
+    def __init__(self, parent: QWidget | None) -> None:
+        super().__init__(parent)
+        self.setWindowTitle("Yosys Component")
+        # Only a close button: a dialog is not minimized or maximized
+        self.setWindowFlags(DIALOG_FLAGS)
+        self.choice = ""
+        layout = QVBoxLayout(self)
+        # As large as its contents, it can't be resized
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+        text = QLabel(
+            "A Yosys component gets its behavior from a Verilog design. Use a Verilog file "
+            "or a netlist synthesized by Yosys, or write a new design in the Verilog "
+            "editor.",
+            self,
+        )
+        text.setWordWrap(True)
+        text.setFixedWidth(420)
+        layout.addWidget(text)
+        self.open_button = QCommandLinkButton(
+            "Open a file", "A Verilog file (.v, .sv) or a Yosys netlist (.json)", self
+        )
+        self.open_button.setIcon(qta.icon("mdi.folder-open-outline"))
+        self.new_button = QCommandLinkButton(
+            "New Verilog file",
+            "Start a new design: a file with a small module, opened in the editor",
+            self,
+        )
+        self.new_button.setIcon(qta.icon("mdi.file-document-edit-outline"))
+        for button, choice in ((self.open_button, "open"), (self.new_button, "new")):
+            button.clicked.connect(lambda _=False, choice=choice: self._choose(choice))
+            layout.addWidget(button)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel, self)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+        self.open_button.setDefault(True)
+        self.open_button.setFocus()
+
+    def _choose(self, choice: str) -> None:
+        self.choice = choice
+        self.accept()
+
+    @classmethod
+    def ask(cls, parent: QWidget | None) -> str:
+        """The choice: "open", "new", or "" if the dialog was cancelled"""
+        dialog = cls(parent)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return ""
+        return dialog.choice
+
+
 class ComponentSettingsDialog(QDialog):
     """SettingsDialog"""
 
@@ -436,25 +499,97 @@ class ComponentSettingsDialog(QDialog):
     sig_enable_ok = Signal(bool)
 
     @staticmethod
+    def _open_or_new(parent: QWidget | None) -> str:
+        """Ask if a file is opened or a new Verilog file is made: "open", "new" or "" """
+        return OpenOrNewDialog.ask(parent)
+
+    @classmethod
+    def ask_file(cls, parent: QWidget | None, parameter: Parameter) -> tuple[str, bool]:
+        """
+        The file of a path parameter, from a file dialog: the path ("" if it was
+        cancelled), and True for a new Verilog file (see the 'new_verilog' parameter key)
+        """
+        if parameter.get("new_verilog", False):
+            choice = cls._open_or_new(parent)
+            if not choice:
+                return "", False
+            if choice == "new":
+                path = cls._new_verilog_path(parent)
+                return path, bool(path)
+        path, _ = QFileDialog.getOpenFileName(
+            parent, parameter["description"], "", f"{parameter['fileinfo']};;All Files (*.*)"
+        )
+        return path, False
+
+    @staticmethod
+    def _new_verilog_path(parent: QWidget | None) -> str:
+        """
+        The name of a new Verilog file, from a save dialog (an open dialog only takes files
+        that exist), "" if it was cancelled. A file that exists is not replaced: it is used
+        as it is, if the user says so, or another name is chosen.
+        """
+        start = ""
+        while True:
+            path, _ = QFileDialog.getSaveFileName(
+                parent,
+                "New Verilog file",
+                start,
+                "Verilog (*.v *.sv)",
+                options=QFileDialog.Option.DontConfirmOverwrite,
+            )
+            if not path:
+                return ""
+            if not path.endswith((".v", ".sv")):
+                path += ".v"
+            if not Path(path).exists():
+                return path
+            answer = QMessageBox.question(
+                parent,
+                "New Verilog file",
+                f"{Path(path).name} exists already. Use it as it is? It is not replaced.\n\n"
+                "No: choose another name.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if answer == QMessageBox.StandardButton.Yes:
+                return path
+            start = path
+
+    @staticmethod
+    def _create_verilog(parent: QWidget | None, path: str) -> bool:
+        """Create a new Verilog file with a module, False with a message if that failed"""
+        file_path = Path(path)
+        try:
+            # "x": not over a file that was made since the dialog
+            with open(file_path, "x", encoding="utf-8") as file:
+                file.write(new_module_text(module_name(file_path.name)))
+        except OSError as exc:
+            QMessageBox.critical(parent, "New Verilog file", f"Could not create {path}: {exc}")
+            return False
+        return True
+
+    @classmethod
     def _is_file_path(
-        parent: QWidget | None, parameters: dict[str, Parameter]
-    ) -> tuple[bool, dict[str, Any]]:
+        cls, parent: QWidget | None, parameters: dict[str, Parameter]
+    ) -> tuple[bool, dict[str, Any], bool]:
         """
         If the first parameter is a file, ask for it with a file dialog. Returns if it is
-        a file, and the settings with the file (empty if the dialog was cancelled).
+        a file, the settings with the file (empty if the dialog was cancelled), and if it
+        is a new Verilog file (to edit).
         """
         first_key = next(iter(parameters))
         settings = {}
-        is_file_path = parameters[first_key]["type"] == "path"
+        new = False
+        parameter = parameters[first_key]
+        is_file_path = parameter["type"] == "path"
         if is_file_path:
-            description = parameters[first_key]["description"]
-            fileinfo = parameters[first_key]["fileinfo"]
-            path = QFileDialog.getOpenFileName(
-                parent, description, "", f"{fileinfo};;All Files (*.*)"
-            )
-            if len(path[0]) > 0:
-                settings[first_key] = path[0]
-        return is_file_path, settings
+            path, new = cls.ask_file(parent, parameter)
+            # A new file with the name of a file that exists is that file
+            if new and not Path(path).exists() and not cls._create_verilog(parent, path):
+                path = ""
+            if len(path) > 0:
+                settings[first_key] = path
+        return is_file_path, settings, new and len(path) > 0
 
     @classmethod
     def start(
@@ -469,13 +604,21 @@ class ComponentSettingsDialog(QDialog):
             # No parameters, just place component without settings
             return True, {}
 
-        is_file_path, settings = cls._is_file_path(parent, parameters)
+        is_file_path, settings, created = cls._is_file_path(parent, parameters)
         if is_file_path:
             if len(settings) == 0:
                 return False, {}
-            # The other parameters in a dialog after the file, if there are any
-            parameters = {key: value for key, value in parameters.items() if key not in settings}
+            # The other parameters in a dialog after the file, if there are any, and the
+            # ones for its file type
+            path = str(next(iter(settings.values()))).lower()
+            parameters = {
+                key: value
+                for key, value in parameters.items()
+                if key not in settings and path.endswith(tuple(value.get("file_types", [""])))
+            }
             if len(parameters) == 0:
+                if created:
+                    app_model.sig_edit_verilog.emit(next(iter(settings.values())))
                 return True, settings
 
         try:
@@ -483,6 +626,9 @@ class ComponentSettingsDialog(QDialog):
             result = dialog.exec()
             if result == QDialog.DialogCode.Rejected:
                 return False, {}
+            if created:
+                # Edit the new file
+                app_model.sig_edit_verilog.emit(next(iter(settings.values())))
             return True, {**settings, **dialog.get_settings()}
         except ComponentSettingsException as exc:
             app_model.sig_error.emit(str(exc))
@@ -512,6 +658,8 @@ class ComponentSettingsDialog(QDialog):
         self._layout = QVBoxLayout(self)
         self.setLayout(self._layout)
         self.setWindowTitle(f"Setup {name}")
+        # Only a close button: a dialog is not minimized or maximized
+        self.setWindowFlags(DIALOG_FLAGS)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self._settings: dict[str, Any] = {}
         self._setup_dialog(parameters)

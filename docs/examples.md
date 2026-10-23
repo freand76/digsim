@@ -353,20 +353,24 @@ Internal signals: state, timer
  1160 ms: RED
 ```
 
-The example writes `traffic_light.vcd`, with the state as text, the name of the state:
+The example writes `traffic_light.vcd`, with the state as a number and, in `state_name`,
+as text, the name of the state:
 
 ![Traffic light waveforms](images/examples/traffic_light_waves.svg)
 
-In the VCD file the state is a string variable:
+In the VCD file the state is a wire, and its name a string variable:
 
 ```text
-$var string 1 0! state $end
+$var wire 2 0! state $end
+$var string 1 1! state_name $end
 ...
 #250000001
-sRED_YELLOW 0!
+b1 0!
+sRED_YELLOW 1!
 ...
 #450000001
-sGREEN 0!
+b10 0!
+sGREEN 1!
 ```
 
 ### pytest testbenches

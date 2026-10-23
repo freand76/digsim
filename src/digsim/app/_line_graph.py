@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -338,3 +338,39 @@ def split_line(graph: LineDataClass, segments: list[list[str]]) -> list[LineData
         # In the order of the line's ports
         line.ports.sort(key=graph.ports.index)
     return lines
+
+
+def without_ports(lines: list[LineDataClass], gone: set[str]) -> list[LineDataClass]:
+    """
+    The lines without some ports, like the ports a changed Verilog module no longer has:
+    the segments to them go, back to where the line meets other segments, and a line
+    that falls apart is split (see split_line()).
+    """
+    result: list[LineDataClass] = []
+    for line in lines:
+        if not gone.intersection(line.ports):
+            result.append(line)
+            continue
+        ports = {port for port in line.ports if port not in gone}
+        edges: dict[str, set[str]] = {}
+        for first, second in line.segments:
+            if first in gone or second in gone:
+                continue
+            edges.setdefault(first, set()).add(second)
+            edges.setdefault(second, set()).add(first)
+        _prune(edges, ports)
+        segments = [
+            [first, second] for first, second in line.segments if second in edges.get(first, ())
+        ]
+        parts = split_line(line, segments)
+        # A port that no segment reaches is drawn to another port of its line
+        loose = [
+            port for port in line.ports if port in ports and not any(port in s for s in segments)
+        ]
+        if loose and len(parts) == 1:
+            parts[0].ports.extend(loose)
+            parts[0].ports.sort(key=line.ports.index)
+        elif loose and not parts and len(loose) >= 2:
+            parts = [LineDataClass(ports=loose)]
+        result.extend(parts)
+    return result

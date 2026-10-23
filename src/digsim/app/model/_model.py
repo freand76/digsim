@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """An application model for a GUI simulated circuit"""
@@ -36,6 +36,10 @@ class AppModel(QThread):
     sig_delete_wires = Signal()
     sig_error = Signal(str)
     sig_warning_log = Signal(str, str)
+    # Open the Verilog editor for a file
+    sig_edit_verilog = Signal(str)
+    # The Yosys components of a file were updated from it
+    sig_yosys_updated = Signal(str)
     sig_zoom_in_gui = Signal()
     sig_zoom_out_gui = Signal()
 
@@ -98,9 +102,18 @@ class AppModel(QThread):
         self.objects.init()
         self.sig_sim_time_notify.emit(0)
 
+    def _wait_finished(self) -> None:
+        """
+        A run that has stopped by itself (a single step) can still be finishing, and
+        QThread.start() does nothing until it has
+        """
+        if not self._keep_running:
+            self.wait()
+
     def model_start(self) -> None:
         """Start model simulation thread"""
         self.model_abort_wire()
+        self._wait_finished()
         self._keep_running = True
         self._single_step = False
         self.start()
@@ -108,6 +121,7 @@ class AppModel(QThread):
 
     def model_single_step(self) -> None:
         """Start the simulation thread, to run until the next input event"""
+        self._wait_finished()
         self._keep_running = True
         self._single_step = True
         self.start()
@@ -188,8 +202,10 @@ class AppModel(QThread):
 
     def _thread_finished(self) -> None:
         """Called in the GUI thread when the simulation thread has finished"""
-        # QThread.finished is sent right before the thread ends, wait until it has
-        self.wait()
+        # QThread.finished is sent right before the thread ends, wait until it has. Not
+        # if a new run has started since, that one runs until it is stopped.
+        if not self._keep_running:
+            self.wait()
         self.sig_control_notify.emit()
 
     def _run_gui_events(self) -> None:

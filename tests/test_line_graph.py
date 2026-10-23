@@ -1,12 +1,20 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pytest module to test the lines of wires as graphs, as circuit files store them"""
 
 import pytest
 
-from digsim.app._line_graph import Chain, decompose, junctions, polyline_path, wire_nodes
+from digsim.app._line_graph import (
+    Chain,
+    decompose,
+    junctions,
+    polyline_path,
+    wire_nodes,
+    without_ports,
+)
 from digsim.app._wire_path import corner_points
+from digsim.storage_model import LineDataClass
 
 
 def test_wire_nodes():
@@ -126,3 +134,43 @@ def test_junctions():
     assert junctions(split) == [(0, 60)]
     # Without length: no way
     assert junctions([((0, 0), (50, 0)), ((50, 0), (50, 0)), ((50, 0), (90, 0))]) == []
+
+
+def _tree():
+    """A.O to a junction (1), from there to L1.I, and around a corner (2) to L2.I"""
+    return LineDataClass(
+        ports=["A.O", "L1.I", "L2.I"],
+        points={"1": [100, 0], "2": [100, 100]},
+        segments=[["A.O", "1"], ["1", "L1.I"], ["1", "2"], ["2", "L2.I"]],
+    )
+
+
+def test_without_ports_cuts_back_to_the_junction():
+    assert without_ports([_tree()], {"L2.I"}) == [
+        LineDataClass(
+            ports=["A.O", "L1.I"], points={"1": [100, 0]}, segments=[["A.O", "1"], ["1", "L1.I"]]
+        )
+    ]
+
+
+def test_without_ports_keeps_the_rest_of_the_line():
+    (line,) = without_ports([_tree()], {"A.O"})
+    assert line.ports == ["L1.I", "L2.I"]
+    assert line.segments == [["1", "L1.I"], ["1", "2"], ["2", "L2.I"]]
+
+
+def test_without_ports_drops_a_line_with_one_port():
+    assert without_ports([_tree()], {"L1.I", "L2.I"}) == []
+
+
+def test_without_ports_keeps_other_lines():
+    other = LineDataClass(ports=["B.O", "L3.I"], segments=[["B.O", "L3.I"]])
+    lines = without_ports([_tree(), other], {"L2.I"})
+    assert lines[1] is other
+
+
+def test_without_ports_keeps_a_port_without_segments():
+    line = _tree()
+    line.ports.append("L3.I")
+    (result,) = without_ports([line], {"L2.I"})
+    assert result.ports == ["A.O", "L1.I", "L3.I"]

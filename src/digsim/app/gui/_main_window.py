@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """The main window and widgets of the digsim gui application"""
@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from digsim.app.editor import VerilogEditors
 
 from ._circuit_area import CircuitArea
 from ._component_selection import ComponentSelection
@@ -107,6 +109,9 @@ class MainWindow(QMainWindow):
         self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
         self._app_model.sig_error.connect(self.error_dialog)
         self._app_model.sig_warning_log.connect(self.warning_log_dialog)
+        self.verilog_editors = VerilogEditors(app_model, self)
+        self._app_model.sig_edit_verilog.connect(self.verilog_editors.open)
+        self._app_model.sig_yosys_updated.connect(self.verilog_editors.components_updated)
 
         QShortcut(QKeySequence("Ctrl+Z"), self, self._app_model.objects.undo)
         QShortcut(QKeySequence("Ctrl+Y"), self, self._app_model.objects.redo)
@@ -162,6 +167,9 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """QT event callback function"""
+        if not self.verilog_editors.close_all():
+            event.ignore()
+            return
         if not self._app_model.is_changed or are_you_sure_destroy_circuit(
             self, "Close Application"
         ):

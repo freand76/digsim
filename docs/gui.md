@@ -51,6 +51,7 @@ Right-click a component to open its context menu:
 | Delete | Remove the component and its wires |
 | Settings | Change the component's options (only for configurable components) |
 | Shortcut | Assign a keyboard shortcut (push buttons and switches) |
+| Edit Verilog... | Open the Verilog file in an editor ([Yosys components](#yosys-component)) |
 | Reload | Reload the Verilog file or netlist ([Yosys components](#yosys-component)) |
 
 Click a component to select it, and drag it to move it. Delete the selected component
@@ -324,15 +325,31 @@ folder.
 
 ![Yosys](images/components/YOSYS.png)
 
-A Yosys component gets its behavior from your own Verilog. When you add one, a file
-dialog asks for either a **Verilog file** or a **Yosys netlist** in JSON format. Verilog
+A Yosys component gets its behavior from your own Verilog. When you add one, DigSim asks
+if you want to open a file or start a new Verilog file. **Open a file** opens a file
+dialog for either a **Verilog file** or a **Yosys netlist** in JSON format. Verilog
 files are synthesized automatically when loaded. Check **Synthesize Verilog into
 functional blocks** in the dialog after the file for a faster simulation, see
 [Gates or functional blocks](synthesis.md#gates-or-functional-blocks). Check **Write the
-internal signals to the VCD file** to see the wires and registers inside the design in
-the waveforms, with the signals to show as state names in the text field below it, see
+internal signals (wires and registers) to the VCD file, states also with their names** to
+see the wires and registers inside the design in the waveforms. A signal with names for
+its values, like the state of a state machine, is also written with the names, as
+`state_name` next to `state`, see
 [Internal signals and states](synthesis.md#internal-signals-and-states). See
 [Verilog and Yosys](synthesis.md) for how to create netlists.
+
+A netlist is not synthesized, so it only asks for the internal signals. These settings
+can be changed later: right-click the component and choose **Settings**. The component is
+built again with them (a Verilog file is synthesized again when **Synthesize Verilog into
+functional blocks** changes), and the simulation starts over at time 0. The wires stay
+where they are.
+
+To start a new design, choose **New Verilog file** and give the new file a name (`.v`
+is added if you leave it out). DigSim creates it with a small module (one input and one
+output, named after the file), adds the component, and opens the file in the
+[Verilog editor](#the-verilog-editor). If a file with that name exists, DigSim asks if it
+should use the file as it is, or if you want to choose another name. The file is never
+replaced.
 
 !!! note
     A Verilog file loaded directly can only contain one module. Synthesize designs with
@@ -346,9 +363,50 @@ new version without rebuilding the circuit. A typical development loop is:
 3. Right-click the component and choose **Reload**.
 4. Simulate and test.
 
-!!! warning
-    The module interface, i.e. the names and widths of the input and output ports, must
-    not change between load and reload.
+**Reload** always synthesizes the Verilog again, so it also picks up a change in a file
+that the design reads, like an `` `include `` file or a `$readmemh` data file. Undo, redo
+and loading a circuit use the netlist of the last synthesis of the same Verilog file.
+
+Every component made from the same file is reloaded. If the ports of the module change,
+a dialog lists the changes and the wires that are removed with them: the wires to ports
+that are gone, or that have another width or direction. New ports are added unconnected.
+The circuit is then built again, and the changes before the reload can't be undone.
+
+#### The Verilog editor
+
+Right-click a Yosys component made from a Verilog file and choose **Edit Verilog...** to
+open the file in an editor window, one window for each file. The editor colors the
+Verilog, shows line numbers, and highlights the bracket that matches the one at the
+cursor.
+
+![The Verilog editor after Synthesize](images/verilog_editor.png)
+
+[Editing a Verilog Component](verilog-tutorial.md) is a step by step guide to the editor.
+
+| Keys | Action |
+| --- | --- |
+| Ctrl+S | Save |
+| Tab / Shift+Tab | Indent or unindent the selected lines (Tab inserts spaces) |
+| Enter | A new line with the indentation of the line, one step more after `begin` or an open bracket |
+| Ctrl+/ | Comment out the selected lines, or remove their comments |
+| Ctrl+F / Ctrl+H | Find, find and replace |
+| F3 / Shift+F3 | Find the next or the previous match |
+| Ctrl+G | Go to a line |
+| Ctrl+Shift+I | Format the file, see [Formatting Verilog](synthesis.md#formatting-verilog) |
+
+**Build > Synthesize** (Ctrl+B) saves the file and synthesizes it, while the circuit keeps
+running. The panel below the text shows each step with its time, the errors and warnings
+of Yosys (double-click one to go to its line, which is also underlined in the text), and
+the whole Yosys log. When it succeeds, every component made from the file is updated,
+synthesized into gates or functional blocks as before. If the ports change, it asks first,
+as **Reload** does.
+
+**File > Revert to saved** loads the file again without your changes. When another
+program changes the file, the editor loads it, and asks first if you have changes that
+are not saved. Closing the editor, or DigSim, asks to save your changes. When the components of the file
+were not updated with the saved file, closing the editor offers to synthesize it first:
+the editor closes when the components are updated, and stays open if the synthesis
+fails.
 
 ### Notes
 

@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """The GUI settings dialog"""
@@ -15,8 +15,11 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QGridLayout,
     QLabel,
+    QLayout,
     QWidget,
 )
+
+from ._dialog_flags import DIALOG_FLAGS
 
 
 if TYPE_CHECKING:
@@ -32,6 +35,9 @@ class GuiSettingsDialog(QDialog):
         layout = QGridLayout(self)
         self.setLayout(layout)
         self.setWindowTitle("Application Settings")
+        # Only a close button: a dialog is not minimized or maximized
+        self.setWindowFlags(DIALOG_FLAGS)
+        layout.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         # GUI Update Frequency

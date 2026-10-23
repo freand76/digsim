@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """The circuit area and component widget"""
@@ -762,19 +762,19 @@ class NewWireGraphicsItem(QGraphicsPathItem):
         super().__init__()
         self._app_model = app_model
 
-    def paint(
-        self,
-        painter: QPainter,
-        option: QStyleOptionGraphicsItem,
-        widget: QWidget | None = None,
-    ) -> None:
-        """QT function"""
+    def update_path(self) -> None:
+        """
+        Follow the wire being drawn. Not in paint(): the scene only paints an item where
+        its path was, so a wire drawn far from the last one would not be painted.
+        """
         new_wire = self._app_model.objects.new_wire
         start_port = new_wire.start_port()
         end_pos = new_wire.end_pos()
-        pen = QPen(Qt.GlobalColor.darkGray)
+        painter_path = QPainterPath()
         if start_port is None or end_pos is None:
+            self.setPath(painter_path)
             return
+        pen = QPen(Qt.GlobalColor.darkGray)
         if start_port.width > 1:
             pen.setWidth(4)
         else:
@@ -792,19 +792,29 @@ class NewWireGraphicsItem(QGraphicsPathItem):
             taken = wires.anchor_directions(*start_branch)
             vertical_first = exits_vertically(taken, start, clicks[0])
         points = drawing_points(start, clicks, vertical_first)
-        painter_path = QPainterPath()
         painter_path.moveTo(QPointF(*points[0]))
         for point in points[1:]:
             painter_path.lineTo(QPointF(*point))
         self.setPath(painter_path)
         self.setPen(pen)
-        super().paint(painter, option, widget)
+
+    def paint(
+        self,
+        painter: QPainter,
+        option: QStyleOptionGraphicsItem,
+        widget: QWidget | None = None,
+    ) -> None:
+        """QT function"""
+        # Not the last wire, if the path wasn't updated since it was finished
+        if self._app_model.objects.new_wire.ongoing():
+            super().paint(painter, option, widget)
 
 
 class _CircuitAreaScene(QGraphicsScene):
     """The circuit area graphics scene"""
 
     _selection_rect_item: QGraphicsRectItem
+    _new_wire_item: NewWireGraphicsItem
 
     def __init__(self, app_model: AppModel, view: CircuitArea) -> None:
         super().__init__()
@@ -850,6 +860,7 @@ class _CircuitAreaScene(QGraphicsScene):
         self._synchronize_gui()
 
     def _repaint(self) -> None:
+        self._new_wire_item.update_path()
         self.update()
 
     def _control_notify(self) -> None:
@@ -959,19 +970,32 @@ class _CircuitAreaScene(QGraphicsScene):
         """A click on the selected point: its wires, then the whole line, then the point"""
         point = self._point
         assert point is not None
-        # The wires of the point's line there, not of other lines that cross it
+        # The wires of the point's line there, not of other lines that cross it. The line
+        # with the dot or the joint there first: another one can have a corner there too,
+        # like a wire that ends at a port under the point.
+        lines = [
+            items
+            for items in self._line_items.values()
+            if any(point in item.corner_points() for item in items)
+        ]
         line = next(
             (
                 items
-                for items in self._line_items.values()
+                for items in lines
                 if any(
-                    point in part.dots or part.ring() == point or part.touches(point)
+                    point in part.dots or part.ring() == point
                     for item in items
                     for part in item.part_items
                 )
-                and any(point in item.corner_points() for item in items)
             ),
-            [],
+            next(
+                (
+                    items
+                    for items in lines
+                    if any(part.touches(point) for item in items for part in item.part_items)
+                ),
+                [],
+            ),
         )
         parts = [
             part
@@ -1353,7 +1377,8 @@ class _CircuitAreaScene(QGraphicsScene):
         self._wire_items = []
         self._selected_wires = set()
         # Add new wire item
-        self.addItem(NewWireGraphicsItem(self._app_model))
+        self._new_wire_item = NewWireGraphicsItem(self._app_model)
+        self.addItem(self._new_wire_item)
         # Add selection rect
         self._selection_rect_item = QGraphicsRectItem()
         self._selection_rect_item.setPen(Qt.PenStyle.DashLine)
@@ -1455,8 +1480,9 @@ class CircuitArea(QGraphicsView):
 
     def _show_drag_preview(self, name: str, view_pos: QPoint) -> None:
         """
-        Show a see-through preview of the component where it will be dropped. The drag
-        image, drawn by the window system, is missing in some Wayland sessions.
+        Show a see-through preview of the component where it will be dropped, in place of
+        a drag image (which is drawn by the window system, and is missing in some Wayland
+        sessions)
         """
         self._remove_drag_preview()
         preview_image = drag_preview(self._app_model, name)

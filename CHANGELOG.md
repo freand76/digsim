@@ -1,6 +1,20 @@
 # CHANGELOG
 
 ## vx.x.x
+ - GUI: a Verilog editor, Edit Verilog... in the context menu of a Yosys component. It colors Verilog like Emacs verilog-mode, and has line numbers, find and replace, go to line, indenting and commenting out lines. It notices when the file changes on disk.
+ - GUI: Synthesize (Ctrl+B) in the Verilog editor saves and synthesizes the file in the background, shows each step, the errors and warnings on their lines and the Yosys log, and updates the components of the file. Closing the editor offers to synthesize the saved file when its components were not updated with it.
+ - GUI: Format (Ctrl+Shift+I) in the Verilog editor indents the file with the Verilog formatter
+ - GUI: a Yosys component can start from a new Verilog file: choose New Verilog file when you add it, and the file is created with a module and opened in the editor. A file that exists is never replaced: use it as it is or choose another name.
+ - GUI: the settings of a Yosys component (functional blocks and internal signals) can be changed with Settings in its context menu. A component made from a netlist isn't asked about synthesizing.
+ - GUI: Reload works when the ports of the Verilog module change. It lists the changes and the wires to ports that are gone or changed, and removes those wires. Every component made from the file is reloaded, and the other Yosys components keep the netlists they have. Reload always synthesizes again, so it picks up a change in an included file or a $readmemh data file.
+ - A Verilog file that was synthesized before, with the same contents, is not synthesized again: a second Yosys component of the file, and undo and redo in the GUI, are faster. YosysComponent.synthesize_file() synthesizes a file the same way.
+ - Verilog formatter: `python -m digsim.verilog format` (and `VerilogFormatter` in Python) indents Verilog and SystemVerilog files by their blocks and brackets, and only changes whitespace
+ - The internal signals of a Yosys component (signals=True) are written with the names of their values when they have them, as "state_name" next to "state", which is written as a number. Every signal with an enum or with the width of at least two parameters gets them, states only adds more. The GUI has no field for the states any more, and its checkbox says what is written.
+ - GUI: the dialogs only have a close button (no minimize or maximize), and the small settings dialogs have a fixed size
+ - GUI: dragging a component shows only the see-through preview in the circuit area, not also a drag image (which X11 showed next to it)
+ - GUI: a wire being drawn is shown also when the view has scrolled away from where the last one was drawn. It could stay invisible until it was finished.
+ - GUI: starting the simulation right after a single step doesn't hang
+ - GUI: the second click on a dot selects the wires of its line, also where another line has a corner at the same place
  - New ICs, written from their datasheets and tested against them: the 74181 ALU, 74182 carry look-ahead, 74283 adder, 7485 comparator, 74138 decoder, 74151 multiplexer, 74193 up/down counter, 74194 and 74595 shift registers, the 4017 decade counter and the 4511 BCD to 7-segment driver
  - The 74162 IC is a new implementation, written from its datasheet. The earlier one came from a GPL-3.0 licensed project, which doesn't fit the license of DigSim.
  - The IC selector has a search field: type a number, or words of the description like counter or shift, also with skipped letters, and pick from the ICs that match

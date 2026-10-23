@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Handle component objects in the model"""
@@ -11,9 +11,17 @@ from PySide6.QtCore import QPointF
 
 import digsim.app.gui_objects
 import digsim.circuit.components
+from digsim.app._line_graph import without_ports
+from digsim.app._yosys_interface import (
+    InterfaceChanges,
+    YosysUpdate,
+    components_of_file,
+    interface_changes,
+    removed_wires,
+)
 from digsim.app.gui_objects import ComponentObject
 from digsim.circuit import Circuit
-from digsim.circuit.components import Buzzer
+from digsim.circuit.components import Buzzer, YosysComponent
 from digsim.circuit.components.atoms import (
     CallbackComponent,
     Component,
@@ -21,6 +29,7 @@ from digsim.circuit.components.atoms import (
     Parameter,
 )
 from digsim.storage_model import GuiPositionDataClass, ModelDataClass
+from digsim.utils import YosysNetlist
 
 
 if TYPE_CHECKING:
@@ -157,12 +166,98 @@ class ModelComponents:
 
     def update_settings(self, component_object: ComponentObject, settings: dict[str, Any]) -> None:
         """Update settings for a component"""
+        component = component_object.component
         self._app_model.objects.push_undo_state()
-        component_object.component.update_settings(settings)
+        try:
+            component.update_settings(settings)
+        except (DigsimException, OSError) as exc:
+            # For example a signal for state names that the netlist doesn't have
+            self._app_model.objects.drop_undo_state()
+            self._app_model.sig_error.emit(f"Could not change the settings: {exc!s}")
+            return
+        if isinstance(component, YosysComponent):
+            # New gates, the simulation starts over
+            self._app_model.model_init()
         self._app_model.model_changed()
         # Settings can change the component size
         component_object.update_size()
         self._app_model.sig_repaint.emit()
+
+    def yosys_components(self, path: str) -> list[YosysComponent]:
+        """The Yosys components made from a Verilog or netlist file"""
+        return components_of_file(self._circuit, path)
+
+    def prepare_yosys_update(self, path: str, netlists: dict[bool, dict[str, Any]]) -> YosysUpdate:
+        """
+        Check new netlists for the components of a file (see load_netlists), and how their
+        ports change.
+
+        Raises:
+            DigsimException: If a component can't be built from its new netlist. Nothing
+                has changed then.
+        """
+        netlist_objects = {variant: YosysNetlist(**data) for variant, data in netlists.items()}
+        changes: dict[YosysComponent, InterfaceChanges] = {}
+        for component in self.yosys_components(path):
+            netlist = netlist_objects[component.functional]
+            component.check_netlist(netlist)
+            changes[component] = interface_changes(
+                component.interface(), YosysComponent.netlist_interface(netlist)
+            )
+        lines = self._app_model.objects.wires.to_lines()
+        removed = sorted(
+            {
+                port
+                for component, component_changes in changes.items()
+                for port in removed_wires(lines, [component.name()], component_changes)
+            }
+        )
+        return YosysUpdate(path, netlists, changes, removed)
+
+    def apply_yosys_update(self, update: YosysUpdate) -> list[str]:
+        """
+        Build the components of a file from new netlists (see prepare_yosys_update). With
+        the same ports, the components are rebuilt, an undo step. When the ports change,
+        the circuit is built again without the wires of the ports that are gone, and the
+        undo steps are dropped. The simulation is stopped. Returns the warnings.
+        """
+        if self._app_model.is_running:
+            self._app_model.model_stop()
+        if not update.changes:
+            return []
+        if not update.ports_change():
+            self._app_model.objects.push_undo_state()
+            for component in update.changes:
+                netlist = update.netlists[component.functional]
+                component.reload_from_netlist(YosysNetlist(**netlist))
+            self._app_model.model_init()
+            self._app_model.model_changed()
+            self._app_model.sig_repaint.emit()
+            self._app_model.sig_yosys_updated.emit(update.path)
+            return []
+        gone = {
+            f"{component.name()}.{port}"
+            for component, changes in update.changes.items()
+            for port in changes.gone()
+        }
+        lines = without_ports(self._app_model.objects.wires.to_lines(), gone)
+        # The other Yosys components are built again from the netlists they have now, not
+        # from their files: those may have changed since, or have errors now
+        netlists = [
+            (
+                component.source_file,
+                component.functional,
+                YosysNetlist(**update.netlists[component.functional])
+                if component in update.changes
+                else component.netlist(),
+            )
+            for component in self._circuit.get_toplevel_components()
+            if isinstance(component, YosysComponent) and component.source_file is not None
+        ]
+        with YosysComponent.given_netlists(netlists):
+            warnings = self._app_model.objects.rebuild(lines)
+        self._app_model.sig_yosys_updated.emit(update.path)
+        return warnings
 
     def update_sizes(self) -> None:
         """Update all component sizes"""

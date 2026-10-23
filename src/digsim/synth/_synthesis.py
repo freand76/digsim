@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Helper module for yosys synthesis"""
@@ -9,11 +9,14 @@ import gc
 import json
 import os
 import pathlib
+import re
 import sys
 import tempfile
+import threading
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Literal
 
 import platformdirs
 import yowasp_yosys
@@ -22,6 +25,10 @@ from digsim.circuit.components.atoms import DigsimException
 
 
 VerilogFiles = str | os.PathLike[str] | Sequence[str | os.PathLike[str]]
+
+# One Yosys at a time: it sends the console output of the whole process to a file, and the
+# GUI synthesizes in a thread
+_yosys_lock = threading.Lock()
 
 
 def _file_list(verilog_files: VerilogFiles) -> list[str]:
@@ -64,8 +71,66 @@ def _console_to_file(console_file: pathlib.Path) -> Iterator[None]:
             os.close(fd)
 
 
+@dataclass(frozen=True)
+class YosysMessage:
+    """
+    An error or a warning in the Yosys log.
+
+    Args:
+        kind: "error" or "warning".
+        text: The message, without the file, line and kind.
+        file: The file the message is about, None if it doesn't say.
+        line: The line in the file, from 1, None if it doesn't say.
+    """
+
+    kind: Literal["error", "warning"]
+    text: str
+    file: str | None = None
+    line: int | None = None
+
+
+# "/path/file.v:3: ERROR: syntax error", "file.v:2.5-2.9: Warning: ...", "ERROR: ..."
+_MESSAGE = re.compile(
+    r"^(?:(?P<file>.+?):(?P<line>\d+)(?:\.\d+(?:-\d+\.\d+)?)?: )?"
+    r"(?P<kind>ERROR|Warning): (?P<text>.*)$"
+)
+
+
+def parse_messages(log: Sequence[str]) -> list[YosysMessage]:
+    """The errors and warnings in a Yosys log, each once, in the order of the log"""
+    messages: list[YosysMessage] = []
+    for log_line in log:
+        match = _MESSAGE.match(log_line.strip())
+        if match is None:
+            continue
+        line = match.group("line")
+        message = YosysMessage(
+            kind="error" if match.group("kind") == "ERROR" else "warning",
+            text=match.group("text"),
+            file=match.group("file"),
+            line=int(line) if line is not None else None,
+        )
+        if message not in messages:
+            messages.append(message)
+    return messages
+
+
 class SynthesisException(DigsimException):
-    """Yosys could not synthesize the Verilog, the message is the Yosys error"""
+    """
+    Yosys could not synthesize the Verilog, the message is the Yosys error.
+
+    Attributes:
+        log: The Yosys log, empty if Yosys didn't write one.
+        messages: The errors and warnings in the log, see parse_messages(). An error
+            that isn't in the log is the only message.
+    """
+
+    def __init__(self, message: str, log: Sequence[str] = ()) -> None:
+        super().__init__(message)
+        self.log = list(log)
+        self.messages = parse_messages(self.log)
+        if not any(message.kind == "error" for message in self.messages):
+            self.messages.append(YosysMessage("error", message.removeprefix("ERROR: ")))
 
 
 class Synthesis:
@@ -105,7 +170,7 @@ class Synthesis:
         # Everything Yosys writes goes to the log file. The WebAssembly Yosys only
         # understands absolute paths with forward slashes, also on Windows (C:/...).
         args = ["-qq", "-l", log_file.as_posix(), "-p", script]
-        with _console_to_file(console_file):
+        with _yosys_lock, _console_to_file(console_file):
             returncode = yowasp_yosys.run_yosys(args)
         if returncode != 0:
             # When Yosys fails, the WebAssembly instance is kept alive by a reference
@@ -122,12 +187,16 @@ class Synthesis:
                 error = f"Yosys failed with exit code {returncode}"
                 if output:
                     error += ": " + " ".join(output.splitlines()[-3:])
-            raise SynthesisException(error)
+            raise SynthesisException(error, log)
 
     @classmethod
-    def list_modules(cls, verilog_files: VerilogFiles) -> list[str]:
+    def list_modules(cls, verilog_files: VerilogFiles, log: list[str] | None = None) -> list[str]:
         """
         The names of the modules in Verilog files.
+
+        Args:
+            verilog_files: One Verilog file, or a list of them.
+            log: A list to add the Yosys log to.
 
         Raises:
             SynthesisException: If Yosys reports an error, like a syntax error.
@@ -136,7 +205,7 @@ class Synthesis:
         with cls._work_dir() as work_dir:
             modules_file = work_dir / "modules.txt"
             script = f"read -sv {files}; tee -q -o {_script_path(modules_file)} ls"
-            cls._run_yosys(script, work_dir, [])
+            cls._run_yosys(script, work_dir, log if log is not None else [])
             ls_response = modules_file.read_text(encoding="utf-8").splitlines()
 
         modules = []
@@ -232,3 +301,7 @@ class Synthesis:
     def get_log(self) -> list[str]:
         """The Yosys log of the last synthesis"""
         return self._yosys_log
+
+    def get_messages(self) -> list[YosysMessage]:
+        """The errors and warnings of the last synthesis, see parse_messages()"""
+        return parse_messages(self._yosys_log)

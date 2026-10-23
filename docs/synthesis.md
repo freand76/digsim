@@ -104,18 +104,22 @@ The names are hierarchical after flattening, like `ALU.OUT` for the signal `OUT`
 submodule `ALU`.
 
 A signal with names for its values, like the state of a state machine, is written to the
-VCD file as text, the name of its value, which a viewer like GTKWave shows. The names
-come from:
+VCD file twice: as its value, like the other signals, and as text, the name of its
+value, in a variable with `_name` after the signal's name (`state_name` for `state`).
+A viewer like GTKWave shows both. The names come from:
 
 - **A SystemVerilog enum**: Yosys keeps the names of an enum in the netlist, so a state
   declared as an enum always has them. This is the reliable way.
-- **Parameters**: for the signals listed in `states`, the module parameters with the
-  width of the signal, a common way to name states in Verilog (`parameter FETCH = 6'd8`).
-  A value with more names gets them all, separated by "/".
+- **Parameters**: the module parameters with the width of the signal, a common way to
+  name states in Verilog (`parameter FETCH = 6'd8`). A value with more names gets them
+  all, separated by "/". Every signal with at least two names this way gets them, also
+  one that isn't a state but has the same width as the states.
 
-The functional synthesis keeps the encoding of a state machine, so that the names fit.
-Gate-level and functional netlists have the same named signals. In the GUI, the settings
-of a Yosys component have a checkbox for the signals and a text field for the states.
+Signals of one bit, and signals with only one name, get no names, unless they are listed
+in `states`. The functional synthesis keeps the encoding of a state machine, so that the
+names fit. Gate-level and functional netlists have the same named signals. In the GUI,
+the settings of a Yosys component have a checkbox for the signals, and the names come
+with them.
 
 A change of a signal with several bits can be written as two changes at the same time in
 the VCD file, while its bits change one at a time, like the ports of a Yosys component.
@@ -147,11 +151,41 @@ Save the commands in a file to run them as a script:
 yowasp-yosys <script.ys>
 ```
 
+## Formatting Verilog
+
+DigSim can format Verilog and SystemVerilog files. Only the whitespace changes: each line
+gets its indentation from the blocks (`module`, `begin`, `case` and so on) and the
+brackets it is in, and a line that doesn't end its statement, like `if (a)`, indents the
+next line. Whitespace at the end of lines goes, and there is at most one empty line in a
+row. Comments and strings stay as they are.
+
+```sh
+python -m digsim.verilog format <file.v>              # print the formatted file
+python -m digsim.verilog format -i <file.v> [...]     # format the files
+python -m digsim.verilog format --check <file.v> [...]
+```
+
+| Option | Description |
+| --- | --- |
+| `-i`, `--in-place` | Write the formatted files back |
+| `--check` | List the files that would change, with exit code 1 |
+| `--indent` | Spaces for each step of indentation (default 4) |
+| `--blank-lines` | The most empty lines in a row (default 1) |
+
+The formatter checks that the formatted code has the same tokens as before. If it would
+not, the file is left as it is, and the exit code is 2. From Python:
+
+```python
+from digsim.verilog import VerilogFormatter
+
+with open("counter.v", encoding="utf-8") as file:
+    formatted = VerilogFormatter(indent=4).format(file.read())
+```
+
 ## Limitations
 
 - A Verilog file loaded directly into a Yosys component can contain only one module.
   Synthesize multi-module designs into a netlist first.
-- When reloading a component, its ports must keep the same names and widths.
 
 See the [Yosys documentation](https://yosyshq.readthedocs.io/projects/yosys/) for
 everything else Yosys can do.

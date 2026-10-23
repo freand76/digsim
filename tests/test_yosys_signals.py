@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pytest module to test the named signals and states of Yosys components"""
@@ -216,3 +216,74 @@ def test_enum_states_from_yosys(functional):
         3: "YELLOW",
     }
     assert len(module.netnames["timer"].bits) == 3
+
+
+FSM_PARAMETERS = Path(__file__).parent / "verilog" / "fsm_parameters.v"
+
+
+def test_named_automatically():
+    """
+    With signals, every signal with names for its values has them: an enum, or a signal
+    with the width of at least two parameters. Not one bit wide, like flag.
+    """
+    circuit = Circuit()
+    fsm = YosysComponent(circuit, path=FSM_PARAMETERS, signals=True)
+    circuit.init()
+    assert fsm.state("state") == "X"
+    assert fsm.state("other") == "X"
+    with pytest.raises(YosysComponentException, match="no names"):
+        fsm.state("flag")
+    # 'states' names more signals, also of one bit
+    fsm = YosysComponent(Circuit(), path=FSM_PARAMETERS, signals=True, states="flag")
+    assert fsm.state("flag") == "X"
+
+
+def _fsm(vcd=None):
+    circuit = Circuit(vcd=vcd)
+    fsm = YosysComponent(circuit, path=FSM_PARAMETERS, signals=True)
+    circuit.init()
+    fsm.reset.value = 1
+    fsm.clk.value = 0
+    return circuit, fsm
+
+
+def test_value_and_names():
+    """A named signal has its value and its names, the names in a port of its own"""
+    circuit, fsm = _fsm()
+    fsm.clk.value = 1
+    circuit.run(us=1)
+    fsm.clk.value = 0
+    fsm.reset.value = 0
+    circuit.run(us=1)
+    fsm.clk.value = 1
+    circuit.run(us=1)
+    assert fsm.signal("state") == 1
+    assert fsm.state("state") == "RUN"
+    # The design's own state_name signal keeps its name
+    assert fsm.signal("state_name") == 1
+    assert fsm.state("other") == "RUN"
+
+
+def test_value_and_names_in_vcd(tmp_path):
+    vcd = tmp_path / "fsm.vcd"
+    circuit, fsm = _fsm(vcd=str(vcd))
+    for reset in (1, 0, 0):
+        fsm.reset.value = reset
+        fsm.clk.value = 1
+        circuit.run(us=1)
+        fsm.clk.value = 0
+        circuit.run(us=1)
+    circuit.vcd_close()
+    variables = {
+        fields[4]: (fields[1], fields[2])
+        for fields in (line.split() for line in vcd.read_text().splitlines())
+        if fields and fields[0] == "$var"
+    }
+    # The value as a number, the names as text, and the design's own state_name
+    assert variables["state"] == ("wire", "2")
+    assert variables["state_name_"] == ("string", "1")
+    assert variables["state_name"] == ("wire", "4")
+    assert variables["other_name"] == ("string", "1")
+    assert "flag_name" not in variables
+    text = vcd.read_text()
+    assert "sRUN" in text and "sDONE" in text
