@@ -472,6 +472,18 @@ buffer each.
 
 ![Tristate bus circuit](images/examples/tristate.png)
 
+### Traffic light
+
+`traffic_light.circuit` is the [traffic light state machine](#state-machine-traffic-light)
+as a Yosys component, made from `traffic_light.sv` with a 4 Hz clock and red, yellow and
+green LEDs.
+
+- Push the upper button (shortcut **1**) to reset it to red.
+- Push the lower button (shortcut **2**) to request green: red and yellow, green, yellow,
+  and red again.
+
+![Traffic light circuit](images/examples/traffic_light.png)
+
 ### Buzzers
 
 `buzzers.circuit` has five push buttons, each connected to a buzzer with its own tone
