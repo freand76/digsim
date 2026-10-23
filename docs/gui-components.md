@@ -1,13 +1,13 @@
 # Adding Components to the GUI
 
 This guide adds the `XNOR` gate and the `LedBar` from [Creating Components](components.md)
-to the DigSim application. The XNOR gate gets an image as its symbol, and the LED bar is
-drawn by code, so it can show its current value.
+to the DigSim application. The XNOR gate is drawn as a gate symbol, like the other gates,
+and the LED bar is drawn by code, so it can show its current value.
 
 ![The XNOR and LED bar components in the GUI](images/guide/new_components.png)
 
 The finished code is in DigSim: the GUI objects are in
-[`_image_objects.py`](https://github.com/freand76/digsim/blob/main/src/digsim/app/gui_objects/_image_objects.py)
+[`_symbol_objects.py`](https://github.com/freand76/digsim/blob/main/src/digsim/app/gui_objects/_symbol_objects.py)
 and
 [`_led_bar_object.py`](https://github.com/freand76/digsim/blob/main/src/digsim/app/gui_objects/_led_bar_object.py).
 Contributions of new components are welcome, see [Contributing](contributing.md).
@@ -18,7 +18,7 @@ all the steps needed to get a component into the component selector:
 
 1. [Add the component to DigSim](#1-add-the-component-to-digsim)
 2. [Export it from `digsim.circuit.components`](#2-export-the-component)
-3. Create a GUI object, either [with an image](#3a-a-gui-object-with-an-image) or
+3. Create a GUI object, either [a gate symbol](#3a-a-gate-symbol) or
    [drawn by code](#3b-a-gui-object-drawn-by-code)
 4. [Register the GUI object](#4-register-the-gui-object)
 5. [Add the component to the component selector](#5-add-it-to-the-component-selector)
@@ -69,52 +69,57 @@ Both the GUI and saved circuit files find components by their name in
 `digsim.circuit.components`. A saved XNOR gate is stored as
 `digsim.circuit.components.XNOR`.
 
-## 3a. A GUI object with an image
+## 3a. A gate symbol
 
 Each component in the GUI is shown by a *GUI object*, a class in
 [`src/digsim/app/gui_objects`](https://github.com/freand76/digsim/tree/main/src/digsim/app/gui_objects).
-For a component with a picture as its symbol, subclass `ImageObject` and name the image.
-Gates use `GateImageObject`, which also hides the port names. In
-[`_image_objects.py`](https://github.com/freand76/digsim/blob/main/src/digsim/app/gui_objects/_image_objects.py):
+Gates subclass `GateObject`, which draws the symbol of a gate from its shape (`"and"`,
+`"or"` or `"buffer"`), with a bubble on an inverted output and the second curve of an
+exclusive gate, and a lead to each port. It also draws the icon in the component selector.
+In
+[`_symbol_objects.py`](https://github.com/freand76/digsim/blob/main/src/digsim/app/gui_objects/_symbol_objects.py):
 
 ```python
-class ImageObjectXNOR(GateImageObject):
-    """The class for a XNOR image component placed in the GUI"""
+class XnorObject(GateObject):
+    """An XNOR gate in the GUI"""
 
-    IMAGE_FILENAME = "images/XNOR.png"
+    SHAPE = "or"
+    EXCLUSIVE = True
+    INVERT = True
 ```
 
-- Put the image in
-  [`src/digsim/app/gui_objects/images`](https://github.com/freand76/digsim/tree/main/src/digsim/app/gui_objects/images).
-  The existing symbols are PNG files about 70 pixels wide. Files in that folder are
-  included in the package (see `MANIFEST.in`).
-- Set `ACTIVE_IMAGE_FILENAME` as well to show another image while the component's `active`
-  property is `True`, the way the LED lights up.
-- Set `SHOW_NAME = False` to leave out the component's name on the image, and
-  `SHOW_PORT_NAMES = False` to leave out the port names. `GateImageObject` sets
-  `SHOW_PORT_NAMES = False`, and the LED leaves out both.
-- The same image is used in the component selector.
-- Components with many ports, like ICs and flip-flops, subclass `NamedBoxObject`
-  instead. It draws a box with the component's name and port names, and only uses the
-  image in the component selector.
+!!! tip "A component with a picture"
+    A component can also have a picture as its symbol. Subclass `ImageObject` and set
+    `IMAGE_FILENAME` to a PNG file in
+    [`src/digsim/app/gui_objects/images`](https://github.com/freand76/digsim/tree/main/src/digsim/app/gui_objects/images)
+    (files in that folder are included in the package, see `MANIFEST.in`). Set
+    `ACTIVE_IMAGE_FILENAME` to show another picture while the component's `active`
+    property is `True`, and `SHOW_NAME = False` and `SHOW_PORT_NAMES = False` to leave out
+    the name and the port names. The same picture is used in the component selector.
+    Components with many ports, like ICs, subclass `NamedBoxObject` instead: a body with
+    the component's name and port names.
 
 ## 3b. A GUI object drawn by code
 
 To show the state of a component, draw it in `paint_component()`. Subclass
-`ComponentObject`, in a new module such as `_led_bar_object.py`:
+`ComponentObject`, in a new module such as `_led_bar_object.py`. Use the colors, lines
+and fonts of `_theme.py`, like `theme.INK`, `theme.lead()` and `theme.paint_text()`, so
+that it looks like the other components:
 
 ```python
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPoint, QSize, Qt
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import QPainter
 
 from digsim.circuit.components import LedBar
 from digsim.circuit.components.atoms import Component
 
+from . import _theme as theme
 from ._component_object import ComponentObject
+from ._symbol_objects import paint_icon, port_dots
 
 
 if TYPE_CHECKING:
@@ -122,17 +127,20 @@ if TYPE_CHECKING:
 
 
 class LedBarObject(ComponentObject):
-    """The class for a LED bar component placed in the GUI, drawn like a DIP switch"""
+    """
+    A LED bar: the display without a body, LED 0 at the top, and a numbered lead from
+    each input to its LED
+    """
 
     SHOW_PORT_NAMES = False
-    LED_WIDTH = 24
-    LED_HEIGHT = 8
+    LED_WIDTH = 18
+    LED_HEIGHT = 6
     # From one LED to the next, and from one input to the next
     LED_DISTANCE = 10
-    # The frame around the LEDs
-    FRAME = 10
-    # From the top to the first input, the frame and half an LED
-    BORDER_TO_PORT = FRAME + LED_HEIGHT // 2
+    # From the display to the LEDs, at the sides
+    MARGIN = 4
+    # From the inputs to the display, room for the numbers
+    LEAD = 18
 
     def __init__(
         self, app_model: AppModel, component: Component, xpos: float, ypos: float
@@ -148,55 +156,76 @@ class LedBarObject(ComponentObject):
 
     def update_size(self) -> None:
         leds = len(self.component.lit())
-        self.width = self.LED_WIDTH + 2 * self.FRAME
+        self.width = self.LEAD + self.LED_WIDTH + 2 * self.MARGIN
         self.height = (leds - 1) * self.LED_DISTANCE + 2 * self.BORDER_TO_PORT
         self.update_ports()
 
-    def paint_component(self, painter: QPainter) -> None:
-        self.paint_component_base(painter, color=Qt.GlobalColor.black)
-        # Each LED next to its input, LED 0 at the top
-        xpos = int(self.object_pos.x() + self.width / 2 - self.LED_WIDTH / 2)
-        ypos = int(self.object_pos.y() + self.BORDER_TO_PORT - self.LED_HEIGHT / 2)
-        for led_on in self.component.lit():
-            self._paint_led(painter, xpos, ypos, led_on)
-            ypos += self.LED_DISTANCE
-
     @classmethod
-    def _paint_led(cls, painter: QPainter, xpos: int, ypos: int, led_on: bool) -> None:
-        painter.setPen(Qt.GlobalColor.darkGray)
-        painter.setBrush(Qt.GlobalColor.red if led_on else Qt.GlobalColor.darkRed)
-        painter.drawRect(xpos, ypos, cls.LED_WIDTH, cls.LED_HEIGHT)
+    def paint_bar(
+        cls,
+        painter: QPainter,
+        rect: QRectF,
+        ys: list[float],
+        lit: list[bool],
+        color: str,
+        selected: bool,
+    ) -> None:
+        """The numbered leads, the display and an LED at each y"""
+        display = rect.adjusted(cls.LEAD, 0, 0, 0)
+        for number, y in enumerate(ys):
+            theme.lead(painter, QPointF(rect.left() - 1, y), QPointF(display.left(), y))
+            theme.paint_text(
+                painter,
+                QRectF(rect.left() + 3, y - 9, cls.LEAD - 5, 8),
+                str(number),
+                6,
+                theme.MUTED,
+                Qt.AlignmentFlag.AlignLeft,
+            )
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(theme.outline_pen(True) if selected else Qt.PenStyle.NoPen)
+        painter.setBrush(theme.DISPLAY)
+        painter.drawRoundedRect(display, theme.CORNER, theme.CORNER)
+        for y, on in zip(ys, lit, strict=True):
+            led = QRectF(0, 0, cls.LED_WIDTH, cls.LED_HEIGHT)
+            led.moveCenter(QPointF(display.center().x(), y))
+            theme.paint_bar_led(painter, led, theme.led_color(color), on)
+
+    def paint_component(self, painter: QPainter) -> None:
+        ys = [self.get_port_item(port).rect().center().y() for port in self.component.inports()]
+        self.paint_bar(
+            painter,
+            QRectF(self.rect()),
+            ys,
+            self.component.lit(),
+            self.component.color,
+            self.selected,
+        )
 
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         leds = [True, False, True, True, False, False]
-        xpos = (size.width() - cls.LED_WIDTH) // 2
-        ypos = (size.width() - len(leds) * cls.LED_DISTANCE) // 2
-        painter.setPen(Qt.GlobalColor.black)
-        painter.setBrush(Qt.GlobalColor.black)
-        painter.drawRoundedRect(
-            xpos - cls.FRAME,
-            ypos - cls.FRAME,
-            cls.LED_WIDTH + 2 * cls.FRAME,
-            (len(leds) - 1) * cls.LED_DISTANCE + cls.LED_HEIGHT + 2 * cls.FRAME,
-            5,
-            5,
-        )
-        for led_on in leds:
-            cls._paint_led(painter, xpos, ypos, led_on)
-            ypos += cls.LED_DISTANCE
-        cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)
+        height = (len(leds) - 1) * cls.LED_DISTANCE + 2 * cls.BORDER_TO_PORT
+
+        def paint(rect: QRectF) -> None:
+            ys = [rect.top() + cls.BORDER_TO_PORT + cls.LED_DISTANCE * idx for idx in range(6)]
+            cls.paint_bar(painter, rect, ys, leds, "red", False)
+            port_dots(painter, [QPointF(rect.left() - 1, y) for y in ys])
+
+        width = cls.LEAD + cls.LED_WIDTH + 2 * cls.MARGIN
+        paint_icon(painter, size, (width, height), paint, scale=1.0)
+        cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)
 ```
 
 Each LED is next to its input: `port_distance` sets the distance from one port to the
-next, and `BORDER_TO_PORT` the distance from the top of the box to the first port (25
-pixels in `ComponentObject`). The LEDs are drawn at the same places, in a frame of
-`FRAME` pixels. `SHOW_PORT_NAMES = False` leaves out the port names, as on the DIP
-switch.
+next, and `BORDER_TO_PORT` the distance from the top of the component to the first port
+(10 pixels). The LED bar has no body: its display is the component, and a numbered lead
+goes from each input to it. `SHOW_PORT_NAMES = False` leaves out the port names, which
+`paint_bar()` draws on the leads instead.
 
 | Method | Purpose |
 | --- | --- |
-| `paint_component(painter)` | Draws the placed component with a `QPainter`. `paint_component_base()` draws the standard rounded box, gray or in the color it is given, `paint_component_name()` the name. The box is `self.rect()`, positioned at `self.object_pos`. |
+| `paint_component(painter)` | Draws the placed component with a `QPainter`. `paint_component_base()` draws the white body of a device, or a body in the color it is given, `paint_component_name()` the name. The box is `self.rect()`, positioned at `self.object_pos`. |
 | `paint_selectable_component(painter, size, name)` | A class method that draws the component's icon in the component selector, in a `size` sized area. |
 | `update_size()` | Called when the component's settings change. Set `self.width` and `self.height`, then call `update_ports()` to move the ports. |
 | `component` | Override it to return the component's own type, so type checkers know its methods. |
@@ -223,7 +252,7 @@ and import the GUI object class there:
 ```python
 CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     ...
-    "XNOR": ImageObjectXNOR,
+    "XNOR": XnorObject,
     "LedBar": LedBarObject,
 }
 ```

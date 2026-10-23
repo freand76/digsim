@@ -167,13 +167,20 @@ class LedBar(CallbackComponent):
         circuit: The circuit to add the component to.
         name: The component name, the class name if not given.
         width: The number of LEDs, 1 to 16.
+        color: The color of the LEDs in the GUI: "red", "green", "blue" or "yellow".
     """
 
-    def __init__(self, circuit, name=None, width=8):
+    def __init__(self, circuit, name=None, width=8, color="red"):
         super().__init__(circuit, name, callback=None)
         for bit in range(width):
             self.add_port(PortIn(self, f"{bit}"))
         self.parameter_set("width", width)
+        self.parameter_set("color", color)
+
+    @property
+    def color(self):
+        """The color of the LEDs in the GUI"""
+        return self.parameter_get("color")
 
     def lit(self):
         """The state of each LED, LED 0 first"""
@@ -188,6 +195,13 @@ class LedBar(CallbackComponent):
                 "max": 16,
                 "default": 8,
                 "description": "Number of LEDs",
+            },
+            "color": {
+                "type": "list",
+                "items": ["red", "green", "blue", "yellow"],
+                "default": "red",
+                "description": "Color",
+                "reconfigurable": True,
             },
         }
 ```

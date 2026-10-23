@@ -250,8 +250,8 @@ presses the button or toggles the switch.
 
 | Component | Description |
 | --- | --- |
-| ![LED](images/components/LED_ON.png) | **LED**: lights up when driven by a logic high. |
-| ![LED bar](images/components/LedBar.png) | **LED Bar**: a column of 1–16 LEDs, each with an input of its own, LED 0 at the top. It fits next to a DIP switch. |
+| ![LED](images/components/LED_ON.png) | **LED**: lights up when driven by a logic high. Red, green, blue or yellow, chosen in its settings. |
+| ![LED bar](images/components/LedBar.png) | **LED Bar**: a column of 1–16 LEDs, each with an input of its own, LED 0 at the top, in one of the LED colors. It fits next to a DIP switch. |
 | ![Hex digit](images/HexDigit.png) | **Hex Digit**: shows a bus value in hexadecimal, with 1–8 digits (4 bits each) and an optional decimal point. |
 | ![7-segment](images/SevenSegment.png) | **7-Segment Display**: like a hex digit, but each segment is controlled individually. |
 | ![Buzzer](images/components/Buzzer.png) | **Buzzer**: plays a tone, with a selectable note, when its input is high. |
