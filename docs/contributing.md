@@ -87,6 +87,13 @@ If you change how the GUI looks or works, regenerate the screenshots in
 uv run python docs/scripts/generate_tutorial.py
 ```
 
+and the component images of the [GUI Reference](gui.md), the screenshots of the
+application and the images of [Adding Components to the GUI](gui-components.md):
+
+```sh
+uv run python docs/scripts/generate_gui_images.py
+```
+
 ## Guidelines
 
 - **Keep changes focused.** One fix or feature per pull request, and one purpose per
