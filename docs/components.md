@@ -4,7 +4,7 @@ This guide shows how to write your own component for [Python circuits](python.md
 step, using two examples:
 
 - **`XNOR`**, a logic gate, high when its inputs are equal.
-- **`LedBar`**, a row of LEDs that shows the bits of a bus.
+- **`LedBar`**, a column of LEDs, with one input for each LED.
 
 !!! info
     Both components are part of DigSim, so you can read the finished code:
@@ -158,10 +158,10 @@ from digsim.circuit.components.atoms import CallbackComponent, PortIn
 
 class LedBar(CallbackComponent):
     """
-    A row of LEDs showing the bits of a bus.
+    A column of LEDs, with one input for each LED.
 
     Ports:
-        I: Input, `width` bits.
+        0, 1, ...: Inputs, one for each LED, numbered from 0.
 
     Args:
         circuit: The circuit to add the component to.
@@ -171,16 +171,13 @@ class LedBar(CallbackComponent):
 
     def __init__(self, circuit, name=None, width=8):
         super().__init__(circuit, name, callback=None)
-        self.add_port(PortIn(self, "I", width=width))
+        for bit in range(width):
+            self.add_port(PortIn(self, f"{bit}"))
         self.parameter_set("width", width)
 
     def lit(self):
-        """The state of each LED, bit 0 first"""
-        width = self.parameter_get("width")
-        value = self.I.value
-        if value == "X":
-            return [False] * width
-        return [bool((value >> bit) & 1) for bit in range(width)]
+        """The state of each LED, LED 0 first"""
+        return [port.value == 1 for port in self.inports()]
 
     @classmethod
     def get_parameters(cls):
@@ -201,7 +198,9 @@ class LedBar(CallbackComponent):
     them as keyword arguments: `LedBar(circuit=circuit, width=8)`.
 
 `LedBar` is a `CallbackComponent`. It doesn't compute anything, but the callback lets a
-user of the component, and the GUI, know when its input has changed.
+user of the component, and the GUI, know when one of its inputs has changed. The inputs
+are named `"0"`, `"1"` and so on, which aren't Python names, so they are reached with
+`port()`: `led_bar.port("0")`.
 
 The docstring describes the component's ports under `Ports:` and its arguments under
 `Args:`. For the components in DigSim, the [API Reference](api/components.md) is generated

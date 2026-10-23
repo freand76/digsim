@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Module with the LED bar component"""
@@ -16,10 +16,10 @@ if TYPE_CHECKING:
 
 class LedBar(CallbackComponent):
     """
-    A row of LEDs showing the bits of a bus.
+    A column of LEDs, with one input for each LED.
 
     Ports:
-        I: Input, `width` bits.
+        0, 1, ...: Inputs, one for each LED, numbered from 0.
 
     Args:
         circuit: The circuit to add the component to.
@@ -29,16 +29,13 @@ class LedBar(CallbackComponent):
 
     def __init__(self, circuit: Circuit, name: str | None = None, width: int = 8) -> None:
         super().__init__(circuit, name, callback=None)
-        self.add_port(PortIn(self, "I", width=width))
+        for bit in range(width):
+            self.add_port(PortIn(self, f"{bit}"))
         self.parameter_set("width", width)
 
     def lit(self) -> list[bool]:
-        """The state of each LED, bit 0 first"""
-        width = self.parameter_get("width")
-        value = self.I.value
-        if not isinstance(value, int):
-            return [False] * width
-        return [bool((value >> bit) & 1) for bit in range(width)]
+        """The state of each LED, LED 0 first"""
+        return [port.value == 1 for port in self.inports()]
 
     @classmethod
     def get_parameters(cls) -> dict[str, Parameter]:
