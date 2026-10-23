@@ -368,16 +368,22 @@ class MuxObject(SymbolObject):
 
 
 class LedObject(SymbolObject):
-    """An LED: a lead from the input to a round LED, in the color of the component"""
+    """
+    An LED standing, seen from the side, in the color of the component. Its long leg
+    bends to the input, below it.
+    """
 
-    RADIUS = 9.0
+    WIDTH = 26
+    HEIGHT = 40
+    # From the top to the input
+    PORT_Y = 30
 
     def __init__(
         self, app_model: AppModel, component: Component, xpos: float, ypos: float
     ) -> None:
         super().__init__(app_model, component, xpos, ypos)
-        self.width = 32
-        self.height = 20
+        self.width = self.WIDTH
+        self.height = self.HEIGHT
         self.update_ports()
 
     @property
@@ -386,22 +392,32 @@ class LedObject(SymbolObject):
         assert isinstance(component, Led)
         return component
 
+    def update_ports(self) -> None:
+        super().update_ports()
+        # The input below the middle, where the leg of the LED bends to it
+        item = self.get_port_item(self.component.I)
+        port_rect = item.rect()
+        port_rect.moveTop(self.rect().top() + self.PORT_Y - self.PORT_SIDE / 2)
+        item.setRect(port_rect)
+
     @classmethod
     def paint_led(
         cls, painter: QPainter, rect: QRectF, color: str, lit: bool, selected: bool
     ) -> None:
-        """The lead and the LED"""
-        center = QPointF(rect.right() - cls.RADIUS - 2, rect.center().y())
-        theme.lead(
-            painter,
-            QPointF(rect.left() - 1, center.y()),
-            QPointF(center.x() - cls.RADIUS, center.y()),
+        """The LED and its legs"""
+        center_x = rect.left() + 16
+        base = theme.paint_led(
+            painter, center_x, rect.top() + 2, theme.led_color(color), lit, selected
         )
-        theme.paint_led(painter, center, cls.RADIUS, theme.led_color(color), lit)
-        if selected:
-            painter.setPen(theme.outline_pen(True))
-            painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawEllipse(center, cls.RADIUS + 3, cls.RADIUS + 3)
+        port_y = rect.top() + cls.PORT_Y
+        painter.setPen(theme.ink_pen())
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        # The long leg (anode) to the input, the short one (cathode) beside it
+        anode = QPainterPath(QPointF(center_x - 2.5, base))
+        anode.lineTo(center_x - 2.5, port_y)
+        anode.lineTo(rect.left() - 1, port_y)
+        painter.drawPath(anode)
+        painter.drawLine(QPointF(center_x + 2.5, base), QPointF(center_x + 2.5, port_y - 3))
 
     def paint_component(self, painter: QPainter) -> None:
         self.paint_led(
@@ -416,9 +432,9 @@ class LedObject(SymbolObject):
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         def paint(rect: QRectF) -> None:
             cls.paint_led(painter, rect, "red", True, False)
-            port_dots(painter, [QPointF(rect.left() - 1, rect.center().y())])
+            port_dots(painter, [QPointF(rect.left() - 1, rect.top() + cls.PORT_Y)])
 
-        paint_icon(painter, size, (32, 20), paint, scale=1.4)
+        paint_icon(painter, size, (cls.WIDTH, cls.HEIGHT), paint, scale=1.4)
         cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)
 
 

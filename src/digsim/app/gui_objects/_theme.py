@@ -12,7 +12,16 @@ symbol only. Components that are a device, like a switch or a display, have a wh
 from __future__ import annotations
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QBrush, QColor, QFont, QPainter, QPainterPath, QPen, QRadialGradient
+from PySide6.QtGui import (
+    QBrush,
+    QColor,
+    QFont,
+    QLinearGradient,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QRadialGradient,
+)
 
 
 # Lines and text
@@ -103,41 +112,60 @@ def dim(color: QColor, factor: float = 0.3, toward: QColor | None = None) -> QCo
     )
 
 
-def paint_led(painter: QPainter, center: QPointF, radius: float, color: QColor, lit: bool) -> None:
+def paint_led(
+    painter: QPainter, center_x: float, top: float, color: QColor, lit: bool, selected: bool
+) -> float:
     """
-    A round LED seen from above: a rim, a lens with a highlight, and a glow around it
-    when it is lit
+    A 5 mm LED from the side, standing: a dome on a body, the rim at its base, and the
+    post and the cup with the chip inside. Lit, it is bright and glows. Returns the y of
+    the base, where the legs start.
     """
+    white = QColor("#ffffff")
+    half = 6.0
+    body = QRectF(center_x - half, top, 2 * half, 18)
     if lit:
-        glow = QRadialGradient(center, radius * 1.9)
+        glow = QRadialGradient(QPointF(center_x, top + half), 17)
         glow_color = QColor(color)
-        glow_color.setAlpha(110)
-        glow.setColorAt(0.45, glow_color)
+        glow_color.setAlpha(120)
+        glow.setColorAt(0.3, glow_color)
         glow_color.setAlpha(0)
         glow.setColorAt(1.0, glow_color)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(glow))
-        painter.drawEllipse(center, radius * 1.9, radius * 1.9)
-    # The rim
-    painter.setPen(ink_pen(1.0))
-    painter.setBrush(dim(color, 0.55, INK) if lit else dim(color, 0.35))
-    painter.drawEllipse(center, radius, radius)
-    # The lens
-    lens = QRadialGradient(center - QPointF(radius * 0.3, radius * 0.3), radius)
+        painter.drawEllipse(QPointF(center_x, top + half), 17, 17)
+    # The dome and the body
+    path = QPainterPath(QPointF(body.left(), body.bottom()))
+    path.lineTo(body.left(), body.top() + half)
+    path.arcTo(QRectF(body.left(), body.top(), 2 * half, 2 * half), 180, -180)
+    path.lineTo(body.right(), body.bottom())
+    path.closeSubpath()
+    fill = QLinearGradient(QPointF(body.left(), 0), QPointF(body.right(), 0))
     if lit:
-        lens.setColorAt(0.0, dim(color, 0.25, QColor("#ffffff")))
-        lens.setColorAt(0.6, color)
-        lens.setColorAt(1.0, dim(color, 0.8, INK))
+        fill.setColorAt(0.0, dim(color, 0.45, white))
+        fill.setColorAt(0.5, color)
+        fill.setColorAt(1.0, dim(color, 0.75, INK))
     else:
-        lens.setColorAt(0.0, dim(color, 0.6))
-        lens.setColorAt(1.0, dim(color, 0.25))
+        fill.setColorAt(0.0, dim(color, 0.25, white))
+        fill.setColorAt(0.5, dim(color, 0.5, white))
+        fill.setColorAt(1.0, dim(color, 0.8, INK))
+    painter.setPen(outline_pen(True) if selected else ink_pen(1.0, dim(color, 0.4, INK)))
+    painter.setBrush(QBrush(fill))
+    painter.drawPath(path)
+    # Inside: the post, and the cup with the chip
+    painter.setPen(ink_pen(1.0, dim(color, 0.5, INK)))
+    painter.drawLine(QPointF(center_x - 2, body.bottom()), QPointF(center_x - 2, top + 10))
+    painter.drawLine(QPointF(center_x + 2, body.bottom()), QPointF(center_x + 2, top + 11))
     painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(QBrush(lens))
-    painter.drawEllipse(center, radius * 0.78, radius * 0.78)
-    # The highlight
-    shine = QColor(255, 255, 255, 170 if lit else 90)
-    painter.setBrush(shine)
-    painter.drawEllipse(center - QPointF(radius * 0.3, radius * 0.32), radius * 0.2, radius * 0.14)
+    painter.setBrush(white if lit else dim(color, 0.5, INK))
+    painter.drawRect(QRectF(center_x + 1, top + 8.5, 3, 2))
+    # The shine
+    painter.setBrush(QColor(255, 255, 255, 170))
+    painter.drawRoundedRect(QRectF(body.left() + 2, top + 4, 2.5, 11), 1, 1)
+    # The rim at the base
+    painter.setPen(ink_pen(1.0, dim(color, 0.4, INK)))
+    painter.setBrush(dim(color, 0.75, INK) if lit else dim(color, 0.6, white))
+    painter.drawRect(QRectF(body.left() - 1.5, body.bottom(), 2 * half + 3, 3))
+    return body.bottom() + 3
 
 
 def paint_bar_led(painter: QPainter, rect: QRectF, color: QColor, lit: bool) -> None:

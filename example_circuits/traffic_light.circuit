@@ -59,10 +59,10 @@
         "Clock": {"x": 60, "y": 45, "z": 0},
         "PushButton": {"x": 60, "y": 125, "z": 0},
         "PushButton_1": {"x": 60, "y": 205, "z": 0},
-        "Led": {"x": 480, "y": 115, "z": 0},
-        "Led_1": {"x": 480, "y": 135, "z": 0},
-        "Led_2": {"x": 480, "y": 155, "z": 0},
-        "Note": {"x": 60, "y": 275, "z": 0}
+        "Led": {"x": 500, "y": 95, "z": 0},
+        "Led_1": {"x": 500, "y": 135, "z": 0},
+        "Led_2": {"x": 500, "y": 175, "z": 0},
+        "Note": {"x": 60, "y": 295, "z": 0}
     },
     "lines": [
         {
@@ -72,13 +72,13 @@
         },
         {
             "ports": ["traffic_light.yellow", "Led_1.I"],
-            "points": {},
-            "segments": [["traffic_light.yellow", "Led_1.I"]]
+            "points": {"1": [489, 145], "2": [489, 165]},
+            "segments": [["traffic_light.yellow", "1"], ["1", "2"], ["2", "Led_1.I"]]
         },
         {
             "ports": ["traffic_light.green", "Led_2.I"],
-            "points": {},
-            "segments": [["traffic_light.green", "Led_2.I"]]
+            "points": {"1": [489, 165], "2": [489, 205]},
+            "segments": [["traffic_light.green", "1"], ["1", "2"], ["2", "Led_2.I"]]
         },
         {
             "ports": ["Clock.O", "traffic_light.clk"],
