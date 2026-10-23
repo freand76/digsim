@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## vx.x.x
+## v1.7.1
  - `python -m digsim.verilog format` without -i writes a file with Windows newlines (\r\n) to the terminal without an extra \r on each line on Windows
 
 ## v1.7.0
