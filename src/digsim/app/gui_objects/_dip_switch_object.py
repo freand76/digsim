@@ -1,43 +1,42 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
-"""A hexdigit component placed in the GUI"""
+"""A DIP switch component placed in the GUI"""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPoint, QPointF, QRect, Qt
-from PySide6.QtGui import QFont, QPainter, QPen
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt
+from PySide6.QtGui import QPainter
 
 from digsim.circuit.components import DipSwitch
 from digsim.circuit.components.atoms import Component
 
-from ._image_objects import ImageObject
+from . import _theme as theme
+from ._component_object import ComponentObject
+from ._symbol_objects import paint_icon, port_dots
 
 
 if TYPE_CHECKING:
     from digsim.app.model import AppModel
 
 
-class DipSwitchObject(ImageObject):
-    """The class for a DIP switch component placed in the GUI"""
+class DipSwitchObject(ComponentObject):
+    """A DIP switch: a slide switch for each output, numbered from 1 like on the part"""
 
-    IMAGE_FILENAME = "images/DIP_SWITCH.png"
-    # The switches are numbered instead
     SHOW_PORT_NAMES = False
-    DIP_SWITCH_WIDTH = 20
-    DIP_SWITCH_HEIGHT = 10
-
-    _DIP_SWITCH_FONT = QFont("Arial", 8)
+    SWITCH_WIDTH = 18
+    SWITCH_HEIGHT = 8
+    SWITCH_DISTANCE = 10
 
     def __init__(
         self, app_model: AppModel, component: Component, xpos: float, ypos: float
     ) -> None:
-        super().__init__(app_model, component, xpos, ypos, port_distance=self.DIP_SWITCH_HEIGHT)
-        self.width = 2.5 * self.DIP_SWITCH_WIDTH
-        self.height = self.component.bits() * self.DIP_SWITCH_HEIGHT
-        self._rects: list[QRect] = []
+        super().__init__(app_model, component, xpos, ypos, port_distance=self.SWITCH_DISTANCE)
+        self.width = 40
+        self.height = (self.component.bits() - 1) * self.SWITCH_DISTANCE + 2 * self.BORDER_TO_PORT
+        self._rects: list[QRectF] = []
         self.update_ports()
 
     @property
@@ -50,27 +49,25 @@ class DipSwitchObject(ImageObject):
         super().update_ports()
         self._rects = []
         for idx in range(self.component.bits()):
-            port_pos = self.get_port_pos(f"{idx}")
-            self._rects.append(
-                QRect(
-                    int(self.object_pos.x() + self.rect().width() / 2 - self.DIP_SWITCH_WIDTH / 2),
-                    int(port_pos.y() - self.DIP_SWITCH_HEIGHT / 2),
-                    self.DIP_SWITCH_WIDTH,
-                    self.DIP_SWITCH_HEIGHT,
-                )
-            )
+            y = self.get_port_pos(f"{idx}").y()
+            self._rects.append(self.switch_rect(QRectF(self.rect()), y))
+
+    @classmethod
+    def switch_rect(cls, rect: QRectF, y: float) -> QRectF:
+        """The switch in a row of the DIP switch"""
+        return QRectF(
+            rect.right() - 6 - cls.SWITCH_WIDTH,
+            y - cls.SWITCH_HEIGHT / 2,
+            cls.SWITCH_WIDTH,
+            cls.SWITCH_HEIGHT,
+        )
 
     def mouse_position(self, pos: QPointF) -> None:
         """update component according to on mouse move"""
         select = None
         pos = pos - self.pos()
         for idx, rect in enumerate(self._rects):
-            if (
-                pos.x() > rect.x()
-                and pos.x() < (rect.x() + rect.width())
-                and pos.y() > rect.y()
-                and pos.y() < (rect.y() + rect.height())
-            ):
+            if rect.contains(pos):
                 select = idx
                 break
         # Repaint only when another switch is highlighted, not on every mouse move
@@ -82,46 +79,40 @@ class DipSwitchObject(ImageObject):
         self.component.toggle()
         self.repaint()
 
-    def _paint_dip_switch(self, painter: QPainter) -> None:
-        pen = QPen()
-        pen.setColor(Qt.GlobalColor.black)
-        pen.setWidth(1)
-        painter.setPen(pen)
-        select_id = self.component.selected()
-        for idx, rect in enumerate(self._rects):
-            painter.setBrush(Qt.GlobalColor.darkGray)
-            painter.drawRect(rect)
-            if select_id == idx:
-                painter.setBrush(Qt.GlobalColor.green)
-            else:
-                painter.setBrush(Qt.GlobalColor.white)
-            if self.component.is_set(idx):
-                painter.drawRect(
-                    int(rect.x() + rect.width() / 2 + 1),
-                    rect.y() + 1,
-                    int(rect.width() / 2 - 2),
-                    rect.height() - 2,
-                )
-            else:
-                painter.drawRect(
-                    rect.x() + 1, rect.y() + 1, int(rect.width() / 2 - 2), rect.height() - 2
-                )
-        painter.setFont(self._DIP_SWITCH_FONT)
-        painter.setPen(Qt.GlobalColor.white)
-        for idx, rect in enumerate(self._rects):
-            port_str = f"{idx + 1}"
-            str_pixels_w, _ = self.get_string_metrics(port_str, self._DIP_SWITCH_FONT)
-            painter.drawText(
-                QPoint(rect.x() - str_pixels_w - 4, rect.y() + rect.height() - 1), port_str
+    @classmethod
+    def paint_switches(
+        cls, painter: QPainter, rect: QRectF, ys: list[float], on: list[bool], selected: int | None
+    ) -> None:
+        """The switches and their numbers"""
+        for idx, y in enumerate(ys):
+            theme.paint_toggle(painter, cls.switch_rect(rect, y), on[idx], idx == selected)
+            theme.paint_text(
+                painter,
+                QRectF(rect.left() + 2, y - 5, 10, 10),
+                str(idx + 1),
+                6,
+                theme.MUTED,
+                Qt.AlignmentFlag.AlignCenter,
             )
 
-        _, str_h = self.get_string_metrics("ON", self._DIP_SWITCH_FONT)
-        painter.drawText(
-            int(self.rect().x() + self.rect().width() / 2),
-            int(self.rect().y() + self.BORDER_TO_PORT - str_h),
-            "ON",
+    def paint_component(self, painter: QPainter) -> None:
+        self.paint_component_base(painter)
+        bits = range(self.component.bits())
+        self.paint_switches(
+            painter,
+            QRectF(self.rect()),
+            [self.get_port_pos(f"{idx}").y() for idx in bits],
+            [self.component.is_set(idx) for idx in bits],
+            self.component.selected(),
         )
 
-    def paint_component(self, painter: QPainter) -> None:
-        self.paint_component_base(painter, color=Qt.GlobalColor.red)
-        self._paint_dip_switch(painter)
+    @classmethod
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
+        def paint(rect: QRectF) -> None:
+            theme.paint_body(painter, rect)
+            ys = [rect.top() + 10 + 10 * idx for idx in range(4)]
+            cls.paint_switches(painter, rect, ys, [True, False, True, True], None)
+            port_dots(painter, [QPointF(rect.right(), y) for y in ys])
+
+        paint_icon(painter, size, (40, 50), paint, scale=1.3)
+        cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)

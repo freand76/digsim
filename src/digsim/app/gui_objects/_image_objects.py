@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """A component with an image as symbol the GUI"""
@@ -8,11 +8,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPoint, QSize, Qt
-from PySide6.QtGui import QFont, QPainter, QPen, QPixmap
+from PySide6.QtCore import QPoint, QPointF, QRectF, QSize, Qt
+from PySide6.QtGui import QPainter, QPixmap
 
 from digsim.circuit.components.atoms import Component
 
+from . import _theme as theme
 from ._component_object import ComponentObject
 
 
@@ -94,180 +95,53 @@ class ImageObject(ComponentObject):
 
 class NamedBoxObject(ImageObject):
     """
-    A base class for components drawn as a box with their name and port names.
-    The image is only used as the icon in the component selector.
+    A base class for components drawn as a body with their name and port names, like an
+    IC. The name is in a header above the ports. The image is not used.
     """
+
+    BORDER_TO_PORT = 25
 
     def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter)
         self.paint_component_name(painter)
+        # The header
+        painter.setPen(theme.ink_pen(1.0, theme.OFF))
+        y = self.rect().top() + 16
+        painter.drawLine(QPointF(self.rect().left() + 4, y), QPointF(self.rect().right() - 4, y))
+
+    @classmethod
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        rect = QRectF(size.width() / 2 - 22, 10, 44, 58)
+        theme.paint_body(painter, rect)
+        painter.setPen(theme.ink_pen(1.0, theme.OFF))
+        painter.drawLine(
+            QPointF(rect.left() + 4, rect.top() + 14), QPointF(rect.right() - 4, rect.top() + 14)
+        )
+        theme.paint_text(
+            painter,
+            QRectF(rect.left(), rect.top() + 1, rect.width(), 13),
+            cls.ICON_TEXT,
+            7,
+            bold=True,
+        )
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(theme.INK)
+        for row in range(3):
+            y = rect.top() + 24 + 12 * row
+            painter.drawEllipse(QPointF(rect.left() - 1, y), 2.5, 2.5)
+            if row < 2:
+                painter.drawEllipse(QPointF(rect.right(), y), 2.5, 2.5)
+        painter.restore()
+        cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)
+
+    # The text in the header of the icon
+    ICON_TEXT = ""
 
 
-class ImageObjectTristateBuffer(ImageObject):
-    """The class for a tristate buffer placed in the GUI, with its port names (A, OE, Y)"""
-
-    IMAGE_FILENAME = "images/TRISTATE.png"
-    SHOW_NAME = False
-    PORT_TO_IMAGE_DIST = 5
-
-    def setup_size(self) -> None:
-        width = self.component.port("A").width
-        if width == 1:
-            return
-        # Wider for the bus port names, like "A[3:0]", on each side of the symbol
-        self._get_pixmaps()
-        str_pixels_w, _ = self.get_string_metrics(f"A[{width - 1}:0]")
-        self.width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._image().width()
-
-
-class GateImageObject(ImageObject):
-    """The base class for gate components placed in the GUI"""
-
-    SHOW_PORT_NAMES = False
-
-
-class ImageObjectAND(GateImageObject):
-    """The class for a AND image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/AND.png"
-
-
-class ImageObjectOR(GateImageObject):
-    """The class for a OR image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/OR.png"
-
-
-class ImageObjectNAND(GateImageObject):
-    """The class for a NAND image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/NAND.png"
-
-
-class ImageObjectNOR(GateImageObject):
-    """The class for a NOR image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/NOR.png"
-
-
-class ImageObjectNOT(GateImageObject):
-    """The class for a NOT image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/NOT.png"
-
-
-class ImageObjectXNOR(GateImageObject):
-    """The class for a XNOR image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/XNOR.png"
-
-
-class ImageObjectXOR(GateImageObject):
-    """The class for a XOR image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/XOR.png"
-
-
-class ImageObjectDFF(ImageObject):
-    """The class for a DFF image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/DFF.png"
-    PORT_TO_IMAGE_DIST = 20
-
-    def setup_size(self) -> None:
-        self._get_pixmaps()
-        str_pixels_w, _ = self.get_string_metrics("D")
-        self.width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._image().width()
-
-
-class ImageObjectFlipFlop(NamedBoxObject):
-    """The class for a flip-flop image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/FlipFlop.png"
-
-
-class ImageObjectMUX(ImageObject):
-    """The class for a MUX image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/MUX.png"
-    PORT_TO_IMAGE_DIST = 20
-
-    def setup_size(self) -> None:
-        self._get_pixmaps()
-        if self.component.port("A").width == 1:
-            str_pixels_w, _ = self.get_string_metrics("A")
-        else:
-            str_pixels_w, _ = self.get_string_metrics("A[31:0]")
-        self.width = 2 * (str_pixels_w + self.PORT_TO_IMAGE_DIST) + self._image().width()
-
-
-class ImageObjectStaticValue(ImageObject):
-    """The class for a StaticValue image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/ZERO.png"
-    ACTIVE_IMAGE_FILENAME = "images/ONE.png"
-
-    SHOW_NAME = False
-
-    _STATIC_VALUE_FONT = QFont("Arial", 16)
-
-    def paint_component(self, painter: QPainter) -> None:
-        if self.component.O.width == 1:
-            super().paint_component(painter)
-        else:
-            self.paint_component_base(painter)
-            value_str = f"{self.component.parameter_get('value')}"
-            str_w, str_h = self.get_string_metrics(value_str, font=self._STATIC_VALUE_FONT)
-            painter.setFont(self._STATIC_VALUE_FONT)
-            painter.drawText(
-                int(self.rect().x() + self.rect().width() / 2 - str_w / 2),
-                int(self.rect().y() + str_h),
-                value_str,
-            )
-
-
-class ImageObjectLed(ImageObject):
-    """The class for a Led image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/LED_OFF.png"
-    ACTIVE_IMAGE_FILENAME = "images/LED_ON.png"
-    SHOW_NAME = False
-    SHOW_PORT_NAMES = False
-
-
-class ImageObjectIC(NamedBoxObject):
-    """The class for an IC image component placed in the GUI"""
+class ICObject(NamedBoxObject):
+    """An IC placed in the GUI"""
 
     IMAGE_FILENAME = "images/IC.png"
-
-
-class ImageObjectWithActiveRect(ImageObject):
-    """
-    A base class for a image component placed in the GUI.
-    When active the image will have a green border painted around it.
-    """
-
-    SHOW_NAME = False
-    SHOW_PORT_NAMES = False
-
-    _ACTIVE_RECT_PEN = QPen(Qt.GlobalColor.green)
-
-    def paint_component(self, painter: QPainter) -> None:
-        super().paint_component(painter)
-        if self.component.active:
-            xpos = self.object_pos.x() + self.size.width() / 2 - self._image().width() / 2
-            ypos = self.object_pos.y() + self.size.height() / 2 - self._image().height() / 2
-            # A copy: the class pen is shared by all instances
-            pen = QPen(self._ACTIVE_RECT_PEN)
-            pen.setWidth(4)
-            painter.setPen(pen)
-            painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawRoundedRect(
-                int(xpos), int(ypos), self._image().width(), self._image().height(), 5, 5
-            )
-
-
-class ImageObjectClock(ImageObjectWithActiveRect):
-    """The class for a Clock image component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/Clock.png"
+    ICON_TEXT = "74xx"

@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """A GUI note object"""
@@ -7,11 +7,12 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPoint, QRect, QSize, Qt
-from PySide6.QtGui import QFont, QFontMetrics, QPainter, QPen
+from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, QSize
+from PySide6.QtGui import QFontMetrics, QPainter, QPainterPath
 
 from digsim.circuit.components.atoms import Component
 
+from . import _theme as theme
 from ._component_object import ComponentObject
 
 
@@ -26,8 +27,7 @@ class GuiNoteObject(ComponentObject):
     NOTE_MINIMUM_WIDTH = 50
     NOTE_MINIMUM_HEIGHT = 20
 
-    _NOTE_FONT = QFont("Arial", 8)
-    _NOTE_PEN = QPen(Qt.GlobalColor.black)
+    _NOTE_FONT = theme.font(8)
 
     def __init__(
         self, app_model: AppModel, component: Component, xpos: float, ypos: float
@@ -55,15 +55,8 @@ class GuiNoteObject(ComponentObject):
         """Paint note rectangle"""
         fm = QFontMetrics(self._NOTE_FONT)
         lines = self._get_lines()
-        # A copy: the class pen is shared by all instances
-        pen = QPen(self._NOTE_PEN)
-        if self.selected:
-            pen.setWidth(4)
-        else:
-            pen.setWidth(1)
-        painter.setPen(pen)
-        painter.setBrush(Qt.GlobalColor.yellow)
-        painter.drawRect(self.rect())
+        self._paint_note(painter, QRectF(self.rect()), self.selected)
+        painter.setPen(theme.INK)
         painter.setFont(self._NOTE_FONT)
         for idx, line in enumerate(lines):
             painter.drawText(
@@ -71,6 +64,30 @@ class GuiNoteObject(ComponentObject):
                 int(self.object_pos.y() + self.NOTE_BORDER + (idx + 1) * fm.height()),
                 line,
             )
+
+    @staticmethod
+    def _paint_note(painter: QPainter, rect: QRectF, selected: bool) -> None:
+        """A note with a folded corner"""
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        fold = 8.0
+        path = QPainterPath(rect.topLeft())
+        path.lineTo(rect.right() - fold, rect.top())
+        path.lineTo(rect.right(), rect.top() + fold)
+        path.lineTo(rect.bottomRight())
+        path.lineTo(rect.bottomLeft())
+        path.closeSubpath()
+        if selected:
+            painter.setPen(theme.outline_pen(True))
+        else:
+            painter.setPen(theme.ink_pen(1.0, theme.dim(theme.NOTE, 0.75, theme.INK)))
+        painter.setBrush(theme.NOTE)
+        painter.drawPath(path)
+        corner = QPainterPath(QPointF(rect.right() - fold, rect.top()))
+        corner.lineTo(rect.right() - fold, rect.top() + fold)
+        corner.lineTo(rect.right(), rect.top() + fold)
+        painter.setPen(theme.ink_pen(1.0, theme.dim(theme.NOTE, 0.75, theme.INK)))
+        painter.setBrush(theme.dim(theme.NOTE, 0.85, theme.INK))
+        painter.drawPath(corner)
 
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
@@ -80,12 +97,8 @@ class GuiNoteObject(ComponentObject):
             size.width() - 2 * cls.NOTE_BORDER,
             size.width() - 2 * cls.NOTE_BORDER,
         )
-        # A copy: the class pen is shared by all instances
-        pen = QPen(cls._NOTE_PEN)
-        pen.setWidth(1)
-        painter.setPen(pen)
-        painter.setBrush(Qt.GlobalColor.yellow)
-        painter.drawRect(note_rect)
+        cls._paint_note(painter, QRectF(note_rect), False)
+        painter.setPen(theme.INK)
         painter.setFont(cls._NOTE_FONT)
         fm = QFontMetrics(cls._NOTE_FONT)
         painter.drawText(2 * cls.NOTE_BORDER, 2 * cls.NOTE_BORDER + fm.height(), "abc..")

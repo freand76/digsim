@@ -18,6 +18,7 @@ class YosysObject(NamedBoxObject):
     """The class for a Yosys image component placed in the GUI"""
 
     IMAGE_FILENAME = "images/YOSYS.png"
+    ICON_TEXT = "Verilog"
 
     @property
     def component(self) -> YosysComponent:

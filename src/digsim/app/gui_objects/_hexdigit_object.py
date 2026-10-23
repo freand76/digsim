@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """A hexdigit component placed in the GUI"""
@@ -13,7 +13,6 @@ from PySide6.QtGui import QPainter
 from digsim.circuit.components import HexDigit
 from digsim.circuit.components.atoms import Component
 
-from ._component_object import ComponentObject
 from ._seven_segment_object import SevenSegmentObject
 
 
@@ -32,7 +31,7 @@ class HexDigitObject(SevenSegmentObject):
             component,
             xpos,
             ypos,
-            port_distance=ComponentObject.DEFAULT_PORT_TO_PORT_DISTANCE,
+            port_distance=10,
         )
 
     @property

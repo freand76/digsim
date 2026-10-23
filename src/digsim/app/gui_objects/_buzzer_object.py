@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """A buzzer component object"""
@@ -8,14 +8,17 @@ from __future__ import annotations
 from struct import pack
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QByteArray, QIODevice
+from PySide6.QtCore import QByteArray, QIODevice, QPointF, QRectF, QSize, Qt
+from PySide6.QtGui import QPainter, QPainterPath
 from PySide6.QtMultimedia import QAudioFormat, QAudioSink, QMediaDevices
 
 from digsim.app._tone import tone_samples
 from digsim.circuit.components import Buzzer
 from digsim.circuit.components.atoms import Component
 
-from ._image_objects import ImageObjectWithActiveRect
+from . import _theme as theme
+from ._device_objects import DeviceObject
+from ._symbol_objects import paint_icon, port_dots
 
 
 if TYPE_CHECKING:
@@ -57,10 +60,10 @@ class _AudioOutput(QIODevice):
         return self.audio_buffer.size() + super().bytesAvailable()
 
 
-class BuzzerObject(ImageObjectWithActiveRect):
+class BuzzerObject(DeviceObject):
     """The class for Buzzer component placed in the GUI"""
 
-    IMAGE_FILENAME = "images/Buzzer.png"
+    SHOW_PORT_NAMES = False
     DATA_SAMPLE_RATE_HZ = 44100
 
     def __init__(
@@ -75,6 +78,39 @@ class BuzzerObject(ImageObjectWithActiveRect):
         self.audio_format.setSampleFormat(QAudioFormat.SampleFormat.Int16)
         self._tone_hz = self.component.tone_frequency()
         self.audio_output = _AudioOutput(self.audio_format, self._tone_hz)
+
+    @classmethod
+    def paint_face(cls, painter: QPainter, rect: QRectF, active: bool) -> None:
+        """A speaker, with sound waves in green while it sounds"""
+        center = rect.center() - QPointF(4, 0)
+        speaker = QPainterPath(QPointF(center.x() - 9, center.y() - 4))
+        speaker.lineTo(center.x() - 4, center.y() - 4)
+        speaker.lineTo(center.x() + 2, center.y() - 10)
+        speaker.lineTo(center.x() + 2, center.y() + 10)
+        speaker.lineTo(center.x() - 4, center.y() + 4)
+        speaker.lineTo(center.x() - 9, center.y() + 4)
+        speaker.closeSubpath()
+        painter.setPen(theme.ink_pen())
+        painter.setBrush(theme.INK)
+        painter.drawPath(speaker)
+        painter.setPen(theme.ink_pen(theme.SYMBOL_WIDTH, theme.ON if active else theme.OFF))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        for radius in (6.0, 11.0):
+            painter.drawArc(
+                QRectF(center.x() + 2 - radius, center.y() - radius, 2 * radius, 2 * radius),
+                -45 * 16,
+                90 * 16,
+            )
+
+    @classmethod
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
+        def paint(rect: QRectF) -> None:
+            theme.paint_body(painter, rect)
+            cls.paint_face(painter, rect, True)
+            port_dots(painter, [QPointF(rect.left() - 1, rect.center().y())])
+
+        paint_icon(painter, size, cls.SIZE, paint, scale=1.3)
+        cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)
 
     @property
     def component(self) -> Buzzer:

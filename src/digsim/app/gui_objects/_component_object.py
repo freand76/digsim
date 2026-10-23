@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """A component placed in the GUI"""
@@ -9,7 +9,7 @@ import abc
 from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, QSize, Qt
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsRectItem,
@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 from digsim.circuit.components.atoms import Component, Port
 from digsim.storage_model import GuiPositionDataClass
 
+from . import _theme as theme
 from ._component_context_menu import ComponentContextMenu
 from ._component_port_item import PortGraphicsItem
 
@@ -35,18 +36,18 @@ if TYPE_CHECKING:
 class ComponentObject(QGraphicsRectItem):
     """A component graphics item, a 'clickable' item with a custom paintEvent"""
 
-    DEFAULT_WIDTH = 80
-    DEFAULT_HEIGHT = 80
+    DEFAULT_WIDTH = 40
+    DEFAULT_HEIGHT = 40
     RECT_TO_BORDER = 5
-    BORDER_TO_PORT = 25
+    BORDER_TO_PORT = 10
     PORT_SIDE = 8
     DEFAULT_PORT_TO_PORT_DISTANCE = 20
     # Draw the port names next to the ports
     SHOW_PORT_NAMES = True
 
-    _COMPONENT_NAME_FONT = QFont("Arial", 10)
-    _PORT_NAME_FONT = QFont("Arial", 8)
-    _SELECTABLE_COMPONENT_NAME_FONT = QFont("Arial", 8)
+    _COMPONENT_NAME_FONT = theme.font(8, bold=True)
+    _PORT_NAME_FONT = theme.font(7)
+    _SELECTABLE_COMPONENT_NAME_FONT = theme.font(8)
 
     def __init__(
         self,
@@ -168,6 +169,7 @@ class ComponentObject(QGraphicsRectItem):
         widget: QWidget | None = None,
     ) -> None:
         """QT function"""
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         self.paint_component(painter)
         if self.SHOW_PORT_NAMES:
             self.paint_portnames(painter)
@@ -203,6 +205,17 @@ class ComponentObject(QGraphicsRectItem):
             self.height = max(self.height, min_height)
 
         # Make sure port names fit in the width of the component
+        if self.SHOW_PORT_NAMES:
+            self._fit_port_names()
+
+        # Create port rects
+        self._set_port_rects(self._component.inports(), -self.RECT_TO_BORDER)
+        self._set_port_rects(
+            self._component.outports(), self.RECT_TO_BORDER + self.width - self.PORT_SIDE - 1
+        )
+
+    def _fit_port_names(self) -> None:
+        """Make the component wide enough for the names of its ports"""
         max_inport_name = ""
         max_outport_name = ""
         for port in self.component.ports:
@@ -214,12 +227,6 @@ class ComponentObject(QGraphicsRectItem):
         max_port_names = f"{max_inport_name} {max_outport_name}"
         max_port_names_w, _ = self.get_string_metrics(max_port_names)
         self.width = max(2 * self.inport_x_pos() + max_port_names_w, self.width)
-
-        # Create port rects
-        self._set_port_rects(self._component.inports(), -self.RECT_TO_BORDER)
-        self._set_port_rects(
-            self._component.outports(), self.RECT_TO_BORDER + self.width - self.PORT_SIDE - 1
-        )
 
     def get_port_item(self, port: Port) -> PortGraphicsItem:
         """Get port item"""
@@ -270,6 +277,7 @@ class ComponentObject(QGraphicsRectItem):
 
     def paint_component_name(self, painter: QPainter) -> None:
         """Paint the component name"""
+        painter.setPen(theme.INK)
         painter.setFont(self._COMPONENT_NAME_FONT)
         fm = QFontMetrics(self._COMPONENT_NAME_FONT)
         display_name_str = self._component.display_name()
@@ -277,24 +285,15 @@ class ComponentObject(QGraphicsRectItem):
         str_pixels_h = fm.height()
         painter.drawText(
             int(self.rect().x() + self.rect().width() / 2 - str_pixels_w / 2),
-            int(self.rect().y() + str_pixels_h),
+            int(self.rect().y() + str_pixels_h + 1),
             display_name_str,
         )
 
     def paint_component_base(
-        self, painter: QPainter, color: QColor | Qt.GlobalColor = Qt.GlobalColor.gray
+        self, painter: QPainter, color: QColor | Qt.GlobalColor = theme.BODY
     ) -> None:
-        """Paint component base rect"""
-        comp_rect = self.rect()
-        pen = QPen()
-        if self.selected:
-            pen.setWidth(4)
-        else:
-            pen.setWidth(1)
-        pen.setColor(Qt.GlobalColor.black)
-        painter.setPen(pen)
-        painter.setBrush(color)
-        painter.drawRoundedRect(comp_rect, 5, 5)
+        """Paint the body of the component, white unless another color is given"""
+        theme.paint_body(painter, self.rect(), self.selected, QColor(color))
 
     @abc.abstractmethod
     def paint_component(self, painter: QPainter) -> None:
@@ -317,7 +316,7 @@ class ComponentObject(QGraphicsRectItem):
         fm = QFontMetrics(cls._SELECTABLE_COMPONENT_NAME_FONT)
         str_pixels_w = fm.horizontalAdvance(name)
         str_pixels_h = fm.height()
-        painter.setPen(Qt.GlobalColor.black)
+        painter.setPen(theme.INK)
         painter.drawText(
             int(point.x() + size.width() / 2 - str_pixels_w / 2),
             int(point.y() + size.height() - str_pixels_h),
@@ -329,7 +328,7 @@ class ComponentObject(QGraphicsRectItem):
         return 1.5 * self.PORT_SIDE
 
     def paint_portnames(
-        self, painter: QPainter, color: QColor | Qt.GlobalColor = Qt.GlobalColor.black
+        self, painter: QPainter, color: QColor | Qt.GlobalColor = theme.INK
     ) -> None:
         """Paint component ports"""
         painter.setPen(color)

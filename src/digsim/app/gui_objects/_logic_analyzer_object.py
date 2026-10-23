@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """A Logic Analyzer component placed in the GUI"""
@@ -7,28 +7,28 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPoint, QRect, Qt
-from PySide6.QtGui import QPainter, QPainterPath, QPen
+from PySide6.QtCore import QPoint, QPointF, QRectF, QSize
+from PySide6.QtGui import QColor, QPainter, QPainterPath, QPen
 
 from digsim.circuit.components import LogicAnalyzer
 from digsim.circuit.components.atoms import Component
 
-from ._image_objects import ImageObject
+from . import _theme as theme
+from ._component_object import ComponentObject
+from ._symbol_objects import paint_icon, port_dots
 
 
 if TYPE_CHECKING:
     from digsim.app.model import AppModel
 
 
-class LogicAnalyzerObject(ImageObject):
+class LogicAnalyzerObject(ComponentObject):
     """The class for a LogicAnalyzer component placed in the GUI"""
-
-    IMAGE_FILENAME = "images/Analyzer.png"
 
     SIGNAL_NAME_WIDTH = 40
     ANALYZER_DISPLAY_WIDTH = 200
 
-    _ANALYZER_PEN = QPen(Qt.GlobalColor.green)
+    _ANALYZER_PEN = QPen(QColor("#4ade80"))
     _SIGNAL_VERTICAL_SCALE = 10
     _SIGNAL_HORIZONTAL_SCALE = 2
 
@@ -47,16 +47,14 @@ class LogicAnalyzerObject(ImageObject):
 
     def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter)
-        painter.setBrush(Qt.GlobalColor.black)
-        painter.drawRoundedRect(
-            QRect(
-                int(self.object_pos.x() + self.SIGNAL_NAME_WIDTH),
-                int(self.object_pos.y() + 2 * self.RECT_TO_BORDER),
+        theme.paint_window(
+            painter,
+            QRectF(
+                self.object_pos.x() + self.SIGNAL_NAME_WIDTH,
+                self.object_pos.y() + self.RECT_TO_BORDER,
                 self.ANALYZER_DISPLAY_WIDTH,
-                int(self.height - 4 * self.RECT_TO_BORDER),
+                self.height - 2 * self.RECT_TO_BORDER,
             ),
-            5,
-            5,
         )
 
         # A copy: the class pen is shared by all instances
@@ -109,3 +107,31 @@ class LogicAnalyzerObject(ImageObject):
                 )
             )
             painter.drawPath(path)
+
+    @classmethod
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
+        def paint(rect: QRectF) -> None:
+            theme.paint_body(painter, rect)
+            window = rect.adjusted(14, 4, -4, -4)
+            theme.paint_window(painter, window)
+            pen = QPen(cls._ANALYZER_PEN)
+            pen.setWidthF(1.5)
+            painter.setPen(pen)
+            for row, edges in enumerate(([0.2, 0.5, 0.8], [0.35, 0.65], [0.1, 0.3, 0.6, 0.9])):
+                y = window.top() + 12 + 13 * row
+                path = QPainterPath(QPointF(window.left() + 2, y))
+                level = 0
+                for edge in edges:
+                    x = window.left() + 2 + edge * (window.width() - 4)
+                    path.lineTo(x, y - level * 7)
+                    level = 1 - level
+                    path.lineTo(x, y - level * 7)
+                path.lineTo(window.right() - 2, y - level * 7)
+                painter.drawPath(path)
+            port_dots(
+                painter,
+                [QPointF(rect.left() - 1, rect.top() + 12 + 13 * row - 3) for row in range(3)],
+            )
+
+        paint_icon(painter, size, (60, 46), paint, scale=1.0)
+        cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)

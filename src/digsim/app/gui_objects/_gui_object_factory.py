@@ -1,38 +1,41 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """A GUI component object factory module"""
 
 from digsim.circuit.components.atoms import DigsimException
 
-from ._bus_bit_object import BitsBusObject, BusBitsObject
 from ._buzzer_object import BuzzerObject
 from ._component_object import ComponentObject
+from ._device_objects import (
+    ButtonObject,
+    ClockObject,
+    FlipFlopObject,
+    OnOffSwitchObject,
+    StaticValueObject,
+)
 from ._dip_switch_object import DipSwitchObject
 from ._gui_note_object import GuiNoteObject
 from ._hexdigit_object import HexDigitObject
-from ._image_objects import (
-    ImageObjectAND,
-    ImageObjectClock,
-    ImageObjectDFF,
-    ImageObjectFlipFlop,
-    ImageObjectIC,
-    ImageObjectLed,
-    ImageObjectMUX,
-    ImageObjectNAND,
-    ImageObjectNOR,
-    ImageObjectNOT,
-    ImageObjectOR,
-    ImageObjectStaticValue,
-    ImageObjectTristateBuffer,
-    ImageObjectXNOR,
-    ImageObjectXOR,
-)
+from ._image_objects import ICObject
 from ._label_object import LabelWireInObject, LabelWireOutObject
 from ._led_bar_object import LedBarObject
 from ._logic_analyzer_object import LogicAnalyzerObject
 from ._seven_segment_object import SevenSegmentObject
-from ._shortcut_objects import ButtonObject, OnOffSwitchObject
+from ._symbol_objects import (
+    AndObject,
+    BitsBusObject,
+    BusBitsObject,
+    LedObject,
+    MuxObject,
+    NandObject,
+    NorObject,
+    NotObject,
+    OrObject,
+    TristateObject,
+    XnorObject,
+    XorObject,
+)
 from ._yosys_object import YosysObject
 
 
@@ -41,39 +44,39 @@ class ComponentObjectFactoryError(DigsimException):
 
 
 CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
-    "AND": ImageObjectAND,
+    "AND": AndObject,
     "Bus2Wires": BusBitsObject,
     "Wires2Bus": BitsBusObject,
-    "Clock": ImageObjectClock,
+    "Clock": ClockObject,
     "DipSwitch": DipSwitchObject,
-    "DFF": ImageObjectDFF,
+    "DFF": FlipFlopObject,
     "HexDigit": HexDigitObject,
     "LabelWireIn": LabelWireInObject,
     "LabelWireOut": LabelWireOutObject,
-    "Led": ImageObjectLed,
+    "Led": LedObject,
     "LogicAnalyzer": LogicAnalyzerObject,
-    "NAND": ImageObjectNAND,
-    "NOR": ImageObjectNOR,
-    "NOT": ImageObjectNOT,
-    "MUX": ImageObjectMUX,
-    "OR": ImageObjectOR,
+    "NAND": NandObject,
+    "NOR": NorObject,
+    "NOT": NotObject,
+    "MUX": MuxObject,
+    "OR": OrObject,
     "OnOffSwitch": OnOffSwitchObject,
     "PushButton": ButtonObject,
     "SevenSegment": SevenSegmentObject,
-    "StaticValue": ImageObjectStaticValue,
-    "XOR": ImageObjectXOR,
-    "XNOR": ImageObjectXNOR,
+    "StaticValue": StaticValueObject,
+    "XOR": XorObject,
+    "XNOR": XnorObject,
     "LedBar": LedBarObject,
-    "IntegratedCircuit": ImageObjectIC,
+    "IntegratedCircuit": ICObject,
     "YosysComponent": YosysObject,
     "Note": GuiNoteObject,
-    "FlipFlop": ImageObjectFlipFlop,
-    "SRFF": ImageObjectFlipFlop,
-    "ClockedSRFF": ImageObjectFlipFlop,
-    "ClockedJKFF": ImageObjectFlipFlop,
-    "ClockedTFF": ImageObjectFlipFlop,
+    "FlipFlop": FlipFlopObject,
+    "SRFF": FlipFlopObject,
+    "ClockedSRFF": FlipFlopObject,
+    "ClockedJKFF": FlipFlopObject,
+    "ClockedTFF": FlipFlopObject,
     "Buzzer": BuzzerObject,
-    "TristateBuffer": ImageObjectTristateBuffer,
+    "TristateBuffer": TristateObject,
 }
 
 

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## vx.x.x
+ - GUI: a new look. All components are drawn in one style: gates, LEDs, buffers and bus splitters as symbols only, devices like switches and displays with a white body, on a light background with a grid of dots. Most components are smaller, a selected one is blue, and green means on everywhere.
+ - GUI: Bus2Wires and Wires2Bus are drawn as a bus bar with an entry for each bit, numbered, and the width of the bus on it
+ - LEDs and LED bars have a color: red, green, blue or yellow (`color` in Python, a setting in the GUI). An LED looks like an LED, and glows when it is lit.
+ - GUI: a circuit saved before keeps the routes of its wires where its components got smaller, with a short step at the ports that moved
+
 ## v1.7.1
  - `python -m digsim.verilog format` without -i writes a file with Windows newlines (\r\n) to the terminal without an extra \r on each line on Windows
 

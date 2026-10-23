@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """A component port graphics item"""
@@ -8,15 +8,19 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QPointF, QRect, QRectF, Qt
-from PySide6.QtGui import QBrush, QPen
+from PySide6.QtGui import QPainter
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsRectItem,
     QGraphicsSceneHoverEvent,
     QGraphicsSceneMouseEvent,
+    QStyleOptionGraphicsItem,
+    QWidget,
 )
 
 from digsim.circuit.components.atoms import Port, PortConnectionError
+
+from . import _theme as theme
 
 
 if TYPE_CHECKING:
@@ -24,15 +28,30 @@ if TYPE_CHECKING:
 
 
 class PortGraphicsItem(QGraphicsRectItem):
-    """A port graphics item"""
+    """A port graphics item, drawn as a dot in its rect (the rect is where it is clicked)"""
+
+    DOT_RADIUS = 2.5
+    HOVER_RADIUS = 4.0
 
     def __init__(self, app_model: AppModel, parent: QGraphicsItem, port: Port) -> None:
         super().__init__(QRect(0, 0, 0, 0), parent)
         self._app_model = app_model
         self._port = port
-        self.setPen(QPen(Qt.GlobalColor.black))
-        self.setBrush(QBrush(Qt.GlobalColor.gray))
+        self._hover = False
         self.setAcceptHoverEvents(True)
+
+    def paint(
+        self,
+        painter: QPainter,
+        option: QStyleOptionGraphicsItem,
+        widget: QWidget | None = None,
+    ) -> None:
+        """QT function"""
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(theme.ACCENT if self._hover else theme.INK)
+        radius = self.HOVER_RADIUS if self._hover else self.DOT_RADIUS
+        painter.drawEllipse(self.rect().center(), radius, radius)
 
     @property
     def port(self) -> Port:
@@ -61,14 +80,16 @@ class PortGraphicsItem(QGraphicsRectItem):
         """QT event callback function"""
         if self._app_model.is_running:
             return
-        self.setBrush(QBrush(Qt.GlobalColor.black))
+        self._hover = True
+        self.update()
         self.setCursor(Qt.CursorShape.CrossCursor)
 
     def hoverLeaveEvent(self, _: QGraphicsSceneHoverEvent) -> None:
         """QT event callback function"""
         if self._app_model.is_running:
             return
-        self.setBrush(QBrush(Qt.GlobalColor.gray))
+        self._hover = False
+        self.update()
         self.setCursor(Qt.CursorShape.ArrowCursor)
 
     def _parent_rect_item(self) -> QGraphicsRectItem:

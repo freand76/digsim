@@ -75,6 +75,7 @@ from digsim.app.gui._circuit_area import (
 )
 from digsim.app.gui._top_bar import LoadSaveWidget, SimControlWidget, VcdControlWidget
 from digsim.app.gui_objects import ComponentObject
+from digsim.app.gui_objects import _theme as theme
 from digsim.app.gui_objects._component_port_item import PortGraphicsItem
 from digsim.app.model import AppModel
 from digsim.circuit.components.atoms import Port
@@ -108,8 +109,10 @@ MAX_COMPONENTS = 14
 UNDO_DEPTH = 100
 # Window sizes: the smaller ones don't show the whole circuit, the view scrolls
 WINDOW_SIZES = [(1700, 1100), (1200, 800), (900, 650)]
-# The background of the circuit area (Qt.GlobalColor.lightGray)
-BACKGROUND = (192, 192, 192)
+# The background of the circuit area, and the dots of its grid
+BACKGROUND = {
+    (color.red(), color.green(), color.blue()) for color in (theme.BACKGROUND, theme.GRID)
+}
 EXAMPLE_CIRCUITS = sorted((Path(__file__).parent.parent / "example_circuits").glob("*.circuit"))
 
 
@@ -430,7 +433,7 @@ class GuiFuzzer:
                 x, y = view_pos.x() + dx, view_pos.y() + dy
                 if 0 <= x < image.width() and 0 <= y < image.height():
                     color = image.pixelColor(x, y)
-                    if (color.red(), color.green(), color.blue()) != BACKGROUND:
+                    if (color.red(), color.green(), color.blue()) not in BACKGROUND:
                         return True
         return False
 

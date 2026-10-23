@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """A 7-segment component placed in the GUI"""
@@ -8,12 +8,13 @@ from __future__ import annotations
 import typing
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPoint, QSize, Qt
+from PySide6.QtCore import QPoint, QRectF, QSize
 from PySide6.QtGui import QPainter, QPainterPath
 
 from digsim.circuit.components import HexDigit, SevenSegment
 from digsim.circuit.components.atoms import Component
 
+from . import _theme as theme
 from ._component_object import ComponentObject
 
 
@@ -110,9 +111,15 @@ class SevenSegmentObject(ComponentObject):
         cls, painter: QPainter, size: QSize, name: str, segments: str
     ) -> None:
         """Paint a digit (for the component selector)"""
-        xpos = size.width() / 2 - cls.DIGIT_WIDTH / 2
-        cls.paint_digit_rect(painter, xpos, 0)
-        cls.draw_digit(painter, xpos, 0, segments)
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.translate(size.width() / 2, 6)
+        painter.scale(0.7, 0.7)
+        xpos = -cls.DIGIT_WIDTH / 2
+        theme.paint_body(painter, QRectF(xpos - 5, 0, cls.DIGIT_WIDTH + 10, cls.DIGIT_HEIGHT + 10))
+        cls.paint_digit_rect(painter, xpos, 5)
+        cls.draw_digit(painter, xpos, 5, segments)
+        painter.restore()
         cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)
 
     @classmethod
@@ -120,11 +127,7 @@ class SevenSegmentObject(ComponentObject):
         cls, painter: QPainter, xpos: float, ypos: float, digits: int = 1
     ) -> None:
         """Paint the digit background"""
-        painter.setBrush(Qt.BrushStyle.SolidPattern)
-        painter.setPen(Qt.GlobalColor.black)
-        painter.drawRoundedRect(
-            int(xpos), int(ypos), cls.DIGIT_WIDTH * digits, cls.DIGIT_HEIGHT, 4, 4
-        )
+        theme.paint_window(painter, QRectF(xpos, ypos, cls.DIGIT_WIDTH * digits, cls.DIGIT_HEIGHT))
 
     @classmethod
     def draw_digit(cls, painter: QPainter, xpos: float, ypos: float, active_segments: str) -> None:
@@ -132,13 +135,13 @@ class SevenSegmentObject(ComponentObject):
         start_point = QPoint(
             int(xpos + cls.DIGIT_RECT_TO_DIGIT_MARGIN), int(ypos + cls.DIGIT_RECT_TO_DIGIT_MARGIN)
         )
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        lit = theme.led_color("red")
+        unlit = theme.dim(lit, 0.16, theme.DISPLAY)
         for seg, type_pos in cls.SEGMENT_TYPE_AND_POS.items():
-            if seg in active_segments:
-                painter.setPen(Qt.GlobalColor.red)
-                painter.setBrush(Qt.GlobalColor.red)
-            else:
-                painter.setPen(Qt.GlobalColor.darkRed)
-                painter.setBrush(Qt.GlobalColor.darkRed)
+            color = lit if seg in active_segments else unlit
+            painter.setPen(theme.ink_pen(1.0, color))
+            painter.setBrush(color)
             pos_vector = cls.SEGMENT_CORDS[type_pos[0]]
             offset = type_pos[1]
             path = QPainterPath()
@@ -148,11 +151,8 @@ class SevenSegmentObject(ComponentObject):
             path.closeSubpath()
             painter.drawPath(path)
 
-        if "." in active_segments:
-            painter.setPen(Qt.GlobalColor.red)
-            painter.setBrush(Qt.GlobalColor.red)
-        else:
-            painter.setPen(Qt.GlobalColor.darkRed)
-            painter.setBrush(Qt.GlobalColor.darkRed)
+        color = lit if "." in active_segments else unlit
+        painter.setPen(theme.ink_pen(1.0, color))
+        painter.setBrush(color)
         dot_point = QPoint(cls.DOT_OFFSET_X, cls.DOT_OFFSET_Y) + start_point
         painter.drawEllipse(dot_point, cls.DOT_RADIUS, cls.DOT_RADIUS)
