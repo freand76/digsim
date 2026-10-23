@@ -59,24 +59,43 @@ class DeviceObject(ComponentObject):
         cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)
 
 
+def _contacts(painter: QPainter, center: QPointF) -> tuple[QPointF, QPointF]:
+    """The two contacts of a switch symbol, with a lead from each to the side"""
+    left = QPointF(center.x() - 9, center.y() + 6)
+    right = QPointF(center.x() + 9, center.y() + 6)
+    painter.setPen(theme.ink_pen())
+    painter.drawLine(QPointF(center.x() - 15, left.y()), QPointF(left.x() - 2, left.y()))
+    painter.drawLine(QPointF(right.x() + 2, right.y()), QPointF(center.x() + 15, right.y()))
+    painter.setBrush(theme.BODY)
+    painter.drawEllipse(left, 2, 2)
+    painter.drawEllipse(right, 2, 2)
+    return left, right
+
+
 class ButtonObject(DeviceObject):
-    """A push button: a round cap, green while it is pushed"""
+    """
+    A push button, as the symbol of a push switch: a bridge on a plunger over two
+    contacts. Pushed, the bridge is down on the contacts, in green.
+    """
 
     @classmethod
     def paint_face(cls, painter: QPainter, rect: QRectF, active: bool) -> None:
-        painter.setPen(theme.ink_pen())
-        painter.setBrush(theme.ON if active else theme.OFF)
-        painter.drawEllipse(rect.center(), 11, 11)
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(theme.BODY)
-        painter.drawEllipse(rect.center() - QPointF(3, 3), 3.5, 2.5)
+        left, right = _contacts(painter, rect.center())
+        bridge_y = left.y() - 2 if active else left.y() - 8
+        color = theme.ON if active else theme.INK
+        painter.setPen(theme.ink_pen(theme.SYMBOL_WIDTH, color))
+        painter.drawLine(QPointF(left.x() - 2, bridge_y), QPointF(right.x() + 2, bridge_y))
+        # The plunger, with its handle
+        top = bridge_y - 9
+        painter.drawLine(QPointF(rect.center().x(), bridge_y), QPointF(rect.center().x(), top))
+        painter.drawLine(QPointF(rect.center().x() - 5, top), QPointF(rect.center().x() + 5, top))
 
     def add_context_menu_action(self, menu: QMenu, parent: QWidget | None) -> None:
         ShortcutMenu.add_context_menu_action(menu, parent, self._app_model, self._component)
 
 
 class OnOffSwitchObject(DeviceObject):
-    """A slide switch, green with the knob to the right when it is on"""
+    """An on/off switch, as the symbol of a switch, its lever closed and green when on"""
 
     @property
     def component(self) -> OnOffSwitch:
@@ -86,9 +105,13 @@ class OnOffSwitchObject(DeviceObject):
 
     @classmethod
     def paint_face(cls, painter: QPainter, rect: QRectF, active: bool) -> None:
-        track = QRectF(0, 0, 26, 14)
-        track.moveCenter(rect.center())
-        theme.paint_toggle(painter, track, active)
+        """The symbol of a switch: a lever from one contact, on the other when it is on"""
+        left, right = _contacts(painter, rect.center())
+        end = (
+            QPointF(right.x() + 1, right.y() - 2) if active else QPointF(right.x(), right.y() - 12)
+        )
+        painter.setPen(theme.ink_pen(theme.SYMBOL_WIDTH, theme.ON if active else theme.INK))
+        painter.drawLine(left, end)
 
     def single_click_action(self) -> None:
         self._toggle()
