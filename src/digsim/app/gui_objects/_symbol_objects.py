@@ -377,6 +377,8 @@ class LedObject(SymbolObject):
     HEIGHT = 40
     # From the top to the input
     PORT_Y = 30
+    # The glow of a lit LED
+    PAINT_MARGIN = 14
 
     def __init__(
         self, app_model: AppModel, component: Component, xpos: float, ypos: float

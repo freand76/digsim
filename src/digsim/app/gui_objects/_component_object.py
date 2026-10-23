@@ -44,6 +44,8 @@ class ComponentObject(QGraphicsRectItem):
     DEFAULT_PORT_TO_PORT_DISTANCE = 20
     # Draw the port names next to the ports
     SHOW_PORT_NAMES = True
+    # How far outside its rect the component paints, like the glow of a lit LED
+    PAINT_MARGIN = 0
 
     _COMPONENT_NAME_FONT = theme.font(8, bold=True)
     _PORT_NAME_FONT = theme.font(7)
@@ -161,6 +163,12 @@ class ComponentObject(QGraphicsRectItem):
             self._app_model.objects.new_wire.abort()
         context_menu = ComponentContextMenu(self._parent_widget, self._app_model, self)
         context_menu.open_at(event.screenPos())
+
+    def boundingRect(self) -> QRectF:
+        """QT function: the rect and the outline, and what is painted outside the rect"""
+        # The outline of a selected component is 4 pixels wide at most
+        margin = self.PAINT_MARGIN + 2
+        return QRectF(self.rect()).adjusted(-margin, -margin, margin, margin)
 
     def paint(
         self,
