@@ -54,55 +54,55 @@
                 "name": "Led",
                 "type": "digsim.circuit.components.Led",
                 "display_name": "Led",
-                "settings": {}
+                "settings": {"color": "red"}
             },
             {
                 "name": "Led_1",
                 "type": "digsim.circuit.components.Led",
                 "display_name": "Led",
-                "settings": {}
+                "settings": {"color": "red"}
             },
             {
                 "name": "Led_2",
                 "type": "digsim.circuit.components.Led",
                 "display_name": "Led",
-                "settings": {}
+                "settings": {"color": "red"}
             },
             {
                 "name": "Led_3",
                 "type": "digsim.circuit.components.Led",
                 "display_name": "Led",
-                "settings": {}
+                "settings": {"color": "red"}
             },
             {
                 "name": "Led_4",
                 "type": "digsim.circuit.components.Led",
                 "display_name": "Led",
-                "settings": {}
+                "settings": {"color": "red"}
             },
             {
                 "name": "Led_5",
                 "type": "digsim.circuit.components.Led",
                 "display_name": "Led",
-                "settings": {}
+                "settings": {"color": "red"}
             }
         ]
     },
     "gui": {
-        "DFF": {"x": 250, "y": 20, "z": 0},
-        "DFF_1": {"x": 250, "y": 130, "z": 0},
-        "DFF_2": {"x": 250, "y": 240, "z": 0},
-        "DFF_3": {"x": 250, "y": 350, "z": 0},
-        "DFF_4": {"x": 250, "y": 460, "z": 0},
-        "DFF_5": {"x": 250, "y": 570, "z": 0},
-        "PushButton": {"x": 20, "y": 10, "z": 0},
-        "Clock": {"x": 20, "y": 300, "z": 0},
-        "Led": {"x": 600, "y": 20, "z": 0},
-        "Led_1": {"x": 600, "y": 130, "z": 0},
-        "Led_2": {"x": 600, "y": 240, "z": 0},
-        "Led_3": {"x": 600, "y": 350, "z": 0},
-        "Led_4": {"x": 600, "y": 460, "z": 0},
-        "Led_5": {"x": 600, "y": 570, "z": 0}
+        "DFF": {"x": 250, "y": 40, "z": 0},
+        "DFF_1": {"x": 250, "y": 150, "z": 0},
+        "DFF_2": {"x": 250, "y": 260, "z": 0},
+        "DFF_3": {"x": 250, "y": 370, "z": 0},
+        "DFF_4": {"x": 250, "y": 480, "z": 0},
+        "DFF_5": {"x": 250, "y": 590, "z": 0},
+        "PushButton": {"x": 20, "y": 30, "z": 0},
+        "Clock": {"x": 20, "y": 320, "z": 0},
+        "Led": {"x": 600, "y": 50, "z": 0},
+        "Led_1": {"x": 600, "y": 160, "z": 0},
+        "Led_2": {"x": 600, "y": 270, "z": 0},
+        "Led_3": {"x": 600, "y": 380, "z": 0},
+        "Led_4": {"x": 600, "y": 490, "z": 0},
+        "Led_5": {"x": 600, "y": 600, "z": 0}
     },
     "lines": [
         {

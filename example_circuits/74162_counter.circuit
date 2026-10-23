@@ -36,7 +36,7 @@
                 "name": "Led",
                 "type": "digsim.circuit.components.Led",
                 "display_name": "Led",
-                "settings": {}
+                "settings": {"color": "red"}
             },
             {
                 "name": "PushButton",
@@ -83,19 +83,19 @@
         ]
     },
     "gui": {
-        "SevenSegment": {"x": 760, "y": 215, "z": 0},
+        "SevenSegment": {"x": 760, "y": 230, "z": 0},
         "ic7448": {"x": 580, "y": 185, "z": 0},
         "ttl_74162": {"x": 380, "y": 175, "z": 0},
-        "Clock": {"x": 0, "y": 400, "z": 0},
-        "OnOffSwitch": {"x": 0, "y": 200, "z": 0},
-        "Led": {"x": 580, "y": 60, "z": 0},
-        "PushButton": {"x": 0, "y": 500, "z": 0},
-        "DipSwitch": {"x": 30, "y": 300, "z": 0},
-        "Wires2Bus": {"x": 120, "y": 300, "z": 0},
-        "PushButton_1": {"x": 0, "y": 0, "z": 0},
-        "PushButton_2": {"x": 0, "y": 100, "z": 0},
-        "NOT": {"x": 140, "y": 100, "z": 0},
-        "NOT_1": {"x": 140, "y": 0, "z": 0}
+        "Clock": {"x": 0, "y": 420, "z": 0},
+        "OnOffSwitch": {"x": 0, "y": 220, "z": 0},
+        "Led": {"x": 580, "y": 90, "z": 0},
+        "PushButton": {"x": 0, "y": 520, "z": 0},
+        "DipSwitch": {"x": 30, "y": 315, "z": 0},
+        "Wires2Bus": {"x": 120, "y": 315, "z": 0},
+        "PushButton_1": {"x": 0, "y": 20, "z": 0},
+        "PushButton_2": {"x": 0, "y": 120, "z": 0},
+        "NOT": {"x": 140, "y": 130, "z": 0},
+        "NOT_1": {"x": 140, "y": 30, "z": 0}
     },
     "lines": [
         {
