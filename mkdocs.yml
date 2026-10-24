@@ -30,6 +30,7 @@ nav:
       - Yosys Netlist: api/netlist.md
       - Verilog: api/verilog.md
   - Project:
+      - About: about.md
       - Contributing: contributing.md
       - Changelog: changelog.md
 
