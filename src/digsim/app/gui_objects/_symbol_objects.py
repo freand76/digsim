@@ -343,10 +343,12 @@ class TristateObject(SymbolObject):
 
 
 class MuxObject(SymbolObject):
-    """A multiplexer, a trapezoid with the inputs to the left, S below them"""
+    """
+    A multiplexer, a trapezoid with the inputs to the left, S below them, each on a lead
+    like the gates, and the names of the inputs inside
+    """
 
-    SHOW_PORT_NAMES = True
-    WIDTH = 50
+    WIDTH = 40
 
     def __init__(
         self, app_model: AppModel, component: Component, xpos: float, ypos: float
@@ -356,39 +358,66 @@ class MuxObject(SymbolObject):
         self.update_ports()
 
     @staticmethod
-    def paint_mux(painter: QPainter, rect: QRectF, selected: bool) -> None:
-        """The trapezoid"""
-        inset = min(12.0, rect.height() / 4)
-        path = QPainterPath(QPointF(rect.left() + 1, rect.top()))
-        path.lineTo(rect.right() - 1, rect.top() + inset)
-        path.lineTo(rect.right() - 1, rect.bottom() - inset)
-        path.lineTo(rect.left() + 1, rect.bottom())
+    def paint_mux(
+        painter: QPainter,
+        rect: QRectF,
+        inputs: list[tuple[str, float, bool]],
+        output: tuple[float, bool],
+        selected: bool,
+    ) -> None:
+        """The trapezoid and the leads, each input is (name, y, is a bus)"""
+        body = rect.adjusted(LEAD, 0, -LEAD, 0)
+        output_y, output_bus = output
+        for _, y, bus in inputs:
+            width = 3.0 if bus else theme.LINE_WIDTH
+            theme.lead(painter, QPointF(rect.left() - 1, y), QPointF(body.left(), y), width)
+        width = 3.0 if output_bus else theme.LINE_WIDTH
+        theme.lead(
+            painter, QPointF(body.right(), output_y), QPointF(rect.right(), output_y), width
+        )
+        inset = min(10.0, rect.height() / 4)
+        path = QPainterPath(QPointF(body.left(), body.top()))
+        path.lineTo(body.right(), body.top() + inset)
+        path.lineTo(body.right(), body.bottom() - inset)
+        path.lineTo(body.left(), body.bottom())
         path.closeSubpath()
         theme.symbol_path(painter, path, selected)
+        for name, y, _ in inputs:
+            theme.paint_text(
+                painter,
+                QRectF(body.left() + 3, y - 5, body.width() - 4, 10),
+                name,
+                6,
+                align=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            )
 
     def paint_component(self, painter: QPainter) -> None:
-        self.paint_mux(painter, QRectF(self.rect()), self.selected)
+        inputs = [
+            (port.name(), self.port_ys([port])[0], port.width > 1)
+            for port in self.component.inports()
+        ]
+        (output,) = self.component.outports()
+        self.paint_mux(
+            painter,
+            QRectF(self.rect()),
+            inputs,
+            (self.port_ys([output])[0], output.width > 1),
+            self.selected,
+        )
 
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         def paint(rect: QRectF) -> None:
-            cls.paint_mux(painter, rect, False)
             ys = [rect.top() + 10, rect.top() + 30, rect.top() + 50]
+            inputs = [(text, y, False) for text, y in zip(["A", "B", "S"], ys, strict=True)]
+            cls.paint_mux(painter, rect, inputs, (rect.center().y(), False), False)
             port_dots(
                 painter,
-                [QPointF(rect.left() + 1, y) for y in ys]
-                + [QPointF(rect.right() - 1, rect.center().y())],
+                [QPointF(rect.left() - 1, y) for y in ys]
+                + [QPointF(rect.right(), rect.center().y())],
             )
-            for text, y in zip(["A", "B", "S"], ys, strict=True):
-                theme.paint_text(
-                    painter,
-                    QRectF(rect.left() + 5, y - 6, 12, 12),
-                    text,
-                    7,
-                    align=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                )
 
-        paint_icon(painter, size, (cls.WIDTH - 10, 60), paint, scale=1.0)
+        paint_icon(painter, size, (cls.WIDTH, 60), paint, scale=1.0)
         cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)
 
 
