@@ -121,7 +121,7 @@ class SevenSegmentObject(ComponentObject):
                 Qt.AlignmentFlag.AlignLeft,
             )
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(theme.outline_pen(True) if self.selected else Qt.PenStyle.NoPen)
+        painter.setPen(theme.outline_pen(self.selected))
         painter.setBrush(theme.DISPLAY)
         painter.drawRoundedRect(display, theme.CORNER, theme.CORNER)
         digits_width = len(segments) * self.DIGIT_WIDTH * self.SCALE
@@ -167,7 +167,7 @@ class SevenSegmentObject(ComponentObject):
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(theme.INK)
             painter.drawEllipse(QPointF(xpos - 34, y), 4, 4)
-        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setPen(theme.ink_pen(2.5))
         painter.setBrush(theme.DISPLAY)
         painter.drawRoundedRect(
             QRectF(xpos - 6, -4, cls.DIGIT_WIDTH + 12, cls.DIGIT_HEIGHT + 8), 6, 6

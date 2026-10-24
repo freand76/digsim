@@ -57,7 +57,7 @@ class LogicAnalyzerObject(ComponentObject):
             self.ANALYZER_DISPLAY_WIDTH,
             self.height - 2 * self.RECT_TO_BORDER,
         )
-        theme.paint_window(painter, window)
+        theme.paint_window(painter, window, theme.SCREEN)
         # A copy: the class pen is shared by all instances
         pen = QPen(self._ANALYZER_PEN)
         pen.setWidth(2)
@@ -91,7 +91,7 @@ class LogicAnalyzerObject(ComponentObject):
         def paint(rect: QRectF) -> None:
             theme.paint_body(painter, rect)
             window = rect.adjusted(14, 4, -4, -4)
-            theme.paint_window(painter, window)
+            theme.paint_window(painter, window, theme.SCREEN)
             pen = QPen(cls._ANALYZER_PEN)
             pen.setWidthF(1.5)
             painter.save()

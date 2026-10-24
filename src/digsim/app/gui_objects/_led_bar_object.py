@@ -79,7 +79,7 @@ class LedBarObject(ComponentObject):
                 Qt.AlignmentFlag.AlignLeft,
             )
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(theme.outline_pen(True) if selected else Qt.PenStyle.NoPen)
+        painter.setPen(theme.outline_pen(selected))
         painter.setBrush(theme.DISPLAY)
         painter.drawRoundedRect(display, theme.CORNER, theme.CORNER)
         for y, on in zip(ys, lit, strict=True):

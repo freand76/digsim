@@ -32,7 +32,9 @@ BODY = QColor("#ffffff")
 # A selected component
 ACCENT = QColor("#2d7ff9")
 # The window of a display, like a 7-segment digit
-DISPLAY = QColor("#1f2429")
+DISPLAY = QColor("#ffffff")
+# The screen of the logic analyzer
+SCREEN = QColor("#1f2429")
 BACKGROUND = QColor("#e6e9ec")
 GRID = QColor("#c8ced5")
 NOTE = QColor("#fff4b8")
@@ -92,10 +94,10 @@ def paint_body(
     painter.drawRoundedRect(rect, CORNER, CORNER)
 
 
-def paint_window(painter: QPainter, rect: QRectF) -> None:
-    """The dark window of a display"""
+def paint_window(painter: QPainter, rect: QRectF, fill: QColor = DISPLAY) -> None:
+    """The window of a display"""
     painter.setPen(Qt.PenStyle.NoPen)
-    painter.setBrush(DISPLAY)
+    painter.setBrush(fill)
     painter.drawRoundedRect(rect, 2, 2)
 
 
@@ -185,7 +187,7 @@ def paint_bar_led(painter: QPainter, rect: QRectF, color: QColor, lit: bool) -> 
         painter.setBrush(color)
     else:
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(dim(color, 0.3))
+        painter.setBrush(dim(color, 0.16, DISPLAY))
     painter.drawRoundedRect(rect, 1.5, 1.5)
 
 
