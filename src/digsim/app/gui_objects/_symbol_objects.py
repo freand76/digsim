@@ -546,10 +546,12 @@ class LedObject(SymbolObject):
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         def paint(rect: QRectF) -> None:
+            # Lower than the other icons, so that the glow fits above the LED
+            rect = rect.translated(0, 6)
             cls.paint_led(painter, rect, "red", True, False)
             port_dots(painter, [QPointF(rect.left() - 1, rect.top() + cls.PORT_Y)])
 
-        paint_icon(painter, size, (cls.WIDTH, cls.HEIGHT), paint, scale=1.4)
+        paint_icon(painter, size, (cls.WIDTH, cls.HEIGHT), paint, scale=1.25)
         cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)
 
 
