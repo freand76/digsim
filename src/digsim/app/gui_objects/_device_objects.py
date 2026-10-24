@@ -8,6 +8,7 @@ switch, the clock, the static value and the flip-flops
 
 from __future__ import annotations
 
+import math
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt
@@ -173,8 +174,13 @@ class StaticValueObject(DeviceObject):
         self, app_model: AppModel, component: Component, xpos: float, ypos: float
     ) -> None:
         super().__init__(app_model, component, xpos, ypos)
+        self.update_size()
+
+    def update_size(self) -> None:
+        # As wide as the value, in steps of 10 so that the output stays on the 10 pixel
+        # rhythm
         text_width, _ = self.get_string_metrics(self._text(), theme.font(11, bold=True))
-        self.width = max(self.SIZE[0], text_width + 16)
+        self.width = max(self.SIZE[0], math.ceil((text_width + 16) / 10) * 10)
         self.update_ports()
 
     def _text(self) -> str:
