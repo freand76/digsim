@@ -57,4 +57,5 @@ class HexDigitObject(SevenSegmentObject):
 
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
-        cls.paint_selectable_digit(painter, size, name, "ABDEG")
+        # The value, a bus, and the dot
+        cls.paint_selectable_digit(painter, size, name, "ABDEG", [(25.0, True), (45.0, False)])

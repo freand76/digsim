@@ -150,23 +150,30 @@ class SevenSegmentObject(ComponentObject):
 
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
-        cls.paint_selectable_digit(painter, size, name, "ADEFG")
+        # An input for each segment and the dot
+        leads = [(5.0 + 10 * idx, False) for idx in range(8)]
+        cls.paint_selectable_digit(painter, size, name, "ADEFG", leads)
 
     @classmethod
     def paint_selectable_digit(
-        cls, painter: QPainter, size: QSize, name: str, segments: str
+        cls,
+        painter: QPainter,
+        size: QSize,
+        name: str,
+        segments: str,
+        leads: list[tuple[float, bool]],
     ) -> None:
-        """Paint a digit (for the component selector)"""
+        """Paint a digit (for the component selector), with a lead at each (y, is a bus)"""
         painter.save()
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         painter.translate(size.width() / 2 + 6, 10)
         painter.scale(0.58, 0.58)
         xpos = -cls.DIGIT_WIDTH / 2
-        for y in (20, 45, 70):
-            theme.lead(painter, QPointF(xpos - 34, y), QPointF(xpos - 6, y), 2.5)
+        for y, bus in leads:
+            theme.lead(painter, QPointF(xpos - 34, y), QPointF(xpos - 6, y), 5.0 if bus else 2.5)
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(theme.INK)
-            painter.drawEllipse(QPointF(xpos - 34, y), 4, 4)
+            painter.drawEllipse(QPointF(xpos - 34, y), 3.5, 3.5)
         painter.setPen(theme.ink_pen(2.5))
         painter.setBrush(theme.DISPLAY)
         painter.drawRoundedRect(
