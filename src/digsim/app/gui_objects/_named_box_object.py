@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+import math
+
 from PySide6.QtCore import QPoint, QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import QPainter
 
@@ -19,6 +21,16 @@ class NamedBoxObject(ComponentObject):
     """
 
     BORDER_TO_PORT = 25
+
+    def update_ports(self) -> None:
+        # Wide enough for the name, in steps of 10 so that the outputs stay on the rhythm
+        # of the ports, and high enough for one port below the header
+        name_width, _ = self.get_string_metrics(
+            self._component.display_name(), self._COMPONENT_NAME_FONT
+        )
+        self.width = max(self.width, math.ceil((name_width + 12) / 10) * 10)
+        self.height = max(self.height, 2 * self.BORDER_TO_PORT)
+        super().update_ports()
 
     def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter)
