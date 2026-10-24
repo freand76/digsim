@@ -349,12 +349,26 @@ class MuxObject(SymbolObject):
     """
 
     WIDTH = 40
+    # The inputs are 10 pixels apart from this many, like the gates
+    DENSE_INPUTS = 4
+    DENSE_DISTANCE = 10
 
     def __init__(
         self, app_model: AppModel, component: Component, xpos: float, ypos: float
     ) -> None:
         super().__init__(app_model, component, xpos, ypos)
+        self.update_size()
+
+    def update_size(self) -> None:
+        # The inputs without S
+        inputs = len(self.component.inports()) - 1
+        self._port_distance = (
+            self.DENSE_DISTANCE
+            if inputs >= self.DENSE_INPUTS
+            else self.DEFAULT_PORT_TO_PORT_DISTANCE
+        )
         self.width = self.WIDTH
+        self.height = inputs * self._port_distance + 2 * self.BORDER_TO_PORT
         self.update_ports()
 
     @staticmethod
