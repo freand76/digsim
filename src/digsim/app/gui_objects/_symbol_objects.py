@@ -64,13 +64,15 @@ class SymbolObject(ComponentObject):
 
 LEAD = 8
 BUBBLE = 3.0
+# The body of a gate is as high as with two inputs. With more inputs the back of the
+# gate is extended with a line, so that every gate has the same shape.
+MAX_BODY = 36
 
 
-def _body_rect(rect: QRectF, invert: bool) -> QRectF:
+def _body_rect(rect: QRectF, invert: bool, center_y: float) -> QRectF:
     right = rect.right() - LEAD - (2 * BUBBLE if invert else 0)
-    return QRectF(
-        rect.left() + LEAD, rect.top() + 2, right - rect.left() - LEAD, rect.height() - 4
-    )
+    height = min(rect.height() - 4, MAX_BODY)
+    return QRectF(rect.left() + LEAD, center_y - height / 2, right - rect.left() - LEAD, height)
 
 
 def _or_back_x(body: QRectF, depth: float, y: float) -> float:
@@ -117,14 +119,18 @@ def paint_gate(
     selected: bool = False,
 ) -> None:
     """A gate in its rect, with a lead from each input and to the output"""
-    body = _body_rect(rect, invert)
+    body = _body_rect(rect, invert, output_y)
     if exclusive:
         # Room for the second curve of the XOR
         back = QRectF(body)
         body.setLeft(body.left() + 5)
     depth = body.width() * 0.22 if shape in ("or",) else 0.0
+    # The back, where the inputs end, and the line that extends it
+    back_x = back.left() if exclusive else body.left()
     for y in input_ys:
-        if exclusive:
+        if not body.top() < y < body.bottom():
+            end = back_x
+        elif exclusive:
             end = _or_back_x(back, back.width() * 0.22, y)
         elif shape == "or":
             end = _or_back_x(body, depth, y)
@@ -134,6 +140,11 @@ def paint_gate(
     output_x = body.right() + (2 * BUBBLE if invert else 0)
     theme.lead(painter, QPointF(output_x, output_y), QPointF(rect.right(), output_y))
     theme.symbol_path(painter, gate_path(shape, body), selected)
+    top, bottom = min(input_ys), max(input_ys)
+    if top < body.top() or bottom > body.bottom():
+        painter.setPen(theme.outline_pen(selected))
+        painter.drawLine(QPointF(back_x, top - 1), QPointF(back_x, body.top()))
+        painter.drawLine(QPointF(back_x, body.bottom()), QPointF(back_x, bottom + 1))
     if exclusive:
         curve = QPainterPath()
         curve.moveTo(back.left(), back.top())
@@ -154,6 +165,8 @@ class GateObject(SymbolObject):
     INVERT = False
     EXCLUSIVE = False
     WIDTH = 50
+    DENSE_INPUTS = 3
+    DENSE_DISTANCE = 10
 
     def __init__(
         self, app_model: AppModel, component: Component, xpos: float, ypos: float
@@ -164,8 +177,14 @@ class GateObject(SymbolObject):
     def update_size(self) -> None:
         inputs = len(self.component.inports())
         self.width = self.WIDTH
-        # The ports 10 pixels from the top and 20 apart, like the other components
-        self.height = inputs * self.DEFAULT_PORT_TO_PORT_DISTANCE
+        # The ports 10 pixels from the top and 20 apart, like the other components, or 10
+        # apart when there are many, so that the gate is not too high
+        self._port_distance = (
+            self.DENSE_DISTANCE
+            if inputs >= self.DENSE_INPUTS
+            else self.DEFAULT_PORT_TO_PORT_DISTANCE
+        )
+        self.height = (inputs - 1) * self._port_distance + 2 * self.BORDER_TO_PORT
         self.update_ports()
 
     def paint_component(self, painter: QPainter) -> None:
