@@ -5,7 +5,8 @@
 Generate the images of the GUI documentation that are not tutorial steps: the component
 images of the GUI reference (docs/images/components/ and the digits and the note), the
 screenshots of the application and the main window, and the images of the guide to
-adding components (docs/images/guide/).
+adding components (docs/images/guide/). Also draws the application icon
+(src/digsim/app/images/app_icon.png, and its copy docs/images/app_icon.png).
 
 Each component is drawn by its GUI object, the way the application draws it, after a
 short simulation that lights its LEDs or sets its switches.
@@ -27,13 +28,14 @@ from typing import Any
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 from PySide6.QtCore import QEventLoop, QPoint, QPointF, QRect, QRectF, Qt, QTimer
-from PySide6.QtGui import QColor, QImage, QPainter, QPen
+from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QApplication, QGraphicsScene, QScrollArea
 
 from digsim.app.gui import MainWindow
 from digsim.app.gui._circuit_area import CircuitArea
 from digsim.app.gui._component_selection import SelectableComponentWidget
 from digsim.app.gui._top_bar import TopBar
+from digsim.app.gui_objects import _theme as theme
 from digsim.app.gui_objects import class_factory
 from digsim.app.model import AppModel
 from digsim.circuit import Circuit, components
@@ -274,6 +276,34 @@ def guide_images(model: AppModel, window: MainWindow) -> None:
     model.clear_circuit()
 
 
+def app_icon() -> None:
+    """A white square wave on a rounded square in the accent color"""
+    size = 256
+    image = QImage(size, size, QImage.Format.Format_ARGB32)
+    image.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(image)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(theme.ACCENT)
+    painter.drawRoundedRect(QRectF(8, 8, size - 16, size - 16), 48, 48)
+    wave = QPainterPath(QPointF(40, 168))
+    for x in (40, 128):
+        wave.lineTo(x + 26, 168)
+        wave.lineTo(x + 26, 88)
+        wave.lineTo(x + 70, 88)
+        wave.lineTo(x + 70, 168)
+    wave.lineTo(216, 168)
+    pen = QPen(QColor("#ffffff"), 14)
+    pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+    pen.setJoinStyle(Qt.PenJoinStyle.RoundJoin)
+    painter.setPen(pen)
+    painter.setBrush(Qt.BrushStyle.NoBrush)
+    painter.drawPath(wave)
+    painter.end()
+    for path in (ROOT / "src" / "digsim" / "app" / "images", IMAGES):
+        image.save(str(path / "app_icon.png"))
+
+
 def main() -> None:
     app = QApplication.instance() or QApplication([])
     assert app is not None  # keep the application alive while drawing
@@ -282,6 +312,7 @@ def main() -> None:
     window.resize(*WINDOW_SIZE)
     window.show()
     spin(300)
+    app_icon()
     component_images(model)
     window_screenshots(model, window)
     guide_images(model, window)

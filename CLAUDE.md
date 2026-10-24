@@ -30,7 +30,7 @@ uv tool run --with mkdocs-material --with mkdocstrings-python --with ruff mkdocs
 uv run --with pytest python docs/scripts/generate_examples.py  # regenerate example images
 uv run python docs/scripts/generate_tutorial.py  # regenerate GUI tutorial screenshots
 uv run python docs/scripts/generate_editor_image.py  # regenerate the Verilog editor screenshot
-uv run python docs/scripts/generate_gui_images.py  # regenerate component images, app screenshots
+uv run python docs/scripts/generate_gui_images.py  # regenerate component images, app screenshots, icon
 uv run python docs/scripts/generate_verilog_tutorial.py  # regenerate Verilog tutorial screenshots
 uv run python tools/gui_fuzz.py --seeds 3,11,21 --steps 300  # GUI test, offscreen
 uv run --with pytest pytest tools/gui_editor_check.py  # Verilog GUI checks, offscreen
@@ -114,9 +114,9 @@ a push, the maintainer reports failures.
 - `docs/documentation.md` only points to the site.
 - Prose doesn't use semicolons unless one is really called for. Code examples are exempt.
 - Ruff also formats Python code blocks in Markdown, and CI checks that.
-- `docs/images/components/`, the app screenshots and `docs/images/guide/` are drawn by
-  `docs/scripts/generate_gui_images.py`, and `docs/images/app_icon.png` is a copy of
-  `src/digsim/app/images/app_icon.png`.
+- `docs/images/components/`, the app screenshots, `docs/images/guide/` and the app icon
+  (`src/digsim/app/images/app_icon.png` and its copy `docs/images/app_icon.png`) are
+  drawn by `docs/scripts/generate_gui_images.py`.
 - `docs/components.md` (Python) and `docs/gui-components.md` (GUI) walk through the real
   `XNOR` and `LedBar` code, keep them in sync. Regenerate the example images when an
   example changes.

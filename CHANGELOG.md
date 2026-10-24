@@ -4,6 +4,7 @@
  - GUI: a new look. All components are drawn in one style: gates, LEDs, buffers and bus splitters as symbols only, devices like switches and displays with a white body, on a light background with a grid of dots. Most components are smaller, a selected one is blue, and green means on everywhere.
  - GUI: gates with more inputs keep the shape of a two-input gate, with a line on the back for the inputs, and from three inputs the inputs are 10 pixels apart, so a gate with many inputs isn't tall and thin. A circuit saved before gets a short step in the wires to those inputs.
  - GUI: the hex digit, the 7-segment display and the LED bar have a white window, with the segments and LEDs that are off in a pale tint of their color
+ - GUI: a new application icon in the new look, a white square wave on blue. On Linux the icon of the desktop entry is updated the first time the new version starts.
  - GUI: Bus2Wires and Wires2Bus are drawn as a bus bar with an entry for each bit, numbered, and the width of the bus on it
  - LEDs and LED bars have a color: red, green, blue or yellow (`color` in Python, a setting in the GUI). An LED looks like an LED, and glows when it is lit.
  - GUI: a circuit saved before keeps the routes of its wires where its components got smaller, with a short step at the ports that moved

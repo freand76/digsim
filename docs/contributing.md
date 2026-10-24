@@ -88,7 +88,8 @@ uv run python docs/scripts/generate_tutorial.py
 ```
 
 and the component images of the [GUI Reference](gui.md), the screenshots of the
-application and the images of [Adding Components to the GUI](gui-components.md):
+application, the images of [Adding Components to the GUI](gui-components.md) and the
+application icon:
 
 ```sh
 uv run python docs/scripts/generate_gui_images.py
