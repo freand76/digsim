@@ -64,6 +64,8 @@ class SymbolObject(ComponentObject):
 
 LEAD = 8
 BUBBLE = 3.0
+# The length of the triangle of a buffer
+TRIANGLE = 16
 # The body of a gate is as high as with two inputs. With more inputs the back of the
 # gate is extended with a line, so that every gate has the same shape.
 MAX_BODY = 36
@@ -120,6 +122,9 @@ def paint_gate(
 ) -> None:
     """A gate in its rect, with a lead from each input and to the output"""
     body = _body_rect(rect, invert, output_y)
+    if shape == "buffer":
+        # The short triangle of the tristate buffer, in the middle
+        body = QRectF(body.center().x() - TRIANGLE / 2, output_y - 9, TRIANGLE, 18)
     if exclusive:
         # Room for the second curve of the XOR
         back = QRectF(body)
@@ -263,7 +268,7 @@ class NotObject(GateObject):
 
     SHAPE = "buffer"
     INVERT = True
-    WIDTH = 44
+    WIDTH = 40
 
 
 class TristateObject(SymbolObject):
@@ -298,7 +303,7 @@ class TristateObject(SymbolObject):
     ) -> None:
         """The triangle from A to Y, and the enable from below"""
         # A short triangle, in the middle
-        body = QRectF(rect.center().x() - 8, a_y - 9, 16, 18)
+        body = QRectF(rect.center().x() - TRIANGLE / 2, a_y - 9, TRIANGLE, 18)
         width = 3.0 if bus else theme.LINE_WIDTH
         theme.lead(painter, QPointF(rect.left() - 1, a_y), QPointF(body.left(), a_y), width)
         theme.lead(painter, QPointF(body.right(), a_y), QPointF(rect.right(), a_y), width)
