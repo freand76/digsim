@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPoint, QRect, QRectF, QSize
+from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, QSize
 from PySide6.QtGui import QPainter, QPolygon
 
 from digsim.circuit.components import LabelWireIn, LabelWireOut
@@ -15,6 +15,7 @@ from digsim.circuit.components.atoms import Component
 
 from . import _theme as theme
 from ._component_object import ComponentObject
+from ._symbol_objects import port_dots
 
 
 if TYPE_CHECKING:
@@ -118,21 +119,15 @@ class LabelObject(ComponentObject):
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         width = 44
         height = 16
-        cls._paint_label(
-            painter,
-            QRect(
-                int(size.width() / 2 - width / 2),
-                int(size.height() / 2 - height / 2),
-                width,
-                height,
-            ),
+        # Centered like the symbols of the other components
+        rect = QRectF(
+            size.width() / 2 - width / 2, size.width() / 2 - 2 - height / 2, width, height
         )
-        theme.paint_text(
-            painter,
-            QRectF(size.width() / 2 - width / 2, size.height() / 2 - height / 2, width, height),
-            "label",
-            7,
-        )
+        cls._paint_label(painter, rect)
+        theme.paint_text(painter, rect, "label", 7)
+        # The port, at the tip
+        tip_x = rect.left() if cls.SINK else rect.right()
+        port_dots(painter, [QPointF(tip_x, rect.center().y())])
         cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)
 
 
