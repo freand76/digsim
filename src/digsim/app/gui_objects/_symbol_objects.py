@@ -272,7 +272,7 @@ class TristateObject(SymbolObject):
     Y is at the height of A.
     """
 
-    WIDTH = 50
+    WIDTH = 40
 
     def __init__(
         self, app_model: AppModel, component: Component, xpos: float, ypos: float
@@ -297,7 +297,8 @@ class TristateObject(SymbolObject):
         painter: QPainter, rect: QRectF, a_y: float, oe_y: float, bus: bool, selected: bool
     ) -> None:
         """The triangle from A to Y, and the enable from below"""
-        body = QRectF(rect.left() + LEAD, a_y - 9, rect.width() - 2 * LEAD, 18)
+        # A short triangle, in the middle
+        body = QRectF(rect.center().x() - 8, a_y - 9, 16, 18)
         width = 3.0 if bus else theme.LINE_WIDTH
         theme.lead(painter, QPointF(rect.left() - 1, a_y), QPointF(body.left(), a_y), width)
         theme.lead(painter, QPointF(body.right(), a_y), QPointF(rect.right(), a_y), width)
@@ -471,7 +472,8 @@ class BusBitsObject(SymbolObject):
     """
 
     PORT_DISTANCE = 10
-    WIDTH = 48
+    # As wide as a device, the ports stay on the 10 pixel rhythm
+    WIDTH = 40
     # From the bus side to the bar
     BAR = 14
     # The bits are to the right of the bar
@@ -563,7 +565,7 @@ class BusBitsObject(SymbolObject):
             bit_x = rect.right() if cls.BITS_RIGHT else rect.left() - 1
             port_dots(painter, [QPointF(bus_x, bus_y)] + [QPointF(bit_x, y) for y in bit_ys])
 
-        paint_icon(painter, size, (cls.WIDTH, 40), paint, scale=1.2)
+        paint_icon(painter, size, (cls.WIDTH, 40), paint, scale=1.15)
         cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)
 
 
