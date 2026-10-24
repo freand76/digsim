@@ -344,8 +344,8 @@ class TristateObject(SymbolObject):
 
 class MuxObject(SymbolObject):
     """
-    A multiplexer, a trapezoid with the inputs to the left, S below them, each on a lead
-    like the gates, and the names of the inputs inside
+    A multiplexer, a trapezoid with the inputs to the left on leads like the gates, the
+    names of the inputs inside, and S coming into it from below
     """
 
     WIDTH = 40
@@ -368,19 +368,49 @@ class MuxObject(SymbolObject):
             else self.DEFAULT_PORT_TO_PORT_DISTANCE
         )
         self.width = self.WIDTH
-        self.height = inputs * self._port_distance + 2 * self.BORDER_TO_PORT
+        # S is 20 pixels below the last input, room to come in from below
+        self.height = (
+            (inputs - 1) * self._port_distance
+            + self.DEFAULT_PORT_TO_PORT_DISTANCE
+            + 2 * self.BORDER_TO_PORT
+        )
         self.update_ports()
+
+    def update_ports(self) -> None:
+        super().update_ports()
+        if not hasattr(self, "_component"):
+            return
+        *inputs, select = self.component.inports()
+        top = int(self.object_pos.y() + self.BORDER_TO_PORT - self.PORT_SIDE / 2)
+        for idx, port in enumerate(inputs):
+            self._move_port(port, top + idx * self._port_distance)
+        last = top + (len(inputs) - 1) * self._port_distance
+        self._move_port(select, last + self.DEFAULT_PORT_TO_PORT_DISTANCE)
+        # Y in the middle of the inputs
+        self._move_port(self.component.port("Y"), (top + last) // 2)
+
+    def _move_port(self, port: Port, top: int) -> None:
+        item = self.get_port_item(port)
+        rect = item.rect()
+        rect.moveTop(top)
+        item.setRect(rect)
 
     @staticmethod
     def paint_mux(
         painter: QPainter,
         rect: QRectF,
         inputs: list[tuple[str, float, bool]],
+        select: tuple[float, bool],
         output: tuple[float, bool],
         selected: bool,
     ) -> None:
-        """The trapezoid and the leads, each input is (name, y, is a bus)"""
-        body = rect.adjusted(LEAD, 0, -LEAD, 0)
+        """
+        The trapezoid and the leads, each input is (name, y, is a bus), and select and
+        output are (y, is a bus)
+        """
+        ys = [y for _, y, _ in inputs]
+        body = QRectF(rect.left() + LEAD, rect.top(), rect.width() - 2 * LEAD, 0)
+        body.setBottom(ys[-1] + (ys[0] - rect.top()))
         output_y, output_bus = output
         for _, y, bus in inputs:
             width = 3.0 if bus else theme.LINE_WIDTH
@@ -389,13 +419,23 @@ class MuxObject(SymbolObject):
         theme.lead(
             painter, QPointF(body.right(), output_y), QPointF(rect.right(), output_y), width
         )
-        inset = min(10.0, rect.height() / 4)
-        path = QPainterPath(QPointF(body.left(), body.top()))
-        path.lineTo(body.right(), body.top() + inset)
-        path.lineTo(body.right(), body.bottom() - inset)
-        path.lineTo(body.left(), body.bottom())
-        path.closeSubpath()
-        theme.symbol_path(painter, path, selected)
+        inset = min(10.0, body.height() / 4)
+        # S from below, into the slanted lower edge
+        select_y, select_bus = select
+        select_x = body.center().x()
+        edge_y = body.bottom() - inset / 2
+        painter.setPen(theme.ink_pen(3.0 if select_bus else theme.LINE_WIDTH))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        path = QPainterPath(QPointF(rect.left() - 1, select_y))
+        path.lineTo(select_x, select_y)
+        path.lineTo(select_x, edge_y)
+        painter.drawPath(path)
+        trapezoid = QPainterPath(QPointF(body.left(), body.top()))
+        trapezoid.lineTo(body.right(), body.top() + inset)
+        trapezoid.lineTo(body.right(), body.bottom() - inset)
+        trapezoid.lineTo(body.left(), body.bottom())
+        trapezoid.closeSubpath()
+        theme.symbol_path(painter, trapezoid, selected)
         for name, y, _ in inputs:
             theme.paint_text(
                 painter,
@@ -406,15 +446,13 @@ class MuxObject(SymbolObject):
             )
 
     def paint_component(self, painter: QPainter) -> None:
-        inputs = [
-            (port.name(), self.port_ys([port])[0], port.width > 1)
-            for port in self.component.inports()
-        ]
+        *inputs, select = self.component.inports()
         (output,) = self.component.outports()
         self.paint_mux(
             painter,
             QRectF(self.rect()),
-            inputs,
+            [(port.name(), self.port_ys([port])[0], port.width > 1) for port in inputs],
+            (self.port_ys([select])[0], select.width > 1),
             (self.port_ys([output])[0], output.width > 1),
             self.selected,
         )
@@ -422,13 +460,15 @@ class MuxObject(SymbolObject):
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         def paint(rect: QRectF) -> None:
-            ys = [rect.top() + 10, rect.top() + 30, rect.top() + 50]
-            inputs = [(text, y, False) for text, y in zip(["A", "B", "S"], ys, strict=True)]
-            cls.paint_mux(painter, rect, inputs, (rect.center().y(), False), False)
+            ys = [rect.top() + 10, rect.top() + 30]
+            select_y = rect.top() + 50
+            output_y = rect.top() + 20
+            inputs = [(text, y, False) for text, y in zip(["A", "B"], ys, strict=True)]
+            cls.paint_mux(painter, rect, inputs, (select_y, False), (output_y, False), False)
             port_dots(
                 painter,
-                [QPointF(rect.left() - 1, y) for y in ys]
-                + [QPointF(rect.right(), rect.center().y())],
+                [QPointF(rect.left() - 1, y) for y in [*ys, select_y]]
+                + [QPointF(rect.right(), output_y)],
             )
 
         paint_icon(painter, size, (cls.WIDTH, 60), paint, scale=1.0)
