@@ -96,9 +96,11 @@ a push, the maintainer reports failures.
   afterwards. The defaults in `get_parameters()` (GUI) must match the `__init__` defaults
   (Python). `YosysComponent` and `IntegratedCircuit` take the Verilog module's name.
 - Yosys always runs in-process (`yowasp_yosys.run_yosys`, WebAssembly), never a native
-  `yosys`. Work files go in a temp folder in the user cache (in the sandbox `/tmp` is
-  private). Paths given to Yosys use forward slashes (`C:/...`). After a failed run Yosys
-  keeps its files open until garbage collection, which breaks cleanup on Windows.
+  `yosys`. YoWASP mounts a `/tmp` of its own, so Yosys can't read files in `/tmp` (or
+  pytest's `tmp_path` on Linux): work files go in a temp folder in the user cache, and
+  `yosys_can_read()` checks input files. Paths given to Yosys use forward slashes
+  (`C:/...`). After a failed run Yosys keeps its files open until garbage collection,
+  which breaks cleanup on Windows.
 - Synthesis changes can be checked against Icarus Verilog (`iverilog`, if installed): random
   Verilog synthesized as gates and with `functional=True` must agree with it.
 

@@ -9,7 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from digsim.synth import Synthesis, SynthesisException, YosysMessage, parse_messages
+from digsim.synth import (
+    Synthesis,
+    SynthesisException,
+    YosysMessage,
+    parse_messages,
+    yosys_can_read,
+)
 from digsim.synth._synthesis import _console_to_file
 
 
@@ -123,6 +129,23 @@ def test_yosys_path_with_space(verilog_path):
         assert Synthesis.list_modules(verilog_file) == ["module_one"]
         netlist_dict = Synthesis(verilog_file, "module_one").synth_to_dict(silent=True)
         assert "module_one" in netlist_dict["modules"]
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="/tmp is a folder on Linux")
+def test_yosys_can_not_read_tmp():
+    """A file in /tmp gets a message that says why, before Yosys runs"""
+    assert not yosys_can_read("/tmp/design.v")
+    assert not yosys_can_read("/tmp/../tmp/designs/design.v")
+    with pytest.raises(SynthesisException, match="/tmp folder of its own"):
+        Synthesis.list_modules("/tmp/design.v")
+    with pytest.raises(SynthesisException, match="/tmp folder of its own"):
+        Synthesis("/tmp/design.v", "design").synth_to_dict(silent=True)
+
+
+def test_yosys_can_read_other_folders(verilog_path):
+    """Files outside /tmp are read by the path they are given"""
+    assert yosys_can_read(verilog_path / "one_module.v")
+    assert yosys_can_read("/tmpdir/design.v")
 
 
 @pytest.mark.skipif(not sys.platform.startswith("linux"), reason="uses /proc to list open files")

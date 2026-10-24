@@ -37,14 +37,55 @@ def _file_list(verilog_files: VerilogFiles) -> list[str]:
     return [str(verilog_file) for verilog_file in verilog_files]
 
 
+def _in_tmp(path: pathlib.Path) -> bool:
+    return path.parts[:2] == ("/", "tmp")
+
+
+def _readable_path(path: pathlib.Path) -> pathlib.Path | None:
+    """
+    The path that Yosys can read a file by, None if it can't. YoWASP, the WebAssembly
+    Yosys, has a /tmp folder of its own on Linux and macOS, which hides the files in
+    /tmp. On macOS /tmp is a link to /private/tmp, and the file can be read by that path.
+    """
+    if os.name == "nt" or not _in_tmp(path.absolute()):
+        return path
+    real_path = path.resolve()
+    return None if _in_tmp(real_path) else real_path
+
+
+def yosys_can_read(path: str | os.PathLike[str]) -> bool:
+    """
+    If the Yosys of DigSim can read a file. It can't read files in /tmp on Linux: the
+    WebAssembly Yosys (YoWASP) has a /tmp folder of its own.
+
+    Args:
+        path: The path of a Verilog file.
+    """
+    return _readable_path(pathlib.Path(path)) is not None
+
+
 def _script_path(path: pathlib.Path) -> str:
     """A path for a Yosys script: forward slashes, quoted in case it contains spaces"""
     return f'"{path.as_posix()}"'
 
 
 def _script_files(verilog_files: VerilogFiles) -> str:
-    """The verilog files as arguments in a Yosys script"""
-    return " ".join(_script_path(pathlib.Path(file)) for file in _file_list(verilog_files))
+    """
+    The verilog files as arguments in a Yosys script
+
+    Raises:
+        SynthesisException: If Yosys can't read a file, see yosys_can_read.
+    """
+    paths = []
+    for file in _file_list(verilog_files):
+        path = _readable_path(pathlib.Path(file))
+        if path is None:
+            raise SynthesisException(
+                f"Yosys can't read {file}: the WebAssembly Yosys (YoWASP) has a /tmp folder "
+                "of its own, which hides the files in /tmp. Move the file to another folder."
+            )
+        paths.append(_script_path(path))
+    return " ".join(paths)
 
 
 @contextmanager
