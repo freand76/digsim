@@ -10,4 +10,4 @@ See [Verilog and Yosys](../synthesis.md) for how synthesis is used.
 
 ::: digsim.synth.parse_messages
 
-::: digsim.synth.yosys_can_read
+::: digsim.synth.yosys_path_problem

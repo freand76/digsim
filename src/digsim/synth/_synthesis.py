@@ -37,31 +37,61 @@ def _file_list(verilog_files: VerilogFiles) -> list[str]:
     return [str(verilog_file) for verilog_file in verilog_files]
 
 
-def _in_tmp(path: pathlib.Path) -> bool:
-    return path.parts[:2] == ("/", "tmp")
+# Folders that the WebAssembly Yosys (YoWASP) has of its own, which hide the real ones
+_YOWASP_FOLDERS = ("tmp", "share")
 
 
-def _readable_path(path: pathlib.Path) -> pathlib.Path | None:
+def _yosys_path(path: pathlib.Path) -> tuple[pathlib.Path | None, str]:
     """
-    The path that Yosys can read a file by, None if it can't. YoWASP, the WebAssembly
-    Yosys, has a /tmp folder of its own on Linux and macOS, which hides the files in
-    /tmp. On macOS /tmp is a link to /private/tmp, and the file can be read by that path.
+    The path that Yosys reads a file by, or None and why it can't read it.
+
+    The WebAssembly Yosys (YoWASP) sees the folders of the file system root (the drives on
+    Windows) and, by relative paths, the working folder, but not files directly in the
+    root, not the real /tmp and /share by absolute paths (it has its own), and it doesn't
+    follow links to absolute paths. A path with links in it is
+    given as its real path, which also finds a file in /tmp on macOS (/private/tmp).
     """
-    if os.name == "nt" or not _in_tmp(path.absolute()):
-        return path
-    real_path = path.resolve()
-    return None if _in_tmp(real_path) else real_path
+    absolute = pathlib.Path(os.path.abspath(path))
+    if os.name == "nt":
+        # Not the real path: that is a network path for a network drive letter
+        if not absolute.drive.endswith(":"):
+            return None, (
+                "network paths can't be read by the WebAssembly Yosys (YoWASP), "
+                "use a drive letter for the network folder"
+            )
+        return path, ""
+    real = path.resolve()
+    if real == absolute:
+        if not path.is_absolute():
+            # YoWASP sees the working folder and its parents by relative paths, in any
+            # folder
+            return path, ""
+        # Kept as it is, Yosys writes it into the netlist
+        yosys_path = path
+    else:
+        yosys_path = real
+    parts = real.parts
+    if len(parts) < 3:
+        return None, "files directly in / can't be read by the WebAssembly Yosys (YoWASP)"
+    if parts[1] in _YOWASP_FOLDERS:
+        return None, (
+            f"the WebAssembly Yosys (YoWASP) has a /{parts[1]} folder of its own, "
+            f"which hides the files in /{parts[1]}"
+        )
+    return yosys_path, ""
 
 
-def yosys_can_read(path: str | os.PathLike[str]) -> bool:
+def yosys_path_problem(path: str | os.PathLike[str]) -> str | None:
     """
-    If the Yosys of DigSim can read a file. It can't read files in /tmp on Linux: the
-    WebAssembly Yosys (YoWASP) has a /tmp folder of its own.
+    Why the Yosys of DigSim can't read a file, None if it can. The WebAssembly Yosys
+    (YoWASP) can't read files in /tmp on Linux, in /share, or directly in /, and not
+    network paths on Windows.
 
     Args:
         path: The path of a Verilog file.
     """
-    return _readable_path(pathlib.Path(path)) is not None
+    yosys_path, problem = _yosys_path(pathlib.Path(path))
+    return problem if yosys_path is None else None
 
 
 def _script_path(path: pathlib.Path) -> str:
@@ -74,15 +104,14 @@ def _script_files(verilog_files: VerilogFiles) -> str:
     The verilog files as arguments in a Yosys script
 
     Raises:
-        SynthesisException: If Yosys can't read a file, see yosys_can_read.
+        SynthesisException: If Yosys can't read a file, see yosys_path_problem.
     """
     paths = []
     for file in _file_list(verilog_files):
-        path = _readable_path(pathlib.Path(file))
+        path, problem = _yosys_path(pathlib.Path(file))
         if path is None:
             raise SynthesisException(
-                f"Yosys can't read {file}: the WebAssembly Yosys (YoWASP) has a /tmp folder "
-                "of its own, which hides the files in /tmp. Move the file to another folder."
+                f"Yosys can't read {file}: {problem}. Move the file to another folder."
             )
         paths.append(_script_path(path))
     return " ".join(paths)

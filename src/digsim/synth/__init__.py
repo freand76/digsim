@@ -8,5 +8,5 @@ from ._synthesis import (
     SynthesisException,
     YosysMessage,
     parse_messages,
-    yosys_can_read,
+    yosys_path_problem,
 )

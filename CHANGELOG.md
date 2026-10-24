@@ -6,7 +6,8 @@
  - GUI: the hex digit, the 7-segment display and the LED bar have a white window, with the segments and LEDs that are off in a pale tint of their color
  - GUI: a new application icon in the new look, a white square wave on blue. On Linux the icon of the desktop entry is updated the first time the new version starts.
  - Docs: a new guide, Your First Verilog Component: a new circuit with a Yosys component from a new Verilog file, a half adder written in the editor
- - A Verilog file in /tmp, which the WebAssembly Yosys can't read on Linux, gets a message that says so instead of "file not found", and New Verilog file asks for another folder. On macOS such a file is read by its real path in /private/tmp.
+ - Verilog files reached through a link to an absolute path, like a project folder that is a link, can be synthesized. The WebAssembly Yosys doesn't follow such links and reported "file not found", now it gets the real path. This also makes files in /tmp on macOS work.
+ - A Verilog file that the WebAssembly Yosys can't read (in /tmp on Linux, in /share, directly in /, or a network path on Windows) gets a message that says why instead of "file not found", and New Verilog file asks for another folder
  - Docs: an About page, with the history of DigSim and how AI has been used in its later stages
  - GUI: Bus2Wires and Wires2Bus are drawn as a bus bar with an entry for each bit, numbered, and the width of the bus on it
  - LEDs and LED bars have a color: red, green, blue or yellow (`color` in Python, a setting in the GUI). An LED looks like an LED, and glows when it is lit.
