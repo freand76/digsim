@@ -32,6 +32,7 @@ uv run python docs/scripts/generate_tutorial.py  # regenerate GUI tutorial scree
 uv run python docs/scripts/generate_editor_image.py  # regenerate the Verilog editor screenshot
 uv run python docs/scripts/generate_gui_images.py  # regenerate component images, app screenshots, icon
 uv run python docs/scripts/generate_verilog_tutorial.py  # regenerate Verilog tutorial screenshots
+uv run python docs/scripts/generate_new_verilog_tutorial.py  # regenerate new Verilog component guide screenshots
 uv run python tools/gui_fuzz.py --seeds 3,11,21 --steps 300  # GUI test, offscreen
 uv run --with pytest pytest tools/gui_editor_check.py  # Verilog GUI checks, offscreen
 ```

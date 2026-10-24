@@ -95,6 +95,17 @@ application icon:
 uv run python docs/scripts/generate_gui_images.py
 ```
 
+The screenshots of the Verilog guides,
+[Your First Verilog Component](new-verilog.md) and
+[Editing a Verilog Component](verilog-tutorial.md), and of the Verilog editor in the
+[GUI Reference](gui.md#the-verilog-editor):
+
+```sh
+uv run python docs/scripts/generate_new_verilog_tutorial.py
+uv run python docs/scripts/generate_verilog_tutorial.py
+uv run python docs/scripts/generate_editor_image.py
+```
+
 ## Guidelines
 
 - **Keep changes focused.** One fix or feature per pull request, and one purpose per

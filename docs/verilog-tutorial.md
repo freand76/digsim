@@ -221,7 +221,8 @@ The circuit file itself is not changed, unless you saved it with **Save Circuit*
   wires to ports that are removed, or get another width, are removed. See
   [Yosys component](gui.md#yosys-component).
 - **A new design:** add a Yosys component, and choose **New Verilog file**. DigSim
-  creates the file with a small module and opens it in the editor.
+  creates the file with a small module and opens it in the editor, see
+  [Your First Verilog Component](new-verilog.md).
 - **Faster simulation:** right-click the counter, choose **Settings**, and check
   **Synthesize Verilog into functional blocks**. The editor then synthesizes the file
   into functional blocks for it, see
