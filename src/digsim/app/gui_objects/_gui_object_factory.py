@@ -17,10 +17,10 @@ from ._device_objects import (
 from ._dip_switch_object import DipSwitchObject
 from ._gui_note_object import GuiNoteObject
 from ._hexdigit_object import HexDigitObject
-from ._image_objects import ICObject
 from ._label_object import LabelWireInObject, LabelWireOutObject
 from ._led_bar_object import LedBarObject
 from ._logic_analyzer_object import LogicAnalyzerObject
+from ._named_box_object import ICObject
 from ._seven_segment_object import SevenSegmentObject
 from ._symbol_objects import (
     AndObject,

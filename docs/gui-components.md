@@ -88,16 +88,9 @@ class XnorObject(GateObject):
     INVERT = True
 ```
 
-!!! tip "A component with a picture"
-    A component can also have a picture as its symbol. Subclass `ImageObject` and set
-    `IMAGE_FILENAME` to a PNG file in
-    [`src/digsim/app/gui_objects/images`](https://github.com/freand76/digsim/tree/main/src/digsim/app/gui_objects/images)
-    (files in that folder are included in the package, see `MANIFEST.in`). Set
-    `ACTIVE_IMAGE_FILENAME` to show another picture while the component's `active`
-    property is `True`, and `SHOW_NAME = False` and `SHOW_PORT_NAMES = False` to leave out
-    the name and the port names. The same picture is used in the component selector.
-    Components with many ports, like ICs, subclass `NamedBoxObject` instead: a body with
-    the component's name and port names.
+!!! tip "A component with many ports"
+    Components with many ports, like ICs, subclass `NamedBoxObject`: a body with the
+    component's name in a header and the names of the ports.
 
 ## 3b. A GUI object drawn by code
 
@@ -308,7 +301,8 @@ Components that the user operates while the simulation runs, like buttons and sw
   released with the mouse (or a [keyboard shortcut](gui.md#keyboard-shortcuts-for-inputs))
   while the simulation runs,
 - use `PortOutImmediate` outputs,
-- return the state from the `active` property, to use `ACTIVE_IMAGE_FILENAME`.
+- return the state from the `active` property, to light the status dot of a
+  `DeviceObject` with `STATUS_LIGHT = True`.
 
 See `PushButton` and `OnOffSwitch` in `src/digsim/circuit/components` for examples. In the
 GUI object, `single_click_action()` handles clicks while the simulation is stopped, and
