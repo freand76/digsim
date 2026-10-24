@@ -156,6 +156,6 @@ Now that you know the basics, here are some things to try:
 - **Example circuits:** load the circuits in the
   [`example_circuits`](https://github.com/freand76/digsim/tree/main/example_circuits)
   folder, described in [Examples](examples.md#gui-example-circuits).
-- **Your own Verilog:** turn a Verilog module into a component, see
-  [Verilog and Yosys](synthesis.md), and change it in the editor, see
+- **Your own Verilog:** write a component in Verilog, see
+  [Your First Verilog Component](new-verilog.md), and change one in the editor, see
   [Editing a Verilog Component](verilog-tutorial.md).

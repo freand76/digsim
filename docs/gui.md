@@ -381,7 +381,8 @@ cursor.
 
 ![The Verilog editor after Synthesize](images/verilog_editor.png)
 
-[Editing a Verilog Component](verilog-tutorial.md) is a step by step guide to the editor.
+[Your First Verilog Component](new-verilog.md) and
+[Editing a Verilog Component](verilog-tutorial.md) are step by step guides to the editor.
 
 | Keys | Action |
 | --- | --- |

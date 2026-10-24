@@ -12,6 +12,7 @@ nav:
   - GUI Application:
       - Your First Circuit: first-circuit.md
       - GUI Reference: gui.md
+      - Your First Verilog Component: new-verilog.md
       - Editing a Verilog Component: verilog-tutorial.md
       - Adding Components to the GUI: gui-components.md
   - Python:
