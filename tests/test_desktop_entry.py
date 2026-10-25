@@ -1,8 +1,9 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pytest module to test the generated Linux desktop entry"""
 
+import os
 import shutil
 import subprocess
 import sys
@@ -118,3 +119,16 @@ def test_entry_is_valid(data_home, icon, monkeypatch, found):
         ["desktop-file-validate", str(desktop_file)], capture_output=True, text=True, check=False
     )
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_new_icon_overwrites_old_and_touches_theme(data_home, icon, monkeypatch):
+    """A new icon replaces an old one, and the theme folder changes so the shell reloads it"""
+    monkeypatch.setattr(cli.shutil, "which", _which({}))
+    target = data_home / "icons/hicolor/256x256/apps" / f"{cli.APP_ID}.png"
+    target.parent.mkdir(parents=True)
+    target.write_bytes(b"old icon")
+    theme_dir = data_home / "icons/hicolor"
+    os.utime(theme_dir, (0, 0))
+    cli.setup_wayland_desktop_entry(icon)
+    assert target.read_bytes() == ICON
+    assert theme_dir.stat().st_mtime > 0

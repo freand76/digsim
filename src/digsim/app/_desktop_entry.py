@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -79,7 +79,8 @@ def setup_wayland_desktop_entry(icon_resource_path: Path) -> None:
 
     data_home = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
     apps_dir = data_home / "applications"
-    icons_dir = data_home / "icons" / "hicolor" / "256x256" / "apps"
+    theme_dir = data_home / "icons" / "hicolor"
+    icons_dir = theme_dir / "256x256" / "apps"
     desktop_file = apps_dir / f"{APP_ID}.desktop"
     target_icon = icons_dir / f"{APP_ID}.png"
 
@@ -88,6 +89,8 @@ def setup_wayland_desktop_entry(icon_resource_path: Path) -> None:
         if not target_icon.exists() or target_icon.read_bytes() != icon_data:
             icons_dir.mkdir(parents=True, exist_ok=True)
             target_icon.write_bytes(icon_data)
+            # GNOME Shell keeps showing the old icon until the theme folder changes
+            os.utime(theme_dir)
 
     content = _desktop_entry_content()
     if not desktop_file.exists() or desktop_file.read_text(encoding="utf-8") != content:
