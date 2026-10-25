@@ -65,7 +65,7 @@ uv run --with mypy mypy                        # type check
 uv run --with pytest pytest                    # run the tests
 ```
 
-The tests run on Linux with Python 3.11 to 3.14 and on Windows, so avoid syntax newer than
+The tests run on Linux with Python 3.11 to 3.15 and on Windows, so avoid syntax newer than
 Python 3.11.
 
 For documentation changes, preview the site while you edit it, at <http://127.0.0.1:8000/digsim/>:

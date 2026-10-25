@@ -2,7 +2,7 @@
 
 DigSim (`digsim-logic-simulator` on PyPI): an interactive digital logic simulator with a
 PySide6 GUI, a Python simulation API, and Yosys (via `yowasp-yosys`) for synthesizing
-Verilog into simulatable netlists. Python >= 3.11 (CI tests 3.11–3.14), so no newer-only
+Verilog into simulatable netlists. Python >= 3.11 (CI tests 3.11–3.15), so no newer-only
 syntax. Dependencies in `pyproject.toml` are pinned to exact versions.
 
 ## Layout
@@ -43,7 +43,7 @@ package, but `uv run --with .` from another project can use a stale build (`--re
 ## CI
 
 `.github/workflows/` runs ruff, and pytest plus `examples/yosys_counter/*.py`, on Linux
-(3.11–3.14) and Windows, on push only. `docs.yaml` deploys the site on pushes to `main`
+(3.11–3.15) and Windows, on push only. `docs.yaml` deploys the site on pushes to `main`
 that touch `docs/`, `src/digsim/`, `mkdocs.yml` or `CHANGELOG.md`. Don't watch CI after
 a push, the maintainer reports failures.
 

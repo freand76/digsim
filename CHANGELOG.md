@@ -15,6 +15,7 @@
  - New GUI example circuit, traffic_light.circuit: the traffic light state machine (traffic_light.sv) with a reset and a request button, and red, yellow and green LEDs
  - Verilog parameters: `Synthesis(..., parameters={"WIDTH": 16})`, `YosysComponent(..., parameters=...)` and `python -m digsim.synth synth -p WIDTH=16` synthesize the top module with other values for its parameters. A Yosys component keeps them in a saved circuit, and Reload and the Verilog editor synthesize each component with its own parameters.
  - GUI: Build > Parameters... in the Verilog editor shows the parameters of the module and their defaults, with the values of each component of the file, and synthesizes the components with new values. `Synthesis.list_parameters()` lists the parameters of a module, and `python -m digsim.synth list` lists each module's parameters with their defaults.
+ - Python 3.15 support
 
 ## v1.7.1
  - `python -m digsim.verilog format` without -i writes a file with Windows newlines (\r\n) to the terminal without an extra \r on each line on Windows
