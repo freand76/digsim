@@ -9,3 +9,5 @@ See [Verilog and Yosys](../synthesis.md) for how synthesis is used.
 ::: digsim.synth.YosysMessage
 
 ::: digsim.synth.parse_messages
+
+::: digsim.synth.yosys_path_problem

@@ -9,6 +9,22 @@ DigSim ships with [YoWASP](https://github.com/YoWASP/yosys), a portable WebAssem
 of Yosys, so nothing extra needs to be installed. DigSim always uses it, also when
 another `yosys` is installed.
 
+!!! warning "Folders that Yosys can't read"
+    YoWASP runs Yosys in a WebAssembly sandbox, which doesn't see every file:
+
+    - `/tmp` on Linux and `/share`: YoWASP has folders of its own with these names,
+      which hide the real ones. On macOS `/tmp` works, DigSim uses its real path
+      `/private/tmp`.
+    - Files directly in `/`.
+    - Network paths on Windows (`\\server\share\...`). A network folder with a drive
+      letter works.
+
+    Synthesis fails with a message that says so, and `yosys_path_problem()` in
+    `digsim.synth` tells beforehand. A path through a link works: DigSim gives Yosys the
+    real path, as the sandbox doesn't follow links to absolute paths. Files that the
+    Verilog includes with `` `include `` are read by Yosys itself, keep them in the same
+    places.
+
 You don't always need to synthesize by hand: the GUI and `YosysComponent` both accept
 `.v` files and synthesize them on load. Creating a netlist yourself is useful when the
 design has several modules, or when the same design is loaded often (synthesis of large

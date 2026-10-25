@@ -349,7 +349,9 @@ is added if you leave it out). DigSim creates it with a small module (one input 
 output, named after the file), adds the component, and opens the file in the
 [Verilog editor](#the-verilog-editor). If a file with that name exists, DigSim asks if it
 should use the file as it is, or if you want to choose another name. The file is never
-replaced.
+replaced. A few folders can't be used, like `/tmp` on Linux, as Yosys can't read files
+there, see [Verilog and Yosys](synthesis.md#verilog-and-yosys). DigSim says so when
+you choose one.
 
 !!! note
     A Verilog file loaded directly can only contain one module. Synthesize designs with

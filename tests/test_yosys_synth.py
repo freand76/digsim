@@ -9,7 +9,13 @@ from pathlib import Path
 
 import pytest
 
-from digsim.synth import Synthesis, SynthesisException, YosysMessage, parse_messages
+from digsim.synth import (
+    Synthesis,
+    SynthesisException,
+    YosysMessage,
+    parse_messages,
+    yosys_path_problem,
+)
 from digsim.synth._synthesis import _console_to_file
 
 
@@ -123,6 +129,51 @@ def test_yosys_path_with_space(verilog_path):
         assert Synthesis.list_modules(verilog_file) == ["module_one"]
         netlist_dict = Synthesis(verilog_file, "module_one").synth_to_dict(silent=True)
         assert "module_one" in netlist_dict["modules"]
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="/tmp is a folder on Linux")
+def test_yosys_can_not_read_its_own_folders():
+    """Files in /tmp and /share, or directly in /, get a message that says why"""
+    assert "/tmp folder of its own" in yosys_path_problem("/tmp/design.v")
+    assert "/tmp folder of its own" in yosys_path_problem("/tmp/../tmp/designs/design.v")
+    assert "/share folder of its own" in yosys_path_problem("/share/designs/design.v")
+    assert "directly in /" in yosys_path_problem("/design.v")
+    with pytest.raises(SynthesisException, match="/tmp folder of its own"):
+        Synthesis.list_modules("/tmp/design.v")
+    with pytest.raises(SynthesisException, match="/tmp folder of its own"):
+        Synthesis("/tmp/design.v", "design").synth_to_dict(silent=True)
+
+
+def test_yosys_can_read_other_folders(verilog_path):
+    """Files outside those folders can be read, and any file by a relative path"""
+    assert yosys_path_problem(verilog_path / "one_module.v") is None
+    assert yosys_path_problem("/tmpdir/design.v") is None
+    assert yosys_path_problem("design.v") is None
+
+
+@pytest.mark.skipif(not sys.platform.startswith("linux"), reason="/tmp is a folder on Linux")
+def test_yosys_reads_relative_paths_in_tmp(verilog_path, tmp_path, monkeypatch):
+    """YoWASP sees the working folder by relative paths, also in /tmp"""
+    (tmp_path / "one_module.v").write_text((verilog_path / "one_module.v").read_text())
+    monkeypatch.chdir(tmp_path)
+    assert Synthesis.list_modules("one_module.v") == ["module_one"]
+
+
+@pytest.mark.skipif(os.name == "nt", reason="links need extra rights on Windows")
+def test_yosys_reads_through_links(verilog_path):
+    """
+    A file reached through a link to an absolute path is read by its real path: the
+    WebAssembly Yosys doesn't follow such links
+    """
+    # Not in tmp_path: the WebAssembly Yosys can't read the system temp folder
+    with Synthesis._work_dir() as work_dir:
+        designs = work_dir / "designs"
+        designs.mkdir()
+        (designs / "one_module.v").write_text((verilog_path / "one_module.v").read_text())
+        (work_dir / "file_link.v").symlink_to(designs / "one_module.v")
+        (work_dir / "folder_link").symlink_to(designs)
+        assert Synthesis.list_modules(work_dir / "file_link.v") == ["module_one"]
+        assert Synthesis.list_modules(work_dir / "folder_link" / "one_module.v") == ["module_one"]
 
 
 @pytest.mark.skipif(not sys.platform.startswith("linux"), reason="uses /proc to list open files")

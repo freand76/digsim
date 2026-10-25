@@ -37,7 +37,9 @@ design, and DigSim asks where the design comes from:
 
 Click **New Verilog file**, and choose a folder and a file name in the file dialog, for
 example `half_adder.v`. Keep the Verilog file in the same folder as the circuit that you
-save in step 9, so that they stay together.
+save in step 9, so that they stay together. On Linux, choose a folder outside `/tmp`:
+Yosys runs as WebAssembly in DigSim and can't read the files there. DigSim tells you if
+you choose a folder that it can't use.
 
 The name of the file is the name of the module: `half_adder.v` gets the module
 `half_adder`. DigSim never replaces a file that exists. If you choose one, it asks if you

@@ -39,6 +39,7 @@ from digsim.app._editor_text import module_name, new_module_text
 from digsim.app._ic_search import search_ics
 from digsim.circuit.components import IntegratedCircuit
 from digsim.circuit.components.atoms import Parameter
+from digsim.synth import yosys_path_problem
 
 from ._dialog_flags import DIALOG_FLAGS
 
@@ -541,6 +542,15 @@ class ComponentSettingsDialog(QDialog):
                 return ""
             if not path.endswith((".v", ".sv")):
                 path += ".v"
+            problem = yosys_path_problem(path)
+            if problem is not None:
+                QMessageBox.warning(
+                    parent,
+                    "New Verilog file",
+                    f"Yosys can't read the file there: {problem}. Choose another folder.",
+                )
+                start = path
+                continue
             if not Path(path).exists():
                 return path
             answer = QMessageBox.question(
