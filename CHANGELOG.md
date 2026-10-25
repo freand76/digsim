@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## vx.x.x
+## v1.8.0
  - GUI: a new look. All components are drawn in one style: gates, LEDs, buffers and bus splitters as symbols only, devices like switches and displays with a white body, on a light background with a grid of dots. Most components are smaller, a selected one is blue, and green means on everywhere.
  - GUI: gates with more inputs keep the shape of a two-input gate, with a line on the back for the inputs, and from three inputs the inputs are 10 pixels apart, so a gate with many inputs isn't tall and thin. A circuit saved before gets a short step in the wires to those inputs.
  - GUI: the hex digit, the 7-segment display and the LED bar have a white window, with the segments and LEDs that are off in a pale tint of their color
