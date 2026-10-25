@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """The main class module of the digsim.synth namespace"""
@@ -10,14 +10,32 @@ import time
 from . import Synthesis, SynthesisException
 
 
+def _parameter(text: str) -> tuple[str, int]:
+    """A parameter of the command line, NAME=VALUE"""
+    name, equals, value = text.partition("=")
+    try:
+        if not equals:
+            raise ValueError
+        return name.strip(), int(value.strip(), 0)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            f"'{text}' is not NAME=VALUE with an integer value"
+        ) from None
+
+
 def _synth_modules(args: argparse.Namespace) -> int:
     print("Synthesis started...")
     for infile in args.input_files:
         print(f" - Reading {infile}")
+    parameters = dict(args.parameters)
+    for name, value in parameters.items():
+        print(f" - Parameter {name} = {value}")
     print(f"Generating {args.output_file}...")
     start_time = time.monotonic()
-    synthesis = Synthesis(args.input_files, args.top, functional=args.functional)
     try:
+        synthesis = Synthesis(
+            args.input_files, args.top, functional=args.functional, parameters=parameters
+        )
         synthesis.synth_to_json_file(args.output_file, silent=args.silent)
         print(f"Synthesis complete in {time.monotonic() - start_time:.2f}s")
     except SynthesisException as exc:
@@ -34,10 +52,14 @@ def _synth_modules(args: argparse.Namespace) -> int:
 def _list_modules(args: argparse.Namespace) -> int:
     try:
         modules = Synthesis.list_modules(args.input_files)
+        parameters = Synthesis.list_module_parameters(args.input_files)
         print("Modules:")
         print("========")
         for idx, module in enumerate(modules):
             print(f"{idx}: {module}")
+            # As synth -p takes them
+            for name, value in parameters.get(module, {}).items():
+                print(f"   {name} = {value}")
         print("========")
     except SynthesisException as exc:
         print(exc)
@@ -67,6 +89,16 @@ if __name__ == "__main__":
         action="store_true",
         help="Synthesize into functional blocks (adders, multiplexers, registers) instead of "
         "gates, which simulates faster",
+    )
+    synth_parser.add_argument(
+        "--parameters",
+        "-p",
+        type=_parameter,
+        nargs="+",
+        action="extend",
+        default=[],
+        metavar="NAME=VALUE",
+        help="Values for parameters of the top module, like WIDTH=16 (integers: 16, -1, 0xff)",
     )
     synth_parser.set_defaults(func=_synth_modules)
     list_parser = subparser.add_parser("list")

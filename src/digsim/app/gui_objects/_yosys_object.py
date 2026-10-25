@@ -43,7 +43,7 @@ class YosysObject(NamedBoxObject):
         try:
             # Yosys always runs: an `include file or a $readmemh file may have changed,
             # which the cached netlists don't know
-            variants = {component.functional for component in components}
+            variants = {component.variant for component in components}
             netlists = load_netlists(path, variants, cached=False)
             update = self._app_model.objects.components.prepare_yosys_update(path, netlists)
             update_yosys_components(parent, self._app_model, update)

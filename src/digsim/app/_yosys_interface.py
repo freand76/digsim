@@ -14,8 +14,12 @@ from pathlib import Path
 from typing import Any
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import YosysComponent
-from digsim.circuit.components._yosys_component import YosysComponentException
+from digsim.circuit.components import YosysComponent, YosysVariant
+from digsim.circuit.components._yosys_component import (
+    YosysComponentException,
+    parameter_dict,
+    parameter_text,
+)
 from digsim.storage_model import LineDataClass
 from digsim.utils import YosysNetlist
 
@@ -96,14 +100,14 @@ def components_of_file(circuit: Circuit, path: str | Path) -> list[YosysComponen
 
 def load_netlists(
     path: str | Path,
-    functional: set[bool],
+    variants: set[YosysVariant],
     log: list[str] | None = None,
     cached: bool = True,
-) -> dict[bool, dict[str, Any]]:
+) -> dict[YosysVariant, dict[str, Any]]:
     """
     The netlists of a Verilog file or a netlist file, for the components made from it:
-    synthesized into gates (False) and into functional blocks (True), as they need. A
-    netlist file is the same for both.
+    synthesized into gates or functional blocks, with the parameters of each variant that
+    they need. A netlist file is the same for all.
 
     Raises:
         DigsimException: If the Verilog can't be synthesized or the netlist file is not
@@ -121,11 +125,47 @@ def load_netlists(
                 raise YosysComponentException(f"Not a Yosys netlist: '{path}'") from exc
         if len(modules) != 1:
             raise YosysComponentException(f"Not a Yosys netlist with one module: '{path}'")
-        return dict.fromkeys(functional, netlist_dict)
+        return dict.fromkeys(variants, netlist_dict)
     return {
-        variant: YosysComponent.synthesize_file(path, variant, log=log, cached=cached)
-        for variant in sorted(functional)
+        variant: YosysComponent.synthesize_file(
+            path,
+            variant.functional,
+            log=log,
+            cached=cached,
+            parameters=parameter_dict(variant.parameters),
+        )
+        for variant in sorted(variants)
     }
+
+
+def variant_with(component: YosysComponent, parameters: str | None) -> YosysVariant:
+    """
+    The variant of a component with other parameters ("NAME=VALUE,...", None for the
+    ones it has)
+    """
+    if parameters is None:
+        return component.variant
+    return YosysVariant(component.functional, parameter_text(parameter_dict(parameters)))
+
+
+def parameter_column(texts: dict[str, str]) -> str:
+    """
+    The values typed for the parameters of a component, by parameter, as "NAME=VALUE,..."
+    (an empty value is the default): integers like 8, -1 or 0xff.
+
+    Raises:
+        ValueError: If a value is not an integer: (message, parameter name).
+    """
+    values: dict[str, int] = {}
+    for name, text in texts.items():
+        text = text.strip()
+        if not text:
+            continue
+        try:
+            values[name] = int(text) if text.lstrip("+-").isdigit() else int(text, 0)
+        except ValueError:
+            raise ValueError(f"{name} is not an integer: '{text}'", name) from None
+    return parameter_text(values)
 
 
 def change_message(name: str, changes: InterfaceChanges, removed: list[str]) -> str:
@@ -147,19 +187,28 @@ class YosysUpdate:
     """
 
     path: str
-    # Netlist dicts, synthesized into gates (False) and into functional blocks (True)
-    netlists: dict[bool, dict[str, Any]]
+    # Netlist dicts, by how they are synthesized
+    netlists: dict[YosysVariant, dict[str, Any]]
     # The components of the file, and how their ports change
     changes: dict[YosysComponent, InterfaceChanges]
     # The ports on wires that are removed with the ports, like "counter.y"
     removed: list[str] = field(default_factory=list)
+    # How each component is synthesized now: its new parameters, if they change
+    variants: dict[YosysComponent, YosysVariant] = field(default_factory=dict)
+
+    def variant(self, component: YosysComponent) -> YosysVariant:
+        """The variant of a component, with its new parameters"""
+        return self.variants.get(component, component.variant)
 
     def ports_change(self) -> bool:
         """True if the ports of a component change"""
         return any(self.changes.values())
 
     def port_changes(self) -> InterfaceChanges:
-        """How the ports change (the components of a file have the same ports)"""
+        """
+        How the ports change (the components of a file have the same ports, unless they
+        have different parameters: then the changes of one of them)
+        """
         return next((changes for changes in self.changes.values() if changes), InterfaceChanges())
 
     def names(self) -> str:

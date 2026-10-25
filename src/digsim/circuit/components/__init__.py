@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """All classes within digsim.circuit.components namespace"""
@@ -24,5 +24,5 @@ from ._seven_segment import SevenSegment
 from ._static_level import GND, VDD
 from ._static_value import StaticValue
 from ._tristate_buffer import TristateBuffer
-from ._yosys_component import YosysComponent, YosysComponentException
+from ._yosys_component import YosysComponent, YosysComponentException, YosysVariant
 from .atoms import PortConnectionError

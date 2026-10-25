@@ -13,7 +13,7 @@ import re
 import sys
 import tempfile
 import threading
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -25,6 +25,9 @@ from digsim.circuit.components.atoms import DigsimException
 
 
 VerilogFiles = str | os.PathLike[str] | Sequence[str | os.PathLike[str]]
+
+# The parameters of the top module that a synthesis changes, by name
+Parameters = Mapping[str, int]
 
 # One Yosys at a time: it sends the console output of the whole process to a file, and the
 # GUI synthesizes in a thread
@@ -92,6 +95,45 @@ def yosys_path_problem(path: str | os.PathLike[str]) -> str | None:
     """
     yosys_path, problem = _yosys_path(pathlib.Path(path))
     return problem if yosys_path is None else None
+
+
+def _parameter_value(value: int) -> str:
+    """A parameter value as a Verilog constant for Yosys, which can't read a minus sign"""
+    if value >= 0:
+        return str(value)
+    width = max(32, (-value - 1).bit_length() + 1)
+    return f"{width}'sb{value & ((1 << width) - 1):0{width}b}"
+
+
+def _parameter_arguments(parameters: Parameters | None) -> str:
+    """
+    The parameters as arguments of the Yosys command hierarchy (-chparam).
+
+    Raises:
+        SynthesisException: If a name is not a Verilog identifier, or a value not an int.
+    """
+    arguments = ""
+    for name, value in (parameters or {}).items():
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_$]*", name):
+            raise SynthesisException(f"Not a parameter name: '{name}'")
+        if not isinstance(value, int):
+            raise SynthesisException(f"The value of parameter '{name}' is not an integer")
+        arguments += f" -chparam {name} {_parameter_value(int(value))}"
+    return arguments
+
+
+def _rtlil_value(text: str) -> int | str:
+    """A constant of an RTLIL file as a number: 4, 8'00000100 or 8's11111100 (signed)"""
+    if text.lstrip("-").isdigit():
+        return int(text)
+    match = re.fullmatch(r"(\d+)'(s?)([01]+)", text)
+    if match is None:
+        return text
+    width, signed, bits = int(match.group(1)), match.group(2), match.group(3)
+    value = int(bits, 2)
+    if signed and bits[0] == "1":
+        value -= 1 << width
+    return value
 
 
 def _script_path(path: pathlib.Path) -> str:
@@ -213,6 +255,13 @@ class Synthesis:
         functional: Synthesize into functional blocks, like adders, multiplexers and
             registers, instead of gates and one-bit flip-flops. The netlist has far fewer
             cells, so it simulates faster.
+        parameters: Values for parameters of the top module, by name, instead of their
+            defaults, like {"WIDTH": 16}. The values are integers.
+
+    Raises:
+        SynthesisException: If a parameter name is not a Verilog identifier, or its value
+            not an integer. A parameter that the module doesn't have is an error of the
+            synthesis.
     """
 
     @staticmethod
@@ -287,12 +336,76 @@ class Synthesis:
             modules.append(line.replace("$abstract\\", "").strip())
         return modules
 
+    @classmethod
+    def list_parameters(
+        cls, verilog_files: VerilogFiles, module: str, log: list[str] | None = None
+    ) -> dict[str, int | str]:
+        """
+        The parameters of a module and their defaults, in the order of the Verilog. A
+        default is an integer, or text if it isn't one (like a string parameter).
+
+        Args:
+            verilog_files: One Verilog file, or a list of them.
+            module: The name of the module.
+            log: A list to add the Yosys log to.
+
+        Raises:
+            SynthesisException: If Yosys reports an error, like a syntax error, or the
+                files have no such module.
+        """
+        yosys_log = log if log is not None else []
+        modules = cls.list_module_parameters(verilog_files, yosys_log)
+        if module not in modules:
+            raise SynthesisException(f"ERROR: No module '{module}'", yosys_log)
+        return modules[module]
+
+    @classmethod
+    def list_module_parameters(
+        cls, verilog_files: VerilogFiles, log: list[str] | None = None
+    ) -> dict[str, dict[str, int | str]]:
+        """
+        The parameters of every module in Verilog files and their defaults, by module, see
+        list_parameters(). A module without parameters has an empty dict.
+
+        Args:
+            verilog_files: One Verilog file, or a list of them.
+            log: A list to add the Yosys log to.
+
+        Raises:
+            SynthesisException: If Yosys reports an error, like a syntax error.
+        """
+        files = _script_files(verilog_files)
+        with cls._work_dir() as work_dir:
+            rtlil_file = work_dir / "modules.il"
+            script = f"read_verilog -sv {files}; write_rtlil {_script_path(rtlil_file)}"
+            cls._run_yosys(script, work_dir, log if log is not None else [])
+            rtlil = rtlil_file.read_text(encoding="utf-8").splitlines()
+        modules: dict[str, dict[str, int | str]] = {}
+        parameters: dict[str, int | str] = {}
+        for line in rtlil:
+            if line.startswith("module "):
+                parameters = modules.setdefault(line.split()[1].removeprefix("\\"), {})
+            elif line.startswith("  parameter "):
+                # A module's own parameter (the ones of its cells are indented more):
+                # "parameter [signed] \NAME [value]"
+                words = line.split()[1:]
+                if words[0] == "signed":
+                    words = words[1:]
+                value = " ".join(words[1:])
+                parameters[words[0].removeprefix("\\")] = _rtlil_value(value)
+        return modules
+
     def __init__(
-        self, verilog_files: VerilogFiles, verilog_top_module: str, functional: bool = False
+        self,
+        verilog_files: VerilogFiles,
+        verilog_top_module: str,
+        functional: bool = False,
+        parameters: Parameters | None = None,
     ) -> None:
         self._verilog_files = _file_list(verilog_files)
         self._verilog_top_module = verilog_top_module
         self._functional = functional
+        self._parameter_arguments = _parameter_arguments(parameters)
         self._yosys_log: list[str] = []
 
     def synth_to_json(self, silent: bool = False) -> str:
@@ -307,7 +420,7 @@ class Synthesis:
         """
         top = self._verilog_top_module
         script = f"read -sv {_script_files(self._verilog_files)}; "
-        script += f"hierarchy -top {top}; "
+        script += f"hierarchy -top {top}{self._parameter_arguments}; "
         # Tristate buffers ('bz) become tristate cells: several on one net are merged into
         # one, and the ones that don't drive an output port of the design become logic
         script += "proc; flatten; tribuf -merge -logic; "

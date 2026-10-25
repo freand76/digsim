@@ -18,10 +18,11 @@ from digsim.app._yosys_interface import (
     components_of_file,
     interface_changes,
     removed_wires,
+    variant_with,
 )
 from digsim.app.gui_objects import ComponentObject
 from digsim.circuit import Circuit
-from digsim.circuit.components import Buzzer, YosysComponent
+from digsim.circuit.components import Buzzer, YosysComponent, YosysVariant
 from digsim.circuit.components.atoms import (
     CallbackComponent,
     Component,
@@ -187,10 +188,16 @@ class ModelComponents:
         """The Yosys components made from a Verilog or netlist file"""
         return components_of_file(self._circuit, path)
 
-    def prepare_yosys_update(self, path: str, netlists: dict[bool, dict[str, Any]]) -> YosysUpdate:
+    def prepare_yosys_update(
+        self,
+        path: str,
+        netlists: dict[YosysVariant, dict[str, Any]],
+        parameters: dict[str, str] | None = None,
+    ) -> YosysUpdate:
         """
         Check new netlists for the components of a file (see load_netlists), and how their
-        ports change.
+        ports change. 'parameters' has new parameters for components, by name, which the
+        netlists are synthesized with.
 
         Raises:
             DigsimException: If a component can't be built from its new netlist. Nothing
@@ -198,8 +205,11 @@ class ModelComponents:
         """
         netlist_objects = {variant: YosysNetlist(**data) for variant, data in netlists.items()}
         changes: dict[YosysComponent, InterfaceChanges] = {}
+        variants: dict[YosysComponent, YosysVariant] = {}
         for component in self.yosys_components(path):
-            netlist = netlist_objects[component.functional]
+            variant = variant_with(component, (parameters or {}).get(component.name()))
+            variants[component] = variant
+            netlist = netlist_objects[variant]
             component.check_netlist(netlist)
             changes[component] = interface_changes(
                 component.interface(), YosysComponent.netlist_interface(netlist)
@@ -212,7 +222,7 @@ class ModelComponents:
                 for port in removed_wires(lines, [component.name()], component_changes)
             }
         )
-        return YosysUpdate(path, netlists, changes, removed)
+        return YosysUpdate(path, netlists, changes, removed, variants)
 
     def apply_yosys_update(self, update: YosysUpdate) -> list[str]:
         """
@@ -228,8 +238,9 @@ class ModelComponents:
         if not update.ports_change():
             self._app_model.objects.push_undo_state()
             for component in update.changes:
-                netlist = update.netlists[component.functional]
-                component.reload_from_netlist(YosysNetlist(**netlist))
+                variant = update.variant(component)
+                component.set_parameters(variant.parameters)
+                component.reload_from_netlist(YosysNetlist(**update.netlists[variant]))
             self._app_model.model_init()
             self._app_model.model_changed()
             self._app_model.sig_repaint.emit()
@@ -241,13 +252,16 @@ class ModelComponents:
             for port in changes.gone()
         }
         lines = without_ports(self._app_model.objects.wires.to_lines(), gone)
+        # The circuit is built from the settings of the components, with the new parameters
+        for component in update.changes:
+            component.set_parameters(update.variant(component).parameters)
         # The other Yosys components are built again from the netlists they have now, not
         # from their files: those may have changed since, or have errors now
         netlists = [
             (
                 component.source_file,
-                component.functional,
-                YosysNetlist(**update.netlists[component.functional])
+                update.variant(component),
+                YosysNetlist(**update.netlists[update.variant(component)])
                 if component in update.changes
                 else component.netlist(),
             )

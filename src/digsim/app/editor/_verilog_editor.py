@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 from PySide6.QtCore import QFileSystemWatcher, Qt
 from PySide6.QtGui import QAction, QCloseEvent, QKeySequence, QTextCursor
 from PySide6.QtWidgets import (
+    QDialog,
     QInputDialog,
     QLabel,
     QMainWindow,
@@ -22,12 +23,17 @@ from PySide6.QtWidgets import (
 )
 
 from digsim.app._build_flow import BuildResult, BuildStep
+from digsim.app._yosys_interface import variant_with
+from digsim.circuit.components import YosysVariant
+from digsim.circuit.components._yosys_component import parameter_dict
 from digsim.circuit.components.atoms import DigsimException
+from digsim.synth import Synthesis
 from digsim.verilog import VerilogFormatError, VerilogFormatter
 
 from ._build_panel import BuildPanel, SynthesisWorker
 from ._code_edit import CodeEdit
 from ._find_bar import FindBar
+from ._parameters_dialog import ParametersDialog
 from ._yosys_update import update_yosys_components
 
 
@@ -88,6 +94,8 @@ class VerilogEditor(QMainWindow):
         self.splitter.setSizes([500, 200])
         self.setCentralWidget(self.splitter)
         self._worker: SynthesisWorker | None = None
+        # New parameters from the dialog, by component name, for the next synthesis
+        self._parameters: dict[str, str] = {}
 
         self._add_menus()
         self.code.document().modificationChanged.connect(self.setWindowModified)
@@ -171,6 +179,9 @@ class VerilogEditor(QMainWindow):
         )
         self.menu_actions["synthesize"] = self._action(
             "&Build", "&Synthesize", self.synthesize, "Ctrl+B"
+        )
+        self.menu_actions["parameters"] = self._action(
+            "&Build", "&Parameters...", self.edit_parameters
         )
         self.menu_actions["unindent"] = self._action(
             "&Edit", "U&nindent", code.unindent_selection, "Ctrl+["
@@ -386,13 +397,58 @@ class VerilogEditor(QMainWindow):
 
     def _set_building(self, building: bool) -> None:
         # The file is not changed while Yosys reads it: the netlist is of the saved text
-        for name in ("synthesize", "format", "save", "revert"):
+        for name in ("synthesize", "parameters", "format", "save", "revert"):
             self.menu_actions[name].setEnabled(not building)
         self.code.setReadOnly(building)
         if building:
             self.statusBar().showMessage("Synthesizing...")
         else:
             self.statusBar().clearMessage()
+
+    def edit_parameters(self) -> None:
+        """
+        Show the parameters of the module, for each component of the file, and synthesize
+        with the new values
+        """
+        components = self._app_model.objects.components.yosys_components(str(self._path))
+        if not components:
+            QMessageBox.information(
+                self,
+                "Parameters",
+                "No component uses this file. The parameters are set for each component.",
+            )
+            return
+        try:
+            modules = Synthesis.list_modules(self._path)
+            if len(modules) != 1:
+                raise DigsimException(f"The file has {len(modules)} modules, it needs one")
+            defaults = Synthesis.list_parameters(self._path, modules[0])
+        except (DigsimException, OSError) as exc:
+            QMessageBox.warning(self, "Parameters", f"The parameters can't be read: {exc}")
+            return
+        if not defaults:
+            QMessageBox.information(
+                self, "Parameters", f"The module {modules[0]} has no parameters."
+            )
+            return
+        values = {
+            component.name(): variant_with(
+                component, self._parameters.get(component.name())
+            ).parameters
+            for component in components
+        }
+        note = "The file has changes: these are the parameters of the saved file."
+        dialog = ParametersDialog(
+            self,
+            modules[0],
+            defaults,
+            {name: parameter_dict(text) for name, text in values.items()},
+            note if self.is_modified() else "",
+        )
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return
+        self._parameters = dialog.values()
+        self.synthesize()
 
     def synthesize(self) -> None:
         """
@@ -413,7 +469,10 @@ class VerilogEditor(QMainWindow):
         panel.add_step(BuildStep("Save", "ok", self._path.name))
         self._synthesized_text = self._disk_text
         components = self._app_model.objects.components.yosys_components(str(self._path))
-        variants = {component.functional for component in components} or {False}
+        variants = {
+            variant_with(component, self._parameters.get(component.name()))
+            for component in components
+        } or {YosysVariant()}
         self._worker = SynthesisWorker(self._path, variants)
         self._worker.sig_step.connect(panel.add_step)
         self._worker.sig_done.connect(self._synthesized)
@@ -447,7 +506,7 @@ class VerilogEditor(QMainWindow):
         if updated and close_after_build:
             self.close()
 
-    def _update_components(self, netlists: dict[bool, dict[str, Any]]) -> bool:
+    def _update_components(self, netlists: dict[YosysVariant, dict[str, Any]]) -> bool:
         """Update the components of the file, True if there were any and they were"""
         panel = self.build_panel
         path = str(self._path)
@@ -458,7 +517,11 @@ class VerilogEditor(QMainWindow):
                 BuildStep("Update components", "skipped", "No component uses this file")
             )
             return False
-        if any(component.functional not in netlists for component in yosys_components):
+        parameters = self._parameters
+        if any(
+            variant_with(component, parameters.get(component.name())) not in netlists
+            for component in yosys_components
+        ):
             panel.add_step(
                 BuildStep(
                     "Update components",
@@ -467,8 +530,10 @@ class VerilogEditor(QMainWindow):
                 )
             )
             return False
+        # The parameters of the dialog are used once, by this update
+        self._parameters = {}
         try:
-            update = components.prepare_yosys_update(path, netlists)
+            update = components.prepare_yosys_update(path, netlists, parameters)
         except DigsimException as exc:
             panel.add_step(BuildStep("Check ports", "error", str(exc)))
             return False

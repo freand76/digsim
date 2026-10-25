@@ -12,11 +12,12 @@ import pytest
 
 import digsim.circuit.components._yosys_component as yosys_component
 from digsim.app._build_flow import run_synthesis
-from digsim.circuit.components import YosysComponent
+from digsim.circuit.components import YosysComponent, YosysVariant
 from digsim.synth import Synthesis
 
 
 VERILOG = Path(__file__).parent / "verilog"
+GATES, FUNCTIONAL = YosysVariant(False), YosysVariant(True)
 
 
 @pytest.fixture(name="work_dir")
@@ -36,7 +37,7 @@ def _run(path, variants):
 
 def test_steps(monkeypatch):
     yosys_component._netlist_cache.clear()
-    result, steps, raw = _run(VERILOG / "one_module.v", {True, False})
+    result, steps, raw = _run(VERILOG / "one_module.v", {FUNCTIONAL, GATES})
     assert steps == [
         ("List modules", "running", ""),
         ("List modules", "ok", "Module module_one"),
@@ -46,16 +47,16 @@ def test_steps(monkeypatch):
         ("Synthesize into functional blocks", "ok", ""),
     ]
     assert all(step.seconds is not None for step in raw if step.status != "running")
-    assert set(result.netlists) == {False, True}
+    assert set(result.netlists) == {GATES, FUNCTIONAL}
     assert len(result.log) > 0
     assert result.messages == []
     # The components get the netlists without running Yosys again
     monkeypatch.setattr(Synthesis, "synth_to_dict", None)
-    assert YosysComponent.synthesize_file(VERILOG / "one_module.v") == result.netlists[False]
+    assert YosysComponent.synthesize_file(VERILOG / "one_module.v") == result.netlists[GATES]
 
 
 def test_syntax_error():
-    result, steps, _ = _run(VERILOG / "syntax_error.v", {False})
+    result, steps, _ = _run(VERILOG / "syntax_error.v", {GATES})
     assert steps[-1][:2] == ("List modules", "error")
     assert steps[-1][2].startswith("Line 4: syntax error")
     assert result.netlists is None
@@ -65,7 +66,7 @@ def test_syntax_error():
 
 def test_error_in_synthesis():
     """module_with_error.v reads, but has a port that is not declared"""
-    result, steps, _ = _run(VERILOG / "module_with_error.v", {False})
+    result, steps, _ = _run(VERILOG / "module_with_error.v", {GATES})
     assert [step[:2] for step in steps][-1] in (
         ("List modules", "error"),
         ("Synthesize into gates", "error"),
@@ -75,7 +76,7 @@ def test_error_in_synthesis():
 
 
 def test_two_modules():
-    result, steps, _ = _run(VERILOG / "multiple_modules.v", {False})
+    result, steps, _ = _run(VERILOG / "multiple_modules.v", {GATES})
     assert steps[-1] == (
         "List modules",
         "error",
@@ -86,7 +87,7 @@ def test_two_modules():
 
 
 def test_warnings():
-    result, steps, _ = _run(VERILOG / "module_with_warning.v", {False})
+    result, steps, _ = _run(VERILOG / "module_with_warning.v", {GATES})
     name, status, detail = steps[-1]
     assert (name, status) == ("Synthesize into gates", "warning")
     assert detail.endswith(" warnings")
@@ -96,7 +97,7 @@ def test_warnings():
 
 
 def test_missing_file(work_dir):
-    result, steps, _ = _run(work_dir / "missing.v", {False})
+    result, steps, _ = _run(work_dir / "missing.v", {GATES})
     assert steps[-1][:2] == ("List modules", "error")
     assert result.netlists is None
     assert result.errors()

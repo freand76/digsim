@@ -45,8 +45,10 @@ python -m digsim.synth synth -i <file1.v> [<file2.v> ...] -o <netlist.json> -t <
 | `-t`, `--top` | The name of the top module |
 | `-s`, `--silent` | Hide the Yosys output |
 | `-f`, `--functional` | Synthesize into functional blocks instead of gates, see below |
+| `-p`, `--parameters` | Values for parameters of the top module, like `-p WIDTH=16 DEPTH=4`, see below |
 
-To list the modules found in a set of Verilog files:
+To list the modules found in a set of Verilog files, with their parameters and the
+defaults, as `-p` takes them:
 
 ```sh
 python -m digsim.synth list -i <file1.v> [<file2.v> ...]
@@ -63,6 +65,30 @@ synthesis.synth_to_json_file("counter.json")
 
 `synth_to_dict()` returns the netlist instead of writing it, see
 [Verilog Testbench with pytest](testbenches.md).
+
+## Parameters
+
+The parameters of the top module keep their defaults, unless the synthesis gives them
+other values. The values are integers, also negative ones and ones wider than 32 bits.
+
+```python
+synthesis = Synthesis(["fifo.v"], "fifo", parameters={"WIDTH": 16, "DEPTH": 4})
+fifo = YosysComponent(circuit, path="fifo.v", parameters={"WIDTH": 16, "DEPTH": 4})
+```
+
+A `YosysComponent` also takes them as text, `parameters="WIDTH=16,DEPTH=4"`, and a saved
+circuit keeps them. Each set of parameters is a netlist of its own, so two components of
+the same file can have different ports. A parameter that the module doesn't have is a
+synthesis error. A netlist file has no parameters, they were set when it was
+synthesized. `Synthesis.list_parameters("fifo.v", "fifo")` returns the parameters of a
+module and their defaults, and `Synthesis.list_module_parameters()` those of every module
+in the files.
+
+In the GUI, **Build > Parameters...** in the [Verilog editor](verilog-tutorial.md) shows
+the parameters of the module, with their defaults, and a column for each component of
+the file. An empty value is the default. **Synthesize** saves the file and synthesizes
+each component with its values, and asks first if that changes the ports of a component,
+like a wider bus does. Undo brings the values from before back, unless the ports changed.
 
 ## Gates or functional blocks
 

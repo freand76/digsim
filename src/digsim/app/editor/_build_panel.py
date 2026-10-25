@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from digsim.app._build_flow import BuildResult, BuildStep, run_synthesis
+from digsim.circuit.components import YosysVariant
 from digsim.synth import YosysMessage
 
 
@@ -35,7 +36,7 @@ class SynthesisWorker(QThread):
     sig_step = Signal(object)
     sig_done = Signal(object)
 
-    def __init__(self, path: Path, variants: set[bool]) -> None:
+    def __init__(self, path: Path, variants: set[YosysVariant]) -> None:
         super().__init__()
         self._path = path
         self._variants = variants

@@ -12,11 +12,11 @@ import hashlib
 import json
 import threading
 from collections import OrderedDict
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 import digsim.circuit.components._yosys_atoms
 from digsim.synth import Synthesis
@@ -50,6 +50,49 @@ class YosysComponentException(DigsimException):
     """Yosys component exception class"""
 
 
+class YosysVariant(NamedTuple):
+    """
+    How a Verilog file is synthesized for a component: into functional blocks or gates,
+    and with which parameters of its module ("NAME=VALUE,...", see YosysComponent)
+    """
+
+    functional: bool = False
+    parameters: str = ""
+
+
+def parameter_dict(parameters: str | Mapping[str, int] | None) -> dict[str, int]:
+    """
+    Parameters by name, from a dict or from "NAME=VALUE,..." (a value like 8, -1 or 0xff)
+
+    Raises:
+        YosysComponentException: If the text can't be read.
+    """
+    if parameters is None:
+        return {}
+    if not isinstance(parameters, str):
+        for name, value in parameters.items():
+            if not isinstance(value, int):
+                raise YosysComponentException(f"The value of parameter '{name}' is not an int")
+        return {name: int(value) for name, value in parameters.items()}
+    values: dict[str, int] = {}
+    for item in parameters.split(","):
+        if not item.strip():
+            continue
+        name, equals, text = item.partition("=")
+        try:
+            if not equals:
+                raise ValueError
+            values[name.strip()] = int(text.strip(), 0)
+        except ValueError:
+            raise YosysComponentException(f"Not a parameter: '{item.strip()}'") from None
+    return values
+
+
+def parameter_text(parameters: Mapping[str, int]) -> str:
+    """Parameters as "NAME=VALUE,...", sorted by name"""
+    return ",".join(f"{name}={parameters[name]}" for name in sorted(parameters))
+
+
 class _NetlistCache:
     """
     The netlists of the last Verilog files synthesized, as JSON text, by the file and its
@@ -59,18 +102,18 @@ class _NetlistCache:
     SIZE = 8
 
     def __init__(self) -> None:
-        self._netlists: OrderedDict[tuple[str, str, bool], str] = OrderedDict()
+        self._netlists: OrderedDict[tuple[str, str, YosysVariant], str] = OrderedDict()
         # The GUI synthesizes in a thread of its own
         self._lock = threading.Lock()
 
     @staticmethod
-    def key(path: str, functional: bool) -> tuple[str, str, bool]:
+    def key(path: str, variant: YosysVariant) -> tuple[str, str, YosysVariant]:
         """The key of a file: its path, a hash of its contents, and how it is synthesized"""
         resolved = Path(path).resolve()
         digest = hashlib.sha256(resolved.read_bytes()).hexdigest()
-        return str(resolved), digest, functional
+        return str(resolved), digest, variant
 
-    def get(self, key: tuple[str, str, bool]) -> dict[str, Any] | None:
+    def get(self, key: tuple[str, str, YosysVariant]) -> dict[str, Any] | None:
         """The netlist, None if it isn't in the cache"""
         with self._lock:
             netlist_json = self._netlists.get(key)
@@ -79,7 +122,7 @@ class _NetlistCache:
             self._netlists.move_to_end(key)
         return json.loads(netlist_json)
 
-    def put(self, key: tuple[str, str, bool], netlist_dict: dict[str, Any]) -> None:
+    def put(self, key: tuple[str, str, YosysVariant], netlist_dict: dict[str, Any]) -> None:
         """Add a netlist, the oldest one goes when the cache is full"""
         netlist_json = json.dumps(netlist_dict)
         with self._lock:
@@ -97,14 +140,14 @@ class _NetlistCache:
 _netlist_cache = _NetlistCache()
 
 # The netlists that the components being built use instead of their files, by file and
-# 'functional', in the order of the components (see YosysComponent.given_netlists())
-_given_netlists: ContextVar[dict[tuple[str, bool], list[YosysNetlist]] | None] = ContextVar(
-    "_given_netlists", default=None
+# variant, in the order of the components (see YosysComponent.given_netlists())
+_given_netlists: ContextVar[dict[tuple[str, YosysVariant], list[YosysNetlist]] | None] = (
+    ContextVar("_given_netlists", default=None)
 )
 
 
-def _given_key(path: str | Path, functional: bool) -> tuple[str, bool]:
-    return str(Path(path).resolve()), functional
+def _given_key(path: str | Path, variant: YosysVariant) -> tuple[str, YosysVariant]:
+    return str(Path(path).resolve()), variant
 
 
 class SignalPort(PortMultiBitWire):
@@ -171,6 +214,13 @@ class YosysComponent(MultiComponent):
             "<signal>_name", as the names, see state().
         states: More signals (with signals=True) to write with the names of their values:
             signals of one bit, or with one name. A list, or names separated by commas.
+        parameters: Values for parameters of the Verilog module instead of their
+            defaults: a dict like {"WIDTH": 16}, or "WIDTH=16,DEPTH=4". The values are
+            integers. A netlist file has no parameters.
+
+    Raises:
+        YosysComponentException: If parameters are given for a netlist file, or can't be
+            read.
     """
 
     def __init__(
@@ -181,10 +231,12 @@ class YosysComponent(MultiComponent):
         functional: bool = False,
         signals: bool = False,
         states: str | list[str] | None = None,
+        parameters: str | Mapping[str, int] | None = None,
     ) -> None:
         super().__init__(circuit)
         self._path = str(path) if path is not None else None
         self._functional = functional
+        self._module_parameters = self._checked_parameters(parameters)
         self._signals = signals
         self._states = self._state_list(states)
         # The settings that can be changed later, see reconfigure()
@@ -202,6 +254,31 @@ class YosysComponent(MultiComponent):
 
         if path is not None:
             self._load_file()
+
+    @staticmethod
+    def _is_verilog(path: str) -> bool:
+        return path.endswith((".v", ".sv"))
+
+    def _checked_parameters(self, parameters: str | Mapping[str, int] | None) -> str:
+        """The parameters as text, if the component can have them"""
+        text = parameter_text(parameter_dict(parameters))
+        if text and self._path is not None and not self._is_verilog(self._path):
+            raise YosysComponentException(
+                f"'{self._path}' is not a Verilog file, it has no parameters"
+            )
+        return text
+
+    def set_parameters(self, parameters: str | Mapping[str, int] | None) -> None:
+        """
+        Change the parameters of the Verilog module, without building the component
+        again: for a netlist synthesized with them, that reload_from_netlist() builds it
+        from next (or a circuit built again from the settings of its components).
+
+        Raises:
+            YosysComponentException: If the parameters can't be read, or the component is
+                made from a netlist file.
+        """
+        self._module_parameters = self._checked_parameters(parameters)
 
     @staticmethod
     def _state_list(states: str | list[str] | None) -> list[str]:
@@ -278,12 +355,12 @@ class YosysComponent(MultiComponent):
         try:
             module = self._module()
             path = self._path
-            if (
-                functional != self._functional
-                and path is not None
-                and path.endswith((".v", ".sv"))
-            ):
-                netlist = YosysNetlist(**self.synthesize_file(path, functional))
+            if functional != self._functional and path is not None and self._is_verilog(path):
+                netlist = YosysNetlist(
+                    **self.synthesize_file(
+                        path, functional, parameters=parameter_dict(self._module_parameters)
+                    )
+                )
                 _, module = self._first_module(netlist)
                 if not module.is_same_interface(self._module()):
                     raise YosysComponentException(
@@ -306,17 +383,17 @@ class YosysComponent(MultiComponent):
     @staticmethod
     @contextmanager
     def given_netlists(
-        netlists: Iterable[tuple[str | Path, bool, YosysNetlist]],
+        netlists: Iterable[tuple[str | Path, YosysVariant, YosysNetlist]],
     ) -> Iterator[None]:
         """
         Components built in the context use given netlists instead of reading their files,
-        like when a circuit is built again: (file, functional, netlist) for each component,
+        like when a circuit is built again: (file, variant, netlist) for each component,
         in the order that the components are built. A component of a file that has no
         netlist left reads its file.
         """
-        given: dict[tuple[str, bool], list[YosysNetlist]] = {}
-        for path, functional, netlist in netlists:
-            given.setdefault(_given_key(path, functional), []).append(netlist)
+        given: dict[tuple[str, YosysVariant], list[YosysNetlist]] = {}
+        for path, variant, netlist in netlists:
+            given.setdefault(_given_key(path, variant), []).append(netlist)
         token = _given_netlists.set(given)
         try:
             yield
@@ -603,6 +680,16 @@ class YosysComponent(MultiComponent):
         """True if the Verilog is synthesized into functional blocks"""
         return self._functional
 
+    @property
+    def parameters(self) -> dict[str, int]:
+        """The parameters of the Verilog module that have other values than their defaults"""
+        return parameter_dict(self._module_parameters)
+
+    @property
+    def variant(self) -> YosysVariant:
+        """How the Verilog is synthesized: 'functional' and the parameters"""
+        return YosysVariant(self._functional, self._module_parameters)
+
     @staticmethod
     def netlist_interface(netlist_object: YosysNetlist) -> dict[str, tuple[bool, int]]:
         """The ports of the (first) module of a netlist: name to (is output, width)"""
@@ -689,6 +776,7 @@ class YosysComponent(MultiComponent):
         log: list[str] | None = None,
         cached: bool = True,
         top: str | None = None,
+        parameters: Mapping[str, int] | None = None,
     ) -> dict[str, Any]:
         """
         Synthesize a Verilog file with one module into a netlist dict, as a YosysComponent
@@ -703,6 +791,7 @@ class YosysComponent(MultiComponent):
                 False Yosys always runs (to get its log), and the netlist is kept.
             top: The module of the file, if it is known. Else the file is checked to have
                 one module.
+            parameters: Values for parameters of the module, see YosysComponent.
 
         Raises:
             SynthesisException: If Yosys reports an error, like a syntax error.
@@ -710,7 +799,8 @@ class YosysComponent(MultiComponent):
             OSError: If the file can't be read.
         """
         path = str(path)
-        key = _netlist_cache.key(path, functional)
+        parameters = dict(parameters or {})
+        key = _netlist_cache.key(path, YosysVariant(functional, parameter_text(parameters)))
         if cached:
             netlist_dict = _netlist_cache.get(key)
             if netlist_dict is not None:
@@ -723,34 +813,34 @@ class YosysComponent(MultiComponent):
                     "Current only one module per verilog file is supported"
                 )
             top = modules[0]
-        synthesis = Synthesis(path, top, functional=functional)
+        synthesis = Synthesis(path, top, functional=functional, parameters=parameters)
         try:
             netlist_dict = synthesis.synth_to_dict(silent=True)
         finally:
             yosys_log.extend(synthesis.get_log())
         # Only when the file didn't change while Yosys read it (by a save, or another
         # program): the netlist is then of the contents the key has
-        if _netlist_cache.key(path, functional) == key:
+        if _netlist_cache.key(path, key[2]) == key:
             _netlist_cache.put(key, netlist_dict)
         return netlist_dict
 
     def _synth_verilog(self, path: str) -> dict[str, Any]:
         """Synthesize verilog to netlist"""
-        return self.synthesize_file(path, self._functional)
+        return self.synthesize_file(path, self._functional, parameters=self.parameters)
 
     def _load_netlist_dict(self) -> YosysNetlist:
         """Load yosys netlist dict"""
         path = self._file_path()
         given = _given_netlists.get()
         if given is not None:
-            netlists = given.get(_given_key(path, self._functional))
+            netlists = given.get(_given_key(path, self.variant))
             if netlists:
                 return netlists.pop(0)
         try:
             if path.endswith(".json"):
                 with open(path, encoding="utf-8") as json_file:
                     netlist_dict = json.load(json_file)
-            elif path.endswith((".v", ".sv")):
+            elif self._is_verilog(path):
                 netlist_dict = self._synth_verilog(path)
             else:
                 raise YosysComponentException(f"Unknown file extension '{path}'")
@@ -796,6 +886,8 @@ class YosysComponent(MultiComponent):
             settings["signals"] = True
         if self._states:
             settings["states"] = ",".join(self._states)
+        if self._module_parameters:
+            settings["parameters"] = self._module_parameters
         return settings
 
     def get_reconfigurable_parameters(self) -> dict[str, Parameter]:

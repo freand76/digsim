@@ -1151,7 +1151,7 @@ def test_no_editing_while_synthesizing(gui, circuit):
     editor.menu_actions["synthesize"].trigger()
     assert editor.is_building()
     assert editor.code.isReadOnly()
-    for name in ("save", "revert", "format", "synthesize"):
+    for name in ("save", "revert", "format", "synthesize", "parameters"):
         assert not editor.menu_actions[name].isEnabled(), name
     for _ in range(1500):
         if not editor.is_building():
@@ -1159,7 +1159,7 @@ def test_no_editing_while_synthesizing(gui, circuit):
         spin(20)
     spin()
     assert not editor.code.isReadOnly()
-    for name in ("save", "revert", "format", "synthesize"):
+    for name in ("save", "revert", "format", "synthesize", "parameters"):
         assert editor.menu_actions[name].isEnabled(), name
     assert not editor.needs_update()
 
@@ -1179,3 +1179,143 @@ def test_unexpected_error_in_synthesis(gui, circuit, monkeypatch):
     assert editor.menu_actions["synthesize"].isEnabled()
     item = editor.build_panel.messages.topLevelItem(0)
     assert "the WebAssembly Yosys trapped" in item.text(2)
+
+
+# The parameters dialog of the editor
+
+PARAMETERS = """
+module m #(parameter WIDTH = 4, parameter INVERT = 0) (
+   input a, input [WIDTH-1:0] b, output y, output [WIDTH-1:0] q
+);
+   assign y = INVERT ? ~a : a;
+   assign q = b;
+endmodule
+"""
+
+
+@pytest.fixture(name="parameters_circuit")
+def fixture_parameters_circuit(gui, circuit):
+    """The circuit, with a module with parameters (the same ports with their defaults)"""
+    circuit.write_text(PARAMETERS, encoding="utf-8")
+    reload(gui)
+    assert gui.questions == []
+    return circuit
+
+
+def set_parameters(
+    gui: Gui, monkeypatch, editor: VerilogEditor, values: dict[tuple[str, str], str]
+) -> list:
+    """
+    Open the parameters dialog, type values (by (parameter, component)), click
+    Synthesize, and wait for the build. Returns the dialogs.
+    """
+    from PySide6.QtWidgets import QDialog
+
+    from digsim.app.editor._parameters_dialog import ParametersDialog
+
+    dialogs = []
+
+    def exec_(dialog: ParametersDialog) -> int:
+        dialogs.append(dialog)
+        table = dialog.table
+        columns = [table.horizontalHeaderItem(c).text() for c in range(table.columnCount())]
+        rows = [table.item(r, 0).text() for r in range(table.rowCount())]
+        for (parameter, component), text in values.items():
+            table.item(rows.index(parameter), columns.index(component)).setText(text)
+        dialog.accept()
+        return dialog.result()
+
+    monkeypatch.setattr(ParametersDialog, "exec", exec_)
+    editor.menu_actions["parameters"].trigger()
+    for _ in range(1500):
+        if not editor.is_building():
+            break
+        spin(20)
+    spin()
+    assert dialogs and dialogs[-1].result() == QDialog.DialogCode.Accepted
+    return dialogs
+
+
+def test_parameters_with_the_same_ports(gui, parameters_circuit, monkeypatch):
+    editor = open_editor(gui, parameters_circuit)
+    undo_steps = len(gui.model.objects._undo_stack)
+    (dialog,) = set_parameters(gui, monkeypatch, editor, {("INVERT", "m"): "1"})
+    table = dialog.table
+    assert [table.item(row, 1).text() for row in range(2)] == ["4", "0"]
+    assert editor.build_panel.step_status()[-1] == ("✓", "Update components")
+    assert gui.questions == [] and gui.errors == [] and gui.warnings == []
+    assert yosys(gui).parameters == {"INVERT": 1}
+    assert connections(gui) == ["PushButton.O>m.a", "StaticValue.O>m.b", "m.y>Led.I"]
+    assert len(gui.model.objects._undo_stack) == undo_steps + 1
+    # The dialog shows the values a component has
+    (dialog,) = set_parameters(gui, monkeypatch, editor, {})
+    assert dialog.table.item(1, 2).text() == "1"
+    gui.model.objects.undo()
+    spin()
+    assert yosys(gui).parameters == {"INVERT": 1}
+    gui.model.objects.undo()
+    spin()
+    assert yosys(gui).parameters == {}
+
+
+def test_parameters_with_changed_ports(gui, parameters_circuit, monkeypatch):
+    editor = open_editor(gui, parameters_circuit)
+    set_parameters(gui, monkeypatch, editor, {("WIDTH", "m"): "8"})
+    (question,) = gui.questions
+    assert "Port 'b' has 8 bits instead of 4" in question
+    component = yosys(gui)
+    assert component.interface()["b"] == (False, 8)
+    assert component.settings_to_dict()["parameters"] == "WIDTH=8"
+    assert connections(gui) == ["PushButton.O>m.a", "m.y>Led.I"]
+    # All defaults again
+    set_parameters(gui, monkeypatch, editor, {("WIDTH", "m"): ""})
+    assert yosys(gui).parameters == {}
+    assert yosys(gui).interface()["b"] == (False, 4)
+
+
+def test_parameters_cancelled_with_the_ports(gui, parameters_circuit, monkeypatch):
+    editor = open_editor(gui, parameters_circuit)
+    gui.answer = QMessageBox.StandardButton.Cancel
+    set_parameters(gui, monkeypatch, editor, {("WIDTH", "m"): "8"})
+    assert yosys(gui).parameters == {}
+    # The values were for that synthesis only
+    gui.answer = QMessageBox.StandardButton.Ok
+    build(editor)
+    assert yosys(gui).parameters == {}
+
+
+def test_parameters_of_two_components(gui, parameters_circuit, monkeypatch):
+    gui.add("YosysComponent", 300, 300, path=str(parameters_circuit))
+    editor = open_editor(gui, parameters_circuit)
+    set_parameters(gui, monkeypatch, editor, {("INVERT", "m_1"): "1"})
+    assert yosys_component(gui, "m").parameters == {}
+    assert yosys_component(gui, "m_1").parameters == {"INVERT": 1}
+    steps = [name for _, name in editor.build_panel.step_status()]
+    assert "Synthesize into gates (INVERT=1)" in steps and "Synthesize into gates" in steps
+
+
+def test_parameter_that_is_not_a_number():
+    from digsim.app.editor._parameters_dialog import ParametersDialog
+
+    QApplication.instance() or QApplication([])
+    dialog = ParametersDialog(None, "m", {"WIDTH": 4, "INVERT": 0}, {"m": {}, "m_1": {}})
+    dialog.table.item(1, 3).setText("yes")
+    dialog.accept()
+    assert dialog.result() != 1
+    assert dialog.error.text() == "m_1: INVERT is not an integer: 'yes'"
+    assert dialog.table.item(1, 3).background().color().red() == 255
+    dialog.table.item(1, 3).setText("0x1")
+    assert dialog.values() == {"m": "", "m_1": "INVERT=1"}
+    dialog.clear()
+    assert dialog.values() == {"m": "", "m_1": ""}
+
+
+def test_module_without_parameters(gui, circuit, monkeypatch):
+    messages = []
+    monkeypatch.setattr(
+        QMessageBox, "information", lambda _parent, _title, text, *_: messages.append(text)
+    )
+    editor = open_editor(gui, circuit)
+    editor.menu_actions["parameters"].trigger()
+    assert messages == ["The module m has no parameters."]
+    assert not editor.is_building()

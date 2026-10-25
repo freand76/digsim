@@ -21,12 +21,14 @@ from digsim.app._yosys_interface import (
     removed_wires,
 )
 from digsim.circuit import Circuit
-from digsim.circuit.components import Led, PushButton, StaticValue, YosysComponent
+from digsim.circuit.components import Led, PushButton, StaticValue, YosysComponent, YosysVariant
 from digsim.circuit.components._yosys_component import YosysComponentException
 from digsim.storage_model import LineDataClass
 from digsim.synth import SynthesisException
 from digsim.utils import YosysNetlist
 
+
+GATES, FUNCTIONAL = YosysVariant(False), YosysVariant(True)
 
 BEFORE = """
 module m(input a, input [3:0] b, output y, output [3:0] q);
@@ -132,31 +134,31 @@ def test_components_of_file(verilog, work_dir, monkeypatch):
 
 
 def test_load_netlists(verilog):
-    netlists = load_netlists(verilog, {False, True})
-    assert set(netlists) == {False, True}
-    assert netlists[False] == YosysComponent.synthesize_file(verilog)
-    assert netlists[True] == YosysComponent.synthesize_file(verilog, functional=True)
+    netlists = load_netlists(verilog, {GATES, FUNCTIONAL})
+    assert set(netlists) == {GATES, FUNCTIONAL}
+    assert netlists[GATES] == YosysComponent.synthesize_file(verilog)
+    assert netlists[FUNCTIONAL] == YosysComponent.synthesize_file(verilog, functional=True)
     log = []
-    assert set(load_netlists(verilog, {True}, log=log, cached=False)) == {True}
+    assert set(load_netlists(verilog, {FUNCTIONAL}, log=log, cached=False)) == {FUNCTIONAL}
     assert len(log) > 0
 
 
 def test_load_netlists_of_a_netlist_file(verilog, work_dir):
     path = work_dir / "m.json"
     path.write_text(json.dumps(YosysComponent.synthesize_file(verilog)), encoding="utf-8")
-    netlists = load_netlists(path, {False, True})
-    assert netlists[False] == netlists[True] == YosysComponent.synthesize_file(verilog)
+    netlists = load_netlists(path, {GATES, FUNCTIONAL})
+    assert netlists[GATES] == netlists[FUNCTIONAL] == YosysComponent.synthesize_file(verilog)
     path.write_text('{"not": "a netlist"}', encoding="utf-8")
     with pytest.raises(YosysComponentException):
-        load_netlists(path, {False})
+        load_netlists(path, {GATES})
 
 
 def test_load_netlists_errors(verilog, work_dir):
     verilog.write_text("module m(input a; endmodule\n", encoding="utf-8")
     with pytest.raises(SynthesisException):
-        load_netlists(verilog, {False})
+        load_netlists(verilog, {GATES})
     with pytest.raises(OSError):
-        load_netlists(work_dir / "missing.v", {False})
+        load_netlists(work_dir / "missing.v", {GATES})
 
 
 class Drawing(WireDrawing):
@@ -224,7 +226,7 @@ def test_changed_ports_lose_their_wires(verilog):
     lines = drawing.to_lines()
 
     verilog.write_text(AFTER, encoding="utf-8")
-    netlist = YosysNetlist(**load_netlists(verilog, {False})[False])
+    netlist = YosysNetlist(**load_netlists(verilog, {GATES})[GATES])
     changes = interface_changes(m.interface(), YosysComponent.netlist_interface(netlist))
     assert changes.gone() == {"b", "y"}
     assert removed_wires(lines, ["m"], changes) == ["m.b", "m.y"]
@@ -257,7 +259,7 @@ def test_given_netlists(verilog, work_dir):
     assert YosysComponent.netlist_interface(netlist) == first.interface()
     verilog.write_text("module m(input a; endmodule\n", encoding="utf-8")
     after = YosysNetlist(**YosysComponent.synthesize_file(_after_file(work_dir)))
-    with YosysComponent.given_netlists([(verilog, False, netlist), (str(verilog), False, after)]):
+    with YosysComponent.given_netlists([(verilog, GATES, netlist), (str(verilog), GATES, after)]):
         second = YosysComponent(circuit, verilog)
         third = YosysComponent(circuit, verilog)
         # None left: the file is read, it has an error now

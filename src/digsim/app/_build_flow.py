@@ -14,7 +14,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
-from digsim.circuit.components import YosysComponent
+from digsim.circuit.components import YosysComponent, YosysVariant
+from digsim.circuit.components._yosys_component import parameter_dict
 from digsim.circuit.components.atoms import DigsimException
 from digsim.synth import Synthesis, SynthesisException, YosysMessage, parse_messages
 
@@ -36,7 +37,7 @@ class BuildStep:
 class BuildResult:
     """The netlists (None if the build failed), the Yosys log and its messages"""
 
-    netlists: dict[bool, dict[str, Any]] | None = None
+    netlists: dict[YosysVariant, dict[str, Any]] | None = None
     log: list[str] = field(default_factory=list)
     messages: list[YosysMessage] = field(default_factory=list)
 
@@ -49,9 +50,12 @@ class BuildResult:
         return [message for message in self.messages if message.kind == "warning"]
 
 
-def synth_step_name(functional: bool) -> str:
+def synth_step_name(variant: YosysVariant) -> str:
     """The name of the step that synthesizes into gates or functional blocks"""
-    return "Synthesize into functional blocks" if functional else "Synthesize into gates"
+    name = "Synthesize into functional blocks" if variant.functional else "Synthesize into gates"
+    if variant.parameters:
+        name += f" ({variant.parameters.replace(',', ', ')})"
+    return name
 
 
 def describe(message: YosysMessage) -> str:
@@ -69,11 +73,11 @@ def _failed(exc: Exception, log: list[str]) -> list[YosysMessage]:
 
 
 def run_synthesis(
-    path: str | Path, variants: set[bool], report: Callable[[BuildStep], None]
+    path: str | Path, variants: set[YosysVariant], report: Callable[[BuildStep], None]
 ) -> BuildResult:
     """
-    List the modules of a Verilog file, and synthesize it into gates (False) and into
-    functional blocks (True), as 'variants' says. Each step is reported when it starts
+    List the modules of a Verilog file, and synthesize it into gates or functional blocks,
+    with parameters, as 'variants' says. Each step is reported when it starts
     and when it ends. The netlists are kept for the components (see synthesize_file).
     """
     path = str(path)
@@ -111,12 +115,17 @@ def run_synthesis(
 
     if not run("List modules", list_modules):
         return result
-    netlists: dict[bool, dict[str, Any]] = {}
+    netlists: dict[YosysVariant, dict[str, Any]] = {}
     for variant in sorted(variants):
 
-        def synthesize(variant: bool = variant) -> str:
+        def synthesize(variant: YosysVariant = variant) -> str:
             netlists[variant] = YosysComponent.synthesize_file(
-                path, variant, log=log, cached=False, top=modules[0]
+                path,
+                variant.functional,
+                log=log,
+                cached=False,
+                top=modules[0],
+                parameters=parameter_dict(variant.parameters),
             )
             return ""
 
