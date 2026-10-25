@@ -1,3 +1,2 @@
 graft src/digsim/app/images
-graft src/digsim/app/gui_objects/images
 graft src/digsim/circuit/components/ic

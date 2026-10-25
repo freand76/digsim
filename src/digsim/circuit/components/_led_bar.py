@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ._led import LED_COLORS
 from .atoms import CallbackComponent, Parameter, PortIn
 
 
@@ -25,13 +26,22 @@ class LedBar(CallbackComponent):
         circuit: The circuit to add the component to.
         name: The component name, the class name if not given.
         width: The number of LEDs, 1 to 16.
+        color: The color of the LEDs in the GUI: "red", "green", "blue" or "yellow".
     """
 
-    def __init__(self, circuit: Circuit, name: str | None = None, width: int = 8) -> None:
+    def __init__(
+        self, circuit: Circuit, name: str | None = None, width: int = 8, color: str = "red"
+    ) -> None:
         super().__init__(circuit, name, callback=None)
         for bit in range(width):
             self.add_port(PortIn(self, f"{bit}"))
         self.parameter_set("width", width)
+        self.parameter_set("color", color)
+
+    @property
+    def color(self) -> str:
+        """The color of the LEDs in the GUI"""
+        return self.parameter_get("color")
 
     def lit(self) -> list[bool]:
         """The state of each LED, LED 0 first"""
@@ -46,5 +56,12 @@ class LedBar(CallbackComponent):
                 "max": 16,
                 "default": 8,
                 "description": "Number of LEDs",
+            },
+            "color": {
+                "type": "list",
+                "items": LED_COLORS,
+                "default": "red",
+                "description": "Color",
+                "reconfigurable": True,
             },
         }

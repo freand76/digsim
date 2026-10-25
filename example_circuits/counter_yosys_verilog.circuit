@@ -36,7 +36,7 @@
                 "name": "Led",
                 "type": "digsim.circuit.components.Led",
                 "display_name": "Led",
-                "settings": {}
+                "settings": {"color": "red"}
             },
             {
                 "name": "Note",
@@ -168,11 +168,11 @@
     },
     "gui": {
         "counter": {"x": 595, "y": 280, "z": 0},
-        "Clock_1": {"x": 265, "y": 135, "z": 0},
-        "PushButton_2": {"x": 265, "y": 285, "z": 0},
-        "HexDigit_4": {"x": 895, "y": 410, "z": 0},
-        "OnOffSwitch": {"x": 265, "y": 425, "z": 0},
-        "Led": {"x": 595, "y": 135, "z": 0},
+        "Clock_1": {"x": 265, "y": 155, "z": 0},
+        "PushButton_2": {"x": 265, "y": 305, "z": 0},
+        "HexDigit_4": {"x": 895, "y": 425, "z": 0},
+        "OnOffSwitch": {"x": 265, "y": 445, "z": 0},
+        "Led": {"x": 595, "y": 145, "z": 0},
         "Note": {"x": 492, "y": 386, "z": 0},
         "Note_1": {"x": 73, "y": 42, "z": 0},
         "Note_2": {"x": 53, "y": 445, "z": 0},
@@ -180,8 +180,8 @@
         "Note_4": {"x": 34, "y": 154, "z": 0},
         "Note_5": {"x": 513, "y": 89, "z": 0},
         "Note_6": {"x": 825, "y": 520, "z": 0},
-        "LogicAnalyzer": {"x": 965, "y": 21, "z": 0},
-        "Bus2Wires": {"x": 788, "y": 116, "z": 0},
+        "LogicAnalyzer": {"x": 965, "y": 26, "z": 0},
+        "Bus2Wires": {"x": 788, "y": 131, "z": 0},
         "LabelWireIn": {"x": 403, "y": 532, "z": 0},
         "LabelWireIn_1": {"x": 401, "y": 390, "z": 0},
         "LabelWireIn_2": {"x": 405, "y": 231, "z": 0},
@@ -190,13 +190,13 @@
         "LabelWireOut_2": {"x": 819, "y": 76, "z": 0},
         "Note_7": {"x": 1007, "y": 227, "z": 0},
         "Buzzer": {"x": 655, "y": 510, "z": 0},
-        "LabelWireOut_3": {"x": 512, "y": 540, "z": 0},
+        "LabelWireOut_3": {"x": 512, "y": 520, "z": 0},
         "Note_8": {"x": 569, "y": 604, "z": 0}
     },
     "lines": [
         {
             "ports": ["counter.cnt", "HexDigit_4.val", "Bus2Wires.bus"],
-            "points": {"1": [734, 325], "2": [788, 325], "3": [788, 445], "4": [734, 156]},
+            "points": {"1": [734, 325], "2": [788, 325], "3": [788, 455], "4": [734, 156]},
             "segments": [
                 ["counter.cnt", "1"], ["1", "2"], ["2", "3"], ["3", "HexDigit_4.val"], ["1", "4"],
                 ["4", "Bus2Wires.bus"]

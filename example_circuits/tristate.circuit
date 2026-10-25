@@ -73,16 +73,16 @@
         ]
     },
     "gui": {
-        "StaticValue": {"x": 100, "y": 60, "z": 0},
-        "TristateBuffer": {"x": 360, "y": 70, "z": 0},
-        "StaticValue_1": {"x": 100, "y": 190, "z": 0},
-        "TristateBuffer_1": {"x": 360, "y": 200, "z": 0},
-        "StaticValue_2": {"x": 100, "y": 320, "z": 0},
-        "TristateBuffer_2": {"x": 360, "y": 330, "z": 0},
-        "StaticValue_3": {"x": 100, "y": 450, "z": 0},
-        "TristateBuffer_3": {"x": 360, "y": 460, "z": 0},
-        "DipSwitch": {"x": 100, "y": 580, "z": 0},
-        "HexDigit": {"x": 640, "y": 260, "z": 0},
+        "StaticValue": {"x": 100, "y": 90, "z": 0},
+        "TristateBuffer": {"x": 360, "y": 90, "z": 0},
+        "StaticValue_1": {"x": 100, "y": 220, "z": 0},
+        "TristateBuffer_1": {"x": 360, "y": 220, "z": 0},
+        "StaticValue_2": {"x": 100, "y": 350, "z": 0},
+        "TristateBuffer_2": {"x": 360, "y": 350, "z": 0},
+        "StaticValue_3": {"x": 100, "y": 480, "z": 0},
+        "TristateBuffer_3": {"x": 360, "y": 480, "z": 0},
+        "DipSwitch": {"x": 100, "y": 595, "z": 0},
+        "HexDigit": {"x": 640, "y": 270, "z": 0},
         "Note": {"x": 640, "y": 450, "z": 0}
     },
     "lines": [
@@ -132,11 +132,11 @@
                 "TristateBuffer_2.Y", "HexDigit.val"
             ],
             "points": {
-                "1": [568, 240],
+                "1": [568, 230],
                 "2": [568, 305],
-                "3": [568, 370],
-                "4": [568, 500],
-                "5": [568, 110]
+                "3": [568, 360],
+                "4": [568, 490],
+                "5": [568, 100]
             },
             "segments": [
                 ["TristateBuffer_1.Y", "1"], ["1", "2"], ["2", "3"], ["3", "4"],

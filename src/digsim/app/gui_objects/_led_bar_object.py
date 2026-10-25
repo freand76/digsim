@@ -7,13 +7,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QPoint, QSize, Qt
+from PySide6.QtCore import QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import QPainter
 
 from digsim.circuit.components import LedBar
 from digsim.circuit.components.atoms import Component
 
+from . import _theme as theme
 from ._component_object import ComponentObject
+from ._symbol_objects import paint_icon, port_dots
 
 
 if TYPE_CHECKING:
@@ -21,17 +23,20 @@ if TYPE_CHECKING:
 
 
 class LedBarObject(ComponentObject):
-    """The class for a LED bar component placed in the GUI, drawn like a DIP switch"""
+    """
+    A LED bar: the display without a body, LED 0 at the top, and a numbered lead from
+    each input to its LED
+    """
 
     SHOW_PORT_NAMES = False
-    LED_WIDTH = 24
-    LED_HEIGHT = 8
+    LED_WIDTH = 18
+    LED_HEIGHT = 6
     # From one LED to the next, and from one input to the next
     LED_DISTANCE = 10
-    # The frame around the LEDs
-    FRAME = 10
-    # From the top to the first input, the frame and half an LED
-    BORDER_TO_PORT = FRAME + LED_HEIGHT // 2
+    # From the display to the LEDs, at the sides
+    MARGIN = 4
+    # From the inputs to the display, room for the numbers
+    LEAD = 18
 
     def __init__(
         self, app_model: AppModel, component: Component, xpos: float, ypos: float
@@ -47,41 +52,62 @@ class LedBarObject(ComponentObject):
 
     def update_size(self) -> None:
         leds = len(self.component.lit())
-        self.width = self.LED_WIDTH + 2 * self.FRAME
+        self.width = self.LEAD + self.LED_WIDTH + 2 * self.MARGIN
         self.height = (leds - 1) * self.LED_DISTANCE + 2 * self.BORDER_TO_PORT
         self.update_ports()
 
-    def paint_component(self, painter: QPainter) -> None:
-        self.paint_component_base(painter, color=Qt.GlobalColor.black)
-        # Each LED next to its input, LED 0 at the top
-        xpos = int(self.object_pos.x() + self.width / 2 - self.LED_WIDTH / 2)
-        ypos = int(self.object_pos.y() + self.BORDER_TO_PORT - self.LED_HEIGHT / 2)
-        for led_on in self.component.lit():
-            self._paint_led(painter, xpos, ypos, led_on)
-            ypos += self.LED_DISTANCE
-
     @classmethod
-    def _paint_led(cls, painter: QPainter, xpos: int, ypos: int, led_on: bool) -> None:
-        painter.setPen(Qt.GlobalColor.darkGray)
-        painter.setBrush(Qt.GlobalColor.red if led_on else Qt.GlobalColor.darkRed)
-        painter.drawRect(xpos, ypos, cls.LED_WIDTH, cls.LED_HEIGHT)
+    def paint_bar(
+        cls,
+        painter: QPainter,
+        rect: QRectF,
+        ys: list[float],
+        lit: list[bool],
+        color: str,
+        selected: bool,
+    ) -> None:
+        """The numbered leads, the display and an LED at each y"""
+        display = rect.adjusted(cls.LEAD, 0, 0, 0)
+        for number, y in enumerate(ys):
+            theme.lead(painter, QPointF(rect.left() - 1, y), QPointF(display.left(), y))
+            theme.paint_text(
+                painter,
+                QRectF(rect.left() + 3, y - 9, cls.LEAD - 5, 8),
+                str(number),
+                6,
+                theme.MUTED,
+                Qt.AlignmentFlag.AlignLeft,
+            )
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(theme.outline_pen(selected))
+        painter.setBrush(theme.DISPLAY)
+        painter.drawRoundedRect(display, theme.CORNER, theme.CORNER)
+        for y, on in zip(ys, lit, strict=True):
+            led = QRectF(0, 0, cls.LED_WIDTH, cls.LED_HEIGHT)
+            led.moveCenter(QPointF(display.center().x(), y))
+            theme.paint_bar_led(painter, led, theme.led_color(color), on)
+
+    def paint_component(self, painter: QPainter) -> None:
+        ys = [self.get_port_item(port).rect().center().y() for port in self.component.inports()]
+        self.paint_bar(
+            painter,
+            QRectF(self.rect()),
+            ys,
+            self.component.lit(),
+            self.component.color,
+            self.selected,
+        )
 
     @classmethod
     def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
         leds = [True, False, True, True, False, False]
-        xpos = (size.width() - cls.LED_WIDTH) // 2
-        ypos = (size.width() - len(leds) * cls.LED_DISTANCE) // 2
-        painter.setPen(Qt.GlobalColor.black)
-        painter.setBrush(Qt.GlobalColor.black)
-        painter.drawRoundedRect(
-            xpos - cls.FRAME,
-            ypos - cls.FRAME,
-            cls.LED_WIDTH + 2 * cls.FRAME,
-            (len(leds) - 1) * cls.LED_DISTANCE + cls.LED_HEIGHT + 2 * cls.FRAME,
-            5,
-            5,
-        )
-        for led_on in leds:
-            cls._paint_led(painter, xpos, ypos, led_on)
-            ypos += cls.LED_DISTANCE
-        cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)
+        height = (len(leds) - 1) * cls.LED_DISTANCE + 2 * cls.BORDER_TO_PORT
+
+        def paint(rect: QRectF) -> None:
+            ys = [rect.top() + cls.BORDER_TO_PORT + cls.LED_DISTANCE * idx for idx in range(6)]
+            cls.paint_bar(painter, rect, ys, leds, "red", False)
+            port_dots(painter, [QPointF(rect.left() - 1, y) for y in ys])
+
+        width = cls.LEAD + cls.LED_WIDTH + 2 * cls.MARGIN
+        paint_icon(painter, size, (width, height), paint, scale=1.0)
+        cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)

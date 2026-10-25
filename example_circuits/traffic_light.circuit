@@ -1,0 +1,101 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "traffic_light",
+                "type": "digsim.circuit.components.YosysComponent",
+                "display_name": "traffic_light",
+                "settings": {"path": "../examples/yosys_fsm/traffic_light.sv", "functional": true}
+            },
+            {
+                "name": "Clock",
+                "type": "digsim.circuit.components.Clock",
+                "display_name": "Clock",
+                "settings": {"frequency": 4}
+            },
+            {
+                "name": "PushButton",
+                "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
+                "settings": {}
+            },
+            {
+                "name": "PushButton_1",
+                "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
+                "settings": {}
+            },
+            {
+                "name": "Led",
+                "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
+                "settings": {"color": "red"}
+            },
+            {
+                "name": "Led_1",
+                "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
+                "settings": {"color": "yellow"}
+            },
+            {
+                "name": "Led_2",
+                "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
+                "settings": {"color": "green"}
+            },
+            {
+                "name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {
+                    "text": "A traffic light, a state machine in SystemVerilog (examples/yosys_fsm).\nStart the simulation and push Reset (the upper button, or key 1) to start at red.\nThen push Request (the lower button, or key 2): red, red and yellow, green, yellow, red."
+                }
+            }
+        ]
+    },
+    "gui": {
+        "traffic_light": {"x": 260, "y": 100, "z": 0},
+        "Clock": {"x": 60, "y": 45, "z": 0},
+        "PushButton": {"x": 60, "y": 125, "z": 0},
+        "PushButton_1": {"x": 60, "y": 205, "z": 0},
+        "Led": {"x": 500, "y": 95, "z": 0},
+        "Led_1": {"x": 500, "y": 145, "z": 0},
+        "Led_2": {"x": 500, "y": 195, "z": 0},
+        "Note": {"x": 60, "y": 315, "z": 0}
+    },
+    "lines": [
+        {
+            "ports": ["traffic_light.red", "Led.I"],
+            "points": {},
+            "segments": [["traffic_light.red", "Led.I"]]
+        },
+        {
+            "ports": ["traffic_light.yellow", "Led_1.I"],
+            "points": {"1": [474, 145], "2": [474, 175]},
+            "segments": [["traffic_light.yellow", "1"], ["1", "2"], ["2", "Led_1.I"]]
+        },
+        {
+            "ports": ["traffic_light.green", "Led_2.I"],
+            "points": {"1": [454, 165], "2": [454, 225]},
+            "segments": [["traffic_light.green", "1"], ["1", "2"], ["2", "Led_2.I"]]
+        },
+        {
+            "ports": ["Clock.O", "traffic_light.clk"],
+            "points": {"1": [249, 65], "2": [249, 125]},
+            "segments": [["Clock.O", "1"], ["1", "2"], ["2", "traffic_light.clk"]]
+        },
+        {
+            "ports": ["PushButton.O", "traffic_light.reset"],
+            "points": {},
+            "segments": [["PushButton.O", "traffic_light.reset"]]
+        },
+        {
+            "ports": ["PushButton_1.O", "traffic_light.request"],
+            "points": {"1": [249, 225], "2": [249, 165]},
+            "segments": [["PushButton_1.O", "1"], ["1", "2"], ["2", "traffic_light.request"]]
+        }
+    ],
+    "shortcuts": {"1": "PushButton", "2": "PushButton_1"},
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 20}
+}

@@ -860,6 +860,18 @@ def screenshots() -> None:
             dip_switch.select(1)
             dip_switch.onpress()
             simulate(300)
+        elif name == "traffic_light":
+            # Reset to red, then a request: red and yellow, then green (4 Hz clock)
+            reset = circuit.get_component("PushButton")
+            request = circuit.get_component("PushButton_1")
+            assert isinstance(reset, PushButton) and isinstance(request, PushButton)
+            reset.push()
+            simulate(300)
+            reset.release()
+            request.push()
+            simulate(300)
+            request.release()
+            simulate(500)
         elif name == "buzzers":
             # Press the third button (screenshot while pressed)
             button = circuit.get_component("PushButton_2")

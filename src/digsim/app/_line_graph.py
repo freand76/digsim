@@ -235,6 +235,42 @@ def decompose(
     return chains
 
 
+def align_to_ports(
+    places: dict[str, Point], ports: set[str], segments: list[tuple[str, str]]
+) -> list[tuple[str, str]]:
+    """
+    The segments of a line, with a step where a port has moved away from the segment to
+    it, like in a file from a version that drew the component another size. A wire
+    leaves a port horizontally: it gets a short horizontal piece from the port, and a
+    vertical one to the height of the segment, which keeps its place. New points are
+    added to 'places'. A line whose points line up with its ports doesn't change.
+    """
+    result: list[tuple[str, str]] = []
+    for first, second in segments:
+        port, point = (first, second) if first in ports else (second, first)
+        if port not in ports or point in ports or port not in places or point not in places:
+            result.append((first, second))
+            continue
+        port_x, port_y = places[port]
+        point_x, point_y = places[point]
+        if point_x == port_x or point_y == port_y:
+            result.append((first, second))
+            continue
+        # The step, close to the port
+        # At a whole pixel, like the points the file stores
+        step = min(ALIGN_STEP, abs(point_x - port_x) / 2)
+        step_x = round(port_x + step if point_x > port_x else port_x - step)
+        upper, lower = f"{port}~{point}~0", f"{port}~{point}~1"
+        places[upper] = (step_x, port_y)
+        places[lower] = (step_x, point_y)
+        result += [(port, upper), (upper, lower), (lower, point)]
+    return result
+
+
+# How far from a port the step to a segment that has moved away from it is
+ALIGN_STEP = 10
+
+
 def on_segment(start: Point, end: Point, point: Point) -> bool:
     """Is a point on a horizontal or vertical segment, at an end or between them"""
     return (start[0] == end[0] == point[0] and _between(start[1], point[1], end[1])) or (

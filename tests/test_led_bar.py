@@ -1,10 +1,10 @@
 # Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
-"""Pytest module to test the LED bar component"""
+"""Pytest module to test the LED bar component, and the colors of LEDs"""
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import LedBar, StaticValue
+from digsim.circuit.components import Led, LedBar, StaticValue
 
 
 def test_led_bar_has_an_input_for_each_led():
@@ -55,3 +55,21 @@ def test_led_bar_saved_and_loaded(tmp_path):
     loaded.from_json_file(tmp_path / "led_bar.json")
     assert loaded.get_component("bar").parameter_get("width") == 5
     assert len(loaded.get_component("bar").inports()) == 5
+
+
+def test_led_colors(tmp_path):
+    """The LEDs of an LED and an LED bar have a color, red if not given, which is saved"""
+    circuit = Circuit(name="colors")
+    assert Led(circuit, "red").color == "red"
+    Led(circuit, "green", color="green")
+    LedBar(circuit, "bar", width=2, color="blue")
+    circuit.to_json_file(tmp_path / "colors.json")
+    loaded = Circuit()
+    loaded.from_json_file(tmp_path / "colors.json")
+    assert loaded.get_component("green").color == "green"
+    assert loaded.get_component("bar").color == "blue"
+    for component in (Led, LedBar):
+        color = component.get_parameters()["color"]
+        assert color["items"] == ["red", "green", "blue", "yellow"]
+        assert color["default"] == "red"
+        assert color["reconfigurable"]

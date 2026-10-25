@@ -65,6 +65,7 @@ from digsim.app._wire_path import (
     split_segment,
 )
 from digsim.app.gui_objects import ComponentObject
+from digsim.app.gui_objects import _theme as theme
 from digsim.app.gui_objects._buzzer_object import BuzzerObject
 from digsim.app.gui_objects._component_port_item import PortGraphicsItem
 from digsim.app.settings import ComponentSettingsDialog
@@ -323,20 +324,15 @@ class WirePartGraphicsItem(QGraphicsRectItem):
 
     def _get_wire_color(self, port_value: VALUE_TYPE, bus_width: int) -> QColor | Qt.GlobalColor:
         if port_value == "X":
-            return Qt.GlobalColor.red
+            return theme.WIRE_X
         if port_value == "Z":
             # Not driven, high impedance
-            return QColor(64, 112, 255)
+            return theme.WIRE_Z
         if port_value == 0:
-            return Qt.GlobalColor.darkGray
+            return theme.WIRE
         assert isinstance(port_value, int)
-
-        max_value = 2**bus_width - 1
-        # Start with dark gray
-        green = 128
-        # Calculate the green component, ranging from 128 to 255
-        green += int(127 * port_value / max_value)
-        return QColor(128, green, 128)
+        # From the color of 0 to the color of 1, by the value of the bus
+        return theme.dim(theme.ON, 0.4 + 0.6 * port_value / (2**bus_width - 1), theme.WIRE)
 
     def paint(
         self,
@@ -345,7 +341,7 @@ class WirePartGraphicsItem(QGraphicsRectItem):
         widget: QWidget | None = None,
     ) -> None:
         """QT function"""
-        pen = QPen(Qt.GlobalColor.darkGray)
+        pen = QPen(theme.WIRE)
         bus_width = self._src_port.width
         if bus_width > 1:
             pen.setWidth(4)
@@ -353,7 +349,7 @@ class WirePartGraphicsItem(QGraphicsRectItem):
             pen.setWidth(2)
 
         if not self._app_model.is_running and self._selected:
-            pen.setColor(Qt.GlobalColor.black)
+            pen.setColor(theme.INK)
         elif self._app_model.settings.get("color_wires"):
             # All wires of a line have its value, "X" when its outputs drive different values
             pen.setColor(self._get_wire_color(self._parent.line_value(), bus_width))
@@ -361,26 +357,28 @@ class WirePartGraphicsItem(QGraphicsRectItem):
         painter.setPen(pen)
         painter.drawLine(self._start, self._end)
 
+        # Smooth dots and rings, the straight wires keep whole pixels
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         extra_radius = 1 if bus_width > 1 else 0
         for point, parts in self._dots:
             # Where the line goes three or more ways, in its color, or black when a wire
             # there is selected
             painter.setPen(Qt.PenStyle.NoPen)
             if not self._app_model.is_running and any(p.is_wire_selected() for p in parts):
-                painter.setBrush(Qt.GlobalColor.black)
+                painter.setBrush(theme.INK)
             else:
                 painter.setBrush(pen.color())
             radius = self.JUNCTION_RADIUS + extra_radius
             painter.drawEllipse(QPointF(*point), radius, radius)
         if self._is_joint() and self._selected and not self._app_model.is_running:
             # A corner of a straight part of the wire, where a new wire can start
-            painter.setPen(QPen(Qt.GlobalColor.black, 2))
+            painter.setPen(QPen(theme.INK, 2))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             radius = self.JOINT_RADIUS + extra_radius
             painter.drawEllipse(self._start, radius, radius)
         if self._show_handle():
             painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(Qt.GlobalColor.black)
+            painter.setBrush(theme.INK)
             radius = self.HANDLE_RADIUS + extra_radius
             painter.drawEllipse((self._start + self._end) / 2, radius, radius)
 
@@ -774,7 +772,7 @@ class NewWireGraphicsItem(QGraphicsPathItem):
         if start_port is None or end_pos is None:
             self.setPath(painter_path)
             return
-        pen = QPen(Qt.GlobalColor.darkGray)
+        pen = QPen(theme.WIRE)
         if start_port.width > 1:
             pen.setWidth(4)
         else:
@@ -1387,7 +1385,7 @@ class _CircuitAreaScene(QGraphicsScene):
         # A ring around the selected point, on top of everything
         radius = WirePartGraphicsItem.JUNCTION_RADIUS + 4
         self._point_marker = QGraphicsEllipseItem(-radius, -radius, 2 * radius, 2 * radius)
-        self._point_marker.setPen(QPen(Qt.GlobalColor.black, 2))
+        self._point_marker.setPen(QPen(theme.INK, 2))
         self._point_marker.setZValue(1_000_000)
         self._point_marker.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
         self._point_marker.setVisible(False)
@@ -1403,6 +1401,8 @@ class _CircuitAreaScene(QGraphicsScene):
 class CircuitArea(QGraphicsView):
     """The circuit area graphics view"""
 
+    GRID_STEP = 20
+
     ZOOM_IN_FACTOR = 1.25
     ZOOM_OUT_FACTOR = 0.8
 
@@ -1414,11 +1414,34 @@ class CircuitArea(QGraphicsView):
         self._scene = _CircuitAreaScene(app_model, self)
         self._wheel_zoom_mode = False
         self.setScene(self._scene)
-        self.setBackgroundBrush(QBrush(Qt.GlobalColor.lightGray))
+        self.setBackgroundBrush(QBrush(theme.BACKGROUND))
         self.setAcceptDrops(True)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
         self._mouse_pos = QPoint(0, 0)
         self._drag_preview: QGraphicsPixmapItem | None = None
+
+    def drawBackground(self, painter: QPainter, rect: QRectF | QRect) -> None:
+        """QT function: the background, with a dot every GRID_STEP pixels"""
+        super().drawBackground(painter, rect)
+        rect = QRectF(rect)
+        if self.transform().m11() * self.GRID_STEP < 8:
+            # Zoomed out too far, the dots would gray the background
+            return
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
+        # One pixel at any zoom, in the grid color exactly
+        painter.setPen(QPen(theme.GRID, 0))
+        step = self.GRID_STEP
+        left = int(rect.left()) // step * step
+        top = int(rect.top()) // step * step
+        painter.drawPoints(
+            [
+                QPointF(x, y)
+                for x in range(left, int(rect.right()) + 1, step)
+                for y in range(top, int(rect.bottom()) + 1, step)
+            ]
+        )
+        painter.restore()
 
     def has_selection(self) -> bool:
         """Return true if items are selected"""

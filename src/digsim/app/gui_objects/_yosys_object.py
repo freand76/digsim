@@ -11,13 +11,13 @@ from digsim.app.editor import update_yosys_components
 from digsim.circuit.components import YosysComponent
 from digsim.circuit.components.atoms import DigsimException
 
-from ._image_objects import NamedBoxObject
+from ._named_box_object import NamedBoxObject
 
 
 class YosysObject(NamedBoxObject):
     """The class for a Yosys image component placed in the GUI"""
 
-    IMAGE_FILENAME = "images/YOSYS.png"
+    ICON_TEXT = "Verilog"
 
     @property
     def component(self) -> YosysComponent:

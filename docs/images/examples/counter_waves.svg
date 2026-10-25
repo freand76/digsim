@@ -34,7 +34,6 @@
 <text x='402.6' y='135.0' text-anchor='middle' fill='#1f2328' font-size='11'>6</text>
 <polygon points='426.5,131.0 429.5,120.0 471.2,120.0 474.2,131.0 471.2,142.0 429.5,142.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='450.3' y='135.0' text-anchor='middle' fill='#1f2328' font-size='11'>7</text>
-<polygon points='474.2,131.0 474.2,120.0 474.2,120.0 474.2,131.0 474.2,142.0 474.2,142.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <polygon points='474.2,131.0 477.2,120.0 518.9,120.0 521.9,131.0 518.9,142.0 477.2,142.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='498.1' y='135.0' text-anchor='middle' fill='#1f2328' font-size='11'>8</text>
 <polygon points='521.9,131.0 524.9,120.0 566.7,120.0 569.7,131.0 566.7,142.0 524.9,142.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
@@ -51,7 +50,6 @@
 <text x='784.5' y='135.0' text-anchor='middle' fill='#1f2328' font-size='11'>14</text>
 <polygon points='808.4,131.0 811.4,120.0 853.1,120.0 856.1,131.0 853.1,142.0 811.4,142.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='832.3' y='135.0' text-anchor='middle' fill='#1f2328' font-size='11'>15</text>
-<polygon points='856.1,131.0 856.1,120.0 856.1,120.0 856.1,131.0 856.1,142.0 856.1,142.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <polygon points='856.1,131.0 859.1,120.0 877.0,120.0 880.0,131.0 877.0,142.0 859.1,142.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='868.1' y='135.0' text-anchor='middle' fill='#1f2328' font-size='11'>0</text>
 </svg>
