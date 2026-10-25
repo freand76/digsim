@@ -27,7 +27,6 @@ the same seed repeats the same actions.
 from __future__ import annotations
 
 import argparse
-import concurrent.futures
 import math
 import os
 import random
@@ -37,6 +36,7 @@ import tempfile
 import time
 from collections import Counter
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from itertools import pairwise
 from pathlib import Path
 from typing import Any, ClassVar
@@ -2238,7 +2238,9 @@ def run_seeds(seeds: list[int], steps: int, jobs: int, extra: list[str]) -> int:
         return found + [line for line in lines if line.startswith("repeat with:")]
 
     failed = False
-    with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as pool:
+    # Imported by name: Python 3.15 imports concurrent.futures.ThreadPoolExecutor lazily,
+    # and with PySide6 6.12 loaded that attribute stays an unresolved lazy import
+    with ThreadPoolExecutor(max_workers=jobs) as pool:
         for output in pool.map(run, seeds):
             failed = failed or not output[0].startswith("gui_fuzz OK")
             print("\n".join(output), flush=True)
