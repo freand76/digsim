@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -22,12 +22,13 @@ from .components.atoms import (
     VALUE_TYPE,
     Component,
     DigsimException,
+    PortInOut,
     PortMultiBitWire,
     PortOutDelta,
 )
 
 
-EventPort = PortOutDelta | PortMultiBitWire
+EventPort = PortOutDelta | PortMultiBitWire | PortInOut
 
 
 class CircuitError(DigsimException):

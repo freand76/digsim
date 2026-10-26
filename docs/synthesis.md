@@ -126,7 +126,32 @@ of the component: it is `"Z"` (high impedance) when it doesn't drive, so other o
 the same wire decide its value, see [Python Circuits](python.md#components-and-ports).
 Inside a design, several tristate drivers on one bus are merged into one, and tristate
 buses that don't reach an output port become ordinary logic (the Yosys pass
-`tribuf -merge -logic`). DigSim components have no bidirectional (`inout`) ports.
+`tribuf -merge -logic`).
+
+## Inout ports
+
+An `inout` port is bidirectional, like the data bus of a memory chip. It is a `PortInOut`
+of the component, of any width. The design drives it with a tristate driver, like
+`assign data = oe ? value : 'bz;`, and reads the value of the wire:
+
+- what the design drives on it, `"Z"` while it doesn't, is the `value` of the port, and
+  the other ports on the wire get it, like from a tristate output,
+- the design reads its own value resolved with the values of the other drivers of the
+  port, `"X"` where they drive different values. `read_value()` is that value.
+
+Wire inout ports to each other both ways, and every other driver on the bus to each of
+them:
+
+```python
+first.data.wire = second.data
+second.data.wire = first.data
+cpu.Y.wire = first.data  # A TristateBuffer
+cpu.Y.wire = second.data
+```
+
+A testbench can drive an inout port directly, `dut.data.value = 0x5A`, and let go of it
+with `dut.data.value = "Z"`. Each bit is resolved by itself, but the value of a port is a
+word: a word of which only some bits are driven is `"X"` for the ports it drives.
 
 ## Internal signals and states
 

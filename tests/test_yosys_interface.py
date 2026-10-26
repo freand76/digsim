@@ -62,8 +62,8 @@ def fixture_verilog(work_dir):
 
 
 def test_interface_changes():
-    old = {"a": (False, 1), "b": (False, 4), "y": (True, 1), "q": (True, 4)}
-    new = {"a": (True, 1), "b": (False, 8), "z": (True, 1), "q": (True, 4)}
+    old = {"a": ("input", 1), "b": ("input", 4), "y": ("output", 1), "q": ("output", 4)}
+    new = {"a": ("output", 1), "b": ("input", 8), "z": ("output", 1), "q": ("output", 4)}
     changes = interface_changes(old, new)
     assert changes == InterfaceChanges(
         added=["z"], removed=["y"], width={"b": (4, 8)}, direction=["a"]
@@ -79,8 +79,15 @@ def test_interface_changes():
     assert not interface_changes(old, dict(old))
 
 
+def test_inout_changes_direction():
+    """An input or an output that becomes an inout port, or back, changes direction"""
+    old = {"a": ("input", 4), "y": ("output", 4), "z": ("inout", 4)}
+    new = {"a": ("inout", 4), "y": ("inout", 4), "z": ("input", 4)}
+    assert interface_changes(old, new).direction == ["a", "y", "z"]
+
+
 def test_only_added_ports_remove_no_wires():
-    changes = interface_changes({"a": (False, 1)}, {"a": (False, 1), "b": (False, 1)})
+    changes = interface_changes({"a": ("input", 1)}, {"a": ("input", 1), "b": ("input", 1)})
     assert changes
     assert changes.gone() == set()
 
@@ -111,10 +118,10 @@ def test_component_interface(verilog):
     assert component.source_file == str(verilog)
     assert not component.functional
     assert component.interface() == {
-        "a": (False, 1),
-        "b": (False, 4),
-        "y": (True, 1),
-        "q": (True, 4),
+        "a": ("input", 1),
+        "b": ("input", 4),
+        "y": ("output", 1),
+        "q": ("output", 4),
     }
     netlist = YosysNetlist(**YosysComponent.synthesize_file(verilog))
     assert YosysComponent.netlist_interface(netlist) == component.interface()
@@ -241,7 +248,7 @@ def test_changed_ports_lose_their_wires(verilog):
     drawing.from_lines(lines)
     a, m = circuit.get_component("A"), circuit.get_component("m")
     led1, led2 = circuit.get_component("L1"), circuit.get_component("L2")
-    assert m.interface()["b"] == (False, 8)
+    assert m.interface()["b"] == ("input", 8)
     # The wire to a is kept, the one to b is gone, and the LEDs keep the wire between them
     assert drawing.connections() == [(a.O, m.a)]
     assert sorted(drawing.drawn(), key=str) == sorted([(a.O, m.a), (led1.I, led2.I)], key=str)

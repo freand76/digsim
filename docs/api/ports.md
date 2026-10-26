@@ -8,7 +8,9 @@ when it is not driven (high impedance).
 Several outputs can drive the same input (see `get_drivers()`). The input has the value
 that they drive, and `"X"` when they drive different values. A tristate port (see
 `set_tristate()`), like the output of `TristateBuffer`, is `"Z"` when it doesn't drive, and
-then the other drivers decide. When none drives, the input is `"Z"`.
+then the other drivers decide. When none drives, the input is `"Z"`. An inout port
+(`PortInOut`), like an `inout` port of a Verilog component, is both: it drives the ports it
+is wired to, and other ports can drive it.
 
 All port classes have the methods of `Port`. The other classes are used to write
 [your own components](../components.md): they decide how a port updates its component and
@@ -26,6 +28,7 @@ the ports it drives.
         - wired_ports
         - is_input
         - is_output
+        - is_inout
         - has_driver
         - get_driver
         - get_drivers
@@ -59,6 +62,13 @@ the ports it drives.
     options:
       members:
         - get_bit
+
+::: digsim.circuit.components.atoms.PortInOut
+    options:
+      members:
+        - read_value
+        - get_bit
+        - get_drive_bit
 
 ## Exceptions
 

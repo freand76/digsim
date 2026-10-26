@@ -79,7 +79,7 @@ def test_component_with_parameters(functional):
         functional=functional,
         parameters={"WIDTH": 8, "OFFSET": -3, "BIG": big},
     )
-    assert component.interface()["a"] == (False, 8)
+    assert component.interface()["a"] == ("input", 8)
     assert _outputs(component, 0x01) == (0xFE, 0xFD, big)
     assert component.parameters == {"BIG": big, "OFFSET": -3, "WIDTH": 8}
     assert component.variant == YosysVariant(functional, f"BIG={big},OFFSET=-3,WIDTH=8")
@@ -88,7 +88,7 @@ def test_component_with_parameters(functional):
 def test_parameters_as_text():
     component = YosysComponent(Circuit(), VERILOG, parameters=" WIDTH = 0x8, OFFSET=-3 ")
     assert component.parameters == {"OFFSET": -3, "WIDTH": 8}
-    assert component.interface()["a"] == (False, 8)
+    assert component.interface()["a"] == ("input", 8)
 
 
 @pytest.mark.parametrize(
@@ -156,7 +156,7 @@ def test_parameters_are_saved():
     loaded = data.create(Circuit())
     assert isinstance(loaded, YosysComponent)
     assert loaded.parameters == {"OFFSET": -3, "WIDTH": 8}
-    assert loaded.interface()["a"] == (False, 8)
+    assert loaded.interface()["a"] == ("input", 8)
 
 
 def test_no_parameters_are_not_saved():
@@ -170,7 +170,7 @@ def test_reconfigure_keeps_the_parameters():
     component = YosysComponent(Circuit(), VERILOG, parameters={"WIDTH": 8})
     component.update_settings({"functional": True})
     assert component.functional
-    assert component.interface()["a"] == (False, 8)
+    assert component.interface()["a"] == ("input", 8)
     assert _outputs(component, 0x01) == (0x02, 0x01, 0)
 
 
@@ -182,8 +182,8 @@ def test_given_netlists_by_variant():
         # The default variant is synthesized, the other one gets the given netlist
         default = YosysComponent(circuit, VERILOG)
         second = YosysComponent(circuit, VERILOG, parameters="WIDTH=8")
-    assert default.interface()["a"] == (False, 4)
-    assert second.interface()["a"] == (False, 8)
+    assert default.interface()["a"] == ("input", 4)
+    assert second.interface()["a"] == ("input", 8)
 
 
 def test_load_netlists_by_variant():
@@ -248,7 +248,7 @@ def test_set_parameters(work_dir):
     component = YosysComponent(Circuit(), VERILOG)
     component.set_parameters({"WIDTH": 8})
     # Not built again: the netlist is the one from before, until it is reloaded
-    assert component.interface()["a"] == (False, 4)
+    assert component.interface()["a"] == ("input", 4)
     assert component.variant == YosysVariant(False, "WIDTH=8")
     component.set_parameters(None)
     assert component.parameters == {}

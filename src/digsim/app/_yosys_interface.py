@@ -24,8 +24,8 @@ from digsim.storage_model import LineDataClass
 from digsim.utils import YosysNetlist
 
 
-# Port name to (is output, width)
-Interface = dict[str, tuple[bool, int]]
+# Port name to (direction, width), the direction "input", "output" or "inout"
+Interface = dict[str, tuple[str, int]]
 
 
 @dataclass
@@ -36,7 +36,7 @@ class InterfaceChanges:
     removed: list[str] = field(default_factory=list)
     # Port name to (old width, new width)
     width: dict[str, tuple[int, int]] = field(default_factory=dict)
-    # Ports that change from input to output or back
+    # Ports that change direction, like from input to output or inout
     direction: list[str] = field(default_factory=list)
 
     def __bool__(self) -> bool:
@@ -61,12 +61,12 @@ class InterfaceChanges:
 def interface_changes(old: Interface, new: Interface) -> InterfaceChanges:
     """The changes from the old ports to the new, in the order of the ports"""
     changes = InterfaceChanges()
-    for name, (is_output, width) in old.items():
+    for name, (direction, width) in old.items():
         if name not in new:
             changes.removed.append(name)
             continue
-        new_output, new_width = new[name]
-        if new_output != is_output:
+        new_direction, new_width = new[name]
+        if new_direction != direction:
             changes.direction.append(name)
         elif new_width != width:
             changes.width[name] = (width, new_width)

@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """All classes within digsim.circuit.components.atoms namespace"""
@@ -18,6 +18,7 @@ from ._port import (
     Port,
     PortConnectionError,
     PortIn,
+    PortInOut,
     PortMultiBitWire,
     PortOutDelta,
     PortOutImmediate,

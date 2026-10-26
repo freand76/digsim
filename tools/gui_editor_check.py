@@ -704,7 +704,7 @@ def test_new_verilog_file(gui, work_dir, monkeypatch):
     assert path.read_text(encoding="utf-8").startswith("module my_blinky (")
     component = yosys(gui)
     assert component.name() == "my_blinky"
-    assert component.interface() == {"a": (False, 1), "y": (True, 1)}
+    assert component.interface() == {"a": ("input", 1), "y": ("output", 1)}
     (editor,) = gui.window.verilog_editors.editors()
     assert editor.path == path.resolve()
 
@@ -809,10 +809,10 @@ def test_close_without_update(gui, circuit):
     assert "m.v are not updated with the saved file" in question
     # The components are as they were: y = a
     assert yosys(gui).interface() == {
-        "a": (False, 1),
-        "b": (False, 4),
-        "y": (True, 1),
-        "q": (True, 4),
+        "a": ("input", 1),
+        "b": ("input", 4),
+        "y": ("output", 1),
+        "q": ("output", 4),
     }
     spin()
     assert gui.window.verilog_editors.editors() == []
@@ -1264,13 +1264,13 @@ def test_parameters_with_changed_ports(gui, parameters_circuit, monkeypatch):
     (question,) = gui.questions
     assert "Port 'b' has 8 bits instead of 4" in question
     component = yosys(gui)
-    assert component.interface()["b"] == (False, 8)
+    assert component.interface()["b"] == ("input", 8)
     assert component.settings_to_dict()["parameters"] == "WIDTH=8"
     assert connections(gui) == ["PushButton.O>m.a", "m.y>Led.I"]
     # All defaults again
     set_parameters(gui, monkeypatch, editor, {("WIDTH", "m"): ""})
     assert yosys(gui).parameters == {}
-    assert yosys(gui).interface()["b"] == (False, 4)
+    assert yosys(gui).interface()["b"] == ("input", 4)
 
 
 def test_parameters_cancelled_with_the_ports(gui, parameters_circuit, monkeypatch):

@@ -11,7 +11,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, Literal, NoReturn, NotRequired, TypedDict
 
 from ._digsim_exception import DigsimException
-from ._port import VALUE_TYPE, Port, PortMultiBitWire, PortOutDelta
+from ._port import VALUE_TYPE, Port, PortInOut, PortMultiBitWire, PortOutDelta
 
 
 if TYPE_CHECKING:
@@ -199,12 +199,13 @@ class Component(abc.ABC):
             # the ports (their other drivers keep driving them)
             src_port.remove_wires()
 
-        for dst_port in self.inports():
+        # The inputs, and the inout ports (which are outputs too)
+        for dst_port in self._ports:
             for driver in dst_port.get_drivers():
                 driver.disconnect(dst_port)
 
     def add_event(
-        self, port: PortOutDelta | PortMultiBitWire, value: VALUE_TYPE, delay_ns: int
+        self, port: PortOutDelta | PortMultiBitWire | PortInOut, value: VALUE_TYPE, delay_ns: int
     ) -> None:
         """Add delta cycle event"""
         self._circuit.add_event(port, value, delay_ns)

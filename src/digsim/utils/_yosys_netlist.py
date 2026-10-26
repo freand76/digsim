@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -38,15 +38,23 @@ class NetPort:
 
 @dataclasses.dataclass
 class Nets:
-    """The port that drives each net, and the ports that each net drives"""
+    """
+    The port that drives each net, and the ports that each net drives. The net of a bit of
+    an inout module port is driven by the port, with the value of the wire outside, and
+    the cell outputs on it are its drivers in 'inout_drivers' instead.
+    """
 
     source: dict[NET_TYPE, NetPort] = dataclasses.field(default_factory=dict)
     sinks: dict[NET_TYPE, list[NetPort]] = dataclasses.field(default_factory=dict)
+    inout_drivers: dict[NET_TYPE, list[NetPort]] = dataclasses.field(default_factory=dict)
 
 
 @dataclass
 class YosysPort:
-    """A port of a module: its direction ("input" or "output") and the nets of its bits"""
+    """
+    A port of a module: its direction ("input", "output" or "inout") and the nets of its
+    bits
+    """
 
     direction: str
     bits: BIT_TYPE
@@ -54,6 +62,10 @@ class YosysPort:
     @property
     def is_output(self) -> bool:
         return self.direction == "output"
+
+    @property
+    def is_inout(self) -> bool:
+        return self.direction == "inout"
 
     def is_same(self, compare_port: YosysPort) -> bool:
         return (compare_port.direction == self.direction) and (
@@ -178,14 +190,20 @@ class YosysModule:
     def get_nets(self) -> Nets:
         """
         The nets of the module. Module inputs and cell outputs drive nets, and module
-        outputs and cell inputs are driven by them.
+        outputs and cell inputs are driven by them. An inout module port drives its nets
+        (constant bits excepted), and the cell outputs on them drive the port.
         """
         nets = Nets()
+        inout_nets: set[NET_TYPE] = set()
         for port_name, port in self.ports.items():
             for bit_index, net in enumerate(port.bits):
                 net_port = NetPort(port_name, bit_index=bit_index)
                 if port.is_output:
                     nets.sinks.setdefault(net, []).append(net_port)
+                elif port.is_inout:
+                    if isinstance(net, int):
+                        nets.source[net] = net_port
+                        inout_nets.add(net)
                 else:
                     nets.source[net] = net_port
         for cell_name, cell in self.cells.items():
@@ -195,6 +213,8 @@ class YosysModule:
                     net_port = NetPort(port_name, cell=cell_name, bit_index=bit_index)
                     if is_input:
                         nets.sinks.setdefault(net, []).append(net_port)
+                    elif net in inout_nets:
+                        nets.inout_drivers.setdefault(net, []).append(net_port)
                     else:
                         nets.source[net] = net_port
         return nets

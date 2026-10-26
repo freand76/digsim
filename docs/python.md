@@ -105,6 +105,10 @@ second.Y.wire = led.I  # Both are TristateBuffer outputs
 button.O.wire = led.I  # Its value, unless an enabled buffer drives another one
 ```
 
+An `inout` port of a Verilog component is both an output and an input, see
+[Inout ports](synthesis.md#inout-ports). Two of them on one bus drive each other:
+`a.data.wire = b.data` and `b.data.wire = a.data`.
+
 Interactive components have methods for controlling them, such as `PushButton.push()`
 and `.release()`. Output components such as `Led` accept a `callback` that is called
 whenever their value changes.

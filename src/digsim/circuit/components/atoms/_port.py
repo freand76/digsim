@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """This module contains the classes for all component ports"""
@@ -126,6 +126,8 @@ class Port(abc.ABC):
         """
         if self.width != port.width:
             raise PortConnectionError("Cannot connect ports with different widths")
+        if port is self:
+            raise PortConnectionError(f"Cannot connect {self.path()}.{self.name()} to itself")
         if port.has_driver():
             drivers = port.get_drivers()
             if self in drivers:
@@ -233,8 +235,15 @@ class Port(abc.ABC):
         return self._output
 
     def is_input(self) -> bool:
-        """Return True if this port is an input port"""
+        """Return True if this port is an input port (or an inout port)"""
         return not self._output
+
+    def is_inout(self) -> bool:
+        """
+        Return True if this port is bidirectional, an inout port: both an output and an
+        input (see PortInOut)
+        """
+        return False
 
     def is_rising_edge(self) -> bool:
         """
@@ -526,3 +535,176 @@ class PortMultiBitWire(Port):
         Do nothing here, the event passed in 'update_value_from_bits'
         is just used to update waves in Circuit class
         """
+
+
+def _bit(value: VALUE_TYPE, bit_id: int) -> VALUE_TYPE:
+    """One bit of a value, "X" and "Z" are the same for every bit"""
+    if isinstance(value, str):
+        return value
+    return (value >> bit_id) & 1
+
+
+class _InOutDriveBit(PortWire):
+    """A bit of what the component of an inout port drives on it, it updates the port"""
+
+    def __init__(self, parent: Component, name: str, inout_port: PortInOut, bit_id: int) -> None:
+        super().__init__(parent, name, 1, output=False)
+        self._inout_port = inout_port
+        self._bit_id = bit_id
+
+    def drive(self) -> VALUE_TYPE:
+        """What the bit drives: "Z" if nothing in the component drives it"""
+        return self._value if self.has_driver() else "Z"
+
+    def set_value(self, value: VALUE_TYPE) -> None:
+        super().set_value(value)
+        self._inout_port.drive_changed(self._bit_id)
+
+
+class PortInOut(Port):
+    """
+    A bidirectional port of one or more bits, like an inout port of a Verilog module.
+
+    Like an output, it drives the ports it is wired to with what its component drives on
+    it, "Z" (not driven) while the component doesn't. Like an input, other ports can drive
+    it. The component reads the value of the wire, at each bit what it drives itself
+    resolved with what the other ports drive (see resolve()), and only that is "X" when
+    they drive different values.
+
+    The bits that the component drives are the drive bits, get_drive_bit(), and the bits
+    it reads are get_bit(). The value of the port is what it drives, as for a tristate
+    output, and read_value() is the value of the wire. A word of which only some bits are
+    driven is "X" for the ports it drives.
+
+    Two inout ports on the same wire drive each other: a.wire = b and b.wire = a.
+    """
+
+    def __init__(self, parent: Component, name: str, width: int = 1) -> None:
+        self._port_driver: Port | None = None  # The first port that drives this port
+        self._other_value: VALUE_TYPE = "Z"  # What the other ports drive on the wire
+        self._drive_bits: list[_InOutDriveBit] = []
+        self._read_bits: list[PortWire] = []
+        super().__init__(parent, name, width, output=True)
+        for bit_id in range(width):
+            self._drive_bits.append(_InOutDriveBit(parent, f"{name}_drive_{bit_id}", self, bit_id))
+            self._read_bits.append(PortWire(parent, f"{name}_{bit_id}", output=True))
+
+    def init(self) -> None:
+        super().init()
+        self._other_value = "X" if self.has_driver() else "Z"
+        for bit in [*self._drive_bits, *self._read_bits]:
+            bit.init()
+        # Bits that nothing in the component drives drive "Z" from the start, and the
+        # ports the port drives get the value after their own init()
+        drive = self._drive_word() if self._drive_bits else "X"
+        if drive != "X":
+            self._parent.add_event(self, drive, 0)
+
+    def is_input(self) -> bool:
+        """Return True, an inout port can be driven by other ports"""
+        return True
+
+    def is_inout(self) -> bool:
+        """Return True, see Port.is_inout()"""
+        return True
+
+    def set_value(self, value: VALUE_TYPE) -> None:
+        """
+        Set what the other ports drive on the wire. A testbench can drive the port like
+        this, "Z" to let go of the wire.
+        """
+        self._other_value = value
+        for bit_id, bit in enumerate(self._read_bits):
+            bit.set_value(self._read_bit(bit_id))
+
+    def remove_driver(self, port: Port) -> None:
+        """Remove a driver of the port, without drivers no other port drives the wire"""
+        super().remove_driver(port)
+        if not self.has_driver():
+            self.set_value("Z")
+
+    def _read_bit(self, bit_id: int) -> VALUE_TYPE:
+        """The value of a bit of the wire, see resolve()"""
+        drive = self._drive_bits[bit_id].drive()
+        other = _bit(self._other_value, bit_id)
+        if drive == "Z":
+            return other
+        if other in ("Z", drive):
+            return drive
+        return "X"
+
+    def _drive_word(self) -> VALUE_TYPE:
+        """What the component drives on the port, "X" if only some of the bits"""
+        value = 0
+        driven = 0
+        for bit_id, bit in enumerate(self._drive_bits):
+            bit_value = bit.drive()
+            if bit_value == "X":
+                return "X"
+            if bit_value == "Z":
+                continue
+            driven += 1
+            value |= bit_value << bit_id
+        if not driven:
+            return "Z"
+        return value if driven == self.width else "X"
+
+    def drive_changed(self, bit_id: int) -> None:
+        """A drive bit changed: update the bit that the component reads, and the wires"""
+        self._read_bits[bit_id].set_value(self._read_bit(bit_id))
+        drive = self._drive_word()
+        if drive != self._value:
+            self.update_wires(drive)
+            # Send event just to update waves
+            self._parent.add_event(self, drive, 0)
+
+    def read_value(self) -> VALUE_TYPE:
+        """
+        The value of the wire, what the port drives resolved with what the other ports
+        drive: "X" if they drive different values, or only some bits of a word are driven
+        """
+        value = 0
+        not_driven = 0
+        for bit_id, bit in enumerate(self._read_bits):
+            bit_value = bit.value
+            if bit_value == "X":
+                return "X"
+            if bit_value == "Z":
+                not_driven += 1
+                continue
+            value |= bit_value << bit_id
+        if not_driven:
+            return "Z" if not_driven == self.width else "X"
+        return value
+
+    def get_wired_ports_recursive(self, processed_ports: set[Port] | None = None) -> list[Port]:
+        if processed_ports is None:
+            processed_ports = set()
+        all_wired_ports = super().get_wired_ports_recursive(processed_ports)
+        for bit in self._read_bits:
+            all_wired_ports.extend(bit.get_wired_ports_recursive(processed_ports))
+        return all_wired_ports
+
+    def set_driver(self, port: Port | None) -> None:
+        """Set port driver"""
+        self._port_driver = port
+
+    def get_driver(self) -> Port | None:
+        """Get port driver"""
+        return self._port_driver
+
+    def has_driver(self) -> bool:
+        """Return True if port has driver"""
+        return self._port_driver is not None
+
+    def get_bit(self, bit_id: int) -> Port:
+        """The bit of the wire that the component reads, it drives the ports of the component"""
+        return self._read_bits[bit_id]
+
+    def get_drive_bit(self, bit_id: int) -> Port:
+        """The bit that the component drives, ports of the component are wired to it"""
+        return self._drive_bits[bit_id]
+
+    def delta_cycle(self, value: VALUE_TYPE) -> None:
+        """Drive the wires after init(), the other events only update waves"""
+        self.update_wires(value)

@@ -38,6 +38,7 @@ from .atoms import (
     Parameter,
     ParameterValue,
     Port,
+    PortInOut,
     PortMultiBitWire,
 )
 
@@ -198,7 +199,8 @@ class YosysComponent(MultiComponent):
     A component built from a Verilog file or a Yosys JSON netlist, named after its module.
 
     Ports:
-        The ports of the Verilog module, with the same names and widths.
+        The ports of the Verilog module, with the same names and widths. An inout port is
+            a PortInOut, wire it both ways to another inout port.
 
     Args:
         circuit: The circuit to add the component to.
@@ -302,9 +304,13 @@ class YosysComponent(MultiComponent):
         self.set_display_name(module_name)
         # Add External Ports
         for portname, port_dict in netlist_module.ports.items():
-            external_port = PortMultiBitWire(
-                self, portname, width=len(port_dict.bits), output=port_dict.is_output
-            )
+            external_port: Port
+            if port_dict.is_inout:
+                external_port = PortInOut(self, portname, width=len(port_dict.bits))
+            else:
+                external_port = PortMultiBitWire(
+                    self, portname, width=len(port_dict.bits), output=port_dict.is_output
+                )
             self.add_port(external_port)
         # Create component
         self._create_component()
@@ -405,9 +411,9 @@ class YosysComponent(MultiComponent):
             raise YosysComponentException("No netlist loaded")
         return self._netlist_module
 
-    def _bus_port(self, portname: str) -> PortMultiBitWire:
+    def _bus_port(self, portname: str) -> PortMultiBitWire | PortInOut:
         port = self.port(portname)
-        if not isinstance(port, PortMultiBitWire):
+        if not isinstance(port, (PortMultiBitWire, PortInOut)):
             raise YosysComponentException(f"Port '{portname}' is not a bus port")
         return port
 
@@ -583,15 +589,43 @@ class YosysComponent(MultiComponent):
         self._connect_sinks(components_dict, components_dict["VDD"].port("O"), vdd_sinks)
 
     def _connect_external_input(self, components_dict: dict[str, Component], nets: Nets) -> None:
-        """Connect each bit of the input ports to the cell inputs and module outputs it drives"""
+        """
+        Connect each bit of the input and inout ports to the cell inputs and module outputs
+        it drives
+        """
         for portname, port in self._module().ports.items():
             if port.is_output:
                 continue
             bus_port = self._bus_port(portname)
             for bit_index, net in enumerate(port.bits):
+                if port.is_inout and not isinstance(net, int):
+                    # A constant bit, the component drives it (see _connect_inout_drivers)
+                    continue
                 self._connect_sinks(
                     components_dict, bus_port.get_bit(bit_index), nets.sinks.get(net, [])
                 )
+
+    def _connect_inout_drivers(self, components_dict: dict[str, Component], nets: Nets) -> None:
+        """
+        Connect the cell outputs on the nets of the inout ports, and the constant bits, to
+        the bits that the ports drive. An inout port that drives only from tristate cells
+        (or not at all) is a tristate port.
+        """
+        for portname, port in self._module().ports.items():
+            if not port.is_inout:
+                continue
+            inout_port = self._bus_port(portname)
+            assert isinstance(inout_port, PortInOut)
+            tristate = True
+            for bit_index, net in enumerate(port.bits):
+                drive_bit = inout_port.get_drive_bit(bit_index)
+                if net in ("0", "1"):
+                    components_dict["GND" if net == "0" else "VDD"].port("O").wire = drive_bit
+                for driver in nets.inout_drivers.get(net, []):
+                    assert driver.cell is not None
+                    self._cell_port(components_dict[driver.cell], driver).wire = drive_bit
+                tristate = tristate and all(d.is_tristate() for d in drive_bit.get_drivers())
+            inout_port.set_tristate(tristate)
 
     def _create_component(self) -> None:
         """Create yosys component"""
@@ -604,8 +638,9 @@ class YosysComponent(MultiComponent):
         # Connect cells, functional cells to each other as words
         linked = self._link_functional_cells(components_dict, cells, nets)
         self._connect_cells(components_dict, nets, linked)
-        # Connect external input ports
+        # Connect external input ports, and the drivers of the inout ports
         self._connect_external_input(components_dict, nets)
+        self._connect_inout_drivers(components_dict, nets)
         # An output driven only by tristate cells is a tristate output (it can share a wire)
         for portname, port in self._module().ports.items():
             if port.is_output:
@@ -691,15 +726,18 @@ class YosysComponent(MultiComponent):
         return YosysVariant(self._functional, self._module_parameters)
 
     @staticmethod
-    def netlist_interface(netlist_object: YosysNetlist) -> dict[str, tuple[bool, int]]:
-        """The ports of the (first) module of a netlist: name to (is output, width)"""
+    def netlist_interface(netlist_object: YosysNetlist) -> dict[str, tuple[str, int]]:
+        """
+        The ports of the (first) module of a netlist: name to (direction, width), the
+        direction "input", "output" or "inout"
+        """
         _, module = YosysComponent._first_module(netlist_object)
-        return {name: (port.is_output, len(port.bits)) for name, port in module.ports.items()}
+        return {name: (port.direction, len(port.bits)) for name, port in module.ports.items()}
 
-    def interface(self) -> dict[str, tuple[bool, int]]:
-        """The ports of the component: name to (is output, width)"""
+    def interface(self) -> dict[str, tuple[str, int]]:
+        """The ports of the component: name to (direction, width), see netlist_interface()"""
         return {
-            name: (port.is_output, len(port.bits)) for name, port in self._module().ports.items()
+            name: (port.direction, len(port.bits)) for name, port in self._module().ports.items()
         }
 
     def signal_names(self) -> list[str]:
@@ -867,6 +905,13 @@ class YosysComponent(MultiComponent):
 
     def _disconnect_external_ports(self) -> None:
         """Disconnect external ports before reload"""
+        for port in self.ports:
+            if isinstance(port, PortInOut):
+                for bit_id in range(port.width):
+                    port.get_bit(bit_id).remove_wires()
+                    drive_bit = port.get_drive_bit(bit_id)
+                    for driver in drive_bit.get_drivers():
+                        driver.disconnect(drive_bit)
         for port in self.inports():
             bus_port = self._bus_port(port.name())
             for bit_id in range(bus_port.width):
