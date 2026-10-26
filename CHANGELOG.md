@@ -3,6 +3,7 @@
 ## vx.x.x
  - Verilog `inout` ports, of any width: a bidirectional port of a Yosys component (`PortInOut`) drives the wire with what the design drives on it, "Z" while it doesn't, and the design reads the value of the wire, resolved with the other drivers. Wire two inout ports both ways (`a.data.wire = b.data` and `b.data.wire = a.data`). Before, an inout port was an input and the design didn't drive it.
  - GUI: the ports of ICs and Verilog components are arrows that show their direction, an input points into the component and an output out of it
+ - GUI: the port of a Wire Source is at the tip of its tag, it was a little inside it
  - GUI: inout ports are drawn as a diamond. They drive their line and read it, so two inout ports on a line drive each other.
  - New Python example, examples/yosys_inout: two registers with an inout data port on a shared bus
  - New GUI example circuit, walkie_talkie.circuit: two walkie-talkies, the same Verilog module twice, that talk over one bidirectional bus wire

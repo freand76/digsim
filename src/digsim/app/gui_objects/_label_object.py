@@ -42,7 +42,8 @@ class LabelObject(ComponentObject):
         if self.SINK:
             xpos = -ComponentObject.RECT_TO_BORDER
         else:
-            xpos = self.width - self.PORT_SIDE - 1
+            # At the tip, like the outputs of other components
+            xpos = ComponentObject.RECT_TO_BORDER + self.width - self.PORT_SIDE - 1
         rect = QRect(
             int(self.object_pos.x() + xpos),
             int(self.object_pos.y() + self.height / 2 - self.PORT_SIDE / 2),
