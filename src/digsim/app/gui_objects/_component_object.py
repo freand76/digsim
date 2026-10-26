@@ -44,6 +44,8 @@ class ComponentObject(QGraphicsRectItem):
     DEFAULT_PORT_TO_PORT_DISTANCE = 20
     # Draw the port names next to the ports
     SHOW_PORT_NAMES = True
+    # Draw the ports on the border as arrows that show their direction, not as dots
+    PORT_ARROWS = False
     # How far outside its rect the component paints, like the glow of a lit LED
     PAINT_MARGIN = 0
 
@@ -200,7 +202,9 @@ class ComponentObject(QGraphicsRectItem):
                 self._port_names[port] = port.name()
             else:
                 self._port_names[port] = f"{port.name()}[{port.width - 1}:0]"
-            self._port_items[port] = PortGraphicsItem(self._app_model, self, port)
+            self._port_items[port] = PortGraphicsItem(
+                self._app_model, self, port, arrow=self.PORT_ARROWS
+            )
         self.update_ports()
 
     def update_ports(self) -> None:
@@ -342,15 +346,19 @@ class ComponentObject(QGraphicsRectItem):
         """Paint component ports"""
         painter.setPen(color)
         painter.setFont(self._PORT_NAME_FONT)
+        # Room for the arrows, which are mostly inside the body
+        gap = 2 if self.PORT_ARROWS else 0
         for port in self._component.ports:
             rect = self.get_port_item(port).rect()
             port_str = self._port_names[port]
             str_pixels_w, str_pixels_h = self.get_string_metrics(port_str, self._PORT_NAME_FONT)
             text_y = rect.y() + str_pixels_h - self.PORT_SIDE / 2
             if rect.x() < self.object_pos.x():
-                text_pos = QPoint(int(rect.x() + self.inport_x_pos()), int(text_y))
+                text_pos = QPoint(int(rect.x() + self.inport_x_pos() + gap), int(text_y))
             else:
-                text_pos = QPoint(int(rect.x() - str_pixels_w - self.PORT_SIDE / 2), int(text_y))
+                text_pos = QPoint(
+                    int(rect.x() - str_pixels_w - self.PORT_SIDE / 2 - gap), int(text_y)
+                )
             painter.drawText(text_pos, port_str)
 
     def get_port_pos(self, portname: str) -> QPointF:

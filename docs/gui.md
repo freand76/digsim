@@ -62,6 +62,10 @@ with the **Del** key or the **Delete** button in the control area.
 Wires connect component ports. To draw a wire, **click a port, then click the port you
 want to connect it to**. Press **Esc** to cancel a wire you have started.
 
+A port is a dot. The ports of an IC or a Verilog component are arrows that show their
+direction: an input points into the component, an output out of it, and an inout port
+is a diamond.
+
 On the way to the second port, each click in the circuit area adds a corner to the wire.
 From the port where you started, the wire runs horizontally to the x position of each
 click and then vertically to it. Press **Backspace** to remove the last corner. While you
