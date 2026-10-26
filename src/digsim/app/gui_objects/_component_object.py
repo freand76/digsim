@@ -228,9 +228,10 @@ class ComponentObject(QGraphicsRectItem):
         max_outport_name = ""
         for port in self.component.ports:
             port_name = self._port_names[port]
-            if port.is_input() and len(port_name) > len(max_inport_name):
+            # An inout port is on the right side, with the outputs
+            if not port.is_output() and len(port_name) > len(max_inport_name):
                 max_inport_name = port_name
-            elif not port.is_input() and len(port_name) > len(max_outport_name):
+            elif port.is_output() and len(port_name) > len(max_outport_name):
                 max_outport_name = port_name
         max_port_names = f"{max_inport_name} {max_outport_name}"
         max_port_names_w, _ = self.get_string_metrics(max_port_names)

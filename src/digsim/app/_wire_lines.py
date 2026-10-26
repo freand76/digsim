@@ -219,9 +219,10 @@ class WireDrawing:
             for end in (self._start_node(wire), self._end_node(wire)):
                 port = end[1]
                 if isinstance(port, Port):
-                    group = outputs if port.is_output() else inputs
-                    if port not in group:
-                        group.append(port)
+                    # An inout port is both
+                    for group, member in ((outputs, port.is_output()), (inputs, port.is_input())):
+                        if member and port not in group:
+                            group.append(port)
         if node[0] == "port" and not wires:
             port = node[1]
             assert isinstance(port, Port)
@@ -681,11 +682,14 @@ class WireDrawing:
             src_port.wire = dst_port
 
     def _complete(self, port: Port) -> None:
-        """Connect each output port of the line of a port to each of its input ports"""
+        """
+        Connect each output port of the line of a port to each of its input ports (an
+        inout port to the others)
+        """
         line = self.line(("port", port))
         for src_port in line.outputs:
             for dst_port in line.inputs:
-                if dst_port not in src_port.wired_ports:
+                if dst_port is not src_port and dst_port not in src_port.wired_ports:
                     src_port.wire = dst_port
                     self._implied.add((src_port, dst_port))
 
@@ -1256,8 +1260,9 @@ class WireDrawing:
             if chain.parent is None:
                 start = ports[nodes[0]]
                 wire = (start, end)
-                if start.is_input() and end.is_output():
-                    # From the output port, like a wire drawn between them
+                if not start.is_output() and end.is_output():
+                    # From the output port, like a wire drawn between them (between two
+                    # inout ports, which are both, as it is)
                     wire, nodes = (end, start), nodes[::-1]
             else:
                 parent = wires[chain.parent]
@@ -1396,7 +1401,11 @@ class WireDrawing:
             done.update(line.outputs, line.inputs)
             for src_port in line.outputs:
                 for dst_port in line.inputs:
-                    if dst_port in src_port.wired_ports or src_port.width != dst_port.width:
+                    if (
+                        dst_port is src_port
+                        or dst_port in src_port.wired_ports
+                        or src_port.width != dst_port.width
+                    ):
                         continue
                     src_port.wire = dst_port
                     self._implied.add((src_port, dst_port))

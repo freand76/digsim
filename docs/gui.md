@@ -124,6 +124,11 @@ like one wire of a real circuit. Each output port on a line drives each input po
 The inputs have the value that the outputs drive, and it is undefined if they drive
 different values.
 
+An inout port of a Verilog component, drawn as a diamond, is an output and an input: it
+drives the line and reads it, like a pin on a bidirectional bus. Draw a wire from it like
+from an output. Two inout ports on a line drive each other, so a value can go both ways
+on the same wire.
+
 A new wire can end on any wire, at a corner or anywhere along it, and the pointer shows a
 crosshair where it can. A wire from an input port is a branch there, and a wire from an
 output port joins the line, like a chip that is connected to a bus. A wire started on a

@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QPointF, QRect, QRectF, Qt
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QPainter, QPolygonF
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsRectItem,
@@ -28,7 +28,10 @@ if TYPE_CHECKING:
 
 
 class PortGraphicsItem(QGraphicsRectItem):
-    """A port graphics item, drawn as a dot in its rect (the rect is where it is clicked)"""
+    """
+    A port graphics item, drawn as a dot in its rect (the rect is where it is clicked). An
+    inout port, which both drives its wire and reads it, is a diamond.
+    """
 
     DOT_RADIUS = 2.5
     HOVER_RADIUS = 4.0
@@ -51,7 +54,21 @@ class PortGraphicsItem(QGraphicsRectItem):
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(theme.ACCENT if self._hover else theme.INK)
         radius = self.HOVER_RADIUS if self._hover else self.DOT_RADIUS
-        painter.drawEllipse(self.rect().center(), radius, radius)
+        center = self.rect().center()
+        if self._port.is_inout():
+            radius *= 1.6
+            painter.drawPolygon(
+                QPolygonF(
+                    [
+                        center + QPointF(0, -radius),
+                        center + QPointF(radius, 0),
+                        center + QPointF(0, radius),
+                        center + QPointF(-radius, 0),
+                    ]
+                )
+            )
+            return
+        painter.drawEllipse(center, radius, radius)
 
     @property
     def port(self) -> Port:

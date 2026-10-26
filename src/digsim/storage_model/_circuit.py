@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -143,7 +143,12 @@ class LineDataClass:
             if not src_port.is_output():
                 continue
             for dst_port in ports:
-                if dst_port.is_input() and dst_port not in src_port.wired_ports:
+                # An inout port is both, it drives the others
+                if (
+                    dst_port.is_input()
+                    and dst_port is not src_port
+                    and dst_port not in src_port.wired_ports
+                ):
                     try:
                         src_port.wire = dst_port
                     except DigsimException as exc:

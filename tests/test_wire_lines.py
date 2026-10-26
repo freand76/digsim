@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pytest module to test the lines of the wires drawn in the GUI, with every wire on them"""
@@ -13,10 +13,27 @@ from digsim.circuit.components import (
     Led,
     OnOffSwitch,
     PortConnectionError,
+    PortInOut,
     PushButton,
     StaticValue,
 )
+from digsim.circuit.components.atoms import Component, PortOutImmediate
 from digsim.storage_model import GuiWireDataClass, LineDataClass
+
+
+class Transceiver(Component):
+    """A component with an inout port, IO, and a value that it drives on it"""
+
+    def __init__(self, circuit, name):
+        super().__init__(circuit, name)
+        self.add_port(PortInOut(self, "IO"))
+        # Not a port of the component, so not a wire of the drawing
+        self._drive = PortOutImmediate(self, "drive")
+        self._drive.wire = self.IO.get_drive_bit(0)
+
+    def drive(self, value):
+        """Drive a value on IO, "Z" to let go of it"""
+        self._drive.value = value
 
 
 class Drawing(WireDrawing):
@@ -36,6 +53,9 @@ class Drawing(WireDrawing):
 
     def led(self, name, x, y):
         return self.add(Led(self.circuit, name), x, y).I
+
+    def transceiver(self, name, x, y):
+        return self.add(Transceiver(self.circuit, name), x, y).IO
 
     def connections(self):
         return [
@@ -838,3 +858,100 @@ def test_move_a_point_that_another_line_runs_through():
     move = drawing.point_move((390, 0))
     assert move is not None
     assert move.wire == (a, led1) and move.segment == 1
+
+
+# --------------------------------------------------------------------------------------
+# Inout ports, both outputs and inputs of their line
+# --------------------------------------------------------------------------------------
+
+
+@pytest.fixture(name="inout_bus")
+def fixture_inout_bus():
+    """
+    Two inout ports on a line, with a branch to an LED, and a button that joins the line
+    """
+    drawing = Drawing()
+    a = drawing.transceiver("A", 0, 0)
+    b = drawing.transceiver("B", 0, 300)
+    led = drawing.led("L", 400, 100)
+    button = drawing.button("P", 0, 500)
+    drawing.connect_ports(a, b)
+    drawing.connect_branch((a, b), middle(drawing, (a, b), 0), led)
+    drawing.connect_join(button, (a, b), middle(drawing, (a, b), 1))
+    return drawing, a, b, led, button
+
+
+def test_inout_ports_drive_each_other():
+    """A wire between two inout ports connects them both ways, one way is implied"""
+    drawing = Drawing()
+    a = drawing.transceiver("A", 0, 0)
+    b = drawing.transceiver("B", 0, 300)
+    drawing.connect_ports(a, b)
+    assert drawing.drivers(a) == ["B"]
+    assert drawing.drivers(b) == ["A"]
+    assert drawing.keys() == (["B.IO"], ["A.IO"])
+    line = drawing.line(("port", a))
+    assert line.outputs == [a, b]
+    assert line.inputs == [a, b]
+
+
+def test_inout_line(inout_bus):
+    """Every output of the line drives every input, the inout ports are both"""
+    drawing, a, b, led, _ = inout_bus
+    assert drawing.drivers(a) == ["B", "P"]
+    assert drawing.drivers(b) == ["A", "P"]
+    assert drawing.drivers(led) == ["A", "B", "P"]
+    assert drawing.complete_lines() == []
+    round_trip(drawing)
+
+
+def test_inout_line_values():
+    """The inout ports read what the others drive on the line, and so does the LED"""
+    drawing = Drawing()
+    a = drawing.transceiver("A", 0, 0)
+    b = drawing.transceiver("B", 0, 300)
+    led = drawing.led("L", 400, 100)
+    drawing.connect_ports(a, b)
+    drawing.connect_branch((a, b), middle(drawing, (a, b), 0), led)
+    drawing.circuit.init()
+    for drive_a, drive_b, expected in [("Z", "Z", "Z"), (1, "Z", 1), (1, 0, "X"), ("Z", 0, 0)]:
+        a.parent().drive(drive_a)
+        b.parent().drive(drive_b)
+        drawing.circuit.run(ns=10)
+        assert (a.read_value(), b.read_value(), led.value) == (expected,) * 3
+        assert drawing.line_value((a, b)) == expected
+
+
+def test_delete_the_wire_between_inout_ports():
+    """Both ways are disconnected"""
+    drawing = Drawing()
+    a = drawing.transceiver("A", 0, 0)
+    b = drawing.transceiver("B", 0, 300)
+    drawing.connect_ports(a, b)
+    drawing.delete_wires([(a, b)])
+    assert drawing.drivers(a) == drawing.drivers(b) == []
+    assert drawing.drawn() == []
+
+
+def test_delete_an_inout_port_of_the_line(inout_bus):
+    """The other ports of the line stay connected, the inout port that is left both ways"""
+    drawing, a, b, led, _ = inout_bus
+    drawing.remove_component(b.parent())
+    drawing.circuit.delete_component(b.parent())
+    assert drawing.drivers(a) == ["P"]
+    assert drawing.drivers(led) == ["A", "P"]
+    assert drawing.keys() == (["A.IO", "L.I<A.IO"], ["L.I<P.O"])
+
+
+def test_connect_a_line_of_inout_ports(inout_bus):
+    """A line of a circuit file connects the inout ports both ways, not to themselves"""
+    drawing, a, b, led, button = inout_bus
+    (line,) = [line for line in drawing.to_lines() if "A.IO" in line.ports]
+    for port in (a, b, button):
+        port.remove_wires()
+    errors = []
+    line.connect(drawing.circuit, errors)
+    assert errors == []
+    assert drawing.drivers(a) == ["B", "P"]
+    assert drawing.drivers(b) == ["A", "P"]
+    assert drawing.drivers(led) == ["A", "B", "P"]
