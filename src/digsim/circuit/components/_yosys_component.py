@@ -51,6 +51,10 @@ class YosysComponentException(DigsimException):
     """Yosys component exception class"""
 
 
+# Flip-flops on the implicit global clock, from formal Verilog like always @($global_clock)
+GLOBAL_CLOCK_CELLS = {"$ff", "$_FF_"}
+
+
 class YosysVariant(NamedTuple):
     """
     How a Verilog file is synthesized for a component: into functional blocks or gates,
@@ -418,6 +422,16 @@ class YosysComponent(MultiComponent):
         return port
 
     @staticmethod
+    def _unsupported(cell: YosysCell) -> YosysComponentException:
+        """The error for a cell that can't be simulated"""
+        if cell.type in GLOBAL_CLOCK_CELLS:
+            return YosysComponentException(
+                f"Unsupported Yosys cell '{cell.type}': a register on the global clock "
+                "($global_clock), DigSim has no global clock"
+            )
+        return YosysComponentException(f"Unsupported Yosys cell '{cell.type}'")
+
+    @staticmethod
     def _supported(cell: YosysCell) -> bool:
         """True if a cell can be simulated (or is ignored)"""
         if cell.type in IGNORED_CELLS or cell.type in FUNCTIONAL_CELLS:
@@ -438,7 +452,7 @@ class YosysComponent(MultiComponent):
         """
         for cell in group_comparisons(module.cells).values():
             if not cls._supported(cell):
-                raise YosysComponentException(f"Unsupported Yosys cell '{cell.type}'")
+                raise cls._unsupported(cell)
         if signals:
             names = module.signal_names()
             for state in states:
@@ -470,12 +484,12 @@ class YosysComponent(MultiComponent):
                     digsim.circuit.components._yosys_atoms, cell.component_type(), None
                 )
                 if component_class is None:
-                    raise YosysComponentException(f"Unsupported Yosys cell '{cell.type}'")
+                    raise self._unsupported(cell)
                 component = component_class(self._circuit, name=name)
             elif cell.type in FUNCTIONAL_CELLS:
                 component = FUNCTIONAL_CELLS[cell.type](self._circuit, name, cell)
             else:
-                raise YosysComponentException(f"Unsupported Yosys cell '{cell.type}'")
+                raise self._unsupported(cell)
             self._gates_comp.add(component)
             components_dict[cellname] = component
 

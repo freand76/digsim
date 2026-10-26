@@ -16,6 +16,7 @@ from digsim.utils import YosysNetlist
 
 COUNTER = Path(__file__).parent.parent / "examples" / "yosys_counter" / "counter.v"
 FSM_PARAMETERS = Path(__file__).parent / "verilog" / "fsm_parameters.v"
+GLOBAL_CLOCK = Path(__file__).parent / "verilog" / "global_clock.v"
 
 
 def _counter(**settings):
@@ -85,3 +86,25 @@ def test_good_netlist_reloads():
     counter.check_netlist(_netlist())
     counter.reload_from_netlist(_netlist())
     assert _counts(circuit, counter, buttons, 4)
+
+
+@pytest.mark.parametrize("functional", [False, True])
+def test_global_clock_register(functional):
+    """A register on the global clock ($ff, or $_FF_ as gates) can't be simulated"""
+    with pytest.raises(YosysComponentException, match="global clock"):
+        YosysComponent(Circuit(), GLOBAL_CLOCK, functional=functional)
+
+
+def test_reload_to_global_clock_register():
+    """A reload to a register on the global clock leaves the component as it was"""
+    circuit, counter, buttons = _counter()
+
+    def global_clock_cell(module):
+        next(iter(module["cells"].values()))["type"] = "$_FF_"
+
+    netlist = _netlist(global_clock_cell)
+    with pytest.raises(YosysComponentException, match="global clock"):
+        counter.check_netlist(netlist)
+    with pytest.raises(YosysComponentException, match="global clock"):
+        counter.reload_from_netlist(netlist)
+    assert _counts(circuit, counter, buttons, 3)

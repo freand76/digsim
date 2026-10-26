@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2024
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -16,15 +16,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .atoms import VALUE_TYPE, Component, DigsimException, PortIn, PortOutDelta, PortWire
+from .atoms import VALUE_TYPE, Component, PortIn, PortOutDelta, PortWire
 
 
 if TYPE_CHECKING:
     from digsim.circuit import Circuit
-
-
-class YosysNotImplementedException(DigsimException):
-    """Exception for not implemented components"""
 
 
 class ClassNameParameterComponent(Component):
@@ -487,16 +483,6 @@ class _SR_PN_(_SR_):
 
 class _SR_PP_(_SR_):
     """module _SR_PP_ (S, R, Q)"""
-
-
-class _FF_(Component):
-    """module module _FF_ (D, Q)"""
-
-    def __init__(self, circuit: Circuit, name: str | None = None) -> None:
-        super().__init__(circuit, name)
-        raise YosysNotImplementedException(
-            "NOT IMPLEMENTED: D-type flip-flop that is clocked from the implicit global clock"
-        )
 
 
 class _DFF_(ClockedComponent):
