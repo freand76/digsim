@@ -1,0 +1,146 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "DipSwitch",
+                "type": "digsim.circuit.components.DipSwitch",
+                "display_name": "DipSwitch",
+                "settings": {"bits": 4}
+            },
+            {
+                "name": "PushButton",
+                "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
+                "settings": {}
+            },
+            {
+                "name": "walkie_talkie",
+                "type": "digsim.circuit.components.YosysComponent",
+                "display_name": "Walkie-talkie A",
+                "settings": {"path": "../examples/yosys_inout/walkie_talkie.v"}
+            },
+            {
+                "name": "HexDigit",
+                "type": "digsim.circuit.components.HexDigit",
+                "display_name": "HexDigit",
+                "settings": {"digits": 1, "dot": false}
+            },
+            {
+                "name": "DipSwitch_1",
+                "type": "digsim.circuit.components.DipSwitch",
+                "display_name": "DipSwitch",
+                "settings": {"bits": 4}
+            },
+            {
+                "name": "PushButton_1",
+                "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
+                "settings": {}
+            },
+            {
+                "name": "walkie_talkie_1",
+                "type": "digsim.circuit.components.YosysComponent",
+                "display_name": "Walkie-talkie B",
+                "settings": {"path": "../examples/yosys_inout/walkie_talkie.v"}
+            },
+            {
+                "name": "HexDigit_1",
+                "type": "digsim.circuit.components.HexDigit",
+                "display_name": "HexDigit",
+                "settings": {"digits": 1, "dot": false}
+            },
+            {
+                "name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {
+                    "text": "Two walkie-talkies, the same Verilog module (examples/yosys_inout/walkie_talkie.v),\nshare one 4-bit bus wire. Their bus port, the diamond, is an inout port:\nit can send on the wire and listen to it.\n\n1. Start the simulation and set a message with the switches of walkie-talkie A.\n2. Hold Talk A (key 1): A sends, and both displays show the message.\n3. Hold Talk B (key 2) instead: the same wire carries B's message the other way.\n4. Hold both with different messages: a collision, the bus is undefined (X, red).\nWith nobody talking the bus is not driven (Z, blue), and the displays are blank."
+                }
+            }
+        ]
+    },
+    "gui": {
+        "DipSwitch": {"x": 40, "y": 120, "z": 0},
+        "PushButton": {"x": 40, "y": 250, "z": 0},
+        "walkie_talkie": {"x": 180, "y": 120, "z": 0},
+        "HexDigit": {"x": 400, "y": 20, "z": 0},
+        "DipSwitch_1": {"x": 520, "y": 120, "z": 0},
+        "PushButton_1": {"x": 520, "y": 250, "z": 0},
+        "walkie_talkie_1": {"x": 660, "y": 120, "z": 0},
+        "HexDigit_1": {"x": 880, "y": 20, "z": 0},
+        "Note": {"x": 40, "y": 400, "z": 0}
+    },
+    "lines": [
+        {
+            "ports": ["DipSwitch.0", "walkie_talkie.m0"],
+            "points": {"1": [150, 130], "2": [150, 145]},
+            "segments": [["DipSwitch.0", "1"], ["1", "2"], ["2", "walkie_talkie.m0"]]
+        },
+        {
+            "ports": ["DipSwitch.1", "walkie_talkie.m1"],
+            "points": {"1": [140, 140], "2": [140, 165]},
+            "segments": [["DipSwitch.1", "1"], ["1", "2"], ["2", "walkie_talkie.m1"]]
+        },
+        {
+            "ports": ["DipSwitch.2", "walkie_talkie.m2"],
+            "points": {"1": [130, 150], "2": [130, 185]},
+            "segments": [["DipSwitch.2", "1"], ["1", "2"], ["2", "walkie_talkie.m2"]]
+        },
+        {
+            "ports": ["DipSwitch.3", "walkie_talkie.m3"],
+            "points": {"1": [120, 160], "2": [120, 205]},
+            "segments": [["DipSwitch.3", "1"], ["1", "2"], ["2", "walkie_talkie.m3"]]
+        },
+        {
+            "ports": ["PushButton.O", "walkie_talkie.talk"],
+            "points": {"1": [130, 270], "2": [130, 225]},
+            "segments": [["PushButton.O", "1"], ["1", "2"], ["2", "walkie_talkie.talk"]]
+        },
+        {
+            "ports": ["walkie_talkie.heard", "HexDigit.val"],
+            "points": {"1": [334, 175], "2": [334, 55]},
+            "segments": [["walkie_talkie.heard", "1"], ["1", "2"], ["2", "HexDigit.val"]]
+        },
+        {
+            "ports": ["DipSwitch_1.0", "walkie_talkie_1.m0"],
+            "points": {"1": [630, 130], "2": [630, 145]},
+            "segments": [["DipSwitch_1.0", "1"], ["1", "2"], ["2", "walkie_talkie_1.m0"]]
+        },
+        {
+            "ports": ["DipSwitch_1.1", "walkie_talkie_1.m1"],
+            "points": {"1": [620, 140], "2": [620, 165]},
+            "segments": [["DipSwitch_1.1", "1"], ["1", "2"], ["2", "walkie_talkie_1.m1"]]
+        },
+        {
+            "ports": ["DipSwitch_1.2", "walkie_talkie_1.m2"],
+            "points": {"1": [610, 150], "2": [610, 185]},
+            "segments": [["DipSwitch_1.2", "1"], ["1", "2"], ["2", "walkie_talkie_1.m2"]]
+        },
+        {
+            "ports": ["DipSwitch_1.3", "walkie_talkie_1.m3"],
+            "points": {"1": [600, 160], "2": [600, 205]},
+            "segments": [["DipSwitch_1.3", "1"], ["1", "2"], ["2", "walkie_talkie_1.m3"]]
+        },
+        {
+            "ports": ["PushButton_1.O", "walkie_talkie_1.talk"],
+            "points": {"1": [610, 270], "2": [610, 225]},
+            "segments": [["PushButton_1.O", "1"], ["1", "2"], ["2", "walkie_talkie_1.talk"]]
+        },
+        {
+            "ports": ["walkie_talkie_1.heard", "HexDigit_1.val"],
+            "points": {"1": [814, 175], "2": [814, 55]},
+            "segments": [["walkie_talkie_1.heard", "1"], ["1", "2"], ["2", "HexDigit_1.val"]]
+        },
+        {
+            "ports": ["walkie_talkie_1.bus", "walkie_talkie.bus"],
+            "points": {"1": [770, 195], "2": [770, 330], "3": [290, 330], "4": [290, 195]},
+            "segments": [
+                ["walkie_talkie_1.bus", "1"], ["1", "2"], ["2", "3"], ["3", "4"],
+                ["4", "walkie_talkie.bus"]
+            ]
+        }
+    ],
+    "shortcuts": {"1": "PushButton", "2": "PushButton_1"},
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 20}
+}

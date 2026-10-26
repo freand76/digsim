@@ -10,8 +10,10 @@ import pytest
 from digsim.circuit import Circuit
 from digsim.circuit.components import (
     Bus2Wires,
+    DipSwitch,
     PortConnectionError,
     PortInOut,
+    PushButton,
     StaticValue,
     TristateBuffer,
     YosysComponent,
@@ -24,6 +26,7 @@ from digsim.utils import YosysNetlist
 VERILOG = Path(__file__).parent / "verilog" / "inout.v"
 ROOT = Path(__file__).parents[1]
 BUS_REGISTER = ROOT / "examples" / "yosys_inout" / "bus_register.v"
+WALKIE_TALKIE = ROOT / "example_circuits" / "walkie_talkie.circuit"
 
 
 def _netlist(top, functional=False):
@@ -369,3 +372,32 @@ def test_bus_register(width, functional):
         assert register.dut.value.value == value
         assert register.dut.data.value == "Z"
         assert register.read() == value
+
+
+def test_walkie_talkie_circuit():
+    """
+    The GUI example: whichever walkie-talkie talks, both hear its message over the bus.
+    Two that talk at once with different messages collide.
+    """
+    circuit = Circuit()
+    circuit.from_json_file(WALKIE_TALKIE)
+    talkies = [circuit.get_component(name) for name in ("walkie_talkie", "walkie_talkie_1")]
+    switches = [circuit.get_component(name) for name in ("DipSwitch", "DipSwitch_1")]
+    talks = [circuit.get_component(name) for name in ("PushButton", "PushButton_1")]
+    assert all(isinstance(switch, DipSwitch) for switch in switches)
+    assert all(isinstance(talk, PushButton) for talk in talks)
+    assert talkies[0].bus.get_drivers() == [talkies[1].bus]
+    assert talkies[1].bus.get_drivers() == [talkies[0].bus]
+    circuit.init()
+    for switch, bits in zip(switches, ((0, 2), (1, 3)), strict=True):
+        for bit in bits:
+            switch.select(bit)
+            switch.onpress()
+    for pressed, expected in [((), "Z"), ((0,), 0b0101), ((1,), 0b1010), ((0, 1), "X")]:
+        for number, talk in enumerate(talks):
+            if number in pressed:
+                talk.push()
+            else:
+                talk.release()
+        circuit.run(ms=1)
+        assert [talkie.heard.value for talkie in talkies] == [expected, expected], pressed

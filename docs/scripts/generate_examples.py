@@ -860,6 +860,16 @@ def screenshots() -> None:
             dip_switch.select(1)
             dip_switch.onpress()
             simulate(300)
+        elif name == "walkie_talkie":
+            # Walkie-talkie A sends 5 over the bus: both hex digits show it
+            dip_switch = circuit.get_component("DipSwitch")
+            talk = circuit.get_component("PushButton")
+            assert isinstance(dip_switch, DipSwitch) and isinstance(talk, PushButton)
+            for bit in (0, 2):
+                dip_switch.select(bit)
+                dip_switch.onpress()
+            talk.push()
+            simulate(300)
         elif name == "traffic_light":
             # Reset to red, then a request: red and yellow, then green (4 Hz clock)
             reset = circuit.get_component("PushButton")

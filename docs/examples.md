@@ -508,6 +508,22 @@ buffer each.
 
 ![Tristate bus circuit](images/examples/tristate.png)
 
+### Walkie-talkies
+
+`walkie_talkie.circuit` shows a bidirectional bus for a first look: two walkie-talkies,
+the same Verilog module
+([`walkie_talkie.v`](https://github.com/freand76/digsim/blob/main/examples/yosys_inout/walkie_talkie.v))
+twice, share one 4-bit bus wire. The bus port of each, drawn as a diamond, is an `inout`
+port: it can send on the wire and listen to it. Each walkie-talkie has four switches for
+its message, a Talk button, and a hex digit for what it hears on the bus.
+
+- Hold Talk A (shortcut **1**): A sends its message, and both hex digits show it.
+- Hold Talk B (shortcut **2**) instead: the same wire carries B's message the other way.
+- Hold both, with different messages: the two collide, and the bus is undefined (red).
+- With nobody talking the bus is not driven (blue), and the hex digits are blank.
+
+![Walkie-talkies circuit](images/examples/walkie_talkie.png)
+
 ### Traffic light
 
 `traffic_light.circuit` is the [traffic light state machine](#state-machine-traffic-light)
