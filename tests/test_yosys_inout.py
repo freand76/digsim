@@ -22,6 +22,8 @@ from digsim.utils import YosysNetlist
 
 
 VERILOG = Path(__file__).parent / "verilog" / "inout.v"
+ROOT = Path(__file__).parents[1]
+BUS_REGISTER = ROOT / "examples" / "yosys_inout" / "bus_register.v"
 
 
 def _netlist(top, functional=False):
@@ -287,6 +289,22 @@ def test_vcd(tmp_path):
     assert list(values.values())[-2:] == ["b1010", "bZ"]
 
 
+def test_save_and_load(tmp_path):
+    """The wires both ways between inout ports are saved, and loaded again"""
+    circuit = Circuit(name="bus")
+    designs = [YosysComponent(circuit, BUS_REGISTER) for _ in range(2)]
+    designs[0].data.wire = designs[1].data
+    designs[1].data.wire = designs[0].data
+    path = tmp_path / "bus.json"
+    circuit.to_json_file(path)
+    loaded = Circuit()
+    loaded.from_json_file(path)
+    first = loaded.get_component("bus_register")
+    second = loaded.get_component("bus_register_1")
+    assert first.data.get_drivers() == [second.data]
+    assert second.data.get_drivers() == [first.data]
+
+
 def test_reload_with_inout_ports():
     """A design is built again from a netlist with the same ports"""
     circuit = Circuit()
@@ -303,3 +321,51 @@ def test_reload_with_inout_ports():
     # An inout port that would be an input
     with pytest.raises(YosysComponentException):
         design.reload_from_netlist(_netlist("inout_bits"))
+
+
+class _BusRegister:
+    """A testbench for examples/yosys_inout/bus_register.v"""
+
+    def __init__(self, width, functional):
+        self.circuit = Circuit()
+        self.dut = YosysComponent(
+            self.circuit, BUS_REGISTER, functional=functional, parameters={"WIDTH": width}
+        )
+        self.circuit.init()
+        for port in (self.dut.clk, self.dut.we, self.dut.oe):
+            port.value = 0
+        self.circuit.run(ns=10)
+
+    def clock(self):
+        for value in (1, 0):
+            self.dut.clk.value = value
+            self.circuit.run(ns=10)
+
+    def write(self, value):
+        self.dut.data.value = value
+        self.dut.we.value = 1
+        self.clock()
+        self.dut.we.value = 0
+        self.dut.data.value = "Z"
+        self.circuit.run(ns=10)
+
+    def read(self):
+        self.dut.oe.value = 1
+        self.circuit.run(ns=10)
+        value = self.dut.data.value
+        self.dut.oe.value = 0
+        self.circuit.run(ns=10)
+        return value
+
+
+@pytest.mark.parametrize("functional", [False, True])
+@pytest.mark.parametrize("width", [1, 8, 16])
+def test_bus_register(width, functional):
+    """The example's register stores the value on the bus and drives it on the bus"""
+    register = _BusRegister(width, functional)
+    assert register.dut.data.width == width
+    for value in (0, (1 << width) - 1, 0x5A5A & ((1 << width) - 1)):
+        register.write(value)
+        assert register.dut.value.value == value
+        assert register.dut.data.value == "Z"
+        assert register.read() == value

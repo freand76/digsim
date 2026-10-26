@@ -373,6 +373,42 @@ b10 0!
 sGREEN 1!
 ```
 
+### Bus registers (inout ports)
+
+[`examples/yosys_inout/example_yosys_inout.py`](https://github.com/freand76/digsim/blob/main/examples/yosys_inout/example_yosys_inout.py)
+puts two registers on a shared 8-bit data bus, with a tristate buffer that drives the bus
+like a CPU. The register,
+[`bus_register.v`](https://github.com/freand76/digsim/blob/main/examples/yosys_inout/bus_register.v),
+has a bidirectional `inout` data port: it drives its value on the bus while `oe` is high,
+and stores the value on the bus at a clock edge while `we` is high. The inout ports drive
+each other, see [Inout ports](synthesis.md#inout-ports):
+
+```python
+cpu.Y.wire = reg_a.data
+cpu.Y.wire = reg_b.data
+reg_a.data.wire = reg_b.data
+reg_b.data.wire = reg_a.data
+```
+
+The CPU writes 0x5a to the first register, which then drives it on the bus for the second
+register to store. `bus` is the value on the bus that the first register reads, and
+`a drives` what it drives itself:
+
+```sh
+uv run python examples/yosys_inout/example_yosys_inout.py
+```
+
+```text
+Start, nothing drives the bus      bus=Z    a drives=Z    a=0x00 b=0x00
+CPU drives 0x5a                    bus=0x5a a drives=Z    a=0x00 b=0x00
+Register a stores it               bus=0x5a a drives=Z    a=0x5a b=0x00
+Register a drives the bus          bus=0x5a a drives=0x5a a=0x5a b=0x00
+Register b stores it               bus=0x5a a drives=0x5a a=0x5a b=0x5a
+Register b drives the bus          bus=0x5a a drives=Z    a=0x5a b=0x5a
+CPU drives 0x33 too (contention)   bus=X    a drives=Z    a=0x5a b=0x5a
+Nothing drives the bus             bus=Z    a drives=Z    a=0x5a b=0x5a
+```
+
 ### pytest testbenches
 
 [`examples/pytest_tb`](https://github.com/freand76/digsim/tree/main/examples/pytest_tb) tests

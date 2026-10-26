@@ -151,7 +151,8 @@ cpu.Y.wire = second.data
 
 A testbench can drive an inout port directly, `dut.data.value = 0x5A`, and let go of it
 with `dut.data.value = "Z"`. Each bit is resolved by itself, but the value of a port is a
-word: a word of which only some bits are driven is `"X"` for the ports it drives.
+word: a word of which only some bits are driven is `"X"` for the ports it drives. See the
+[bus register example](examples.md#bus-registers-inout-ports).
 
 ## Internal signals and states
 
