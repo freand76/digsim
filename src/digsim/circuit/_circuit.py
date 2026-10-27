@@ -14,10 +14,11 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path, PureWindowsPath
 from types import TracebackType
-from typing import TYPE_CHECKING, NamedTuple, Self
+from typing import TYPE_CHECKING, Any, NamedTuple, Self
 
 from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
 
+from . import _native
 from ._waves_writer import WavesWriter
 from .components.atoms import (
     VALUE_TYPE,
@@ -28,6 +29,7 @@ from .components.atoms import (
     PortMultiBitWire,
     PortOutDelta,
 )
+from .components.atoms._port import connection_generation
 
 
 if TYPE_CHECKING:
@@ -95,6 +97,8 @@ class Circuit:
         self._vcd: WavesWriter | None = None
         # The slice of run_within()
         self._slice_ns = START_SLICE_NS
+        # The native engine, see _native.py
+        self._engine: _native.NativeEngine | None = None
 
         if vcd is not None:
             self._vcd = WavesWriter(filename=vcd)
@@ -107,6 +111,8 @@ class Circuit:
     @property
     def time_ns(self) -> int:
         """Get the current simulation time (ns)"""
+        if self._engine is not None:
+            return int(self._engine.engine.time)
         return self._time_ns
 
     @property
@@ -182,6 +188,7 @@ class Circuit:
         Initialize the circuit: set the time to 0 and all ports to "X", then let the
         components set their default state. Call it after adding and connecting components.
         """
+        self._stop_engine(keep_events=False)
         self._time_ns = 0
         self._circuit_events = []
         self._events_by_port = {}
@@ -190,12 +197,25 @@ class Circuit:
             self._vcd_init()
         for comp in self._components.values():
             comp.init()
+        if _native.mode() == "native":
+            self._engine = _native.NativeEngine(self, self._time_ns)
+        native = self._engine
+        if native is not None:
+            # The events that ports added in their init() (an inout port drives "Z"), in
+            # the order of the heap, which pushed in that order is the same heap
+            for event in self._circuit_events:
+                native.engine.add_event(native.nid(event._port), event._value, event._time_ns)
+            self._circuit_events = []
+            self._events_by_port = {}
         for comp in self._components.values():
-            comp.default_state()
+            # The engine sets the state of the components it simulates
+            if native is None or not native.default_state(comp):
+                comp.default_state()
         self.run_until(ns=0)  # Handle all time zero events
 
     def clear(self) -> None:
         """Remove all components, and the events of their ports"""
+        self._stop_engine(keep_events=False)
         for comp in self._components.values():
             comp.clear()
         self._components = {}
@@ -265,6 +285,36 @@ class Circuit:
     ) -> None:
         self.vcd_close()
 
+    def _stop_engine(self, keep_events: bool = True) -> None:
+        """Go back to the Python engine, with the events and the time of the native one"""
+        native = self._engine
+        if native is None:
+            return
+        self._engine = None
+        events, latest, time_ns = native.close()
+        if not keep_events:
+            return
+        self._time_ns = time_ns
+        self._circuit_events = []
+        self._events_by_port = {}
+        for event_time_ns, seq, port, value in events:
+            event = CircuitEvent(event_time_ns)
+            event._time_ns = event_time_ns
+            event._port = port  # type: ignore[assignment]
+            event._value = value
+            # In the order of the native heap, which is the same heap
+            self._circuit_events.append(event)
+            if latest.get(id(port)) == seq:
+                self._events_by_port[port] = event  # type: ignore[index]
+
+    def _native_engine(self) -> Any:
+        """The native engine, if the circuit has one and its wires haven't changed"""
+        native = self._engine
+        if native is not None and native.generation != connection_generation.value:
+            self._stop_engine()
+            return None
+        return None if native is None else native.engine
+
     def process_single_event(self, stop_time_ns: int | None = None) -> tuple[bool, bool]:
         """
         Process only the next event, to step through a simulation.
@@ -277,6 +327,11 @@ class Circuit:
             stop_time_ns), and if it was on a port of a top-level component, rather than
             inside one like a Yosys component.
         """
+        engine = self._native_engine()
+        if engine is not None:
+            processed, toplevel = engine.process_single_event(stop_time_ns, self._vcd)
+            self._time_ns = engine.time
+            return processed, toplevel
         events = self._circuit_events
         events_by_port = self._events_by_port
         while events:
@@ -325,7 +380,15 @@ class Circuit:
         Returns:
             True if the run stopped for a single step.
         """
-        stop_time_ns = self._time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
+        stop_time_ns = self.time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
+        engine = self._native_engine()
+        if engine is not None:
+            single_step_stop = engine.run(stop_time_ns, single_step, self._vcd)
+            self._time_ns = max(engine.time, stop_time_ns)
+            engine.time = self._time_ns
+            if self._vcd is not None:
+                self._vcd.flush()
+            return bool(single_step_stop)
         single_step_stop = False
         # The loop in process_single_event(), inlined since it runs for every event
         events = self._circuit_events
@@ -467,11 +530,20 @@ class Circuit:
             ns: Nanoseconds.
         """
         stop_time_ns = self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
-        if stop_time_ns >= self._time_ns:
-            self.run(ns=stop_time_ns - self._time_ns)
+        if stop_time_ns >= self.time_ns:
+            self.run(ns=stop_time_ns - self.time_ns)
 
     def add_event(self, port: EventPort, value: VALUE_TYPE, propagation_delay_ns: int) -> None:
         """Add an event for a port, used by the components"""
+        native = self._engine
+        if native is not None:
+            if native.generation == connection_generation.value:
+                nid = getattr(port, "_nid", None)
+                if nid is None:
+                    nid = native.nid(port)
+                native.engine.add_event(nid, value, propagation_delay_ns)
+                return
+            self._stop_engine()
         event_time_ns = self._time_ns + propagation_delay_ns
         # Set without an __init__, to save a Python call for every event
         event = CircuitEvent(event_time_ns)
