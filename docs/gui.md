@@ -299,7 +299,7 @@ presses the button or toggles the switch.
 | ![Hex digit](images/HexDigit.png) | **Hex Digit**: shows a bus value in hexadecimal, with 1–8 digits (4 bits each) and an optional decimal point. |
 | ![7-segment](images/SevenSegment.png) | **7-Segment Display**: like a hex digit, but each segment is controlled individually. |
 | ![Buzzer](images/components/Buzzer.png) | **Buzzer**: plays a tone, with a selectable note, when its input is high. |
-| ![Logic analyzer](images/components/Analyzer.png) | **Logic Analyzer**: plots signal levels over time, live. A sample at the time an input changes, like at a clock edge, shows the value from just before. |
+| ![Logic analyzer](images/components/Analyzer.png) | **Logic Analyzer**: plots signal levels over time, live. A sample at the time an input changes, like at a clock edge, shows the value from just before. Reset clears it. |
 | ![Probe](images/components/Probe.png) | **Probe**: shows the value of a wire or a bus (1–32 bits) in hexadecimal, decimal or binary, "X" in red when it is undefined and "Z" in blue when nothing drives it. Right-click a wire and choose **Add probe** to put one on it. The radix can be changed in its settings. |
 
 ### Logic gates

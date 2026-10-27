@@ -18,6 +18,7 @@ if TYPE_CHECKING:
 class LogicAnalyzer(CallbackComponent):
     """
     A logic analyzer, keeps the last 100 samples of each input to show them in the GUI.
+    The samples are cleared when the circuit is initialized (a reset in the GUI).
     A sample is the value an input had just before the time of the sample: an input that
     changes at the same time, like on the edge of a clock, is sampled before the change,
     whatever the order of the events at that time.
@@ -51,6 +52,8 @@ class LogicAnalyzer(CallbackComponent):
         self.reconfigure()
 
     def default_state(self) -> None:
+        # A new run from time 0, like the VCD file: the samples of the last one are gone
+        self.data_dict = {portname: [0] * 100 for portname in self.PORTLIST}
         for portname in self.PORTLIST:
             self._values[portname] = self.port(portname).value
             self._changed_ns[portname] = -1

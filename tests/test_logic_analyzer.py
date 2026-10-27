@@ -63,3 +63,15 @@ def test_logic_analyzer_samples_before_a_change_at_the_same_time():
     # The clock toggles every 100 ms, every second sample: two samples high, two low. The
     # last one is at 1150 ms, the clock is high from 1100 ms.
     assert samples[-8:] == [1, 0, 0, 1, 1, 0, 0, 1]
+
+
+def test_logic_analyzer_cleared_by_init():
+    """A new run from time 0 doesn't show the samples of the last one"""
+    circuit = Circuit()
+    analyzer = LogicAnalyzer(circuit, sample_rate=100)
+    circuit.init()
+    analyzer.A.value = 1
+    circuit.run(ms=50)
+    assert 1 in analyzer.signal_data()["A"]
+    circuit.init()
+    assert analyzer.signal_data()["A"] == [0] * 100

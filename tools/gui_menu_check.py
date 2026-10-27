@@ -271,3 +271,20 @@ def test_step_clock(gui):
         spin()
         assert counter.Q.value == count
         assert clock.O.value == 1
+
+
+def test_reset_clears_the_logic_analyzer(gui):
+    """Reset starts over at time 0, without the samples of the last run"""
+    switch_object = gui.add("OnOffSwitch")
+    analyzer = gui.add("LogicAnalyzer").component
+    gui.model.objects.wires.connect_ports(switch_object.component.O, analyzer.A)
+    gui.model.model_init()
+    switch_object.single_click_action()
+    gui.trigger("Simulation", "Start")
+    spin(300)
+    gui.trigger("Simulation", "Stop")
+    while gui.model.is_running:
+        spin()
+    assert 1 in analyzer.signal_data()["A"]
+    gui.trigger("Simulation", "Reset")
+    assert analyzer.signal_data()["A"] == [0] * 100
