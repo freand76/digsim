@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QUrl, Signal
@@ -51,6 +52,8 @@ class MenuBar(QMenuBar):
         self._save_as_action = self._add(
             file_menu, "Save &As...", self.save_circuit_as, "Ctrl+Shift+S"
         )
+        file_menu.addSeparator()
+        self._export_action = self._add(file_menu, "&Export Image...", self.export_image, "Ctrl+E")
         file_menu.addSeparator()
         self._add(file_menu, "&Quit", parent.close, "Ctrl+Q")
 
@@ -154,6 +157,24 @@ class MenuBar(QMenuBar):
         if path:
             self._app_model.save_circuit(path)
 
+    def export_image(self) -> None:
+        """Ask for a file and save the circuit as an image in it, PNG or SVG"""
+        if self._circuit_area is None:
+            return
+        circuit_path = self._app_model.circuit_path
+        default = str(Path(circuit_path).with_suffix(".png")) if circuit_path else "circuit.png"
+        path, chosen = QFileDialog.getSaveFileName(
+            self, "Export Image", default, "PNG Image (*.png);;SVG Image (*.svg)"
+        )
+        if not path:
+            return
+        if not path.lower().endswith((".png", ".svg")):
+            path += ".svg" if "svg" in chosen.lower() else ".png"
+        try:
+            self._circuit_area.export_image(path)
+        except (ValueError, OSError) as exc:
+            self._app_model.sig_error.emit(f"Could not export the image: {exc!s}")
+
     # Edit
 
     def _settings_dialog(self) -> None:
@@ -218,6 +239,9 @@ class MenuBar(QMenuBar):
     def update_actions(self) -> None:
         """Turn the actions on and off for the state of the model"""
         running = self._app_model.is_running
+        self._export_action.setEnabled(
+            not running and not self._app_model.objects.components.is_empty()
+        )
         for action in (
             self._new_action,
             self._open_action,

@@ -15,6 +15,7 @@
  - GUI: a component search above the component selection. Ctrl+K (or Ctrl+F) and a few letters, like "flp" for the flip-flop, list the components that match. Drag one into the circuit, or press Enter to add it.
  - GUI: copy, cut, paste and duplicate (Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+D) of the selected components, with the wires between them. A paste lands at the mouse pointer, and works between DigSim windows.
  - GUI: Zoom to Fit (Ctrl+0 or Home) shows the whole circuit in the window
+ - GUI: File > Export Image (Ctrl+E) saves the circuit as a PNG or SVG image
 
 ## v1.8.0
  - GUI: a new look. All components are drawn in one style: gates, LEDs, buffers and bus splitters as symbols only, devices like switches and displays with a white body, on a light background with a grid of dots. Most components are smaller, a selected one is blue, and green means on everywhere.

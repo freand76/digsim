@@ -8,6 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from functools import partial
 from itertools import pairwise
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QEvent, QMimeData, QPoint, QPointF, QRect, QRectF, Qt, QTimer
@@ -19,13 +20,16 @@ from PySide6.QtGui import (
     QDragLeaveEvent,
     QDragMoveEvent,
     QDropEvent,
+    QImage,
     QKeyEvent,
     QMouseEvent,
+    QPaintDevice,
     QPainter,
     QPainterPath,
     QPen,
     QWheelEvent,
 )
+from PySide6.QtSvg import QSvgGenerator
 from PySide6.QtWidgets import (
     QApplication,
     QGraphicsEllipseItem,
@@ -88,6 +92,8 @@ PASTE_STEP = 20
 # A message over the circuit area: how long it is shown, and its distance to the bottom
 MESSAGE_MS = 2500
 MESSAGE_MARGIN = 16
+# An exported bitmap has this many pixels for each pixel of the circuit
+EXPORT_SCALE = 2
 # Zoom to fit: the margin around the circuit, and the most it zooms in
 ZOOM_FIT_MARGIN = 20
 ZOOM_FIT_MAX = 2.0
@@ -929,6 +935,24 @@ class _CircuitAreaScene(QGraphicsScene):
                         best = (distance, point)
         return None if best is None else best[1]
 
+    def render_circuit(self, painter: QPainter, target: QRectF, source: QRectF) -> None:
+        """Paint the circuit, without the selection and the helpers of editing"""
+        selected = self.selectedItems()
+        helpers: list[QGraphicsItem] = [
+            self._point_marker,
+            self._selection_rect_item,
+            self._new_wire_item,
+        ]
+        shown = [item.isVisible() for item in helpers]
+        for item in helpers:
+            item.setVisible(False)
+        self.clearSelection()
+        self.render(painter, target, source)
+        for item, visible in zip(helpers, shown, strict=True):
+            item.setVisible(visible)
+        for item in selected:
+            item.setSelected(True)
+
     def _top_wire_part(self, pos: QPointF) -> WirePartGraphicsItem | None:
         """The segment of a wire on top at a position, None if something else is on top"""
         # Not the ring of a point, the wire being drawn or the selection rectangle
@@ -1601,6 +1625,47 @@ class CircuitArea(QGraphicsView):
             if isinstance(item, (ComponentObject, WireGraphicsItem)):
                 rect = rect.united(item.sceneBoundingRect())
         return rect
+
+    def export_image(self, path: str) -> None:
+        """
+        Save the circuit as an image: SVG for a file ending in .svg, otherwise a bitmap
+        (like PNG) at EXPORT_SCALE. The background has no grid dots.
+
+        Raises:
+            ValueError: If the circuit is empty.
+            OSError: If the file can't be written.
+        """
+        rect = self.circuit_rect()
+        if rect.isEmpty():
+            raise ValueError("The circuit is empty")
+        source = rect.adjusted(
+            -ZOOM_FIT_MARGIN, -ZOOM_FIT_MARGIN, ZOOM_FIT_MARGIN, ZOOM_FIT_MARGIN
+        )
+        if path.lower().endswith(".svg"):
+            generator = QSvgGenerator()
+            generator.setFileName(path)
+            generator.setSize(source.size().toSize())
+            generator.setViewBox(QRectF(0, 0, source.width(), source.height()))
+            generator.setTitle("DigSim circuit")
+            self._paint_export(generator, QRectF(0, 0, source.width(), source.height()), source)
+            if not Path(path).is_file():
+                raise OSError(f"Could not write {path}")
+            return
+        image = QImage(
+            int(source.width() * EXPORT_SCALE),
+            int(source.height() * EXPORT_SCALE),
+            QImage.Format.Format_ARGB32,
+        )
+        self._paint_export(image, QRectF(image.rect()), source)
+        if not image.save(path):
+            raise OSError(f"Could not write {path}")
+
+    def _paint_export(self, device: QPaintDevice, target: QRectF, source: QRectF) -> None:
+        painter = QPainter(device)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.fillRect(target, theme.BACKGROUND)
+        self._scene.render_circuit(painter, target, source)
+        painter.end()
 
     def zoom_fit(self) -> None:
         """

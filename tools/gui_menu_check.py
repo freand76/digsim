@@ -21,7 +21,7 @@ import pytest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QEventLoop, QPointF, QTimer
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction, QImage, QKeySequence
 from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
 from digsim.app.gui import MainWindow
@@ -43,6 +43,8 @@ class Gui:
     def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
         self.app = QApplication.instance() or QApplication([])
         self.path = ""
+        # The file type chosen in the file dialog
+        self.dialog_filter = ""
         self.dialogs: list[str] = []
         monkeypatch.setattr(QFileDialog, "getSaveFileName", self._file)
         monkeypatch.setattr(QFileDialog, "getOpenFileName", self._file)
@@ -57,7 +59,7 @@ class Gui:
 
     def _file(self, *_args: Any, **_kwargs: Any) -> tuple[str, str]:
         self.dialogs.append("file")
-        return self.path, ""
+        return self.path, self.dialog_filter
 
     def _yes(self, *_args: Any) -> QMessageBox.StandardButton:
         self.dialogs.append("question")
@@ -207,3 +209,22 @@ def test_zoom_to_fit(gui):
     gui.trigger("File", "New")
     gui.trigger("View", "Zoom to Fit")
     assert area.transform().m11() == 1
+
+
+def test_export_image(gui, tmp_path):
+    """The circuit as PNG, twice the size, and as SVG"""
+    gui.add("Led")
+    assert gui.action("File", "Export Image...").isEnabled()
+    gui.path = str(tmp_path / "circuit")
+    gui.dialog_filter = "PNG Image (*.png)"
+    gui.trigger("File", "Export Image...")
+    image = QImage(str(tmp_path / "circuit.png"))
+    area = gui.window.findChild(CircuitArea)
+    assert image.width() == 2 * (int(area.circuit_rect().width()) + 40)
+    gui.path = str(tmp_path / "circuit.svg")
+    gui.trigger("File", "Export Image...")
+    assert "<svg" in (tmp_path / "circuit.svg").read_text()
+
+
+def test_export_needs_a_circuit(gui):
+    assert not gui.action("File", "Export Image...").isEnabled()
