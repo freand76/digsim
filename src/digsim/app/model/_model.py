@@ -52,6 +52,8 @@ class AppModel(QThread):
         self._changed = False
         self._gui_event_queue: queue.Queue[Callable[[], None]] = queue.Queue()
         self._circuit_folder = ""
+        # The file the circuit was loaded from or saved to last, None for a new circuit
+        self._circuit_path: str | None = None
         self.finished.connect(self._thread_finished)
 
     def _setup_model_components(self) -> None:
@@ -81,6 +83,11 @@ class AppModel(QThread):
         been told to stop, until the thread has finished, since it still uses the circuit.
         """
         return self._keep_running or self.isRunning()
+
+    @property
+    def circuit_path(self) -> str | None:
+        """The file the circuit was loaded from or saved to last, None for a new circuit"""
+        return self._circuit_path
 
     @property
     def is_changed(self) -> bool:
@@ -284,6 +291,7 @@ class AppModel(QThread):
             self._circuit_folder = old_circuit_folder
             self.sig_error.emit(f"Could not save circuit: {exc!s}")
             return
+        self._circuit_path = str(path)
         self._changed = False
         self.sig_control_notify.emit()
 
@@ -302,6 +310,7 @@ class AppModel(QThread):
         self.shortcuts.from_dict(app_file_dc.shortcuts)
         self.settings.from_dict(app_file_dc.settings)
         self.model_init()
+        self._circuit_path = str(path)
         self._changed = False
         self.objects.reset_undo_stack()
         self.sig_synchronize_gui.emit()
@@ -313,6 +322,7 @@ class AppModel(QThread):
         """Clear the circuit"""
         self.objects.push_undo_state()
         self._model_clear()
+        self._circuit_path = None
         self.sig_synchronize_gui.emit()
         self.sig_control_notify.emit()
 

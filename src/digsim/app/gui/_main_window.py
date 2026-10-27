@@ -5,10 +5,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent, QKeyEvent, QKeySequence, QShortcut
+from PySide6.QtGui import QCloseEvent, QKeyEvent
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
@@ -22,6 +23,7 @@ from digsim.app.editor import VerilogEditors
 
 from ._circuit_area import CircuitArea
 from ._component_selection import ComponentSelection
+from ._menu_bar import MenuBar
 from ._top_bar import TopBar
 from ._utils import are_you_sure_destroy_circuit
 from ._warning_dialog import WarningDialog
@@ -75,7 +77,7 @@ class CentralWidget(QWidget):
     The central widget with the top widget and circuit editor widget.
     """
 
-    def __init__(self, app_model: AppModel, parent: QWidget) -> None:
+    def __init__(self, app_model: AppModel, menu_bar: MenuBar, parent: QWidget) -> None:
         super().__init__(parent)
         self._app_model = app_model
 
@@ -85,7 +87,8 @@ class CentralWidget(QWidget):
         layout.setSpacing(0)
 
         circuit_editor = CircuitEditor(app_model, self)
-        top_bar = TopBar(app_model, circuit_editor, self)
+        menu_bar.set_circuit_area(circuit_editor.circuit_area)
+        top_bar = TopBar(app_model, circuit_editor, menu_bar, self)
         layout.addWidget(top_bar)
         layout.setStretchFactor(top_bar, 0)
 
@@ -102,10 +105,14 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self._app_model = app_model
+        self._package_version = package_version
         self.resize(1280, 720)
-        central_widget = CentralWidget(app_model, self)
-        self.setWindowTitle(f"DigSim - Interactive Digital Logic Simulator [v{package_version}]")
+        menu_bar = MenuBar(app_model, self, package_version)
+        self.setMenuBar(menu_bar)
+        central_widget = CentralWidget(app_model, menu_bar, self)
         self.setCentralWidget(central_widget)
+        self._update_title()
+        self._app_model.sig_control_notify.connect(self._update_title)
         self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
         self._app_model.sig_error.connect(self.error_dialog)
         self._app_model.sig_warning_log.connect(self.warning_log_dialog)
@@ -113,11 +120,13 @@ class MainWindow(QMainWindow):
         self._app_model.sig_edit_verilog.connect(self.verilog_editors.open)
         self._app_model.sig_yosys_updated.connect(self.verilog_editors.components_updated)
 
-        QShortcut(QKeySequence("Ctrl+Z"), self, self._app_model.objects.undo)
-        QShortcut(QKeySequence("Ctrl+Y"), self, self._app_model.objects.redo)
-        QShortcut(QKeySequence("Ctrl++"), self, self._app_model.zoom_in)
-        QShortcut(QKeySequence("Ctrl+-"), self, self._app_model.zoom_out)
-        QShortcut(QKeySequence("Del"), self, self._app_model.objects.delete_selected)
+    def _update_title(self) -> None:
+        """The title has the file of the circuit, with a '*' when it has changed since"""
+        title = f"DigSim - Interactive Digital Logic Simulator [v{self._package_version}]"
+        path = self._app_model.circuit_path
+        if path is not None:
+            title += f" - {Path(path).name}{'*' if self._app_model.is_changed else ''}"
+        self.setWindowTitle(title)
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """QT event callback function"""

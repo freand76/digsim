@@ -73,6 +73,7 @@ from digsim.app.gui._circuit_area import (
     WireGraphicsItem,
     WirePartGraphicsItem,
 )
+from digsim.app.gui._menu_bar import MenuBar
 from digsim.app.gui._top_bar import LoadSaveWidget, SimControlWidget, VcdControlWidget
 from digsim.app.gui_objects import ComponentObject
 from digsim.app.gui_objects import _theme as theme
@@ -1907,7 +1908,7 @@ class GuiFuzzer:
         return components, connections, shapes
 
     def save_and_load(self) -> str:
-        """With the Save and Load buttons, the file dialogs give the file"""
+        """With Save As and the Load button, the file dialogs give the file"""
         path = self.out_dir / "fuzz.circuit"
         before = self.file_snapshot()
         buttons = self.window.findChild(LoadSaveWidget)
@@ -1916,12 +1917,11 @@ class GuiFuzzer:
         chosen = staticmethod(lambda *args, **kwargs: (str(path), ""))
         QFileDialog.getSaveFileName = chosen  # type: ignore[method-assign]
         QFileDialog.getOpenFileName = chosen  # type: ignore[method-assign]
+        menu_bar = self.window.menuBar()
+        assert isinstance(menu_bar, MenuBar)
         try:
-            if buttons._save_button.isEnabled():
-                buttons._save_button.click()
-            else:
-                # Saved already: the button is off until the next change
-                self.model.save_circuit(path)
+            # Save As: Save writes to the file the circuit came from, like an example
+            menu_bar.save_circuit_as()
             check(not self.model.is_changed, "the circuit is changed after it was saved")
             check(not buttons._save_button.isEnabled(), "Save is on after saving")
             saved = path.read_text()

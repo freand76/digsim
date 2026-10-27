@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """The top bar of the main window/gui application"""
@@ -24,13 +24,12 @@ from PySide6.QtWidgets import (
 
 from digsim.app.settings import GuiSettingsDialog
 
-from ._utils import are_you_sure_destroy_circuit
-
 
 if TYPE_CHECKING:
     from digsim.app.model import AppModel
 
     from ._main_window import CircuitEditor
+    from ._menu_bar import MenuBar
 
 
 class SimControlWidget(QFrame):
@@ -249,7 +248,11 @@ class LoadSaveWidget(QFrame):
     """
 
     def __init__(
-        self, app_model: AppModel, circuit_editor: CircuitEditor, parent: QWidget
+        self,
+        app_model: AppModel,
+        circuit_editor: CircuitEditor,
+        menu_bar: MenuBar,
+        parent: QWidget,
     ) -> None:
         super().__init__(parent)
         self._app_model = app_model
@@ -289,13 +292,13 @@ class LoadSaveWidget(QFrame):
         self._settings_button.setToolTip("Settings")
         layout.addWidget(self._settings_button)
         self._load_button = QPushButton("Load Circuit", self)
-        self._load_button.clicked.connect(self._load)
+        self._load_button.clicked.connect(menu_bar.open_circuit)
         layout.addWidget(self._load_button)
         self._save_button = QPushButton("Save Circuit", self)
-        self._save_button.clicked.connect(self._save)
+        self._save_button.clicked.connect(menu_bar.save_circuit)
         layout.addWidget(self._save_button)
         self._clear_button = QPushButton("Clear Circuit", self)
-        self._clear_button.clicked.connect(self._clear)
+        self._clear_button.clicked.connect(menu_bar.new_circuit)
         layout.addWidget(self._clear_button)
         self._app_model.sig_control_notify.connect(self._control_notify)
         # The Delete button follows the selection
@@ -305,32 +308,6 @@ class LoadSaveWidget(QFrame):
     def _settings_dialog(self) -> None:
         settings_dialog = GuiSettingsDialog(self, self._app_model)
         settings_dialog.start()
-
-    def _load(self) -> None:
-        """Button action: Load"""
-        if self._app_model.is_changed and not are_you_sure_destroy_circuit(
-            self.parentWidget(), "Load circuit"
-        ):
-            return
-        path = QFileDialog.getOpenFileName(
-            self, "Load Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
-        )
-        if len(path[0]) == 0:
-            return
-        self._app_model.load_circuit(path[0])
-
-    def _save(self) -> None:
-        """Button action: Save"""
-        path = QFileDialog.getSaveFileName(
-            self, "Save Circuit", "", "Circuit Files (*.circuit);;All Files (*.*)"
-        )
-        if len(path[0]) == 0:
-            return
-        self._app_model.save_circuit(path[0])
-
-    def _clear(self) -> None:
-        """Button action: Clear"""
-        self._app_model.clear_circuit()
 
     def _control_notify(self) -> None:
         if self._app_model.is_running:
@@ -357,7 +334,11 @@ class TopBar(QFrame):
     """
 
     def __init__(
-        self, app_model: AppModel, circuit_editor: CircuitEditor, parent: QWidget
+        self,
+        app_model: AppModel,
+        circuit_editor: CircuitEditor,
+        menu_bar: MenuBar,
+        parent: QWidget,
     ) -> None:
         super().__init__(parent)
         layout = QHBoxLayout(self)
@@ -366,4 +347,4 @@ class TopBar(QFrame):
         layout.addWidget(SimTimeWidget(app_model, self))
         layout.addStretch(1)
         layout.addWidget(VcdControlWidget(app_model, self))
-        layout.addWidget(LoadSaveWidget(app_model, circuit_editor, self))
+        layout.addWidget(LoadSaveWidget(app_model, circuit_editor, menu_bar, self))

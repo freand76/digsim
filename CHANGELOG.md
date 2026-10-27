@@ -11,6 +11,7 @@
  - New components: RAM and ROM, in Python and in the GUI. They have 1–20 address bits and 1–32 data bits, are clocked (on the rising or falling edge) or asynchronous, and can have an output enable for a shared bus. The ROM is filled from a file, a RAM can be. The file is binary or text with hexadecimal words like Verilog's $readmemh reads.
  - Mem64kByte is removed, use RAM(circuit, address_width=16, data_width=8, path=..., load_address=...) instead. The yosys_6502 example uses a RAM.
  - GUI: a Probe shows the value of a wire or a bus, in hexadecimal, decimal or binary. Add probe in the context menu of a wire puts one on it.
+ - GUI: a menu bar, with File (New, Open, Save, Save As, Quit), Edit (Undo, Redo, Delete, Settings), View (zoom), Simulation (Start, Single Step, Reset) and Help. Save saves in the circuit's file without asking, and the window title shows the file, with a * when the circuit has changed.
 
 ## v1.8.0
  - GUI: a new look. All components are drawn in one style: gates, LEDs, buffers and bus splitters as symbols only, devices like switches and displays with a white body, on a light background with a grid of dots. Most components are smaller, a selected one is blue, and green means on everywhere.

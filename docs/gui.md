@@ -21,8 +21,13 @@ folder in the repository has ready-made circuits to explore.
 
 ![Circuit Editor](images/CircuitEditor.png){ width="85%" }
 
-The window has three areas:
+The window has a menu bar and three areas:
 
+- **Menu bar** (top): **File** (New, Open, Save, Save As, Quit), **Edit** (Undo, Redo,
+  Delete, Settings), **View** (zoom in and out), **Simulation** (Start, Single Step,
+  Reset) and **Help** (the documentation, and the version of DigSim). Save saves the
+  circuit in the file it was opened from or saved to, the window title shows that file,
+  with a `*` when the circuit has changed since.
 - **Component selection** (blue, left): all available components, grouped by type.
 - **Circuit area** (red, right): the canvas where you build the circuit.
 - **Control area** (green, top): simulation controls, VCD output, and buttons for
@@ -231,11 +236,16 @@ keep the waves recorded so far.
 | **Ctrl + mouse wheel** | Zoom in and out around the mouse pointer |
 | **Ctrl + +** / **Ctrl + -** | Zoom in / out |
 | **Shift + drag** | Pan the circuit area |
-| **Ctrl + Z** / **Ctrl + Y** | Undo / redo |
+| **Ctrl + N** | New circuit |
+| **Ctrl + O** | Open a circuit |
+| **Ctrl + S** / **Ctrl + Shift + S** | Save / save as |
+| **Ctrl + Q** | Quit |
+| **Ctrl + Z** / **Ctrl + Y** | Undo / redo (also **Ctrl + Shift + Z**) |
 | **Del** | Delete the selected components and wires |
 | **Space** | Start / stop the simulation |
 | **Esc** | Cancel the wire being drawn |
 | **Backspace** | Remove the last corner of the wire being drawn |
+| **F1** | Open the documentation |
 
 ### Keyboard shortcuts for inputs
 
