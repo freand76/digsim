@@ -18,6 +18,7 @@
  - GUI: File > Export Image (Ctrl+E) saves the circuit as a PNG or SVG image
  - GUI: File > Open Recent, with the last eight circuits opened or saved
  - New components: Adder, Subtractor, Multiplier, Comparator and Negator, of 1–32 bits, in Python and in the GUI
+ - New component: Counter, with a width, an optional clock enable, up/down and load, in Python and in the GUI
 
 ## v1.8.0
  - GUI: a new look. All components are drawn in one style: gates, LEDs, buffers and bus splitters as symbols only, devices like switches and displays with a white body, on a light background with a grid of dots. Most components are smaller, a selected one is blue, and green means on everywhere.

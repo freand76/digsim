@@ -183,3 +183,9 @@ class NegatorObject(ArithmeticObject):
     """A negator placed in the GUI"""
 
     SYMBOL = "\u2212x"
+
+
+class CounterObject(NamedBoxObject):
+    """A counter placed in the GUI"""
+
+    ICON_TEXT = "CNT"

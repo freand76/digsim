@@ -312,8 +312,9 @@ XNOR when an even number are.
 
 | Component | Description |
 | --- | --- |
-| ![DFF](images/components/DFF.png) | **D Flip-Flop**: 1–32 bits wide, with optional clock enable and asynchronous reset. |
+| ![DFF](images/components/DFF.png) | **D Flip-Flop**: 1–32 bits wide, with optional clock enable and asynchronous reset. A wide one is a register. |
 | ![Flip-flop](images/components/FlipFlop.png) | **Flip Flop**: choose an SR flip-flop, or an edge-triggered SR, JK or T flip-flop. |
+| ![Counter](images/components/Counter.png) | **Counter**: 1–32 bits, counts on the rising edge of clk and wraps around. R resets it to 0 at once. Optional: a clock enable EN, a direction input UP (1 up, 0 down), and LD to load D. CO is 1 at the last count before it wraps. |
 
 ### Multiplexer
 

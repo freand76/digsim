@@ -23,6 +23,7 @@ from ._logic_analyzer_object import LogicAnalyzerObject
 from ._named_box_object import (
     AdderObject,
     ComparatorObject,
+    CounterObject,
     ICObject,
     MultiplierObject,
     NegatorObject,
@@ -57,6 +58,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "AND": AndObject,
     "Adder": AdderObject,
     "Comparator": ComparatorObject,
+    "Counter": CounterObject,
     "Multiplier": MultiplierObject,
     "Negator": NegatorObject,
     "Subtractor": SubtractorObject,
