@@ -51,7 +51,7 @@
 <polygon points='979.6,97.0 979.8,86.0 979.8,86.0 980.0,97.0 979.8,108.0 979.8,108.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='10' y='135.0' fill='#1f2328'>cpu.WE</text>
 <polyline points='140.0,142.0 700.0,142.0 700.0,120.0 793.2,120.0 793.2,142.0 980.0,142.0' fill='none' stroke='#1a7f37' stroke-width='1.6'/>
-<text x='10' y='169.0' fill='#1f2328'>Memory.DataOut</text>
+<text x='10' y='169.0' fill='#1f2328'>RAM.DataOut</text>
 <polygon points='140.0,165.0 143.0,154.0 229.3,154.0 232.3,165.0 229.3,176.0 143.0,176.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>
 <text x='186.2' y='169.0' text-anchor='middle' fill='#1f2328' font-size='11'>E0</text>
 <polygon points='232.3,165.0 235.3,154.0 322.6,154.0 325.6,165.0 322.6,176.0 235.3,176.0' fill='#dafbe1' stroke='#1a7f37' stroke-width='1'/>

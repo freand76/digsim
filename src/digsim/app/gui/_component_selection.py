@@ -176,6 +176,9 @@ class ComponentSelection(QWidget):
                 "TristateBuffer", self, circuit_area, display_name="Tristate Buffer"
             )
         )
+        layout.addWidget(DescriptionText(self, "Memory"))
+        layout.addWidget(SelectableComponentWidget("RAM", self, circuit_area))
+        layout.addWidget(SelectableComponentWidget("ROM", self, circuit_area))
         layout.addWidget(DescriptionText(self, "IC / Verilog"))
         layout.addWidget(
             SelectableComponentWidget("IntegratedCircuit", self, circuit_area, display_name="IC")

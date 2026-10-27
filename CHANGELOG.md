@@ -8,6 +8,8 @@
  - New Python example, examples/yosys_inout: two registers with an inout data port on a shared bus
  - New GUI example circuit, walkie_talkie.circuit: two walkie-talkies, the same Verilog module twice, that talk over one bidirectional bus wire
  - A register on the global clock (`always @($global_clock)`, the Yosys cells `$ff` and `$_FF_`) gives the same error for gates and functional synthesis, "Unsupported Yosys cell ... DigSim has no global clock", and Reload finds it before it takes the component apart
+ - New components: RAM and ROM, in Python and in the GUI. They have 1–20 address bits and 1–32 data bits, are clocked (on the rising or falling edge) or asynchronous, and can have an output enable for a shared bus. The ROM is filled from a file, a RAM can be. The file is binary or text with hexadecimal words like Verilog's $readmemh reads.
+ - Mem64kByte is removed, use RAM(circuit, address_width=16, data_width=8, path=..., load_address=...) instead. The yosys_6502 example uses a RAM.
 
 ## v1.8.0
  - GUI: a new look. All components are drawn in one style: gates, LEDs, buffers and bus splitters as symbols only, devices like switches and displays with a white body, on a light background with a grid of dots. Most components are smaller, a selected one is blue, and green means on everywhere.

@@ -16,7 +16,7 @@ from ._label_wire import LabelWireIn, LabelWireOut
 from ._led import Led
 from ._led_bar import LedBar
 from ._logic_analyzer import LogicAnalyzer
-from ._mem64kbyte import Mem64kByte
+from ._memory import RAM, ROM
 from ._memstdout import MemStdOut
 from ._note import Note
 from ._on_off_switch import OnOffSwitch

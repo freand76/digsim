@@ -301,6 +301,30 @@ impedance). It is a wire or a bus of 1–32 bits. The outputs of several tristat
 can be connected to the same input, and the one that is enabled drives it. If more than
 one is enabled with different values, the value is undefined.
 
+### Memory components
+
+![RAM](images/components/RAM.png) ![ROM](images/components/ROM.png)
+
+The **RAM** and the **ROM** have 2^n words, with an address width of 1–20 bits, and a
+data width of 1–32 bits. The mode sets how they are clocked:
+
+| Mode | RAM | ROM |
+| --- | --- | --- |
+| sync | DataIn is written while WE is 1, or DataOut read, on the clock edge | DataOut is read on the clock edge |
+| async_read | DataIn is written on the clock edge while WE is 1, DataOut is the word at the address at all times | |
+| async | No clock. DataIn is written while WE is 1, DataOut is the word at the address at all times | No clock, DataOut is the word at the address at all times |
+
+The clock edge is rising or falling. With **Output enable input**, the memory has an OE
+input, and DataOut is not driven while it is low, so several memories can share a data
+bus.
+
+The ROM is filled from a file, chosen when it is added. A RAM can start with the contents
+of a file, and is otherwise filled with zeros. Reset fills it from the file again. A file
+ending in `.hex`, `.mem` or `.txt` has hexadecimal words separated by whitespace, like
+Verilog's `$readmemh` reads, with `//` comments and `@address` to continue at an address.
+Other files are binary, with the bytes of a word wider than 8 bits in little-endian
+order. The file is stored relative to the circuit file.
+
 ### IC components
 
 ![IC](images/components/IC.png)

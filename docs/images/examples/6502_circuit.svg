@@ -54,8 +54,8 @@
 <text x='385' y='169.0' text-anchor='end' fill='#1f2328' font-size='10'>DO</text>
 <text x='385' y='231.5' text-anchor='end' fill='#1f2328' font-size='10'>WE</text>
 <rect x='580' y='30' width='170' height='150' rx='5' fill='#f6f8fa' stroke='#1f2328' stroke-width='1.3'/>
-<text x='665.0' y='24' text-anchor='middle' fill='#59636e' font-size='11'>Memory</text>
-<text x='665.0' y='168' text-anchor='middle' fill='#1f2328' font-weight='bold'>Mem64kByte</text>
+<text x='665.0' y='24' text-anchor='middle' fill='#59636e' font-size='11'>RAM</text>
+<text x='665.0' y='168' text-anchor='middle' fill='#1f2328' font-weight='bold'>RAM 64 kB</text>
 <text x='585' y='64.0' fill='#1f2328' font-size='10'>clk</text>
 <text x='585' y='94.0' fill='#1f2328' font-size='10'>Address</text>
 <text x='585' y='124.0' fill='#1f2328' font-size='10'>DataIn</text>

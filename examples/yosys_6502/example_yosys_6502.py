@@ -1,13 +1,13 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
 Example with a component created from a yosys netlist
 The yosys netlist is a 6502 CPU created from a verilog file.
 The 6502 is connected to two memory mapped components,
-one 64kByte memory and one memory mapped 'stdout' writer.
-The example code that is loaded into the memory before the
-simulation starts will send the characters 'Hello World' to
+a 64 kB RAM and one memory mapped 'stdout' writer.
+The example code is preloaded into the RAM from code.bin,
+at 0xF800, and sends the characters 'Hello World' to
 the MemStdOut component.
 
 The CPU is synthesized into gates (6502_primitives.json), or with
@@ -32,8 +32,8 @@ import time
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import (
+    RAM,
     Clock,
-    Mem64kByte,
     MemStdOut,
     PushButton,
     StaticValue,
@@ -77,18 +77,27 @@ clk = Clock(test_circuit, frequency=CLOCK_HZ, name="CLK")
 irq = StaticValue(test_circuit, "IRQ", value=0)
 rdy = StaticValue(test_circuit, "RDY", value=1)
 
-# Instantiate the 6502 Yosys component, memory, and stdout output
+# Instantiate the 6502 Yosys component, RAM, and stdout output
 yosys_6502 = YosysComponent(
     test_circuit,
     path=example_path / netlist,
     signals=args.signals,
     states=["state"] if args.signals else None,
 )
-mem = Mem64kByte(test_circuit, rom_filename=example_path / "code.bin", rom_address=0xF800)
+# 64 kB RAM, read and written on the rising clock edge, with the program at 0xF800
+mem = RAM(
+    test_circuit,
+    "RAM",
+    address_width=16,
+    data_width=8,
+    mode="sync",
+    path=example_path / "code.bin",
+    load_address=0xF800,
+)
 output = MemStdOut(test_circuit, address=0x8000)
 
 # --- Wire up the components ---
-# Clock and memory
+# Clock and RAM
 clk.wire = mem.clk
 yosys_6502.AB.wire = mem.Address
 yosys_6502.DO.wire = mem.DataIn

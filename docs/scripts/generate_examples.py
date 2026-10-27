@@ -517,8 +517,8 @@ def schematics() -> None:
         outs=["AB", "DO", "WE"],
     )
     mem = Box(
-        "Memory",
-        "Mem64kByte",
+        "RAM",
+        "RAM 64 kB",
         580,
         30,
         170,
@@ -543,9 +543,7 @@ def schematics() -> None:
         ],
         [
             Wire("CLK.O", "cpu.clk", mid_x=185),
-            Wire(
-                "CLK.O", "Memory.clk", via=[(185, 60), (185, 18), (540, 18), (540, py(mem, "clk"))]
-            ),
+            Wire("CLK.O", "RAM.clk", via=[(185, 60), (185, 18), (540, 18), (540, py(mem, "clk"))]),
             Wire(
                 "CLK.O",
                 "MemStdOut.clk",
@@ -555,14 +553,14 @@ def schematics() -> None:
             Wire("IRQ.O", "cpu.IRQ", mid_x=200),
             Wire("IRQ.O", "cpu.NMI", mid_x=200),
             Wire("RDY.O", "cpu.RDY", mid_x=210),
-            Wire("cpu.AB", "Memory.Address", mid_x=460, bus="16"),
+            Wire("cpu.AB", "RAM.Address", mid_x=460, bus="16"),
             Wire("cpu.AB", "MemStdOut.Address", mid_x=460, bus="16"),
-            Wire("cpu.DO", "Memory.DataIn", mid_x=480, bus="8"),
+            Wire("cpu.DO", "RAM.DataIn", mid_x=480, bus="8"),
             Wire("cpu.DO", "MemStdOut.DataIn", mid_x=480, bus="8"),
-            Wire("cpu.WE", "Memory.WE", mid_x=500),
+            Wire("cpu.WE", "RAM.WE", mid_x=500),
             Wire("cpu.WE", "MemStdOut.WE", mid_x=500),
             Wire(
-                "Memory.DataOut",
+                "RAM.DataOut",
                 "cpu.DI",
                 via=[(775, py(mem, "DataOut")), (775, 345), (225, 345), (225, py(cpu, "DI"))],
                 bus="8",
@@ -730,7 +728,7 @@ def waves(vcd_dir: Path) -> None:
             ("cpu.AB", "cpu.AB"),
             ("cpu.DO", "cpu.DO"),
             ("cpu.WE", "cpu.WE"),
-            ("Memory.DataOut", "Memory.DataOut"),
+            ("RAM.DataOut", "RAM.DataOut"),
         ],
         OUT / "6502_waves.svg",
         start=first_write - 6_000,

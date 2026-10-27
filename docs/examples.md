@@ -238,9 +238,9 @@ The netlist is written to `examples/synthesis/fibonacci.json` and the waveforms 
 
 [`examples/yosys_6502/example_yosys_6502.py`](https://github.com/freand76/digsim/blob/main/examples/yosys_6502/example_yosys_6502.py)
 simulates a synthesized [6502 CPU](https://en.wikipedia.org/wiki/MOS_Technology_6502)
-(`6502_primitives.json`) connected to a 64 kB memory and a memory-mapped text output at address
-`0x8000`. The program in the memory, built from
-[`code.s`](https://github.com/freand76/digsim/blob/main/examples/yosys_6502/code.s),
+(`6502_primitives.json`) connected to a 64 kB `RAM` and a memory-mapped text output at address
+`0x8000`. The program is preloaded into the RAM at `0xF800` from `code.bin`, built from
+[`code.s`](https://github.com/freand76/digsim/blob/main/examples/yosys_6502/code.s). It
 writes "Hello World" to the text output, which prints each character.
 
 ![6502 circuit](images/examples/6502_circuit.svg)

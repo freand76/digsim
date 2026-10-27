@@ -132,6 +132,17 @@ COMPONENT_IMAGES: list[tuple[str, str, dict[str, Any], Callable[..., None] | Non
     ("components/FlipFlop.png", "ClockedJKFF", {}, None),
     ("components/MUX.png", "MUX", {}, None),
     ("components/TRISTATE.png", "TristateBuffer", {}, None),
+    ("components/RAM.png", "RAM", {}, None),
+    (
+        "components/ROM.png",
+        "ROM",
+        {
+            "path": str(ROOT / "examples" / "yosys_6502" / "code.bin"),
+            "address_width": 11,
+            "output_enable": True,
+        },
+        None,
+    ),
     ("components/IC.png", "IntegratedCircuit", {"ic_name": "7485"}, None),
     (
         "components/YOSYS.png",

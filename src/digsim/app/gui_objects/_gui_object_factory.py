@@ -20,7 +20,7 @@ from ._hexdigit_object import HexDigitObject
 from ._label_object import LabelWireInObject, LabelWireOutObject
 from ._led_bar_object import LedBarObject
 from ._logic_analyzer_object import LogicAnalyzerObject
-from ._named_box_object import ICObject
+from ._named_box_object import ICObject, RAMObject, ROMObject
 from ._seven_segment_object import SevenSegmentObject
 from ._symbol_objects import (
     AndObject,
@@ -68,6 +68,8 @@ CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "XNOR": XnorObject,
     "LedBar": LedBarObject,
     "IntegratedCircuit": ICObject,
+    "RAM": RAMObject,
+    "ROM": ROMObject,
     "YosysComponent": YosysObject,
     "Note": GuiNoteObject,
     "FlipFlop": FlipFlopObject,

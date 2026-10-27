@@ -94,3 +94,15 @@ class ICObject(NamedBoxObject):
     """An IC placed in the GUI"""
 
     ICON_TEXT = "74xx"
+
+
+class RAMObject(NamedBoxObject):
+    """A RAM placed in the GUI"""
+
+    ICON_TEXT = "RAM"
+
+
+class ROMObject(NamedBoxObject):
+    """A ROM placed in the GUI"""
+
+    ICON_TEXT = "ROM"

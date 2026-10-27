@@ -122,7 +122,8 @@ The available components are:
 | Gates | `AND`, `OR`, `NOT`, `XOR`, `XNOR`, `NAND`, `NOR`, `MUX` |
 | Flip-flops | `DFF`, `SR`, `FlipFlop`, `SRFF`, `ClockedSRFF`, `ClockedJKFF`, `ClockedTFF` |
 | Buses | `Bus2Wires`, `Wires2Bus`, `TristateBuffer`, `LabelWireIn`, `LabelWireOut` |
-| Complex | `IntegratedCircuit`, `YosysComponent`, `Mem64kByte`, `MemStdOut` |
+| Memory | `RAM`, `ROM`, `MemStdOut` |
+| Complex | `IntegratedCircuit`, `YosysComponent` |
 
 ## Verilog components
 

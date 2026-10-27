@@ -372,6 +372,47 @@ class ComponentSettingsListSelector(ComponentSettingsBase):
         self._settings[self._parameter] = self._item_selector.itemData(value)
 
 
+class ComponentSettingsPath(ComponentSettingsBase):
+    """
+    An optional file, typed or chosen with a file dialog. A path that is the first
+    parameter is asked for before the dialog instead, and is not optional.
+    """
+
+    def __init__(
+        self,
+        parent: ComponentSettingsDialog,
+        parameter: str,
+        parameter_dict: Parameter,
+        settings: dict[str, Any],
+    ) -> None:
+        super().__init__(parent, parameter, parameter_dict, settings)
+        layout = QVBoxLayout(self)
+        self.setLayout(layout)
+        layout.addWidget(QLabel(self._parameter_dict["description"]))
+        row = QHBoxLayout()
+        self._line_edit = QLineEdit(self)
+        self._line_edit.setText(self._parameter_dict.get("default") or "")
+        self._line_edit.setPlaceholderText("No file")
+        self._line_edit.textChanged.connect(self._update)
+        row.addWidget(self._line_edit)
+        browse_button = QPushButton("Browse...", self)
+        browse_button.clicked.connect(self._browse)
+        row.addWidget(browse_button)
+        clear_button = QPushButton("Clear", self)
+        clear_button.clicked.connect(self._line_edit.clear)
+        row.addWidget(clear_button)
+        layout.addLayout(row)
+        self._update()
+
+    def _browse(self) -> None:
+        path, _ = ComponentSettingsDialog.ask_file(self, self._parameter_dict)
+        if path:
+            self._line_edit.setText(path)
+
+    def _update(self) -> None:
+        self._settings[self._parameter] = self._line_edit.text().strip()
+
+
 class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
     """SettingsCheckbox for width number of bits (max32)"""
 
@@ -437,6 +478,7 @@ _SETTINGS_WIDGETS: dict[str, type[ComponentSettingsBase]] = {
     "ic_name": ComponentSettingsIcSelector,
     "component_name": ComponentSettingsNameSelector,
     "list": ComponentSettingsListSelector,
+    "path": ComponentSettingsPath,
 }
 
 
