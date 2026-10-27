@@ -12,8 +12,23 @@ from PySide6.QtGui import QDrag, QMouseEvent, QPainter, QPaintEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QFrame, QLabel, QPushButton, QVBoxLayout, QWidget
 
 import digsim.app.gui_objects
+from digsim.app._component_catalog import COMPONENT_GROUPS
 
 from ._circuit_area import CircuitArea
+
+
+def start_component_drag(source: QWidget, name: str) -> None:
+    """Drag a component (its class name) into the circuit area"""
+    drag = QDrag(source)
+    mime = QMimeData()
+    mime.setText(name)
+    drag.setMimeData(mime)
+    # No drag image: the circuit area shows a preview of the component where it will
+    # be dropped. A drag without an image gets a default one on some platforms.
+    pixmap = QPixmap(1, 1)
+    pixmap.fill(Qt.GlobalColor.transparent)
+    drag.setPixmap(pixmap)
+    drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction)
 
 
 class SelectableComponentWidget(QPushButton):
@@ -62,16 +77,7 @@ class SelectableComponentWidget(QPushButton):
         if (pos - self._press_pos).manhattanLength() < QApplication.startDragDistance():
             return
         self._press_pos = None
-        drag = QDrag(self)
-        mime = QMimeData()
-        mime.setText(self._name)
-        drag.setMimeData(mime)
-        # No drag image: the circuit area shows a preview of the component where it will
-        # be dropped. A drag without an image gets a default one on some platforms.
-        pixmap = QPixmap(1, 1)
-        pixmap.fill(Qt.GlobalColor.transparent)
-        drag.setPixmap(pixmap)
-        drag.exec(Qt.DropAction.CopyAction | Qt.DropAction.MoveAction, Qt.DropAction.CopyAction)
+        start_component_drag(self, self._name)
 
     def mouseDoubleClickEvent(self, _: QMouseEvent) -> None:
         """QT event callback function"""
@@ -124,68 +130,11 @@ class ComponentSelection(QWidget):
         self.setLayout(layout)
         layout.setContentsMargins(5, 5, 5, 5)
         layout.setSpacing(5)
-        layout.addWidget(DescriptionText(self, "Input"))
-        layout.addWidget(SelectableComponentWidget("PushButton", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("OnOffSwitch", self, circuit_area))
-        layout.addWidget(
-            SelectableComponentWidget("DipSwitch", self, circuit_area, display_name="DIP switch")
-        )
-        layout.addWidget(SelectableComponentWidget("Clock", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("StaticValue", self, circuit_area))
-        layout.addWidget(DescriptionText(self, "Output"))
-        layout.addWidget(SelectableComponentWidget("Led", self, circuit_area))
-        layout.addWidget(
-            SelectableComponentWidget("LedBar", self, circuit_area, display_name="LED bar")
-        )
-        layout.addWidget(
-            SelectableComponentWidget("HexDigit", self, circuit_area, display_name="Hex-digit")
-        )
-        layout.addWidget(
-            SelectableComponentWidget("SevenSegment", self, circuit_area, display_name="7-Seg")
-        )
-        layout.addWidget(SelectableComponentWidget("Buzzer", self, circuit_area))
-        layout.addWidget(
-            SelectableComponentWidget(
-                "LogicAnalyzer", self, circuit_area, display_name="Logic Analyzer"
-            )
-        )
-        layout.addWidget(SelectableComponentWidget("Probe", self, circuit_area))
-        layout.addWidget(DescriptionText(self, "Gates"))
-        layout.addWidget(SelectableComponentWidget("OR", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("AND", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("NOT", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("XOR", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("XNOR", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("NAND", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("NOR", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("DFF", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("FlipFlop", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("MUX", self, circuit_area))
-        layout.addWidget(DescriptionText(self, "Bus / Wires"))
-        layout.addWidget(
-            SelectableComponentWidget("LabelWireIn", self, circuit_area, display_name="Wire Sink")
-        )
-        layout.addWidget(
-            SelectableComponentWidget(
-                "LabelWireOut", self, circuit_area, display_name="Wire Source"
-            )
-        )
-        layout.addWidget(SelectableComponentWidget("Bus2Wires", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("Wires2Bus", self, circuit_area))
-        layout.addWidget(
-            SelectableComponentWidget(
-                "TristateBuffer", self, circuit_area, display_name="Tristate Buffer"
-            )
-        )
-        layout.addWidget(DescriptionText(self, "Memory"))
-        layout.addWidget(SelectableComponentWidget("RAM", self, circuit_area))
-        layout.addWidget(SelectableComponentWidget("ROM", self, circuit_area))
-        layout.addWidget(DescriptionText(self, "IC / Verilog"))
-        layout.addWidget(
-            SelectableComponentWidget("IntegratedCircuit", self, circuit_area, display_name="IC")
-        )
-        layout.addWidget(
-            SelectableComponentWidget("YosysComponent", self, circuit_area, display_name="Yosys")
-        )
-        layout.addWidget(DescriptionText(self, "Other"))
-        layout.addWidget(SelectableComponentWidget("Note", self, circuit_area))
+        for group, entries in COMPONENT_GROUPS:
+            layout.addWidget(DescriptionText(self, group))
+            for entry in entries:
+                layout.addWidget(
+                    SelectableComponentWidget(
+                        entry.name, self, circuit_area, display_name=entry.display_name
+                    )
+                )

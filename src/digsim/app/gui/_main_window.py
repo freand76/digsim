@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 from digsim.app.editor import VerilogEditors
 
 from ._circuit_area import CircuitArea
+from ._component_search import ComponentSearch
 from ._component_selection import ComponentSelection
 from ._menu_bar import MenuBar
 from ._top_bar import TopBar
@@ -49,22 +50,36 @@ class CircuitEditor(QWidget):
         # A small gap between the component selection and the circuit area
         layout.setSpacing(4)
 
+        # The component search above the component selection
+        self._selection_column = QWidget(self)
+        self._selection_column.setFixedWidth(106)
+        column_layout = QVBoxLayout(self._selection_column)
+        column_layout.setContentsMargins(0, 0, 0, 0)
+        column_layout.setSpacing(4)
+
         self._selection_area = QScrollArea(self)
-        self._selection_area.setFixedWidth(106)
         self._selection_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self._selection_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
         self._circuit_area = CircuitArea(app_model, self)
         selection_panel = ComponentSelection(self._circuit_area, self)
+        self._component_search = ComponentSearch(self._circuit_area, self, self)
 
         self._selection_area.setWidget(selection_panel)
+        column_layout.addWidget(self._component_search)
+        column_layout.addWidget(self._selection_area, 1)
 
-        layout.addWidget(self._selection_area)
+        layout.addWidget(self._selection_column)
         layout.addWidget(self._circuit_area, 1)
         self._circuit_area.setFocus()
 
     def _control_notify(self) -> None:
-        self._selection_area.setEnabled(not self._app_model.is_running)
+        self._selection_column.setEnabled(not self._app_model.is_running)
+
+    def focus_component_search(self) -> None:
+        """Bring the component search to the front, to type the component to add"""
+        if not self._app_model.is_running:
+            self._component_search.focus_search()
 
     @property
     def circuit_area(self) -> CircuitArea:
@@ -88,6 +103,7 @@ class CentralWidget(QWidget):
 
         circuit_editor = CircuitEditor(app_model, self)
         menu_bar.set_circuit_area(circuit_editor.circuit_area)
+        menu_bar.sig_find_component.connect(circuit_editor.focus_component_search)
         top_bar = TopBar(app_model, circuit_editor, menu_bar, self)
         layout.addWidget(top_bar)
         layout.setStretchFactor(top_bar, 0)

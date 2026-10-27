@@ -1,9 +1,10 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
-Fuzzy search of the ICs in the IC selector of the settings dialog
-(kept free from Qt imports so that it can be tested without a display)
+Fuzzy search, of the ICs in the IC selector of the settings dialog and of the components
+in the component search (kept free from Qt imports so that it can be tested without a
+display)
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ def _is_subsequence(query: str, text: str) -> bool:
 
 
 def _word_score(word: str, name: str, description: str) -> int | None:
-    """How well a word of the query matches an IC, lower is better, None if it doesn't"""
+    """How well a word of the query matches an item, lower is better, None if it doesn't"""
     words = description.split()
     if name.startswith(word):
         return 0
@@ -38,20 +39,29 @@ def _word_score(word: str, name: str, description: str) -> int | None:
     return None
 
 
-def search_ics(query: str, ics: dict[str, str]) -> list[str]:
+def fuzzy_search(query: str, items: dict[str, str]) -> list[str]:
     """
-    The ICs (name: description) that match a query, the best match first. Each word of
-    the query must match the name (like "741") or the description (like "counter"), also
-    with skipped letters ("shft" for "shift"). An empty query matches all ICs.
+    The items (name: description) that match a query, the best match first. Each word of
+    the query must match the name or the description, also with skipped letters ("shft"
+    for "shift"). An empty query matches all items.
     """
     words = query.lower().split()
     scored = []
-    for name, description in ics.items():
+    for name, description in items.items():
         scores = [_word_score(word, name.lower(), description.lower()) for word in words]
         if any(score is None for score in scores):
             continue
         scored.append((sum(score for score in scores if score is not None), name))
     return [name for _, name in sorted(scored, key=lambda item: (item[0], _sort_key(item[1])))]
+
+
+def search_ics(query: str, ics: dict[str, str]) -> list[str]:
+    """
+    The ICs (name: description) that match a query, the best match first, see
+    fuzzy_search(). A word matches the name (like "741") or the description (like
+    "counter").
+    """
+    return fuzzy_search(query, ics)
 
 
 def _sort_key(name: str) -> tuple[int, str]:

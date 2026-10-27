@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QUrl
+from PySide6.QtCore import QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import QFileDialog, QMenu, QMenuBar, QMessageBox, QWidget
 
@@ -30,6 +30,9 @@ class MenuBar(QMenuBar):
     The menu bar: File, Edit, View, Simulation and Help. The actions that change the
     circuit are off while the simulation runs.
     """
+
+    # Find Component: bring the component search to the front
+    sig_find_component = Signal()
 
     def __init__(self, app_model: AppModel, parent: QWidget, package_version: str) -> None:
         super().__init__(parent)
@@ -58,6 +61,10 @@ class MenuBar(QMenuBar):
         edit_menu.addSeparator()
         self._delete_action = self._add(
             edit_menu, "&Delete", self._app_model.objects.delete_selected, "Del"
+        )
+        edit_menu.addSeparator()
+        self._find_action = self._add(
+            edit_menu, "&Find Component...", self.sig_find_component.emit, ["Ctrl+K", "Ctrl+F"]
         )
         edit_menu.addSeparator()
         self._settings_action = self._add(edit_menu, "Se&ttings...", self._settings_dialog)
@@ -175,6 +182,7 @@ class MenuBar(QMenuBar):
             self._new_action,
             self._open_action,
             self._save_as_action,
+            self._find_action,
             self._settings_action,
         ):
             action.setEnabled(not running)

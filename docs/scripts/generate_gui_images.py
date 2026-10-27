@@ -227,9 +227,12 @@ def window_screenshots(model: AppModel, window: MainWindow) -> None:
     spin(300)
     pixmap = window.grab()
     painter = QPainter(pixmap)
+    # The component selection and the search above it
+    selection = area.parentWidget().findChild(QScrollArea)
+    assert selection is not None
     for widget, color in (
         (window.findChild(TopBar), QColor(0, 200, 0)),
-        (area.parentWidget().findChild(QScrollArea), QColor(0, 0, 255)),
+        (selection.parentWidget(), QColor(0, 0, 255)),
         (area, QColor(255, 0, 0)),
     ):
         assert widget is not None
