@@ -121,6 +121,7 @@ COMPONENT_IMAGES: list[tuple[str, str, dict[str, Any], Callable[..., None] | Non
     ("SevenSegment.png", "SevenSegment", {}, lit_ports(["A", "B", "G", "E", "D"])),
     ("components/Buzzer.png", "Buzzer", {}, driven(1)),
     ("components/Analyzer.png", "LogicAnalyzer", {}, clocked(["A", "B", "C"])),
+    ("components/Probe.png", "Probe", {"width": 8}, driven(0x2A)),
     ("components/OR.png", "OR", {}, None),
     ("components/AND.png", "AND", {}, None),
     ("components/NOT.png", "NOT", {}, None),

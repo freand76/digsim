@@ -149,6 +149,7 @@ class ComponentSelection(QWidget):
                 "LogicAnalyzer", self, circuit_area, display_name="Logic Analyzer"
             )
         )
+        layout.addWidget(SelectableComponentWidget("Probe", self, circuit_area))
         layout.addWidget(DescriptionText(self, "Gates"))
         layout.addWidget(SelectableComponentWidget("OR", self, circuit_area))
         layout.addWidget(SelectableComponentWidget("AND", self, circuit_area))

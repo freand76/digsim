@@ -265,6 +265,7 @@ presses the button or toggles the switch.
 | ![7-segment](images/SevenSegment.png) | **7-Segment Display**: like a hex digit, but each segment is controlled individually. |
 | ![Buzzer](images/components/Buzzer.png) | **Buzzer**: plays a tone, with a selectable note, when its input is high. |
 | ![Logic analyzer](images/components/Analyzer.png) | **Logic Analyzer**: plots signal levels over time, live. |
+| ![Probe](images/components/Probe.png) | **Probe**: shows the value of a wire or a bus (1–32 bits) in hexadecimal, decimal or binary, "X" in red when it is undefined and "Z" in blue when nothing drives it. Right-click a wire and choose **Add probe** to put one on it. The radix can be changed in its settings. |
 
 ### Logic gates
 

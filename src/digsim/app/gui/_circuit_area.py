@@ -688,6 +688,8 @@ class WireGraphicsItem(QGraphicsPathItem):
         split_action.triggered.connect(partial(self._split_segment, segment, scene_pos))
         start_action = menu.addAction("Start wire here")
         start_action.triggered.connect(partial(self._start_wire, segment, scene_pos))
+        probe_action = menu.addAction("Add probe")
+        probe_action.triggered.connect(partial(self._add_probe, segment, scene_pos))
         merge_action = menu.addAction("Merge segments")
         joint = self._app_model.objects.wires.unused_joint(self.wire, segment)
         merge_action.setEnabled(joint is not None or can_merge_segments(self._path, segment))
@@ -737,6 +739,20 @@ class WireGraphicsItem(QGraphicsPathItem):
             # would cover the ports where the new wire can end
             scene.clearSelection()
         self._app_model.sig_repaint.emit()
+
+    def _add_probe(self, segment: int, scene_pos: QPointF) -> None:
+        """A probe on the wire, at a corner close to a position or a point on the segment"""
+        corner = self.corner_at(scene_pos, WirePartGraphicsItem.CORNER_RADIUS)
+        # On whole pixels, as the circuit file stores them
+        at: At = (
+            corner
+            if corner is not None
+            else (segment, (round(scene_pos.x()), round(scene_pos.y())))
+        )
+        scene = self.scene()
+        if isinstance(scene, _CircuitAreaScene):
+            # Not now: the wire items are replaced, and this one is handling an event
+            QTimer.singleShot(0, partial(scene.add_probe, self.wire, at))
 
     def _merge_segments(self, segment: int) -> None:
         corner_map = partial(merge_corner, self._path, segment)
@@ -1300,6 +1316,12 @@ class _CircuitAreaScene(QGraphicsScene):
                 dots.setdefault(touching[0], []).append((point, touching))
         for part in parts:
             part.set_dots(dots.get(part, []))
+
+    def add_probe(self, wire: Wire, at: At) -> None:
+        """Add a probe on a wire, see ModelComponents.add_probe"""
+        component_object = self._app_model.objects.components.add_probe(wire, at)
+        if component_object is not None:
+            self.add_scene_component(component_object, True)
 
     def _update_wires(self) -> None:
         # The wires are created again, and stay selected (a segment can be gone)

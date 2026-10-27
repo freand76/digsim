@@ -102,6 +102,8 @@ COMPONENTS: list[tuple[str, dict[str, Any]]] = [
     ("TristateBuffer", {"width": 4}),
     ("TristateBuffer", {"width": 4}),
     ("RAM", {"address_width": 4, "data_width": 4, "mode": "async"}),
+    ("Probe", {"width": 1}),
+    ("Probe", {"width": 4, "radix": "bin"}),
 ]
 # Components are placed in the cells of a grid, so that they don't overlap
 GRID_COLUMNS, GRID_ROWS = 6, 4

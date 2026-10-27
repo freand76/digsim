@@ -20,6 +20,7 @@ from ._memory import RAM, ROM
 from ._memstdout import MemStdOut
 from ._note import Note
 from ._on_off_switch import OnOffSwitch
+from ._probe import Probe
 from ._seven_segment import SevenSegment
 from ._static_level import GND, VDD
 from ._static_value import StaticValue

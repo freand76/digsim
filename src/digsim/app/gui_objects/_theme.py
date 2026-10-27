@@ -33,8 +33,10 @@ BODY = QColor("#ffffff")
 ACCENT = QColor("#2d7ff9")
 # The window of a display, like a 7-segment digit
 DISPLAY = QColor("#ffffff")
-# The screen of the logic analyzer
+# The screen of the logic analyzer and of a probe
 SCREEN = QColor("#1f2429")
+# The digits on the screen of a probe
+READOUT = QColor("#34d058")
 BACKGROUND = QColor("#e6e9ec")
 GRID = QColor("#c8ced5")
 NOTE = QColor("#fff4b8")

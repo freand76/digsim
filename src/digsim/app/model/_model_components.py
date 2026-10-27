@@ -12,6 +12,8 @@ from PySide6.QtCore import QPointF
 import digsim.app.gui_objects
 import digsim.circuit.components
 from digsim.app._line_graph import without_ports
+from digsim.app._wire_key import Wire
+from digsim.app._wire_lines import At
 from digsim.app._yosys_interface import (
     InterfaceChanges,
     YosysUpdate,
@@ -22,7 +24,7 @@ from digsim.app._yosys_interface import (
 )
 from digsim.app.gui_objects import ComponentObject
 from digsim.circuit import Circuit
-from digsim.circuit.components import Buzzer, YosysComponent, YosysVariant
+from digsim.circuit.components import Buzzer, Probe, YosysComponent, YosysVariant
 from digsim.circuit.components.atoms import (
     CallbackComponent,
     Component,
@@ -35,6 +37,9 @@ from digsim.utils import YosysNetlist
 
 if TYPE_CHECKING:
     from ._model import AppModel
+
+# Where the input of a probe added on a wire is, from the point on the wire
+PROBE_OFFSET = (20, -20)
 
 
 class ModelComponents:
@@ -143,17 +148,54 @@ class ModelComponents:
     ) -> ComponentObject | None:
         """Add component object from class name, None if the component can't be created"""
         self._app_model.objects.push_undo_state()
-        component_class = self._get_component_class(name)
+        component_object = self.add_object(
+            self._get_component_class(name), pos.x(), pos.y(), settings
+        )
+        if component_object is None:
+            self._app_model.objects.drop_undo_state()
+            return None
+        self._app_model.model_init()
+        self._app_model.model_changed()
+        return component_object
+
+    def add_object(
+        self, component_class: type[Component], xpos: float, ypos: float, settings: dict[str, Any]
+    ) -> ComponentObject | None:
+        """
+        Add a component and its object, as part of a change (not an undo step), None if
+        the component can't be created
+        """
         try:
             with self._circuit.adding_components():
                 component = component_class(self._circuit, **settings)
         except (DigsimException, OSError) as exc:
             # For example a Verilog file with errors, or a file that can't be read
-            self._app_model.objects.drop_undo_state()
-            self._app_model.sig_error.emit(f"Could not add {name}: {exc!s}")
+            self._app_model.sig_error.emit(f"Could not add {component_class.__name__}: {exc!s}")
             return None
+        return self._add_object(component, xpos, ypos)
+
+    def add_probe(self, wire: Wire, at: At) -> ComponentObject | None:
+        """
+        Add a probe on a wire, at a corner or at a point of a segment (see At), with its
+        input up and to the right of it. An undo step. Returns the probe's object, for the
+        GUI to show, None if it can't be added.
+        """
+        wires = self._app_model.objects.wires
+        undo_state = self._app_model.circuit_to_model()
+        anchor = wires.anchor_point(wire, at)
+        component_object = self.add_object(Probe, anchor[0], anchor[1], {"width": wire[0].width})
+        if component_object is None:
+            return None
+        probe = component_object.component
+        assert isinstance(probe, Probe)
+        port = wires.port_pos(probe.I)
+        component_object.moveBy(
+            anchor[0] + PROBE_OFFSET[0] - port[0], anchor[1] + PROBE_OFFSET[1] - port[1]
+        )
+        # A new port of the wire's width, this can't fail
+        wires.connect_branch(wire, at, probe.I)
+        self._app_model.objects.add_undo_state(undo_state)
         self._app_model.model_init()
-        component_object = self._add_object(component, pos.x(), pos.y())
         self._app_model.model_changed()
         return component_object
 
