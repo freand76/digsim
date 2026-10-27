@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2024
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Module with the basic logic gates"""
@@ -326,7 +326,7 @@ class MUX(Component):
     Args:
         circuit: The circuit to add the component to.
         name: The component name, the class name if not given.
-        ports: The number of inputs, 2, 4 or 8.
+        ports: The number of inputs, 2, 4, 8 or 16.
         width: The number of bits of each input.
     """
 
@@ -334,7 +334,7 @@ class MUX(Component):
         self, circuit: Circuit, name: str | None = None, ports: int = 2, width: int = 1
     ) -> None:
         super().__init__(circuit, name)
-        if ports not in [2, 4, 8]:
+        if ports not in [2, 4, 8, 16]:
             raise ComponentException(f"Mux cannot have {ports} number of ports")
         self._inports: list[PortIn] = []
         portname = "A"
@@ -360,7 +360,7 @@ class MUX(Component):
         return {
             "ports": {
                 "type": "intrange",
-                "range": [2, 4, 8],
+                "range": [2, 4, 8, 16],
                 "default_index": 0,
                 "description": "Number of input ports",
             },

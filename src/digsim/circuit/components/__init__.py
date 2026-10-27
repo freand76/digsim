@@ -9,6 +9,7 @@ from ._button import PushButton
 from ._buzzer import Buzzer
 from ._clock import Clock
 from ._counter import Counter
+from ._decoder import Decoder, Demultiplexer
 from ._dip_switch import DipSwitch
 from ._flip_flops import SRFF, ClockedJKFF, ClockedSRFF, ClockedTFF, FlipFlop
 from ._gates import AND, DFF, MUX, NAND, NOR, NOT, OR, SR, XNOR, XOR

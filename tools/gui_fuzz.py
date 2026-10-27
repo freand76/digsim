@@ -107,6 +107,7 @@ COMPONENTS: list[tuple[str, dict[str, Any]]] = [
     ("Probe", {"width": 4, "radix": "bin"}),
     ("Adder", {"width": 4}),
     ("Counter", {"width": 4, "enable": True}),
+    ("Decoder", {"select": 2}),
 ]
 # Components are placed in the cells of a grid, so that they don't overlap
 GRID_COLUMNS, GRID_ROWS = 6, 4

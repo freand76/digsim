@@ -119,7 +119,7 @@ The available components are:
 | --- | --- |
 | Inputs | `PushButton`, `OnOffSwitch`, `DipSwitch`, `Clock`, `StaticValue`, `VDD`, `GND` |
 | Outputs | `Led`, `LedBar`, `HexDigit`, `SevenSegment`, `Buzzer`, `LogicAnalyzer` |
-| Gates | `AND`, `OR`, `NOT`, `XOR`, `XNOR`, `NAND`, `NOR`, `MUX` |
+| Gates | `AND`, `OR`, `NOT`, `XOR`, `XNOR`, `NAND`, `NOR`, `MUX`, `Decoder`, `Demultiplexer` |
 | Flip-flops | `DFF`, `SR`, `FlipFlop`, `SRFF`, `ClockedSRFF`, `ClockedJKFF`, `ClockedTFF`, `Counter` |
 | Arithmetic | `Adder`, `Subtractor`, `Multiplier`, `Comparator`, `Negator` |
 | Buses | `Bus2Wires`, `Wires2Bus`, `TristateBuffer`, `LabelWireIn`, `LabelWireOut` |

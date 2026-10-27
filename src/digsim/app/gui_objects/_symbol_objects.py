@@ -475,6 +475,176 @@ class MuxObject(SymbolObject):
         cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)
 
 
+class DemuxObject(SymbolObject):
+    """
+    A demultiplexer or a decoder: the trapezoid of a multiplexer mirrored, the outputs to
+    the right with their names inside, the data input I (or the enable EN of a decoder)
+    to the left, and S coming into it from below
+    """
+
+    WIDTH = 40
+    # The outputs are 10 pixels apart from this many, like the inputs of a multiplexer
+    DENSE_OUTPUTS = 4
+    DENSE_DISTANCE = 10
+
+    def __init__(
+        self, app_model: AppModel, component: Component, xpos: float, ypos: float
+    ) -> None:
+        super().__init__(app_model, component, xpos, ypos)
+        self.update_size()
+
+    def _left_input(self) -> Port | None:
+        """The input to the left: I of a demultiplexer, EN of a decoder (if it has it)"""
+        names = [port.name() for port in self.component.inports()]
+        for name in ("I", "EN"):
+            if name in names:
+                return self.component.port(name)
+        return None
+
+    def update_size(self) -> None:
+        outputs = len(self.component.outports())
+        self._port_distance = (
+            self.DENSE_DISTANCE
+            if outputs >= self.DENSE_OUTPUTS
+            else self.DEFAULT_PORT_TO_PORT_DISTANCE
+        )
+        left = self._left_input()
+        # Wider with the name EN inside, next to the names of the outputs
+        self.width = self.WIDTH + (16 if left is not None and left.name() == "EN" else 0)
+        # S is 20 pixels below the last output, room to come in from below
+        self.height = (
+            (outputs - 1) * self._port_distance
+            + self.DEFAULT_PORT_TO_PORT_DISTANCE
+            + 2 * self.BORDER_TO_PORT
+        )
+        self.update_ports()
+
+    def update_ports(self) -> None:
+        super().update_ports()
+        if not hasattr(self, "_component"):
+            return
+        outputs = self.component.outports()
+        top = int(self.object_pos.y() + self.BORDER_TO_PORT - self.PORT_SIDE / 2)
+        for idx, port in enumerate(outputs):
+            self._move_port(port, top + idx * self._port_distance)
+        last = top + (len(outputs) - 1) * self._port_distance
+        self._move_port(self.component.port("S"), last + self.DEFAULT_PORT_TO_PORT_DISTANCE)
+        left = self._left_input()
+        if left is not None:
+            # In the middle of the outputs
+            self._move_port(left, (top + last) // 2)
+
+    def _move_port(self, port: Port, top: int) -> None:
+        item = self.get_port_item(port)
+        rect = item.rect()
+        rect.moveTop(top)
+        item.setRect(rect)
+
+    @staticmethod
+    def paint_demux(
+        painter: QPainter,
+        rect: QRectF,
+        outputs: list[tuple[str, float, bool]],
+        left: tuple[str, float, bool] | None,
+        select: tuple[float, bool],
+        selected: bool,
+    ) -> None:
+        """
+        The trapezoid and the leads, each output (and the input to the left) is (name, y,
+        is a bus), and select is (y, is a bus)
+        """
+        ys = [y for _, y, _ in outputs]
+        body = QRectF(rect.left() + LEAD, rect.top(), rect.width() - 2 * LEAD, 0)
+        body.setBottom(ys[-1] + (ys[0] - rect.top()))
+        for _, y, bus in outputs:
+            width = 3.0 if bus else theme.LINE_WIDTH
+            theme.lead(painter, QPointF(body.right(), y), QPointF(rect.right(), y), width)
+        if left is not None:
+            _, left_y, left_bus = left
+            theme.lead(
+                painter,
+                QPointF(rect.left() - 1, left_y),
+                QPointF(body.left(), left_y),
+                3.0 if left_bus else theme.LINE_WIDTH,
+            )
+        inset = min(10.0, body.height() / 4)
+        # S from below, into the slanted lower edge
+        select_y, select_bus = select
+        select_x = body.center().x()
+        edge_y = body.bottom() - inset / 2
+        painter.setPen(theme.ink_pen(3.0 if select_bus else theme.LINE_WIDTH))
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        path = QPainterPath(QPointF(rect.left() - 1, select_y))
+        path.lineTo(select_x, select_y)
+        path.lineTo(select_x, edge_y)
+        painter.drawPath(path)
+        trapezoid = QPainterPath(QPointF(body.left(), body.top() + inset))
+        trapezoid.lineTo(body.right(), body.top())
+        trapezoid.lineTo(body.right(), body.bottom())
+        trapezoid.lineTo(body.left(), body.bottom() - inset)
+        trapezoid.closeSubpath()
+        theme.symbol_path(painter, trapezoid, selected)
+        for name, y, _ in outputs:
+            theme.paint_text(
+                painter,
+                QRectF(body.left() + 1, y - 5, body.width() - 4, 10),
+                name,
+                6,
+                align=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+            )
+        if left is not None and left[0] == "EN":
+            theme.paint_text(
+                painter,
+                QRectF(body.left() + 3, left[1] - 5, body.width() - 4, 10),
+                "EN",
+                6,
+                align=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            )
+
+    def paint_component(self, painter: QPainter) -> None:
+        select = self.component.port("S")
+        left = self._left_input()
+        self.paint_demux(
+            painter,
+            QRectF(self.rect()),
+            [
+                (port.name(), self.port_ys([port])[0], port.width > 1)
+                for port in self.component.outports()
+            ],
+            None if left is None else (left.name(), self.port_ys([left])[0], left.width > 1),
+            (self.port_ys([select])[0], select.width > 1),
+            self.selected,
+        )
+
+    # The input to the left of the icon: I of a demultiplexer, none on a decoder
+    ICON_INPUT: str | None = "I"
+
+    @classmethod
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
+        def paint(rect: QRectF) -> None:
+            ys = [rect.top() + 10, rect.top() + 30]
+            select_y = rect.top() + 50
+            left_y = rect.top() + 20
+            outputs = [(text, y, False) for text, y in zip(["Y0", "Y1"], ys, strict=True)]
+            left = None if cls.ICON_INPUT is None else (cls.ICON_INPUT, left_y, False)
+            cls.paint_demux(painter, rect, outputs, left, (select_y, False), False)
+            port_dots(
+                painter,
+                [QPointF(rect.left() - 1, select_y)]
+                + ([] if left is None else [QPointF(rect.left() - 1, left_y)])
+                + [QPointF(rect.right(), y) for y in ys],
+            )
+
+        paint_icon(painter, size, (cls.WIDTH, 60), paint, scale=1.0)
+        cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)
+
+
+class DecoderObject(DemuxObject):
+    """A decoder, drawn like a demultiplexer without a data input"""
+
+    ICON_INPUT = None
+
+
 class LedObject(SymbolObject):
     """
     An LED standing, seen from the side, in the color of the component. Its long leg

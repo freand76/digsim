@@ -137,6 +137,8 @@ COMPONENT_IMAGES: list[tuple[str, str, dict[str, Any], Callable[..., None] | Non
     ("components/MUX.png", "MUX", {}, None),
     ("components/TRISTATE.png", "TristateBuffer", {}, None),
     ("components/Counter.png", "Counter", {"enable": True, "up_down": True, "load": True}, None),
+    ("components/Decoder.png", "Decoder", {"select": 2, "enable": True}, None),
+    ("components/Demultiplexer.png", "Demultiplexer", {"select": 2, "width": 4}, None),
     ("components/Adder.png", "Adder", {"carry_in": True}, None),
     ("components/Subtractor.png", "Subtractor", {"borrow_in": True}, None),
     ("components/Multiplier.png", "Multiplier", {}, None),

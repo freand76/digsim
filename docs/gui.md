@@ -316,11 +316,16 @@ XNOR when an even number are.
 | ![Flip-flop](images/components/FlipFlop.png) | **Flip Flop**: choose an SR flip-flop, or an edge-triggered SR, JK or T flip-flop. |
 | ![Counter](images/components/Counter.png) | **Counter**: 1–32 bits, counts on the rising edge of clk and wraps around. R resets it to 0 at once. Optional: a clock enable EN, a direction input UP (1 up, 0 down), and LD to load D. CO is 1 at the last count before it wraps. |
 
-### Multiplexer
+### Multiplexer, decoder and demultiplexer
 
 ![Multiplexer](images/components/MUX.png)
 
-The multiplexer has 2, 4 or 8 inputs and a data width between 1 and 32 bits.
+The multiplexer has 2, 4, 8 or 16 inputs and a data width between 1 and 32 bits.
+
+| Component | Description |
+| --- | --- |
+| ![Decoder](images/components/Decoder.png) | **Decoder**: the output that S selects is 1, the others 0. 1–4 select bits (2–16 outputs), and an optional enable input EN. |
+| ![Demultiplexer](images/components/Demultiplexer.png) | **Demux**: the output that S selects is the input I, the others 0. 1–4 select bits, 1–32 bits wide. |
 
 ### Arithmetic components
 

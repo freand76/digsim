@@ -58,6 +58,8 @@ COMPONENT_GROUPS: list[tuple[str, list[CatalogEntry]]] = [
             CatalogEntry("FlipFlop", "FlipFlop", "flip-flop JK SR T latch"),
             CatalogEntry("Counter", "Counter", "counter count up down register"),
             CatalogEntry("MUX", "MUX", "multiplexer mux select"),
+            CatalogEntry("Decoder", "Decoder", "decoder select one hot address"),
+            CatalogEntry("Demultiplexer", "Demux", "demultiplexer demux select"),
         ],
     ),
     (
