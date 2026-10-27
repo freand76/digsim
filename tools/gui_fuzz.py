@@ -997,14 +997,18 @@ class GuiFuzzer:
         after = self.routes()
         changed = [drawn_key(key) for key in before if before[key] != after.get(key)]
         check(not changed, f"other wires changed: {changed}")
+        check(connections <= self.connections(), "a connection is gone")
+        _, number, point = targets[0]
+        if src_port.is_input():
+            # An inout port is an input too: like from an input, the wire is a branch of
+            # the line, from its output port. The inout port drives the line all the same.
+            return self._check_inout_branch(src_port, line, number, point, pos)
         wire = (src_port, line[1])
         check(wire in self.wire_items(), f"no wire {drawn_key(wire)}")
-        check(connections <= self.connections(), "a connection is gone")
         joint = wires.join(wire)
         check(joint is not None and joint[0] == line, f"joins {joint}, not {drawn_key(line)}")
         assert joint is not None
         end = wires.corner_points(wire)[-1]
-        _, number, point = targets[0]
         if point is None:
             check(joint[1] == number, f"ends at corner {joint[1]}, not {number}")
         else:
@@ -1013,6 +1017,36 @@ class GuiFuzzer:
                 f"ends at {end}, not {pos}",
             )
         return f"join {port_key(src_port)} -> {drawn_key(line)} at {end}"
+
+    def _check_inout_branch(
+        self,
+        port: Port,
+        line: Wire,
+        number: int,
+        point: tuple[float, float] | None,
+        pos: tuple[float, float],
+    ) -> str:
+        """A wire drawn from an inout port to a line: a branch of it, to the port"""
+        wires = self.model.objects.wires
+        wire = (line[0], port)
+        check(wire in self.wire_items(), f"no wire {drawn_key(wire)}")
+        branch = wires.branch(wire)
+        check(branch is not None and branch[0] == line, f"starts on {branch}, not the line")
+        assert branch is not None
+        start = wires.corner_points(wire)[0]
+        if point is None:
+            check(branch[1] == number, f"starts at corner {branch[1]}, not {number}")
+        else:
+            check(
+                abs(start[0] - pos[0]) <= 1 and abs(start[1] - pos[1]) <= 1,
+                f"starts at {start}, not {pos}",
+            )
+        inputs = [dst for dst in wires.line(("port", port)).inputs if dst is not port]
+        check(
+            all(dst in port.wired_ports for dst in inputs),
+            "the inout port doesn't drive the line",
+        )
+        return f"join inout {port_key(port)} -> {drawn_key(line)} at {start}"
 
     def _corner_on_line(
         self,
