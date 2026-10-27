@@ -20,7 +20,16 @@ from ._hexdigit_object import HexDigitObject
 from ._label_object import LabelWireInObject, LabelWireOutObject
 from ._led_bar_object import LedBarObject
 from ._logic_analyzer_object import LogicAnalyzerObject
-from ._named_box_object import ICObject, RAMObject, ROMObject
+from ._named_box_object import (
+    AdderObject,
+    ComparatorObject,
+    ICObject,
+    MultiplierObject,
+    NegatorObject,
+    RAMObject,
+    ROMObject,
+    SubtractorObject,
+)
 from ._probe_object import ProbeObject
 from ._seven_segment_object import SevenSegmentObject
 from ._symbol_objects import (
@@ -46,6 +55,11 @@ class ComponentObjectFactoryError(DigsimException):
 
 CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "AND": AndObject,
+    "Adder": AdderObject,
+    "Comparator": ComparatorObject,
+    "Multiplier": MultiplierObject,
+    "Negator": NegatorObject,
+    "Subtractor": SubtractorObject,
     "Bus2Wires": BusBitsObject,
     "Wires2Bus": BitsBusObject,
     "Clock": ClockObject,

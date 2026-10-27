@@ -321,6 +321,19 @@ XNOR when an even number are.
 
 The multiplexer has 2, 4 or 8 inputs and a data width between 1 and 32 bits.
 
+### Arithmetic components
+
+They work on unsigned numbers of 1–32 bits. An input that is undefined makes the outputs
+undefined.
+
+| Component | Description |
+| --- | --- |
+| ![Adder](images/components/Adder.png) | **Adder**: S = A + B, with the carry out Cout. An optional carry input Cin chains adders. |
+| ![Subtractor](images/components/Subtractor.png) | **Subtractor**: D = A − B, Bout is 1 when it borrows. An optional borrow input Bin chains subtractors. |
+| ![Multiplier](images/components/Multiplier.png) | **Multiplier**: P = A × B, twice as wide as A and B (up to 16 bits). |
+| ![Comparator](images/components/Comparator.png) | **Comparator**: LT, EQ or GT is 1 for A < B, A = B or A > B, unsigned or signed (two's complement). |
+| ![Negator](images/components/Negator.png) | **Negator**: Y = −A, in two's complement. |
+
 ### Bus and wire components
 
 - **Bus2Wires** splits a bus into individual bits.

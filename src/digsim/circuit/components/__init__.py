@@ -3,6 +3,7 @@
 
 """All classes within digsim.circuit.components namespace"""
 
+from ._arithmetic import Adder, Comparator, Multiplier, Negator, Subtractor
 from ._bus_bits import Bus2Wires, Wires2Bus
 from ._button import PushButton
 from ._buzzer import Buzzer

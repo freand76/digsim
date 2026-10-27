@@ -60,6 +60,16 @@ COMPONENT_GROUPS: list[tuple[str, list[CatalogEntry]]] = [
         ],
     ),
     (
+        "Arithmetic",
+        [
+            CatalogEntry("Adder", "Adder", "adder add sum plus carry"),
+            CatalogEntry("Subtractor", "Subtractor", "subtractor subtract minus borrow"),
+            CatalogEntry("Multiplier", "Multiplier", "multiplier multiply product times"),
+            CatalogEntry("Comparator", "Comparator", "comparator compare less equal greater"),
+            CatalogEntry("Negator", "Negator", "negator negate minus two's complement"),
+        ],
+    ),
+    (
         "Bus / Wires",
         [
             CatalogEntry("LabelWireIn", "Wire Sink", "wire sink label tunnel"),

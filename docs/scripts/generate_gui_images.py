@@ -136,6 +136,11 @@ COMPONENT_IMAGES: list[tuple[str, str, dict[str, Any], Callable[..., None] | Non
     ("components/FlipFlop.png", "ClockedJKFF", {}, None),
     ("components/MUX.png", "MUX", {}, None),
     ("components/TRISTATE.png", "TristateBuffer", {}, None),
+    ("components/Adder.png", "Adder", {"carry_in": True}, None),
+    ("components/Subtractor.png", "Subtractor", {"borrow_in": True}, None),
+    ("components/Multiplier.png", "Multiplier", {}, None),
+    ("components/Comparator.png", "Comparator", {}, None),
+    ("components/Negator.png", "Negator", {}, None),
     ("components/RAM.png", "RAM", {}, None),
     (
         "components/ROM.png",

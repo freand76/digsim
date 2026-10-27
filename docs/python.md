@@ -121,6 +121,7 @@ The available components are:
 | Outputs | `Led`, `LedBar`, `HexDigit`, `SevenSegment`, `Buzzer`, `LogicAnalyzer` |
 | Gates | `AND`, `OR`, `NOT`, `XOR`, `XNOR`, `NAND`, `NOR`, `MUX` |
 | Flip-flops | `DFF`, `SR`, `FlipFlop`, `SRFF`, `ClockedSRFF`, `ClockedJKFF`, `ClockedTFF` |
+| Arithmetic | `Adder`, `Subtractor`, `Multiplier`, `Comparator`, `Negator` |
 | Buses | `Bus2Wires`, `Wires2Bus`, `TristateBuffer`, `LabelWireIn`, `LabelWireOut` |
 | Memory | `RAM`, `ROM`, `MemStdOut` |
 | Complex | `IntegratedCircuit`, `YosysComponent` |

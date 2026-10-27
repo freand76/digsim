@@ -106,3 +106,80 @@ class ROMObject(NamedBoxObject):
     """A ROM placed in the GUI"""
 
     ICON_TEXT = "ROM"
+
+
+class ArithmeticObject(ComponentObject):
+    """
+    An arithmetic component: a body with its operator in the middle, like + for an
+    adder, and the names of its ports
+    """
+
+    PORT_ARROWS = True
+    BORDER_TO_PORT = 15
+    # The operator, and its font size
+    SYMBOL = ""
+    _SYMBOL_SIZE = 16
+
+    def update_ports(self) -> None:
+        super().update_ports()
+        # Room for the operator between the names of the inputs and the outputs
+        inputs = [self._port_names[port] for port in self.component.inports()]
+        outputs = [self._port_names[port] for port in self.component.outports()]
+        names = [
+            max((self.get_string_metrics(name)[0] for name in group), default=0)
+            for group in (inputs, outputs)
+        ]
+        symbol, _ = self.get_string_metrics(self.SYMBOL, theme.font(self._SYMBOL_SIZE, bold=True))
+        width = math.ceil((2 * self.inport_x_pos() + sum(names) + symbol + 12) / 10) * 10
+        if self.width < width:
+            self.width = width
+            super().update_ports()
+
+    def paint_component(self, painter: QPainter) -> None:
+        self.paint_component_base(painter)
+        theme.paint_text(painter, QRectF(self.rect()), self.SYMBOL, self._SYMBOL_SIZE, bold=True)
+
+    @classmethod
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
+        painter.save()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        rect = QRectF(size.width() / 2 - 20, 14, 40, 50)
+        theme.paint_body(painter, rect)
+        # A longer operator, like <=>, smaller
+        theme.paint_text(painter, rect, cls.SYMBOL, 14 if len(cls.SYMBOL) <= 2 else 10, bold=True)
+        port_arrows(
+            painter, [QPointF(rect.left() - 1, rect.top() + y) for y in (14, 36)], inputs=True
+        )
+        port_arrows(painter, [QPointF(rect.right(), rect.center().y())], inputs=False)
+        painter.restore()
+        cls.paint_selectable_component_name(painter, QPoint(0, 0), size, name)
+
+
+class AdderObject(ArithmeticObject):
+    """An adder placed in the GUI"""
+
+    SYMBOL = "+"
+
+
+class SubtractorObject(ArithmeticObject):
+    """A subtractor placed in the GUI"""
+
+    SYMBOL = "\u2212"
+
+
+class MultiplierObject(ArithmeticObject):
+    """A multiplier placed in the GUI"""
+
+    SYMBOL = "\u00d7"
+
+
+class ComparatorObject(ArithmeticObject):
+    """A comparator placed in the GUI"""
+
+    SYMBOL = "<=>"
+
+
+class NegatorObject(ArithmeticObject):
+    """A negator placed in the GUI"""
+
+    SYMBOL = "\u2212x"
