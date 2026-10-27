@@ -33,24 +33,16 @@ dependencies = [
   # Runs Yosys in-process: yowasp-yosys accepts any 1.x, and it decides the wasmtime versions
   "yowasp-runtime==1.96",
   "wasmtime==47.0.1",
+  # The native engine (https://github.com/freand76/digsim-native), on the platforms it has
+  # wheels for. Without it DigSim simulates in Python
+  "digsim-native==0.1.0; (sys_platform == 'linux' and platform_machine in 'x86_64 aarch64') or (sys_platform == 'win32' and platform_machine in 'AMD64 ARM64') or sys_platform == 'darwin'",
 ]
 
 scripts = { digsim-logic-simulator = "digsim.app.cli:main" }
 
 keywords = ["educational", "simulation", "digital"]
 
-[dependency-groups]
-# The native engine, from the release wheels of https://github.com/freand76/digsim-native
-# (find-links below), for the platforms with wheels. Not in the published package, without
-# it DigSim simulates in Python. Pip installs it with requirements-native.txt, keep the
-# versions the same.
-native = [
-  "digsim-native==0.1.0; (sys_platform == 'linux' and platform_machine in 'x86_64 aarch64') or (sys_platform == 'win32' and platform_machine in 'AMD64 ARM64') or sys_platform == 'darwin'",
-]
-
 [tool.uv]
-default-groups = ["native"]
-find-links = ["https://github.com/freand76/digsim-native/releases/expanded_assets/v0.1.0"]
 # Rebuild the cached package when the sources change, not only pyproject.toml,
 # so that "uvx ." and "uv tool run ." run the current code
 cache-keys = [

@@ -27,9 +27,6 @@ jobs:
     - name: Install digsim
       run: pip install .
 
-    - name: Install the native engine
-      run: pip install -r requirements-native.txt
-
     - name: Run netlist example
       run: python examples/yosys_counter/example_yosys_counter_netlist.py
 
