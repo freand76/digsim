@@ -15,6 +15,7 @@ from PySide6.QtCore import QSettings, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QFileDialog, QMenu, QMenuBar, QMessageBox, QWidget
 
+from digsim.app._clock_step import circuit_clocks
 from digsim.app._recent_files import with_recent, without_file
 from digsim.app.settings import GuiSettingsDialog
 
@@ -104,6 +105,9 @@ class MenuBar(QMenuBar):
         self._start_action = self._add(simulation_menu, "&Start\tSpace", self._start_stop)
         self._single_step_action = self._add(
             simulation_menu, "Single S&tep", self._app_model.model_single_step
+        )
+        self._clock_step_action = self._add(
+            simulation_menu, "Step &Clock", self._app_model.model_clock_step, "F10"
         )
         self._reset_action = self._add(simulation_menu, "&Reset", self._app_model.model_reset)
 
@@ -323,4 +327,7 @@ class MenuBar(QMenuBar):
         self._paste_action.setEnabled(not running and self._can_paste)
         self._start_action.setText("&Stop\tSpace" if running else "&Start\tSpace")
         self._single_step_action.setEnabled(not running)
+        self._clock_step_action.setEnabled(
+            not running and bool(circuit_clocks(self._app_model.objects.circuit))
+        )
         self._reset_action.setEnabled(not running and self._time_s > 0)

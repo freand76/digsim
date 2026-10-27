@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Clock component module"""
@@ -49,10 +49,13 @@ class Clock(CallbackComponent):
             self._feedback.value = 1
         super().update()
 
+    @property
+    def half_period_ns(self) -> int:
+        """The time between two edges of the output, in nanoseconds"""
+        return int(1000000000 / (self.parameter_get("frequency") * 2))
+
     def reconfigure(self) -> None:
-        frequency = self.parameter_get("frequency")
-        half_period_ns = int(1000000000 / (frequency * 2))
-        self._feedback.set_delay_ns(half_period_ns)
+        self._feedback.set_delay_ns(self.half_period_ns)
 
     @property
     def active(self) -> bool:

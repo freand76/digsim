@@ -253,3 +253,21 @@ def test_recent_files(gui, tmp_path):
     spin()
     assert gui.errors and "gone" in gui.errors[0]
     assert str(second) not in gui.menu_bar.recent_files()
+
+
+def test_step_clock(gui):
+    """Each Step Clock is one rising edge of the clock: the counter counts one"""
+    assert not gui.action("Simulation", "Step Clock").isEnabled()
+    clock = gui.add("Clock").component
+    counter = gui.add("Counter", width=4).component
+    gui.model.objects.wires.connect_ports(clock.O, counter.clk)
+    gui.model.model_init()
+    spin()
+    assert gui.action("Simulation", "Step Clock").isEnabled()
+    for count in (1, 2, 3):
+        gui.trigger("Simulation", "Step Clock")
+        while gui.model.is_running:
+            spin()
+        spin()
+        assert counter.Q.value == count
+        assert clock.O.value == 1

@@ -12,6 +12,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal
 
+from digsim.app._clock_step import step_clock
 from digsim.app._wire_key import port_key
 from digsim.app.gui_objects import ComponentObject
 from digsim.circuit.components.atoms import Component, DigsimException
@@ -50,6 +51,8 @@ class AppModel(QThread):
         # Set to keep the simulation loop in run() going, cleared to stop it
         self._keep_running = False
         self._single_step = False
+        # Run to the next rising edge of a clock, see model_clock_step()
+        self._clock_step = False
         self._changed = False
         self._gui_event_queue: queue.Queue[Callable[[], None]] = queue.Queue()
         self._circuit_folder = ""
@@ -140,6 +143,14 @@ class AppModel(QThread):
         self.start()
         self.sig_control_notify.emit()
 
+    def model_clock_step(self) -> None:
+        """Start the simulation thread, to run to the next rising edge of a clock"""
+        self._wait_finished()
+        self._keep_running = True
+        self._clock_step = True
+        self.start()
+        self.sig_control_notify.emit()
+
     def model_stop(self) -> None:
         """Stop model simulation thread"""
         self._keep_running = False
@@ -186,10 +197,11 @@ class AppModel(QThread):
                 gui_event_func = self._gui_event_queue.get()
                 gui_event_func()
 
-            single_step_stop = self.objects.circuit.run(
-                ms=sim_tick_ms, single_step=self._single_step
-            )
-            if single_step_stop:
+            if self._clock_step:
+                step_clock(self.objects.circuit)
+                self._keep_running = False
+            elif self.objects.circuit.run(ms=sim_tick_ms, single_step=self._single_step):
+                # Stopped for a single step
                 self._keep_running = False
 
             self.objects.components.update_callback_objects()
@@ -210,6 +222,7 @@ class AppModel(QThread):
         self.objects.components.update_callback_objects()
 
         self._single_step = False
+        self._clock_step = False
         self.sig_audio_start.emit(False)
         # sig_control_notify is sent by _thread_finished(), when the thread has stopped
 
