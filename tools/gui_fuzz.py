@@ -2359,6 +2359,8 @@ def main() -> int:
     set_max_components(args.max_components)
     # Without a window on the screen (set before the QApplication is created)
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    # Settings of their own, not the recent files of the user
+    os.environ.setdefault("DIGSIM_SETTINGS_DIR", tempfile.mkdtemp(prefix="digsim_settings_"))
     quiet_qt()
     seed = args.seed if args.seed is not None else random.randrange(1_000_000)
     out_dir = args.out or Path(tempfile.mkdtemp(prefix="gui_fuzz_"))

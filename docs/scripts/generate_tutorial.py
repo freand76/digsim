@@ -15,10 +15,13 @@ Run from the repository root:
 from __future__ import annotations
 
 import os
+import tempfile
 from pathlib import Path
 
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
+# Settings of their own, not the recent files of the user
+os.environ.setdefault("DIGSIM_SETTINGS_DIR", tempfile.mkdtemp(prefix="digsim_settings_"))
 
 from PySide6.QtCore import QEventLoop, QPoint, QRect, Qt, QTimer
 from PySide6.QtGui import QColor, QPainter, QPen, QPixmap, QPolygon

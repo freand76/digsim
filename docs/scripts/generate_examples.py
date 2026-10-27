@@ -799,6 +799,8 @@ def waves(vcd_dir: Path) -> None:
 
 def screenshots() -> None:
     os.environ["QT_QPA_PLATFORM"] = "offscreen"
+    # Settings of their own, not the recent files of the user
+    os.environ.setdefault("DIGSIM_SETTINGS_DIR", tempfile.mkdtemp(prefix="digsim_settings_"))
     from PySide6.QtCore import QEventLoop, QRectF, Qt, QTimer
     from PySide6.QtWidgets import QApplication
 

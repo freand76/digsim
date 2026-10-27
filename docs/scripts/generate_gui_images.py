@@ -19,6 +19,7 @@ Run from the repository root:
 from __future__ import annotations
 
 import os
+import tempfile
 from collections.abc import Callable
 from contextlib import chdir
 from pathlib import Path
@@ -26,6 +27,8 @@ from typing import Any
 
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
+# Settings of their own, not the recent files of the user
+os.environ.setdefault("DIGSIM_SETTINGS_DIR", tempfile.mkdtemp(prefix="digsim_settings_"))
 
 from PySide6.QtCore import QEventLoop, QPoint, QPointF, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import QColor, QImage, QPainter, QPainterPath, QPen

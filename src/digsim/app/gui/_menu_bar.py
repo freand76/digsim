@@ -5,14 +5,17 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable
+from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QUrl, Signal
+from PySide6.QtCore import QSettings, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QFileDialog, QMenu, QMenuBar, QMessageBox, QWidget
 
+from digsim.app._recent_files import with_recent, without_file
 from digsim.app.settings import GuiSettingsDialog
 
 from ._circuit_area import CircuitArea
@@ -48,6 +51,10 @@ class MenuBar(QMenuBar):
         file_menu = self.addMenu("&File")
         self._new_action = self._add(file_menu, "&New", self.new_circuit, "Ctrl+N")
         self._open_action = self._add(file_menu, "&Open...", self.open_circuit, "Ctrl+O")
+        self._recent_menu = file_menu.addMenu("Open &Recent")
+        self._recent_menu.aboutToShow.connect(self._fill_recent_menu)
+        # The circuit file when the recent files were last updated, see update_actions()
+        self._recent_path: str | None = None
         self._save_action = self._add(file_menu, "&Save", self.save_circuit, "Ctrl+S")
         self._save_as_action = self._add(
             file_menu, "Save &As...", self.save_circuit_as, "Ctrl+Shift+S"
@@ -157,6 +164,51 @@ class MenuBar(QMenuBar):
         if path:
             self._app_model.save_circuit(path)
 
+    @staticmethod
+    def settings() -> QSettings:
+        """
+        The settings of the application, like the recent files. DIGSIM_SETTINGS_DIR sets
+        another folder for them, like scripts and tests do.
+        """
+        folder = os.environ.get("DIGSIM_SETTINGS_DIR")
+        if folder:
+            return QSettings(str(Path(folder) / "digsim.ini"), QSettings.Format.IniFormat)
+        return QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "digsim", "digsim")
+
+    def recent_files(self) -> list[str]:
+        """The circuit files opened or saved last, the last one first"""
+        value = self.settings().value("recent_files", [])
+        # A list of one is read back as a string
+        if isinstance(value, str):
+            return [value]
+        return [str(path) for path in value] if isinstance(value, list) else []
+
+    def _set_recent_files(self, paths: list[str]) -> None:
+        self.settings().setValue("recent_files", paths)
+        self._recent_menu.setEnabled(bool(paths) and not self._app_model.is_running)
+
+    def _fill_recent_menu(self) -> None:
+        self._recent_menu.clear()
+        for number, path in enumerate(self.recent_files(), start=1):
+            action = self._recent_menu.addAction(f"&{number} {path}")
+            action.triggered.connect(partial(self.open_recent, path))
+        self._recent_menu.addSeparator()
+        self._recent_menu.addAction("&Clear Recent Files").triggered.connect(
+            lambda: self._set_recent_files([])
+        )
+
+    def open_recent(self, path: str) -> None:
+        """Open a recent circuit file, it leaves the list if it is gone"""
+        if self._app_model.is_changed and not are_you_sure_destroy_circuit(
+            self._window, "Open circuit"
+        ):
+            return
+        if not Path(path).is_file():
+            self._set_recent_files(without_file(self.recent_files(), path))
+            self._app_model.sig_error.emit(f"Could not open {path}: the file is gone")
+            return
+        self._app_model.load_circuit(path)
+
     def export_image(self) -> None:
         """Ask for a file and save the circuit as an image in it, PNG or SVG"""
         if self._circuit_area is None:
@@ -239,6 +291,12 @@ class MenuBar(QMenuBar):
     def update_actions(self) -> None:
         """Turn the actions on and off for the state of the model"""
         running = self._app_model.is_running
+        # A circuit that was opened or saved is a recent file
+        path = self._app_model.circuit_path
+        if path is not None and path != self._recent_path:
+            self._set_recent_files(with_recent(self.recent_files(), path))
+        self._recent_path = path
+        self._recent_menu.setEnabled(not running and bool(self.recent_files()))
         self._export_action.setEnabled(
             not running and not self._app_model.objects.components.is_empty()
         )

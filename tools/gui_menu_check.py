@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import os
+import tempfile
 from typing import Any
 
 import pytest
@@ -19,6 +20,8 @@ import pytest
 
 # Without a window on the screen (set before the QApplication is created)
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+# Settings of their own, not the recent files of the user
+os.environ.setdefault("DIGSIM_SETTINGS_DIR", tempfile.mkdtemp(prefix="digsim_settings_"))
 
 from PySide6.QtCore import QEventLoop, QPointF, QTimer
 from PySide6.QtGui import QAction, QImage, QKeySequence
@@ -49,6 +52,8 @@ class Gui:
         monkeypatch.setattr(QFileDialog, "getSaveFileName", self._file)
         monkeypatch.setattr(QFileDialog, "getOpenFileName", self._file)
         monkeypatch.setattr(QMessageBox, "question", self._yes)
+        self.errors: list[str] = []
+        monkeypatch.setattr(MainWindow, "error_dialog", lambda _, text: self.errors.append(text))
         self.model = AppModel()
         self.window = MainWindow(self.model, "1.2.3")
         self.window.show()
@@ -228,3 +233,23 @@ def test_export_image(gui, tmp_path):
 
 def test_export_needs_a_circuit(gui):
     assert not gui.action("File", "Export Image...").isEnabled()
+
+
+def test_recent_files(gui, tmp_path):
+    """A saved or opened circuit is a recent file, a gone one leaves the list"""
+    gui.add("Led")
+    first, second = tmp_path / "first.circuit", tmp_path / "second.circuit"
+    gui.path = str(first)
+    gui.trigger("File", "Save")
+    gui.path = str(second)
+    gui.trigger("File", "Save As...")
+    assert gui.menu_bar.recent_files()[:2] == [str(second), str(first)]
+    gui.menu_bar.open_recent(str(first))
+    spin()
+    assert gui.model.circuit_path == str(first)
+    assert gui.menu_bar.recent_files()[0] == str(first)
+    second.unlink()
+    gui.menu_bar.open_recent(str(second))
+    spin()
+    assert gui.errors and "gone" in gui.errors[0]
+    assert str(second) not in gui.menu_bar.recent_files()
