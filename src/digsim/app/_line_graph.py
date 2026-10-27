@@ -388,25 +388,56 @@ def without_ports(lines: list[LineDataClass], gone: set[str]) -> list[LineDataCl
             result.append(line)
             continue
         ports = {port for port in line.ports if port not in gone}
-        edges: dict[str, set[str]] = {}
-        for first, second in line.segments:
-            if first in gone or second in gone:
-                continue
-            edges.setdefault(first, set()).add(second)
-            edges.setdefault(second, set()).add(first)
-        _prune(edges, ports)
-        segments = [
-            [first, second] for first, second in line.segments if second in edges.get(first, ())
-        ]
-        parts = split_line(line, segments)
-        # A port that no segment reaches is drawn to another port of its line
-        loose = [
-            port for port in line.ports if port in ports and not any(port in s for s in segments)
-        ]
-        if loose and len(parts) == 1:
-            parts[0].ports.extend(loose)
-            parts[0].ports.sort(key=line.ports.index)
-        elif loose and not parts and len(loose) >= 2:
-            parts = [LineDataClass(ports=loose)]
-        result.extend(parts)
+        segments = [segment for segment in line.segments if gone.isdisjoint(segment)]
+        result.extend(_line_parts(line, ports, segments))
     return result
+
+
+def through_ports(
+    line: LineDataClass, ports: set[str], places: dict[str, list[int]]
+) -> list[LineDataClass]:
+    """
+    The parts of a line between some of its ports, like the ports of copied components.
+    The other ports are points where they are ('places'), so that the line still goes
+    through them, and the segments that only lead to them go.
+    """
+    names = {
+        port: f"through{number}"
+        for number, port in enumerate(line.ports)
+        if port not in ports and port in places
+    }
+    # Not the name of a point of the line
+    while set(names.values()) & set(line.points):
+        names = {port: f"{name}_" for port, name in names.items()}
+    points = {**line.points, **{names[port]: list(places[port]) for port in names}}
+    segments = [[names.get(node, node) for node in segment] for segment in line.segments]
+    through = LineDataClass(
+        ports=[port for port in line.ports if port not in names], points=points, segments=segments
+    )
+    # Ports without a place are gone, like in without_ports()
+    kept = [segment for segment in segments if set(segment) <= ports | set(points)]
+    return _line_parts(through, ports & set(line.ports), kept)
+
+
+def _line_parts(
+    line: LineDataClass, ports: set[str], segments: list[list[str]]
+) -> list[LineDataClass]:
+    """
+    The parts of a line with only some of its ports and segments: the loose ends go, and
+    a line that falls apart is split (see split_line())
+    """
+    edges: dict[str, set[str]] = {}
+    for first, second in segments:
+        edges.setdefault(first, set()).add(second)
+        edges.setdefault(second, set()).add(first)
+    _prune(edges, ports)
+    kept = [[first, second] for first, second in segments if second in edges.get(first, ())]
+    parts = split_line(line, kept)
+    # A port that no segment reaches is drawn to another port of its line
+    loose = [port for port in line.ports if port in ports and not any(port in s for s in kept)]
+    if loose and len(parts) == 1:
+        parts[0].ports.extend(loose)
+        parts[0].ports.sort(key=line.ports.index)
+    elif loose and not parts and len(loose) >= 2:
+        parts = [LineDataClass(ports=loose)]
+    return parts

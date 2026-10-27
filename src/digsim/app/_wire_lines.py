@@ -1229,6 +1229,13 @@ class WireDrawing:
         placed and the lines connected (LineDataClass.connect)
         """
         self.clear()
+        self.add_lines(lines)
+
+    def add_lines(self, lines: list[LineDataClass]) -> None:
+        """
+        Add the drawn wires of lines between new components, like pasted ones, after they
+        are placed and the lines connected. The other wires stay as they are.
+        """
         ports = {port_key(port): port for port in self.ports()}
         for line in lines:
             self._add_line(line, ports)

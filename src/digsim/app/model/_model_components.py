@@ -331,6 +331,14 @@ class ModelComponents:
         self._circuit.delete_component(component_object.component)
         self._app_model.sig_delete_component.emit(component_object)
 
+    def add_placed_object(
+        self, component: Component, xpos: float, ypos: float, zlevel: float
+    ) -> ComponentObject:
+        """Add the object of a component that was added to the circuit, at a position"""
+        component_object = self._add_object(component, xpos, ypos)
+        component_object.zlevel = zlevel
+        return component_object
+
     def add_gui_positions(self, gui_dc_dict: dict[str, GuiPositionDataClass]) -> None:
         """Create model components from circuit_dict"""
         for comp in self._circuit.get_toplevel_components():

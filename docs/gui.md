@@ -24,10 +24,10 @@ folder in the repository has ready-made circuits to explore.
 The window has a menu bar and three areas:
 
 - **Menu bar** (top): **File** (New, Open, Save, Save As, Quit), **Edit** (Undo, Redo,
-  Delete, Find Component, Settings), **View** (zoom in and out), **Simulation** (Start,
-  Single Step, Reset) and **Help** (the documentation, and the version of DigSim). Save
-  saves the circuit in the file it was opened from or saved to, the window title shows
-  that file, with a `*` when the circuit has changed since.
+  Cut, Copy, Paste, Duplicate, Delete, Find Component, Settings), **View** (zoom in and
+  out), **Simulation** (Start, Single Step, Reset) and **Help** (the documentation, and
+  the version of DigSim). Save saves the circuit in the file it was opened from or saved
+  to, the window title shows that file, with a `*` when the circuit has changed since.
 - **Component selection** (blue, left): all available components, grouped by type, with
   a search field above them. Press **Ctrl + K** (or **Ctrl + F**, **Edit > Find
   Component**) and type a few letters of a component, like `led`, `flp` or `mem`: the
@@ -234,6 +234,18 @@ keep the waves recorded so far.
 
 ![GTKWave](images/screenshot_gtkwave.png){ width="85%" }
 
+## Copy and paste
+
+**Ctrl + C** copies the selected components, with the wires between them. A wire is only
+copied with the components at both its ends: with nothing but wires selected, nothing is
+copied, the clipboard keeps what it has, and a message says so. **Ctrl + V** pastes the
+copied components at the mouse pointer, or a step down and to the right of the copied
+ones when the pointer is outside the circuit area. The pasted components get new names
+where theirs are taken, and are selected, so they can be moved at once. **Ctrl + X** cuts
+the selected components, and **Ctrl + D** duplicates them without the clipboard. The
+clipboard is shared, so components can be copied from one DigSim window to another. A
+paste is one step to undo.
+
 ## Navigation and keyboard
 
 | Key / mouse | Action |
@@ -247,6 +259,8 @@ keep the waves recorded so far.
 | **Ctrl + Q** | Quit |
 | **Ctrl + K** / **Ctrl + F** | Find a component to add |
 | **Ctrl + Z** / **Ctrl + Y** | Undo / redo (also **Ctrl + Shift + Z**) |
+| **Ctrl + C** / **Ctrl + X** / **Ctrl + V** | Copy / cut / paste the selected components |
+| **Ctrl + D** | Duplicate the selected components |
 | **Del** | Delete the selected components and wires |
 | **Space** | Start / stop the simulation |
 | **Esc** | Cancel the wire being drawn |

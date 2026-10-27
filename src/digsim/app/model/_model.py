@@ -85,6 +85,11 @@ class AppModel(QThread):
         return self._keep_running or self.isRunning()
 
     @property
+    def circuit_folder(self) -> str:
+        """The folder that file paths in the circuit, like a Verilog file, are relative to"""
+        return self._circuit_folder
+
+    @property
     def circuit_path(self) -> str | None:
         """The file the circuit was loaded from or saved to last, None for a new circuit"""
         return self._circuit_path

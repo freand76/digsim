@@ -10,10 +10,11 @@ from functools import partial
 from itertools import pairwise
 from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import QEvent, QPoint, QPointF, QRect, QRectF, Qt, QTimer
+from PySide6.QtCore import QEvent, QMimeData, QPoint, QPointF, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import (
     QBrush,
     QColor,
+    QCursor,
     QDragEnterEvent,
     QDragLeaveEvent,
     QDragMoveEvent,
@@ -26,6 +27,7 @@ from PySide6.QtGui import (
     QWheelEvent,
 )
 from PySide6.QtWidgets import (
+    QApplication,
     QGraphicsEllipseItem,
     QGraphicsItem,
     QGraphicsPathItem,
@@ -36,6 +38,7 @@ from PySide6.QtWidgets import (
     QGraphicsSceneHoverEvent,
     QGraphicsSceneMouseEvent,
     QGraphicsView,
+    QLabel,
     QMenu,
     QStyleOptionGraphicsItem,
     QWidget,
@@ -70,12 +73,21 @@ from digsim.app.gui_objects._buzzer_object import BuzzerObject
 from digsim.app.gui_objects._component_port_item import PortGraphicsItem
 from digsim.app.settings import ComponentSettingsDialog
 from digsim.circuit.components.atoms import VALUE_TYPE, Component, Port, PortConnectionError
+from digsim.storage_model import ClipboardDataClass
 
 from ._drag_preview import drag_preview
 
 
 if TYPE_CHECKING:
     from digsim.app.model import AppModel
+
+# Copied components on the clipboard, as the JSON of a ClipboardDataClass
+CLIPBOARD_MIME_TYPE = "application/x-digsim-components"
+# How far a paste is from the copied components, and the grid it is placed on
+PASTE_STEP = 20
+# A message over the circuit area: how long it is shown, and its distance to the bottom
+MESSAGE_MS = 2500
+MESSAGE_MARGIN = 16
 
 
 def _point(pos: QPointF) -> Point:
@@ -1441,6 +1453,17 @@ class CircuitArea(QGraphicsView):
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
         self._mouse_pos = QPoint(0, 0)
         self._drag_preview: QGraphicsPixmapItem | None = None
+        # The pastes since the last copy, each one a step further from the copied ones
+        self._paste_count = 0
+        # A short message over the circuit area, see show_message()
+        self._message = QLabel(self.viewport())
+        self._message.setStyleSheet(
+            f"background: {theme.INK.name()}; color: white; border-radius: 6px; padding: 6px 12px;"
+        )
+        self._message.hide()
+        self._message_timer = QTimer(self)
+        self._message_timer.setSingleShot(True)
+        self._message_timer.timeout.connect(self._message.hide)
 
     def drawBackground(self, painter: QPainter, rect: QRectF | QRect) -> None:
         """QT function: the background, with a dot every GRID_STEP pixels"""
@@ -1468,6 +1491,98 @@ class CircuitArea(QGraphicsView):
     def has_selection(self) -> bool:
         """Return true if items are selected"""
         return len(self._scene.selectedItems()) > 0
+
+    def selected_objects(self) -> list[ComponentObject]:
+        """The selected components"""
+        return [item for item in self._scene.selectedItems() if isinstance(item, ComponentObject)]
+
+    def show_message(self, text: str) -> None:
+        """A short message at the bottom of the circuit area, that goes away by itself"""
+        self._message.setText(text)
+        self._message.adjustSize()
+        viewport = self.viewport().rect()
+        self._message.move(
+            (viewport.width() - self._message.width()) // 2,
+            viewport.height() - self._message.height() - MESSAGE_MARGIN,
+        )
+        self._message.show()
+        self._message.raise_()
+        self._message_timer.start(MESSAGE_MS)
+
+    # Copy and paste
+
+    def copy_selection(self) -> None:
+        """Copy the selected components, and the lines between them, to the clipboard"""
+        data = self._app_model.objects.clipboard.copy(self.selected_objects())
+        if data is None:
+            return
+        text = data.to_json()
+        mime = QMimeData()
+        mime.setData(CLIPBOARD_MIME_TYPE, text.encode())
+        mime.setText(text)
+        QApplication.clipboard().setMimeData(mime)
+        self._paste_count = 0
+
+    def cut_selection(self) -> None:
+        """Copy the selected components to the clipboard and delete them"""
+        if self._app_model.is_running or not self.selected_objects():
+            return
+        self.copy_selection()
+        self._app_model.objects.delete_selected()
+
+    @staticmethod
+    def clipboard_data() -> ClipboardDataClass | None:
+        """The components on the clipboard, None if it has none"""
+        mime = QApplication.clipboard().mimeData()
+        if mime is None:
+            return None
+        if mime.hasFormat(CLIPBOARD_MIME_TYPE):
+            return ClipboardDataClass.from_json(
+                bytes(mime.data(CLIPBOARD_MIME_TYPE).data()).decode()
+            )
+        if mime.hasText():
+            # From another program, like DigSim components in a text
+            return ClipboardDataClass.from_json(mime.text())
+        return None
+
+    def paste(self) -> None:
+        """
+        Paste the components on the clipboard: at the mouse pointer if it is over the
+        circuit area, or a step down and to the right of the copied ones (one more step
+        for each paste)
+        """
+        data = self.clipboard_data()
+        if data is not None and not self._app_model.is_running:
+            self._paste_count += 1
+            self._paste(data, self._paste_count)
+
+    def duplicate_selection(self) -> None:
+        """A copy of the selected components, a step down and to the right of them"""
+        data = self._app_model.objects.clipboard.copy(self.selected_objects())
+        if data is not None and not self._app_model.is_running:
+            self._paste(data, 1)
+
+    def _paste(self, data: ClipboardDataClass, steps: int) -> None:
+        if not data.gui:
+            return
+        dx = dy = PASTE_STEP * steps
+        mouse = self.viewport().mapFromGlobal(QCursor.pos())
+        if self.viewport().rect().contains(mouse):
+            # The top left corner of the components at the mouse pointer, on the grid
+            target = self.mapToScene(mouse)
+            left = min(position.x for position in data.gui.values())
+            top = min(position.y for position in data.gui.values())
+            dx = round((target.x() - left) / PASTE_STEP) * PASTE_STEP
+            dy = round((target.y() - top) / PASTE_STEP) * PASTE_STEP
+        pasted = self._app_model.objects.clipboard.paste(data, dx, dy)
+        if not pasted:
+            return
+        self._scene.clearSelection()
+        for component_object in pasted:
+            self._scene.add_scene_component(component_object)
+            component_object.setSelected(True)
+        self._app_model.sig_update_wires.emit()
+        self.grow_scene_rect()
 
     def _zoom_in(self) -> None:
         self.scale(self.ZOOM_IN_FACTOR, self.ZOOM_IN_FACTOR)

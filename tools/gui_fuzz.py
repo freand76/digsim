@@ -1529,6 +1529,39 @@ class GuiFuzzer:
         self.check_deleted(before, connections, set(), gone)
         return f"delete component {component.name()}"
 
+    def copy_paste(self) -> str:
+        """Copy some components and paste them: the connections between them come along"""
+        objects = self.component_objects()
+        if not objects:
+            raise Skip("no components")
+        chosen = self.rng.sample(objects, min(len(objects), self.rng.randint(1, 3)))
+        if len(objects) + len(chosen) > MAX_COMPONENTS:
+            raise Skip("full")
+        copied = {obj.component for obj in chosen}
+        inside = {w for w in self.connections() if {w[0].parent(), w[1].parent()} <= copied}
+        before = set(self.model.objects.circuit.get_toplevel_components())
+        self.clear_selection()
+        for obj in chosen:
+            obj.setSelected(True)
+        self.spin(5)
+        self.area.copy_selection()
+        self.area.paste()
+        self.spin()
+        pasted = set(self.model.objects.circuit.get_toplevel_components()) - before
+        check(len(pasted) == len(copied), f"{len(pasted)} pasted of {len(copied)} copied")
+        between = {w for w in self.connections() if {w[0].parent(), w[1].parent()} <= pasted}
+        check(
+            len(between) == len(inside),
+            "the pasted components aren't connected like the copied: "
+            f"{sorted(port_key(a) + '>' + port_key(b) for a, b in inside)} pasted as "
+            f"{sorted(port_key(a) + '>' + port_key(b) for a, b in between)}",
+        )
+        outside = {
+            w for w in self.connections() if (w[0].parent() in pasted) != (w[1].parent() in pasted)
+        }
+        check(not outside, "a pasted component is connected to another one")
+        return f"copy and paste {sorted(c.name() for c in copied)}"
+
     def drag_segment(self) -> str:
         self.clear_selection()
         part, pos = self.segment_pos()
@@ -2129,6 +2162,7 @@ class GuiFuzzer:
         ("drag_segment", 3),
         ("edit_segment", 3),
         ("move_component", 2),
+        ("copy_paste", 2),
         ("undo", 3),
         ("undo_while_dragging", 1),
         ("redo", 2),

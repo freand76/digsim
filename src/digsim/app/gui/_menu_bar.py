@@ -9,8 +9,8 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QUrl, Signal
-from PySide6.QtGui import QAction, QDesktopServices, QKeySequence
-from PySide6.QtWidgets import QFileDialog, QMenu, QMenuBar, QMessageBox, QWidget
+from PySide6.QtGui import QAction, QDesktopServices, QKeySequence, QShortcut
+from PySide6.QtWidgets import QApplication, QFileDialog, QMenu, QMenuBar, QMessageBox, QWidget
 
 from digsim.app.settings import GuiSettingsDialog
 
@@ -42,6 +42,7 @@ class MenuBar(QMenuBar):
         self._time_s: float = 0
         # The circuit area of the window, see set_circuit_area()
         self._circuit_area: CircuitArea | None = None
+        self._can_paste = False
 
         file_menu = self.addMenu("&File")
         self._new_action = self._add(file_menu, "&New", self.new_circuit, "Ctrl+N")
@@ -59,6 +60,20 @@ class MenuBar(QMenuBar):
             edit_menu, "&Redo", self._app_model.objects.redo, ["Ctrl+Y", "Ctrl+Shift+Z"]
         )
         edit_menu.addSeparator()
+        self._cut_action = self._add(edit_menu, "Cu&t", self._area_call("cut_selection"), "Ctrl+X")
+        self._copy_action = self._add(
+            edit_menu, "&Copy", self._area_call("copy_selection"), "Ctrl+C"
+        )
+        self._paste_action = self._add(edit_menu, "&Paste", self._area_call("paste"), "Ctrl+V")
+        self._duplicate_action = self._add(
+            edit_menu, "D&uplicate", self._area_call("duplicate_selection"), "Ctrl+D"
+        )
+        # Cut, Copy and Duplicate are off without selected components, and so are their
+        # shortcuts: these tell why nothing is copied then (a wire alone is not copied)
+        self._nothing_to_copy = [
+            QShortcut(QKeySequence(key), parent, self._show_nothing_to_copy)
+            for key in ("Ctrl+X", "Ctrl+C", "Ctrl+D")
+        ]
         self._delete_action = self._add(
             edit_menu, "&Delete", self._app_model.objects.delete_selected, "Del"
         )
@@ -144,9 +159,33 @@ class MenuBar(QMenuBar):
         GuiSettingsDialog(self._window, self._app_model).start()
 
     def set_circuit_area(self, circuit_area: CircuitArea) -> None:
-        """The circuit area, Delete follows its selection"""
+        """
+        The circuit area, that Cut, Copy, Paste and Duplicate work on. Delete and Copy
+        follow its selection, Paste the clipboard.
+        """
         self._circuit_area = circuit_area
         circuit_area.scene().selectionChanged.connect(self.update_actions)
+        QApplication.clipboard().dataChanged.connect(self._clipboard_changed)
+        self._clipboard_changed()
+
+    def _area_call(self, method: str) -> Callable[[], None]:
+        """A method of the circuit area, for an action"""
+
+        def call() -> None:
+            if self._circuit_area is not None:
+                getattr(self._circuit_area, method)()
+
+        return call
+
+    def _show_nothing_to_copy(self) -> None:
+        if self._circuit_area is not None:
+            self._circuit_area.show_message(
+                "Nothing to copy: select components, the wires between them are copied with them"
+            )
+
+    def _clipboard_changed(self) -> None:
+        self._can_paste = CircuitArea.clipboard_data() is not None
+        self.update_actions()
 
     # Simulation
 
@@ -191,7 +230,14 @@ class MenuBar(QMenuBar):
         self._redo_action.setEnabled(not running and self._app_model.objects.can_redo())
         area = self._circuit_area
         has_selection = area is not None and area.has_selection()
+        has_components = area is not None and bool(area.selected_objects())
         self._delete_action.setEnabled(not running and has_selection)
+        for action in (self._cut_action, self._copy_action, self._duplicate_action):
+            action.setEnabled(not running and has_components)
+        # Their shortcuts say why nothing happens instead
+        for shortcut in self._nothing_to_copy:
+            shortcut.setEnabled(area is not None and not running and not has_components)
+        self._paste_action.setEnabled(not running and self._can_paste)
         self._start_action.setText("&Stop\tSpace" if running else "&Start\tSpace")
         self._single_step_action.setEnabled(not running)
         self._reset_action.setEnabled(not running and self._time_s > 0)

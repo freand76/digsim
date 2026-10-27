@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 from digsim.circuit import Circuit
 from digsim.storage_model import LineDataClass, ModelDataClass
 
+from ._model_clipboard import ModelClipboard
 from ._model_components import ModelComponents
 from ._model_new_wire import NewWire
 from ._model_wires import ModelWires
@@ -39,6 +40,7 @@ class ModelObjects:
         self._redo_stack: deque[ModelDataClass] = deque(maxlen=UNDO_STACK_DEPTH)
         self._new_wire = NewWire(self._app_model)
         self._wires = ModelWires(self._app_model)
+        self._clipboard = ModelClipboard(self._app_model)
 
     @property
     def circuit(self) -> Circuit:
@@ -59,6 +61,11 @@ class ModelObjects:
     def wires(self) -> ModelWires:
         """return the shape of the wires"""
         return self._wires
+
+    @property
+    def clipboard(self) -> ModelClipboard:
+        """return the copy and paste of components"""
+        return self._clipboard
 
     def init(self) -> None:
         """Initialize objects"""
