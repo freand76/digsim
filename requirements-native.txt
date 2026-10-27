@@ -1,0 +1,5 @@
+# The native engine, from the release wheels of https://github.com/freand76/digsim-native:
+# pip install -r requirements-native.txt. The same version as the native group in
+# pyproject.toml.
+--find-links https://github.com/freand76/digsim-native/releases/expanded_assets/v0.1.0
+digsim-native==0.1.0
