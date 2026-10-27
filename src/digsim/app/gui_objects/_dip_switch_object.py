@@ -77,6 +77,8 @@ class DipSwitchObject(ComponentObject):
 
     def single_click_action(self) -> None:
         self.component.toggle()
+        # While the simulation is stopped, the circuit settles with the new value
+        self._app_model.model_settle()
         self.repaint()
 
     @classmethod

@@ -141,6 +141,8 @@ class OnOffSwitchObject(DeviceObject):
 
     def _toggle(self) -> None:
         self.component.toggle()
+        # While the simulation is stopped, the circuit settles with the new value
+        self._app_model.model_settle()
         self.repaint()
 
 

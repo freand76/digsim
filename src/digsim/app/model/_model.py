@@ -23,6 +23,10 @@ from ._model_settings import ModelSettings
 from ._model_shortcuts import ModelShortcuts
 
 
+# How long the circuit runs to settle after an input changed while it was stopped
+SETTLE_US = 10
+
+
 class AppModel(QThread):
     """The application model class for a GUI simulated circuit"""
 
@@ -150,6 +154,20 @@ class AppModel(QThread):
         self._clock_step = True
         self.start()
         self.sig_control_notify.emit()
+
+    def model_settle(self) -> None:
+        """
+        After an input was changed while the simulation is stopped, like a switch that was
+        clicked: let the change go through the circuit, with a short run (SETTLE_US), so
+        that the outputs show it. The clocks are slower, the run ends before their next
+        edge almost always.
+        """
+        if self.is_running:
+            return
+        self.objects.circuit.run(us=SETTLE_US)
+        self.objects.components.update_callback_objects()
+        self.sig_sim_time_notify.emit(self.objects.circuit.time_ns / 1000000000)
+        self.sig_repaint.emit()
 
     def model_stop(self) -> None:
         """Stop model simulation thread"""

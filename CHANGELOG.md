@@ -23,6 +23,7 @@
  - GUI: Simulation > Step Clock (F10) runs to the next rising edge of a clock and lets the logic settle, to step through a CPU one clock cycle at a time
  - The Logic Analyzer samples an input that changes at the time of a sample, like on a clock edge, with its value from just before. Before, a clock could look uneven, depending on the order of the events at the same time.
  - GUI: the Logic Analyzer is cleared when the circuit is reset, like the VCD file starts over
+ - GUI: a switch clicked while the simulation is stopped changes the circuit at once: it runs for 10 µs so that the change goes through it. Before, the switch changed but the rest of the circuit only when the simulation ran.
 
 ## v1.8.0
  - GUI: a new look. All components are drawn in one style: gates, LEDs, buffers and bus splitters as symbols only, devices like switches and displays with a white body, on a light background with a grid of dots. Most components are smaller, a selected one is blue, and green means on everywhere.

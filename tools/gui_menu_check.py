@@ -273,6 +273,27 @@ def test_step_clock(gui):
         assert clock.O.value == 1
 
 
+def test_switch_settles_while_stopped(gui):
+    """A switch clicked while the simulation is stopped: the circuit shows the change"""
+    switch_object = gui.add("OnOffSwitch")
+    switch = switch_object.component
+    inverter = gui.add("NOT").component
+    led = gui.add("Led").component
+    wires = gui.model.objects.wires
+    wires.connect_ports(switch.O, inverter.A)
+    wires.connect_ports(inverter.Y, led.I)
+    gui.model.model_init()
+    spin()
+    switch_object.single_click_action()
+    spin()
+    assert (switch.O.value, led.I.value) == (1, 0)
+    # From the context menu too
+    switch_object._toggle()
+    spin()
+    assert (switch.O.value, led.I.value) == (0, 1)
+    assert not gui.model.is_running
+
+
 def test_reset_clears_the_logic_analyzer(gui):
     """Reset starts over at time 0, without the samples of the last run"""
     switch_object = gui.add("OnOffSwitch")

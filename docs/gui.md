@@ -290,6 +290,10 @@ presses the button or toggles the switch.
 | ![Clock](images/components/Clock.png) | **Clock**: a square wave with a configurable frequency (1–50 Hz). |
 | ![Static value](images/components/ZERO.png) | **Static Value**: a constant value on a wire or a bus (1–16 bits). |
 
+The switches can also be clicked while the simulation is stopped, to set the inputs before
+it starts or before **Step Clock**. The circuit then runs for a moment (10 µs) so that the
+change goes through it, and the outputs show it at once.
+
 ### Output components
 
 | Component | Description |
