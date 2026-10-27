@@ -42,6 +42,7 @@ class AppModel(QThread):
     sig_yosys_updated = Signal(str)
     sig_zoom_in_gui = Signal()
     sig_zoom_out_gui = Signal()
+    sig_zoom_fit_gui = Signal()
 
     def __init__(self) -> None:
         super().__init__()
@@ -338,3 +339,7 @@ class AppModel(QThread):
     def zoom_out(self) -> None:
         """Send zoom out signal to GUI"""
         self.sig_zoom_out_gui.emit()
+
+    def zoom_fit(self) -> None:
+        """Send the signal to the GUI to zoom so that the whole circuit fits"""
+        self.sig_zoom_fit_gui.emit()

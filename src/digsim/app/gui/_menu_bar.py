@@ -87,6 +87,7 @@ class MenuBar(QMenuBar):
         view_menu = self.addMenu("&View")
         self._add(view_menu, "Zoom &In", self._app_model.zoom_in, ["Ctrl++", "Ctrl+="])
         self._add(view_menu, "Zoom &Out", self._app_model.zoom_out, "Ctrl+-")
+        self._add(view_menu, "Zoom to &Fit", self._app_model.zoom_fit, ["Ctrl+0", "Home"])
 
         simulation_menu = self.addMenu("&Simulation")
         # Space starts and stops it, see MainWindow.keyPressEvent(): shown, not a shortcut

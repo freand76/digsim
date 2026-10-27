@@ -14,6 +14,7 @@
  - GUI: a menu bar, with File (New, Open, Save, Save As, Quit), Edit (Undo, Redo, Delete, Settings), View (zoom), Simulation (Start, Single Step, Reset) and Help. Save saves in the circuit's file without asking, and the window title shows the file, with a * when the circuit has changed.
  - GUI: a component search above the component selection. Ctrl+K (or Ctrl+F) and a few letters, like "flp" for the flip-flop, list the components that match. Drag one into the circuit, or press Enter to add it.
  - GUI: copy, cut, paste and duplicate (Ctrl+C, Ctrl+X, Ctrl+V, Ctrl+D) of the selected components, with the wires between them. A paste lands at the mouse pointer, and works between DigSim windows.
+ - GUI: Zoom to Fit (Ctrl+0 or Home) shows the whole circuit in the window
 
 ## v1.8.0
  - GUI: a new look. All components are drawn in one style: gates, LEDs, buffers and bus splitters as symbols only, devices like switches and displays with a white body, on a light background with a grid of dots. Most components are smaller, a selected one is blue, and green means on everywhere.

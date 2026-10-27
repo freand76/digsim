@@ -25,9 +25,10 @@ The window has a menu bar and three areas:
 
 - **Menu bar** (top): **File** (New, Open, Save, Save As, Quit), **Edit** (Undo, Redo,
   Cut, Copy, Paste, Duplicate, Delete, Find Component, Settings), **View** (zoom in and
-  out), **Simulation** (Start, Single Step, Reset) and **Help** (the documentation, and
-  the version of DigSim). Save saves the circuit in the file it was opened from or saved
-  to, the window title shows that file, with a `*` when the circuit has changed since.
+  out, and Zoom to Fit: the whole circuit in the window), **Simulation** (Start, Single
+  Step, Reset) and **Help** (the documentation, and the version of DigSim). Save saves the
+  circuit in the file it was opened from or saved to, the window title shows that file,
+  with a `*` when the circuit has changed since.
 - **Component selection** (blue, left): all available components, grouped by type, with
   a search field above them. Press **Ctrl + K** (or **Ctrl + F**, **Edit > Find
   Component**) and type a few letters of a component, like `led`, `flp` or `mem`: the
@@ -261,6 +262,7 @@ paste is one step to undo.
 | **Ctrl + Z** / **Ctrl + Y** | Undo / redo (also **Ctrl + Shift + Z**) |
 | **Ctrl + C** / **Ctrl + X** / **Ctrl + V** | Copy / cut / paste the selected components |
 | **Ctrl + D** | Duplicate the selected components |
+| **Ctrl + 0** / **Home** | Zoom to fit the whole circuit |
 | **Del** | Delete the selected components and wires |
 | **Space** | Start / stop the simulation |
 | **Esc** | Cancel the wire being drawn |

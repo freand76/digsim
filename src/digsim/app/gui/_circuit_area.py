@@ -88,6 +88,9 @@ PASTE_STEP = 20
 # A message over the circuit area: how long it is shown, and its distance to the bottom
 MESSAGE_MS = 2500
 MESSAGE_MARGIN = 16
+# Zoom to fit: the margin around the circuit, and the most it zooms in
+ZOOM_FIT_MARGIN = 20
+ZOOM_FIT_MAX = 2.0
 
 
 def _point(pos: QPointF) -> Point:
@@ -1445,6 +1448,7 @@ class CircuitArea(QGraphicsView):
         self._app_model = app_model
         self._app_model.sig_zoom_in_gui.connect(self._zoom_in)
         self._app_model.sig_zoom_out_gui.connect(self._zoom_out)
+        self._app_model.sig_zoom_fit_gui.connect(self.zoom_fit)
         self._scene = _CircuitAreaScene(app_model, self)
         self._wheel_zoom_mode = False
         self.setScene(self._scene)
@@ -1589,6 +1593,31 @@ class CircuitArea(QGraphicsView):
 
     def _zoom_out(self) -> None:
         self.scale(self.ZOOM_OUT_FACTOR, self.ZOOM_OUT_FACTOR)
+
+    def circuit_rect(self) -> QRectF:
+        """The area of the components and wires, empty if there are none"""
+        rect = QRectF()
+        for item in self._scene.items():
+            if isinstance(item, (ComponentObject, WireGraphicsItem)):
+                rect = rect.united(item.sceneBoundingRect())
+        return rect
+
+    def zoom_fit(self) -> None:
+        """
+        Zoom so that the whole circuit fits in the view, with a margin around it, and
+        not further in than ZOOM_FIT_MAX (a small circuit isn't blown up)
+        """
+        rect = self.circuit_rect()
+        if rect.isEmpty():
+            self.resetTransform()
+            return
+        rect = rect.adjusted(-ZOOM_FIT_MARGIN, -ZOOM_FIT_MARGIN, ZOOM_FIT_MARGIN, ZOOM_FIT_MARGIN)
+        self._scene.setSceneRect(self._scene.sceneRect().united(rect))
+        self.fitInView(rect, Qt.AspectRatioMode.KeepAspectRatio)
+        if self.transform().m11() > ZOOM_FIT_MAX:
+            self.resetTransform()
+            self.scale(ZOOM_FIT_MAX, ZOOM_FIT_MAX)
+            self.centerOn(rect.center())
 
     def _repaint(self) -> None:
         """Make scene repaint for component update"""

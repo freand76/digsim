@@ -190,3 +190,20 @@ def test_simulation(gui):
     assert gui.action("Simulation", "Reset").isEnabled()
     gui.trigger("Simulation", "Reset")
     assert not gui.action("Simulation", "Reset").isEnabled()
+
+
+def test_zoom_to_fit(gui):
+    """The whole circuit fits in the view, and an empty one has no zoom"""
+    gui.add("Led")
+    component_object = gui.add("Led")
+    component_object.moveBy(3000, 2000)
+    gui.model.sig_update_wires.emit()
+    spin()
+    area = gui.window.findChild(CircuitArea)
+    gui.trigger("View", "Zoom to Fit")
+    visible = area.mapToScene(area.viewport().rect()).boundingRect()
+    assert visible.contains(area.circuit_rect())
+    assert area.transform().m11() < 1
+    gui.trigger("File", "New")
+    gui.trigger("View", "Zoom to Fit")
+    assert area.transform().m11() == 1
