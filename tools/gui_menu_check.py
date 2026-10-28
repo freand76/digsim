@@ -23,7 +23,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 # Settings of their own, not the recent files of the user
 os.environ.setdefault("DIGSIM_SETTINGS_DIR", tempfile.mkdtemp(prefix="digsim_settings_"))
 
-from PySide6.QtCore import QEventLoop, QPointF, QTimer
+from PySide6.QtCore import QEventLoop, QPointF, Qt, QTimer
 from PySide6.QtGui import QAction, QImage, QKeySequence
 from PySide6.QtWidgets import QApplication, QComboBox, QFileDialog, QMessageBox, QSlider
 
@@ -548,3 +548,50 @@ def test_added_component_is_selected_without_a_dialog(gui):
     (counter,) = gui.model.objects.components.get_object_list()
     assert counter.isSelected()
     assert gui.window.settings_pane._title.text() == "Counter"
+
+
+def _hex_editor(gui: Gui, component_object: Any) -> Any:
+    from digsim.app.gui._hex_editor import HexEditorDialog
+
+    return HexEditorDialog(gui.window, gui.model, component_object)
+
+
+def test_hex_editor_saves_the_file(gui, tmp_path):
+    """A word changed in the hex editor is saved in the file, and the ROM has it"""
+    path = tmp_path / "rom.hex"
+    path.write_text("01 02 03\n", encoding="utf-8")
+    rom = gui.add("ROM", path=str(path), address_width=4)
+    editor = _hex_editor(gui, rom)
+    model = editor.model
+    assert model.data(model.index(0, 2)) == "03"
+    assert model.setData(model.index(0, 5), "a5")
+    assert not model.setData(model.index(0, 6), "1ff")
+    assert editor.save()
+    assert path.read_text(encoding="utf-8").split()[:6] == ["01", "02", "03", "00", "00", "A5"]
+    gui.model.objects.circuit.init()
+    assert rom.component.read(5) == 0xA5
+    editor.close()
+
+
+def test_hex_editor_asks_for_a_file_for_a_ram(gui, tmp_path):
+    ram = gui.add("RAM", address_width=4, data_width=16)
+    editor = _hex_editor(gui, ram)
+    editor.model.setData(editor.model.index(0, 1), "1234")
+    gui.path = str(tmp_path / "ram.bin")
+    assert editor.save()
+    assert (tmp_path / "ram.bin").read_bytes() == b"\x00\x00\x34\x12"
+    (ram,) = gui.model.objects.circuit.get_toplevel_components()
+    assert ram.parameter_get("path") == gui.path
+    assert gui.action("Edit", "Undo").isEnabled()
+    editor.close()
+
+
+def test_hex_editor_words_before_the_load_address(gui, tmp_path):
+    """They are not in the file, they can't be changed"""
+    path = tmp_path / "rom.bin"
+    path.write_bytes(b"\x07")
+    rom = gui.add("ROM", path=str(path), address_width=4, load_address=4)
+    model = _hex_editor(gui, rom).model
+    assert model.data(model.index(0, 4)) == "07"
+    assert not model.flags(model.index(0, 3)) & Qt.ItemFlag.ItemIsEditable
+    assert model.flags(model.index(0, 4)) & Qt.ItemFlag.ItemIsEditable

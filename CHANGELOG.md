@@ -1,6 +1,8 @@
 # CHANGELOG
 
 ## vx.x.x
+ - GUI: a hex editor for the contents of a RAM or ROM, Edit Contents... in its context menu. Save writes the words in its file, text or binary, and the memory reads it again. A RAM without a file asks for one.
+ - RAM and ROM: reload_contents() reads the file again after it changed
  - GUI: Flip Horizontal and Flip Vertical (Ctrl+Shift+H, Ctrl+Shift+V) mirror the symbols that rotate, like a MUX with its select input on top. The mirror is saved in the circuit file.
  - GUI: a settings pane to the right of the circuit shows the settings of the selected component, instead of a settings dialog. Apply changes them, also the ones that change the ports (like the inputs of a gate or the width of a bus): the component is built again with the wires to the ports it still has. A new component gets the default settings and is selected, a file or an IC is asked for first. View > Settings Pane (F4) hides and shows it.
  - A flip-flop with an asynchronous load in a gate netlist (the Yosys cells $_ALDFF_ and $_ALDFFE_) follows the load value while the load is active, like the functional $aldff. Before, it only took the value when the load started.

@@ -8,7 +8,10 @@ from __future__ import annotations
 import math
 
 from PySide6.QtCore import QPoint, QPointF, QRectF, QSize, Qt
-from PySide6.QtGui import QPainter, QPolygonF
+from PySide6.QtGui import QAction, QPainter, QPolygonF
+from PySide6.QtWidgets import QMenu, QWidget
+
+from digsim.circuit.components.atoms import DigsimException
 
 from . import _theme as theme
 from ._component_object import ComponentObject
@@ -96,13 +99,33 @@ class ICObject(NamedBoxObject):
     ICON_TEXT = "74xx"
 
 
-class RAMObject(NamedBoxObject):
+class _MemoryObject(NamedBoxObject):
+    """A RAM or ROM, its contents in the hex editor (Edit Contents... in its menu)"""
+
+    def add_context_menu_action(self, menu: QMenu, parent: QWidget | None) -> None:
+        action = QAction("Edit Contents...", menu)
+        menu.addAction(action)
+        action.triggered.connect(lambda: self._edit_contents(parent))
+
+    def _edit_contents(self, parent: QWidget | None) -> None:
+        # Here, the GUI imports the component objects
+        from digsim.app.gui._hex_editor import HexEditorDialog
+
+        try:
+            dialog = HexEditorDialog(parent, self._app_model, self)
+        except DigsimException as exc:
+            self._app_model.sig_error.emit(f"Could not read the contents: {exc!s}")
+            return
+        dialog.exec()
+
+
+class RAMObject(_MemoryObject):
     """A RAM placed in the GUI"""
 
     ICON_TEXT = "RAM"
 
 
-class ROMObject(NamedBoxObject):
+class ROMObject(_MemoryObject):
     """A ROM placed in the GUI"""
 
     ICON_TEXT = "ROM"

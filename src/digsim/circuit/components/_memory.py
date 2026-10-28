@@ -231,6 +231,23 @@ class _Memory(Component):
             self._write()
         self._drive(self._word())
 
+    def reload_contents(self) -> None:
+        """
+        Read the file again, after it changed: the memory has its contents when the
+        circuit is initialized or reset.
+        """
+        path = self.parameter_get("path")
+        self._preload = (
+            read_memory_file(
+                path,
+                self.parameter_get("address_width"),
+                self.parameter_get("data_width"),
+                self.parameter_get("load_address"),
+            )
+            if path
+            else {}
+        )
+
     def read(self, address: int) -> VALUE_TYPE:
         """
         Return the word at an address.
