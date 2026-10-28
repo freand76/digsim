@@ -627,6 +627,17 @@ def test_settings_pane_renames_a_component(gui):
     assert {c.name() for c in circuit.get_toplevel_components()} == {"PushButton", "Led"}
 
 
+def test_a_circuit_port_with_another_label_keeps_its_wires(gui):
+    """The port of an In is named after its label, its wires follow the new label"""
+    port = gui.add("CircuitInput", label="a")
+    led = gui.add("Led")
+    gui.model.objects.wires.connect_ports(port.component.a, led.component.I)
+    assert gui.model.objects.components.change_settings(port, {"label": "x"}) is not None
+    circuit = gui.model.objects.circuit
+    assert circuit.get_component("CircuitInput").x.wired_ports == [circuit.get_component("Led").I]
+    assert not gui.warnings
+
+
 def test_settings_pane_takes_no_name_that_is_used(gui):
     gui.add("Led")
     led = gui.add("Led")

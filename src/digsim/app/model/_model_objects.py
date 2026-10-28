@@ -9,10 +9,11 @@ import re
 from collections import deque
 from typing import TYPE_CHECKING, Any
 
-from digsim.app._clipboard_lines import renamed_port
+from digsim.app._clipboard_lines import renamed_port, renamed_port_keys
 from digsim.app._line_graph import without_ports
 from digsim.app._settings_values import given_name, has_given_name, unique_name
 from digsim.circuit import Circuit
+from digsim.circuit.components import CircuitPort
 from digsim.circuit.components.atoms import Component, DigsimException, Port
 from digsim.storage_model import LineDataClass, ModelDataClass
 
@@ -184,6 +185,13 @@ class ModelObjects:
         if class_name is not None or follows:
             # The display name of the new class, or the new module
             component_dc.display_name = ""
+        if isinstance(old_component, CircuitPort):
+            # Its port is named after its label, the wires go to the port with the new one
+            label = str(settings.get("label", old_component.label()))
+            if label != old_component.label():
+                lines = renamed_port_keys(
+                    lines, {f"{name}.{old_component.label()}": f"{name}.{label}"}
+                )
         if new_name is not None and new_name != name:
             # The name is shown where the component shows its name, not a kind like SR
             shown = old_component.display_name() in (name, given_name(old_component))
