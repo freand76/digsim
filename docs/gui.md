@@ -457,15 +457,27 @@ to add the selected IC. Pins with names ending in `_bar` are active low.
 | 74283 | 4-bit binary full adder with fast carry |
 | 7485 | 4-bit magnitude comparator, cascadable |
 | 74138 | 3-to-8 line decoder with active-low outputs |
+| 74139 | Dual 2-to-4 line decoder with active-low outputs |
+| 74148 | 8-to-3 line priority encoder, active low, cascadable (EI_bar, EO_bar) |
 | 74151 | 8-to-1 multiplexer |
+| 74157 | Quad 2-to-1 multiplexer |
+| 74161 | Synchronous 4-bit binary counter with parallel load, asynchronous clear |
 | 74162 | Synchronous decade counter with parallel load |
+| 74163 | Synchronous 4-bit binary counter with parallel load, synchronous clear |
 | 74164 | 8-bit serial-in, parallel-out shift register |
 | 74165 | 8-bit parallel-in, serial-out shift register |
+| 74173 | 4-bit D register with tristate outputs |
 | 74193 | Up/down binary counter with separate up and down clocks |
 | 74194 | 4-bit bidirectional universal shift register |
+| 74245 | Octal bus transceiver: A to B or B to A by DIR, inout ports |
+| 74374 | Octal D flip-flops with tristate outputs |
+| 74574 | Octal D flip-flops with tristate outputs, the 74374 with another pinout |
 | 74595 | 8-bit shift register with an output register and tristate outputs (output enable OE_bar) |
 | 7448 | BCD to 7-segment decoder |
 | 4017 | Decade counter with 10 decoded outputs |
+| 4021 | 8-stage parallel-in, serial-out shift register |
+| 4029 | Presettable up/down counter, binary or decade |
+| 4094 | 8-stage shift-and-store bus register with tristate outputs |
 | 4511 | BCD to 7-segment latch and decoder |
 
 More ICs can be added by placing Yosys JSON netlists in the

@@ -1,0 +1,1447 @@
+{
+  "creator": "Yosys 0.70 (git sha1 28ba3cb92, Release, Clang /workspace/YoWASP/yosys/wasi-sdk-33.0-x86_64-linux/share/cmake/../..//bin/clang++ 22.1.0)",
+  "modules": {
+    "cmos_4029": {
+      "attributes": {
+        "hdlname": "cmos_4029",
+        "top": "00000000000000000000000000000001",
+        "src": "verilog/4000/4029.v:10.1-32.10"
+      },
+      "ports": {
+        "CLK": {
+          "direction": "input",
+          "bits": [ 2 ]
+        },
+        "CI_bar": {
+          "direction": "input",
+          "bits": [ 3 ]
+        },
+        "UD": {
+          "direction": "input",
+          "bits": [ 4 ]
+        },
+        "BD": {
+          "direction": "input",
+          "bits": [ 5 ]
+        },
+        "PE": {
+          "direction": "input",
+          "bits": [ 6 ]
+        },
+        "J": {
+          "direction": "input",
+          "bits": [ 7, 8, 9, 10 ]
+        },
+        "Q": {
+          "direction": "output",
+          "bits": [ 11, 12, 13, 14 ]
+        },
+        "CO_bar": {
+          "direction": "output",
+          "bits": [ 15 ]
+        }
+      },
+      "cells": {
+        "$auto$ff.cc:337:slice$94": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PPN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:22.4-29.44"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 7 ],
+            "C": [ 2 ],
+            "D": [ 16 ],
+            "E": [ 3 ],
+            "L": [ 6 ],
+            "Q": [ 11 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$95": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PPN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:22.4-29.44"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 8 ],
+            "C": [ 2 ],
+            "D": [ 17 ],
+            "E": [ 3 ],
+            "L": [ 6 ],
+            "Q": [ 12 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$96": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PPN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:22.4-29.44"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 9 ],
+            "C": [ 2 ],
+            "D": [ 18 ],
+            "E": [ 3 ],
+            "L": [ 6 ],
+            "Q": [ 13 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$97": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PPN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:22.4-29.44"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 10 ],
+            "C": [ 2 ],
+            "D": [ 19 ],
+            "E": [ 3 ],
+            "L": [ 6 ],
+            "Q": [ 14 ]
+          }
+        },
+        "$auto$opt_expr.cc:607:replace_const_cells$324": {
+          "hide_name": 1,
+          "type": "$_NOT_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 12 ],
+            "Y": [ 20 ]
+          }
+        },
+        "$auto$opt_expr.cc:607:replace_const_cells$326": {
+          "hide_name": 1,
+          "type": "$_NOT_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 13 ],
+            "Y": [ 21 ]
+          }
+        },
+        "$auto$opt_expr.cc:607:replace_const_cells$328": {
+          "hide_name": 1,
+          "type": "$_NOT_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 14 ],
+            "Y": [ 22 ]
+          }
+        },
+        "$auto$opt_expr.cc:607:replace_const_cells$334": {
+          "hide_name": 1,
+          "type": "$_NOT_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 11 ],
+            "Y": [ 23 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$139": {
+          "hide_name": 1,
+          "type": "$_XOR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:31.36-31.44"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 12 ],
+            "B": [ 5 ],
+            "Y": [ 24 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$140": {
+          "hide_name": 1,
+          "type": "$_XOR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:31.36-31.44"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 13 ],
+            "B": [ 5 ],
+            "Y": [ 25 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$154": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:31.20-31.60"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 3 ],
+            "B": [ 26 ],
+            "Y": [ 15 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$160": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 27 ],
+            "B": [ 28 ],
+            "Y": [ 29 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$206": {
+          "hide_name": 1,
+          "type": "$_XOR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.35-27.43|/share/techmap.v:296.13-296.25"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 12 ],
+            "B": [ 11 ],
+            "Y": [ 30 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$207": {
+          "hide_name": 1,
+          "type": "$_XOR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.35-27.43|/share/techmap.v:296.13-296.25"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 13 ],
+            "B": [ 31 ],
+            "Y": [ 32 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$208": {
+          "hide_name": 1,
+          "type": "$_XOR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.35-27.43|/share/techmap.v:296.13-296.25"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 14 ],
+            "B": [ 33 ],
+            "Y": [ 34 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$219": {
+          "hide_name": 1,
+          "type": "$_XOR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:296.13-296.25"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 20 ],
+            "B": [ 11 ],
+            "Y": [ 35 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$220": {
+          "hide_name": 1,
+          "type": "$_XOR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:296.13-296.25"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 21 ],
+            "B": [ 36 ],
+            "Y": [ 37 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$221": {
+          "hide_name": 1,
+          "type": "$_XOR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:296.13-296.25"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 22 ],
+            "B": [ 38 ],
+            "Y": [ 39 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$244": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:292.26-292.70|/share/techmap.v:205.26-205.31"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 12 ],
+            "B": [ 40 ],
+            "Y": [ 41 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$245": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:292.26-292.70|/share/techmap.v:205.26-205.31"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 13 ],
+            "B": [ 40 ],
+            "Y": [ 42 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$248": {
+          "hide_name": 1,
+          "type": "$_XOR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:292.26-292.70|/share/techmap.v:205.14-205.19"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 12 ],
+            "B": [ 40 ],
+            "Y": [ 43 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$249": {
+          "hide_name": 1,
+          "type": "$_XOR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:292.26-292.70|/share/techmap.v:205.14-205.19"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 13 ],
+            "B": [ 40 ],
+            "Y": [ 44 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$252": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:293.27-293.63|/share/techmap.v:240.12-240.41"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 45 ],
+            "B": [ 46 ],
+            "Y": [ 47 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$253": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:293.27-293.63|/share/techmap.v:240.19-240.41"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 48 ],
+            "B": [ 49 ],
+            "Y": [ 46 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$254": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:293.27-293.63|/share/techmap.v:241.12-241.34"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 14 ],
+            "B": [ 44 ],
+            "Y": [ 48 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$256": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:293.27-293.63|/share/techmap.v:240.19-240.41"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 14 ],
+            "B": [ 42 ],
+            "Y": [ 45 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$258": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:293.27-293.63|/share/techmap.v:240.12-240.41"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 41 ],
+            "B": [ 50 ],
+            "Y": [ 49 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$259": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:293.27-293.63|/share/techmap.v:240.19-240.41"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 43 ],
+            "B": [ 11 ],
+            "Y": [ 50 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$288": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.35-27.43|/share/techmap.v:293.27-293.63|/share/techmap.v:248.19-248.41"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 13 ],
+            "B": [ 31 ],
+            "Y": [ 33 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$290": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.35-27.43|/share/techmap.v:293.27-293.63|/share/techmap.v:240.19-240.41"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 12 ],
+            "B": [ 11 ],
+            "Y": [ 31 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$313": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:293.27-293.63|/share/techmap.v:248.12-248.41"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 13 ],
+            "B": [ 51 ],
+            "Y": [ 38 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$319": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:293.27-293.63|/share/techmap.v:248.19-248.41"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 21 ],
+            "B": [ 36 ],
+            "Y": [ 51 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$320": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:293.27-293.63|/share/techmap.v:240.12-240.41"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 12 ],
+            "B": [ 52 ],
+            "Y": [ 36 ]
+          }
+        },
+        "$auto$simplemap.cc:106:simplemap_bitop$321": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:293.27-293.63|/share/techmap.v:240.19-240.41"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 20 ],
+            "B": [ 11 ],
+            "Y": [ 52 ]
+          }
+        },
+        "$auto$simplemap.cc:157:simplemap_reduce$144": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:31.36-31.44"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 23 ],
+            "B": [ 24 ],
+            "Y": [ 53 ]
+          }
+        },
+        "$auto$simplemap.cc:157:simplemap_reduce$145": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:31.36-31.44"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 25 ],
+            "B": [ 22 ],
+            "Y": [ 54 ]
+          }
+        },
+        "$auto$simplemap.cc:157:simplemap_reduce$147": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:31.36-31.44"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 53 ],
+            "B": [ 54 ],
+            "Y": [ 55 ]
+          }
+        },
+        "$auto$simplemap.cc:157:simplemap_reduce$149": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:31.49-31.58"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 11 ],
+            "B": [ 12 ],
+            "Y": [ 56 ]
+          }
+        },
+        "$auto$simplemap.cc:157:simplemap_reduce$150": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:31.49-31.58"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 13 ],
+            "B": [ 14 ],
+            "Y": [ 57 ]
+          }
+        },
+        "$auto$simplemap.cc:157:simplemap_reduce$165": {
+          "hide_name": 1,
+          "type": "$_AND_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 50 ],
+            "B": [ 48 ],
+            "Y": [ 28 ]
+          }
+        },
+        "$auto$simplemap.cc:157:simplemap_reduce$171": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 58 ],
+            "B": [ 28 ],
+            "Y": [ 59 ]
+          }
+        },
+        "$auto$simplemap.cc:198:logic_reduce$127": {
+          "hide_name": 1,
+          "type": "$_OR_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.16-29.25"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 56 ],
+            "B": [ 57 ],
+            "Y": [ 60 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$119": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.15-27.43"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 23 ],
+            "B": [ "0" ],
+            "S": [ 59 ],
+            "Y": [ 61 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$120": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.15-27.43"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 30 ],
+            "B": [ "0" ],
+            "S": [ 59 ],
+            "Y": [ 62 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$121": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.15-27.43"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 32 ],
+            "B": [ "0" ],
+            "S": [ 59 ],
+            "Y": [ 63 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$122": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.15-27.43"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 34 ],
+            "B": [ "0" ],
+            "S": [ 59 ],
+            "Y": [ 64 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$132": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.15-29.43"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 23 ],
+            "S": [ 60 ],
+            "Y": [ 65 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$133": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.15-29.43"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 5 ],
+            "B": [ 35 ],
+            "S": [ 60 ],
+            "Y": [ 66 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$134": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.15-29.43"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 5 ],
+            "B": [ 37 ],
+            "S": [ 60 ],
+            "Y": [ 67 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$135": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.15-29.43"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ "1" ],
+            "B": [ 39 ],
+            "S": [ 60 ],
+            "Y": [ 68 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$153": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:31.30-31.59"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 60 ],
+            "B": [ 55 ],
+            "S": [ 4 ],
+            "Y": [ 26 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$155": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:26.12-26.14|verilog/4000/4029.v:26.8-29.44"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 65 ],
+            "B": [ 61 ],
+            "S": [ 4 ],
+            "Y": [ 16 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$156": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:26.12-26.14|verilog/4000/4029.v:26.8-29.44"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 66 ],
+            "B": [ 62 ],
+            "S": [ 4 ],
+            "Y": [ 17 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$157": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:26.12-26.14|verilog/4000/4029.v:26.8-29.44"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 67 ],
+            "B": [ 63 ],
+            "S": [ 4 ],
+            "Y": [ 18 ]
+          }
+        },
+        "$auto$simplemap.cc:298:simplemap_mux$158": {
+          "hide_name": 1,
+          "type": "$_MUX_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:26.12-26.14|verilog/4000/4029.v:26.8-29.44"
+          },
+          "port_directions": {
+            "A": "input",
+            "B": "input",
+            "S": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 68 ],
+            "B": [ 64 ],
+            "S": [ 4 ],
+            "Y": [ 19 ]
+          }
+        },
+        "$auto$simplemap.cc:46:simplemap_not$159": {
+          "hide_name": 1,
+          "type": "$_NOT_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 29 ],
+            "Y": [ 58 ]
+          }
+        },
+        "$auto$simplemap.cc:46:simplemap_not$166": {
+          "hide_name": 1,
+          "type": "$_NOT_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 47 ],
+            "Y": [ 27 ]
+          }
+        },
+        "$auto$simplemap.cc:46:simplemap_not$203": {
+          "hide_name": 1,
+          "type": "$_NOT_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:279.31-279.37"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 5 ],
+            "Y": [ 40 ]
+          }
+        }
+      },
+      "netnames": {
+        "$auto$simplemap.cc:148:simplemap_reduce$143": {
+          "hide_name": 1,
+          "bits": [ 53, 54 ],
+          "attributes": {
+          }
+        },
+        "$auto$simplemap.cc:148:simplemap_reduce$148": {
+          "hide_name": 1,
+          "bits": [ 56, 57 ],
+          "attributes": {
+          }
+        },
+        "$auto$simplemap.cc:148:simplemap_reduce$161": {
+          "hide_name": 1,
+          "bits": [ 50, 48 ],
+          "attributes": {
+          }
+        },
+        "$auto$simplemap.cc:189:logic_reduce$126": {
+          "hide_name": 1,
+          "bits": [ 60 ],
+          "attributes": {
+          }
+        },
+        "$auto$simplemap.cc:271:simplemap_eqne$136": {
+          "hide_name": 1,
+          "bits": [ 23, 24, 25, 22 ],
+          "attributes": {
+          }
+        },
+        "$ge$verilog/4000/4029.v:27$4_Y": {
+          "hide_name": 1,
+          "bits": [ 59 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24"
+          }
+        },
+        "$ne$verilog/4000/4029.v:31$10_Y": {
+          "hide_name": 1,
+          "bits": [ 55 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:31.36-31.44"
+          }
+        },
+        "$procmux$15_Y": {
+          "hide_name": 1,
+          "bits": [ 16, 17, 18, 19 ],
+          "attributes": {
+          }
+        },
+        "$techmap$add$verilog/4000/4029.v:27$5.$auto$alumacc.cc:578:replace_alu$116.CO": {
+          "hide_name": 1,
+          "bits": [ 11, 31, 33, 69 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "verilog/4000/4029.v:27.35-27.43|/share/techmap.v:274.23-274.25"
+          }
+        },
+        "$techmap$add$verilog/4000/4029.v:27$5.$auto$alumacc.cc:578:replace_alu$116.P": {
+          "hide_name": 1,
+          "bits": [ 23, 12, 13, 14 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "verilog/4000/4029.v:27.35-27.43|/share/techmap.v:287.21-287.22"
+          }
+        },
+        "$techmap$add$verilog/4000/4029.v:27$5.$auto$alumacc.cc:578:replace_alu$116.Y": {
+          "hide_name": 1,
+          "bits": [ 23, 30, 32, 34 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "verilog/4000/4029.v:27.35-27.43|/share/techmap.v:270.26-270.27"
+          }
+        },
+        "$techmap$ge$verilog/4000/4029.v:27$4.$auto$alumacc.cc:578:replace_alu$103.BB": {
+          "hide_name": 1,
+          "bits": [ "0", 40, 40, "0" ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:279.21-279.23"
+          }
+        },
+        "$techmap$ge$verilog/4000/4029.v:27$4.$auto$alumacc.cc:578:replace_alu$103.CO": {
+          "hide_name": 1,
+          "bits": [ 11, 49, 70, 47 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:274.23-274.25"
+          }
+        },
+        "$techmap$ge$verilog/4000/4029.v:27$4.$auto$alumacc.cc:578:replace_alu$103.P": {
+          "hide_name": 1,
+          "bits": [ 11, 43, 44, 14 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:287.21-287.22"
+          }
+        },
+        "$techmap$ge$verilog/4000/4029.v:27$4.$auto$alumacc.cc:578:replace_alu$103.fa.X": {
+          "hide_name": 1,
+          "bits": [ "0", 41, 42, "0" ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:292.26-292.70|/share/techmap.v:200.21-200.22"
+          }
+        },
+        "$techmap$ge$verilog/4000/4029.v:27$4.$auto$rtlil.cc:3245:Not$107": {
+          "hide_name": 1,
+          "bits": [ 27 ],
+          "attributes": {
+          }
+        },
+        "$techmap$ge$verilog/4000/4029.v:27$4.$auto$rtlil.cc:3245:Not$113": {
+          "hide_name": 1,
+          "bits": [ 58 ],
+          "attributes": {
+          }
+        },
+        "$techmap$ge$verilog/4000/4029.v:27$4.$auto$rtlil.cc:3248:ReduceAnd$109": {
+          "hide_name": 1,
+          "bits": [ 28 ],
+          "attributes": {
+          }
+        },
+        "$techmap$ge$verilog/4000/4029.v:27$4.$auto$rtlil.cc:3294:Or$111": {
+          "hide_name": 1,
+          "bits": [ 29 ],
+          "attributes": {
+          }
+        },
+        "$techmap$sub$verilog/4000/4029.v:29$8.$auto$alumacc.cc:578:replace_alu$129.CO": {
+          "hide_name": 1,
+          "bits": [ 11, 36, 38, 71 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:274.23-274.25"
+          }
+        },
+        "$techmap$sub$verilog/4000/4029.v:29$8.$auto$alumacc.cc:578:replace_alu$129.P": {
+          "hide_name": 1,
+          "bits": [ 11, 20, 21, 22 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:287.21-287.22"
+          }
+        },
+        "$techmap$sub$verilog/4000/4029.v:29$8.$auto$alumacc.cc:578:replace_alu$129.Y": {
+          "hide_name": 1,
+          "bits": [ 23, 35, 37, 39 ],
+          "attributes": {
+            "force_downto": "00000000000000000000000000000001",
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:270.26-270.27"
+          }
+        },
+        "$techmap$techmap$ge$verilog/4000/4029.v:27$4.$auto$alumacc.cc:578:replace_alu$103.lcu.$and$/share/techmap.v:240$188_Y": {
+          "hide_name": 1,
+          "bits": [ 45 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:293.27-293.63|/share/techmap.v:240.19-240.41"
+          }
+        },
+        "$techmap$techmap$ge$verilog/4000/4029.v:27$4.$auto$alumacc.cc:578:replace_alu$103.lcu.$and$/share/techmap.v:240$191_Y": {
+          "hide_name": 1,
+          "bits": [ 46 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.16-27.24|/share/techmap.v:293.27-293.63|/share/techmap.v:240.19-240.41"
+          }
+        },
+        "$techmap$techmap$sub$verilog/4000/4029.v:29$8.$auto$alumacc.cc:578:replace_alu$129.lcu.$and$/share/techmap.v:240$185_Y": {
+          "hide_name": 1,
+          "bits": [ 52 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:293.27-293.63|/share/techmap.v:240.19-240.41"
+          }
+        },
+        "$techmap$techmap$sub$verilog/4000/4029.v:29$8.$auto$alumacc.cc:578:replace_alu$129.lcu.$and$/share/techmap.v:248$194_Y": {
+          "hide_name": 1,
+          "bits": [ 51 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.35-29.43|/share/techmap.v:293.27-293.63|/share/techmap.v:248.19-248.41"
+          }
+        },
+        "$ternary$verilog/4000/4029.v:27$6_Y": {
+          "hide_name": 1,
+          "bits": [ 61, 62, 63, 64 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:27.15-27.43"
+          }
+        },
+        "$ternary$verilog/4000/4029.v:29$9_Y": {
+          "hide_name": 1,
+          "bits": [ 65, 66, 67, 68 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:29.15-29.43"
+          }
+        },
+        "$ternary$verilog/4000/4029.v:31$12_Y": {
+          "hide_name": 1,
+          "bits": [ 26 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:31.30-31.59"
+          }
+        },
+        "BD": {
+          "hide_name": 0,
+          "bits": [ 5 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:14.11-14.13"
+          }
+        },
+        "CI_bar": {
+          "hide_name": 0,
+          "bits": [ 3 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:12.11-12.17"
+          }
+        },
+        "CLK": {
+          "hide_name": 0,
+          "bits": [ 2 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:11.11-11.14"
+          }
+        },
+        "CO_bar": {
+          "hide_name": 0,
+          "bits": [ 15 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:18.12-18.18"
+          }
+        },
+        "J": {
+          "hide_name": 0,
+          "bits": [ 7, 8, 9, 10 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:16.17-16.18"
+          }
+        },
+        "PE": {
+          "hide_name": 0,
+          "bits": [ 6 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:15.11-15.13"
+          }
+        },
+        "Q": {
+          "hide_name": 0,
+          "bits": [ 11, 12, 13, 14 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:17.22-17.23"
+          }
+        },
+        "UD": {
+          "hide_name": 0,
+          "bits": [ 4 ],
+          "attributes": {
+            "src": "verilog/4000/4029.v:13.11-13.13"
+          }
+        },
+        "top": {
+          "hide_name": 0,
+          "bits": [ "1", 5, 5 ],
+          "attributes": {
+          }
+        }
+      }
+    }
+  }
+}

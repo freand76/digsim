@@ -13,7 +13,14 @@ from pathlib import Path
 import pytest
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import Bus2Wires, IntegratedCircuit, YosysComponent
+from digsim.circuit.components import (
+    Bus2Wires,
+    IntegratedCircuit,
+    Probe,
+    StaticValue,
+    TristateBuffer,
+    YosysComponent,
+)
 from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
 
@@ -34,6 +41,18 @@ SOURCES = {
     "74595": ("74xx/74595.v", "ttl_74595"),
     "4017": ("4000/4017.v", "cmos_4017"),
     "4511": ("4000/4511.v", "cmos_4511"),
+    "4021": ("4000/4021.v", "cmos_4021"),
+    "4029": ("4000/4029.v", "cmos_4029"),
+    "4094": ("4000/4094.v", "cmos_4094"),
+    "74139": ("74xx/74139.v", "ttl_74139"),
+    "74148": ("74xx/74148.v", "ttl_74148"),
+    "74157": ("74xx/74157.v", "ttl_74157"),
+    "74161": ("74xx/74161.v", "ttl_74161"),
+    "74163": ("74xx/74163.v", "ttl_74163"),
+    "74173": ("74xx/74173.v", "ttl_74173"),
+    "74245": ("74xx/74245.v", "ttl_74245"),
+    "74374": ("74xx/74374.v", "ttl_74374"),
+    "74574": ("74xx/74574.v", "ttl_74574"),
 }
 # The bundled gate netlist, and the Verilog synthesized into functional blocks
 KINDS = ["netlist", "functional"]
@@ -533,7 +552,9 @@ def test_74164(kind):
 def test_74165(kind):
     """Load in parallel, then shift out of QH, the highest bit first"""
     bench = Bench("74165", kind)
-    bench.set(Clk=0, Clk_inh=0, SER=0, D=0xB4, SH_LD_bar=0)
+    bench.set(Clk=0, Clk_inh=0, SER=0, D=0x01, SH_LD_bar=0)
+    # While loading, the register follows D
+    bench.set(D=0xB4)
     bench.set(SH_LD_bar=1)
     out = []
     for _ in range(8):
@@ -546,3 +567,228 @@ def test_74165(kind):
     bench.set(SH_LD_bar=1, Clk_inh=1)
     bench.pulse("Clk")
     assert bench.get("QH") == 1
+
+
+# --------------------------------------------------------------------------------------
+# More counters, registers, selectors and shift registers
+# --------------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("kind", KINDS)
+@pytest.mark.parametrize("ic_name", ["74161", "74163"])
+def test_74161_74163_binary_counter(kind, ic_name):
+    """The 74161 clears at once, the 74163 at the next clock edge"""
+    bench = Bench(ic_name, kind)
+    bench.set(Clk=0, Clear_bar=0, Load_bar=1, ENP=1, ENT=1, D=0)
+    bench.pulse("Clk")
+    bench.set(Clear_bar=1)
+    count = 0
+    rng = random.Random(7)
+    for _ in range(400):
+        clear, load = int(rng.random() > 0.05), int(rng.random() > 0.1)
+        enp, ent = int(rng.random() > 0.2), int(rng.random() > 0.2)
+        d = rng.randrange(16)
+        bench.set(Clear_bar=clear, Load_bar=load, ENP=enp, ENT=ent, D=d)
+        if not clear and ic_name == "74161":
+            count = 0
+            assert bench.get("Q") == 0
+        assert bench.get("RCO") == int(ent and count == 15), count
+        bench.pulse("Clk")
+        if not clear:
+            count = 0
+        elif not load:
+            count = d
+        elif enp and ent:
+            count = (count + 1) & M4
+        assert bench.get("Q") == count, (clear, load, enp, ent)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_74157_quad_mux(kind):
+    bench = Bench("74157", kind)
+    rng = random.Random(8)
+    for _ in range(100):
+        a, b, s, g = rng.randrange(16), rng.randrange(16), rng.randrange(2), rng.randrange(2)
+        bench.set(A=a, B=b, S=s, G_bar=g)
+        assert bench.get("Y") == (0 if g else b if s else a)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_74173_register(kind):
+    bench = Bench("74173", kind)
+    bench.set(Clk=0, CLR=1, G1_bar=0, G2_bar=0, M=0, N=0, D=0)
+    bench.set(CLR=0)
+    register = 0
+    rng = random.Random(9)
+    for _ in range(200):
+        d, g1, g2 = rng.randrange(16), rng.randrange(2), rng.randrange(2)
+        m, n = int(rng.random() > 0.8), int(rng.random() > 0.8)
+        bench.set(D=d, G1_bar=g1, G2_bar=g2, M=m, N=n)
+        if rng.random() > 0.9:
+            bench.pulse("CLR")
+            register = 0
+        else:
+            bench.pulse("Clk")
+            if not g1 and not g2:
+                register = d
+        assert bench.get("Q") == ("Z" if m or n else register)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+@pytest.mark.parametrize("ic_name", ["74374", "74574"])
+def test_74374_74574_octal_flip_flops(kind, ic_name):
+    bench = Bench(ic_name, kind)
+    bench.set(Clk=0, OE_bar=0, D=0)
+    rng = random.Random(10)
+    register = None
+    for _ in range(100):
+        d, oe = rng.randrange(256), int(rng.random() > 0.7)
+        bench.set(D=d, OE_bar=oe)
+        if rng.random() > 0.3:
+            bench.pulse("Clk")
+            register = d
+        if register is not None:
+            assert bench.get("Q") == ("Z" if oe else register)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_74245_bus_transceiver(kind):
+    """A to B or B to A by DIR, neither while OE_bar is high"""
+    circuit = Circuit()
+    chip = _chip(circuit, "74245", kind)
+    side_a = TristateBuffer(circuit, "drive_a", width=8)
+    side_b = TristateBuffer(circuit, "drive_b", width=8)
+    controls = {}
+    for name, buffer, value in (("a", side_a, 0x5A), ("b", side_b, 0xC3)):
+        StaticValue(circuit, f"value_{name}", width=8, value=value).O.wire = buffer.A
+        controls[name] = StaticValue(circuit, f"enable_{name}", value=0)
+        controls[name].O.wire = buffer.OE
+    for port, buffer in ((chip.A, side_a), (chip.B, side_b)):
+        buffer.Y.wire = port
+    probes = {"a": Probe(circuit, "probe_a", width=8), "b": Probe(circuit, "probe_b", width=8)}
+    chip.A.wire = probes["a"].I
+    chip.B.wire = probes["b"].I
+    side_a.Y.wire = probes["a"].I
+    side_b.Y.wire = probes["b"].I
+    dir_, oe = StaticValue(circuit, "dir", value=1), StaticValue(circuit, "oe", value=0)
+    dir_.O.wire = chip.DIR
+    oe.O.wire = chip.OE_bar
+    circuit.init()
+
+    def run(**values):
+        for name, value in values.items():
+            component = {"dir": dir_, "oe": oe, **controls}[name]
+            component.parameter_set("value", value)
+            component.reconfigure()
+        circuit.run(us=1)
+        return probes["a"].I.value, probes["b"].I.value
+
+    # A drives the chip's A side, the chip drives B
+    assert run(a=1, b=0, dir=1, oe=0) == (0x5A, 0x5A)
+    # B to A
+    assert run(a=0, b=1, dir=0) == (0xC3, 0xC3)
+    # Not enabled: only B is driven, by its buffer
+    assert run(oe=1) == ("Z", 0xC3)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_74148_priority_encoder(kind):
+    bench = Bench("74148", kind)
+    for ei in (0, 1):
+        for inputs in range(256):
+            bench.set(I_bar=inputs, EI_bar=ei)
+            low = [bit for bit in range(8) if not inputs >> bit & 1]
+            if ei:
+                expected = (7, 1, 1)
+            elif not low:
+                expected = (7, 1, 0)
+            else:
+                expected = (~max(low) & 7, 0, 1)
+            assert (bench.get("A_bar"), bench.get("GS_bar"), bench.get("EO_bar")) == expected
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_74139_dual_decoder(kind):
+    bench = Bench("74139", kind)
+    for g1 in (0, 1):
+        for a1 in range(4):
+            for g2 in (0, 1):
+                for a2 in range(4):
+                    bench.set(G1_bar=g1, A1=a1, G2_bar=g2, A2=a2)
+                    assert bench.get("Y1_bar") == (0xF if g1 else 0xF & ~(1 << a1))
+                    assert bench.get("Y2_bar") == (0xF if g2 else 0xF & ~(1 << a2))
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_4094_shift_and_store(kind):
+    bench = Bench("4094", kind)
+    bench.set(CP=0, STR=0, OE=1, D=0)
+    for _ in range(8):
+        bench.pulse("CP")
+    bench.pulse("STR")
+    shift = stored = 0
+    serial2 = 0
+    rng = random.Random(11)
+    for _ in range(300):
+        operation = rng.choice(["shift", "shift", "store", "oe"])
+        if operation == "shift":
+            d = rng.randrange(2)
+            bench.set(D=d, CP=1)
+            shift = ((shift << 1) | d) & 0xFF
+            assert bench.get("QS2") == serial2
+            bench.set(CP=0)
+            serial2 = shift >> 7
+        elif operation == "store":
+            bench.pulse("STR")
+            stored = shift
+        else:
+            bench.set(OE=1 - bench.get("OE"))
+        assert bench.get("Q") == (stored if bench.get("OE") else "Z"), operation
+        assert bench.get("QS1") == shift >> 7
+        assert bench.get("QS2") == serial2
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_4021_parallel_in_serial_out(kind):
+    bench = Bench("4021", kind)
+    bench.set(CP=0, DS=0, P=0b1011_0010, PL=1)
+    bench.set(PL=0)
+    shift = 0b1011_0010
+    rng = random.Random(12)
+    for _ in range(50):
+        ds = rng.randrange(2)
+        bench.set(DS=ds)
+        bench.pulse("CP")
+        shift = ((shift << 1) | ds) & 0xFF
+        outputs = (bench.get("Q6"), bench.get("Q7"), bench.get("Q8"))
+        assert outputs == (shift >> 5 & 1, shift >> 6 & 1, shift >> 7)
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_4029_up_down_counter(kind):
+    bench = Bench("4029", kind)
+    bench.set(CLK=0, CI_bar=0, UD=1, BD=1, J=0, PE=1)
+    bench.set(PE=0)
+    count = 0
+    rng = random.Random(13)
+    for _ in range(400):
+        ci, ud, bd = int(rng.random() > 0.8), rng.randrange(2), rng.randrange(2)
+        top = 15 if bd else 9
+        if not bd and count > 9:
+            # Back in the decade first, from a binary count
+            bench.set(PE=1, J=0)
+            bench.set(PE=0)
+            count = 0
+        bench.set(CI_bar=ci, UD=ud, BD=bd)
+        last = count == (top if ud else 0)
+        assert bench.get("CO_bar") == int(ci or not last), (count, ud, bd)
+        if rng.random() > 0.95:
+            j = rng.randrange(top + 1)
+            bench.set(J=j, PE=1)
+            bench.set(PE=0)
+            count = j
+        else:
+            bench.pulse("CLK")
+            if not ci:
+                count = (count + 1) % (top + 1) if ud else (count - 1) % (top + 1)
+        assert bench.get("Q") == count

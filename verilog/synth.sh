@@ -78,6 +78,66 @@ python3 -m digsim.synth synth \
         -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/4511.json \
         -t cmos_4511
 
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/4000/4021.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/4021.json \
+        -t cmos_4021
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/4000/4029.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/4029.json \
+        -t cmos_4029
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/4000/4094.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/4094.json \
+        -t cmos_4094
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/74xx/74139.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74139.json \
+        -t ttl_74139
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/74xx/74148.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74148.json \
+        -t ttl_74148
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/74xx/74157.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74157.json \
+        -t ttl_74157
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/74xx/74161.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74161.json \
+        -t ttl_74161
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/74xx/74163.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74163.json \
+        -t ttl_74163
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/74xx/74173.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74173.json \
+        -t ttl_74173
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/74xx/74245.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74245.json \
+        -t ttl_74245
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/74xx/74374.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74374.json \
+        -t ttl_74374
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/74xx/74574.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74574.json \
+        -t ttl_74574
+
 # The 6502 synthesized into gates and into functional blocks, see examples/yosys_6502
 python3 -m digsim.synth synth \
         -i $SCRIPT_DIR/6502/ALU.v $SCRIPT_DIR/6502/cpu.v \
