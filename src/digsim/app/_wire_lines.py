@@ -54,6 +54,12 @@ from digsim.app._wire_path import (
     split_segment,
     step_aside,
 )
+from digsim.app._wire_route import (
+    automatic_route,
+    clicked_route,
+    default_direction,
+    faces_vertically,
+)
 from digsim.circuit.components.atoms import VALUE_TYPE, Port, PortConnectionError, resolve
 from digsim.storage_model import GuiWireDataClass, LineDataClass
 
@@ -127,7 +133,8 @@ class WireDrawing:
     """
     The drawn wires and their paths. A drawn wire keeps its path when components move:
     only the segments at the ports follow them. The GUI gives the connections, the ports
-    and their positions (connections(), ports(), port_pos() and port_rect()).
+    and their positions (connections(), ports(), port_pos() and port_rect()), and the
+    directions of the ports of rotated components (port_direction()).
     """
 
     def __init__(self) -> None:
@@ -156,6 +163,55 @@ class WireDrawing:
     def port_rect(self, port: Port) -> Rect:
         """The rectangle of a port's component, that a wire runs around"""
         raise NotImplementedError
+
+    def port_direction(self, port: Port) -> str:
+        """
+        The direction a wire leaves a port in: right from an output port and left from an
+        input port, other directions on a rotated component (see digsim.app._wire_route)
+        """
+        return default_direction(port.is_output())
+
+    def _turned_ends(self, wire: Wire) -> tuple[str | None, str | None] | None:
+        """
+        The directions of the ends of a wire with an end at a port of a rotated component,
+        None at a corner of another wire. None for other wires.
+        """
+        src_port, dst_port = wire
+        start = None if wire in self._branches else self.port_direction(src_port)
+        end = None if wire in self._joins else self.port_direction(dst_port)
+        if start in (None, default_direction(src_port.is_output())) and end in (
+            None,
+            default_direction(dst_port.is_output()),
+        ):
+            return None
+        return start, end
+
+    def _turned_taken(self, wire: Wire) -> tuple[set[str], set[str]]:
+        """The directions taken at the corners where a wire starts and ends"""
+        branch, join = self._branches.get(wire), self._joins.get(wire)
+        return (
+            set() if branch is None else self.taken_directions(*branch),
+            set() if join is None else self.taken_directions(*join),
+        )
+
+    def _turned_automatic_path(
+        self, wire: Wire, directions: tuple[str | None, str | None]
+    ) -> list[float]:
+        start_taken, end_taken = self._turned_taken(wire)
+        rects = [
+            self.port_rect(port)
+            for port, direction in zip(wire, directions, strict=True)
+            if direction is not None
+        ]
+        return automatic_route(
+            self.start_point(wire),
+            directions[0],
+            self.end_point(wire),
+            directions[1],
+            rects,
+            start_taken,
+            end_taken,
+        )
 
     def _push_undo(self) -> None:
         """Called before a change that is an undo step of its own"""
@@ -315,6 +371,9 @@ class WireDrawing:
     def automatic_path(self, wire: Wire) -> list[float]:
         """The automatic path of a wire, for the current component positions"""
         src_port, dst_port = wire
+        directions = self._turned_ends(wire)
+        if directions is not None:
+            return self._turned_automatic_path(wire, directions)
         if wire in self._joins:
             start, end = self.start_point(wire), self.end_point(wire)
             if wire in self._branches or is_forwards(start, end):
@@ -359,6 +418,21 @@ class WireDrawing:
         """
         start, end = self.start_point(wire), self.end_point(wire)
         clicks = list(clicks)
+        directions = self._turned_ends(wire)
+        if directions is not None:
+            if not clicks:
+                return self._turned_automatic_path(wire, directions)
+            start_taken, end_taken = self._turned_taken(wire)
+            return clicked_route(
+                start,
+                directions[0],
+                end,
+                directions[1],
+                clicks,
+                from_source,
+                start_taken,
+                end_taken,
+            )
         branch, join = self._branches.get(wire), self._joins.get(wire)
         if join is not None:
             if not clicks and branch is None:
@@ -436,6 +510,18 @@ class WireDrawing:
             self._joins[other] = (wire, new_corner(self._joins[other][1]))
         self._changed()
 
+    def reroute(self, components: set[Component]) -> None:
+        """
+        The wires to the ports of components get the automatic path, after they are
+        rotated (part of the rotation's undo step)
+        """
+        for wire in self.drawing_order():
+            src_port, dst_port = wire
+            if (wire not in self._branches and src_port.parent() in components) or (
+                wire not in self._joins and dst_port.parent() in components
+            ):
+                self.set_path(wire, self.automatic_path(wire), undo=False)
+
     def move_paths(self, paths: dict[Wire, list[float]], dx: int, dy: int) -> None:
         """
         Give wires their paths moved by (dx, dy), while components that they run between
@@ -445,6 +531,46 @@ class WireDrawing:
             self._paths[wire] = [
                 value + (dy if index % 2 else dx) for index, value in enumerate(path)
             ]
+
+    def following_ends(
+        self, moving: set[Component], moving_wires: Iterable[Wire]
+    ) -> dict[Wire, tuple[list[float], bool, bool]]:
+        """
+        The wires that leave or reach a port up or down, at a component that moves without
+        the other end of the wire: the segment at the port follows it across. Each wire
+        has its path, and if its start and its end follow.
+        """
+        result: dict[Wire, tuple[list[float], bool, bool]] = {}
+        skip = set(moving_wires)
+        for wire in self.drawn():
+            if wire in skip or wire in self._implied:
+                continue
+            directions = self._turned_ends(wire)
+            if directions is None:
+                continue
+            path = self.path(wire)
+            # The x of the segment at each end, at the port's x if it leaves it up or down
+            ends_x = (path[0], path[-1])
+            follows = [
+                direction is not None
+                and faces_vertically(direction)
+                and port.parent() in moving
+                and end_x == self.port_pos(port)[0]
+                for port, direction, end_x in zip(wire, directions, ends_x, strict=True)
+            ]
+            if any(follows):
+                result[wire] = (list(path), follows[0], follows[1])
+        return result
+
+    def move_ends(self, ends: dict[Wire, tuple[list[float], bool, bool]], dx: int) -> None:
+        """Move the segments at the ports of following_ends() across by dx, with a move"""
+        for wire, (path, start, end) in ends.items():
+            new_path = list(path)
+            if start:
+                new_path[0] += dx
+            if end:
+                new_path[-1] += dx
+            self._paths[wire] = new_path
 
     def moving_wires(self, moving: set[Component]) -> list[Wire]:
         """

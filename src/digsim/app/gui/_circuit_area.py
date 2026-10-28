@@ -71,6 +71,7 @@ from digsim.app._wire_path import (
     split_corner,
     split_segment,
 )
+from digsim.app._wire_route import faces_vertically
 from digsim.app.gui_objects import ComponentObject
 from digsim.app.gui_objects import _theme as theme
 from digsim.app.gui_objects._buzzer_object import BuzzerObject
@@ -820,6 +821,8 @@ class NewWireGraphicsItem(QGraphicsPathItem):
         if start_branch is None:
             component_object = self._app_model.objects.components.get_object(start_port.parent())
             start = _point(component_object.get_port_item(start_port).portPos())
+            # From a port of a rotated component that faces up or down: up or down first
+            vertical_first = faces_vertically(component_object.port_direction(start_port))
         else:
             # Like the model makes it, not along the wire it starts on
             wires = self._app_model.objects.wires
@@ -876,9 +879,17 @@ class _CircuitAreaScene(QGraphicsScene):
         self._selecting = False
         self._updating_wires = False
         self._select_start_pos: QPointF | None = None
-        # The component being dragged, where it was, and the paths of the wires that move
-        # with it (between components that move together)
-        self._group_move: tuple[ComponentObject, QPointF, dict[Wire, list[float]]] | None = None
+        # The component under the mouse and where it was, the paths of the wires that move
+        # with the components, and the wires whose ends follow them (see following_ends())
+        self._group_move: (
+            tuple[
+                ComponentObject,
+                QPointF,
+                dict[Wire, list[float]],
+                dict[Wire, tuple[list[float], bool, bool]],
+            ]
+            | None
+        ) = None
         # A selected point where wires meet, or a joint, and what clicks on it selected:
         # 1 the point, 2 the wires there, 3 the whole line
         self._point: Point | None = None
@@ -1181,7 +1192,8 @@ class _CircuitAreaScene(QGraphicsScene):
         moving.add(grabber.component)
         wires = self._app_model.objects.wires
         paths = {wire: list(wires.path(wire)) for wire in wires.moving_wires(moving)}
-        self._group_move = (grabber, grabber.pos(), paths)
+        ends = wires.following_ends(moving, paths)
+        self._group_move = (grabber, grabber.pos(), paths, ends)
         self._app_model.objects.components.set_move_undo_state(self._app_model.circuit_to_model())
 
     def wire_end_at(self, pos: QPointF) -> tuple[Wire, int, Point | None] | None:
@@ -1247,9 +1259,11 @@ class _CircuitAreaScene(QGraphicsScene):
                 has_moved_component = True
         if has_moved_component:
             if self._group_move is not None:
-                grabber, start, paths = self._group_move
+                grabber, start, paths, ends = self._group_move
                 delta = grabber.pos() - start
-                self._app_model.objects.wires.move_paths(paths, round(delta.x()), round(delta.y()))
+                wires = self._app_model.objects.wires
+                wires.move_paths(paths, round(delta.x()), round(delta.y()))
+                wires.move_ends(ends, round(delta.x()))
             self._app_model.sig_update_wires.emit()
 
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:

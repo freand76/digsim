@@ -24,12 +24,12 @@ folder in the repository has ready-made circuits to explore.
 The window has a menu bar and three areas:
 
 - **Menu bar** (top): **File** (New Tab, New, Open, Open Recent, Save, Save As, Export
-  Image, Close Tab, Quit), **Edit** (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete, Find Component,
-  Settings), **View** (zoom in and out, and Zoom to Fit: the whole circuit in the
-  window), **Simulation** (Start, Single Step, Step Clock, Reset) and **Help** (the
-  documentation, and the version of DigSim). Save saves the circuit in the file it was
-  opened from or saved to, the window title shows that file, with a `*` when the circuit
-  has changed since.
+  Image, Close Tab, Quit), **Edit** (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete,
+  Rotate, Find Component, Settings), **View** (zoom in and out, and Zoom to Fit: the
+  whole circuit in the window), **Simulation** (Start, Single Step, Step Clock, Reset)
+  and **Help** (the documentation, and the version of DigSim). Save saves the circuit in
+  the file it was opened from or saved to, the window title shows that file, with a `*`
+  when the circuit has changed since.
 - **Component selection** (blue, left): all available components, grouped by type, with
   a search field above them. Press **Ctrl + K** (or **Ctrl + F**, **Edit > Find
   Component**) and type a few letters of a component, like `led`, `flp` or `mem`: the
@@ -65,6 +65,7 @@ Right-click a component to open its context menu:
 
 | Menu item | Action |
 | --- | --- |
+| Rotate | Turn the component a quarter clockwise (gates and the other symbols, see [Rotating components](#rotating-components)) |
 | Bring to front / Send to back | Change the drawing order of overlapping components |
 | Delete | Remove the component and its wires |
 | Settings | Change the component's options (only for configurable components) |
@@ -74,6 +75,16 @@ Right-click a component to open its context menu:
 
 Click a component to select it, and drag it to move it. Delete the selected component
 with the **Del** key or the **Delete** button in the control area.
+
+### Rotating components
+
+Components drawn as a symbol (the gates, the tristate buffer, the multiplexer, the
+decoder and the demultiplexer, Bus2Wires, Wires2Bus and the Splitter) can be rotated:
+**Rotate** in the context menu, or **Ctrl + R** for the selected components, turns each a
+quarter clockwise around its middle. The wires to a rotated component get a new route,
+that leaves and reaches its ports in the directions they face, up or down too. The text
+of a rotated symbol reads from below or from the right. Components with a body, like the
+switches, the LEDs and the ICs, keep their direction.
 
 ## Wires
 
@@ -271,6 +282,7 @@ paste is one step to undo.
 | **Ctrl + Z** / **Ctrl + Y** | Undo / redo (also **Ctrl + Shift + Z**) |
 | **Ctrl + C** / **Ctrl + X** / **Ctrl + V** | Copy / cut / paste the selected components |
 | **Ctrl + D** | Duplicate the selected components |
+| **Ctrl + R** | Rotate the selected components a quarter clockwise |
 | **Ctrl + 0** / **Home** | Zoom to fit the whole circuit |
 | **Del** | Delete the selected components and wires |
 | **Space** | Start / stop the simulation |

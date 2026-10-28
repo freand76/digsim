@@ -101,6 +101,7 @@ class MenuBar(QMenuBar):
         self._delete_action = self._add(
             edit_menu, "&Delete", lambda: self._app_model.objects.delete_selected(), "Del"
         )
+        self._rotate_action = self._add(edit_menu, "&Rotate", self._rotate, "Ctrl+R")
         edit_menu.addSeparator()
         self._find_action = self._add(
             edit_menu, "&Find Component...", self.sig_find_component.emit, ["Ctrl+K", "Ctrl+F"]
@@ -278,6 +279,11 @@ class MenuBar(QMenuBar):
 
         return call
 
+    def _rotate(self) -> None:
+        if self._circuit_area is not None:
+            selected = self._circuit_area.selected_objects()
+            self._app_model.objects.components.rotate(selected)
+
     def _show_nothing_to_copy(self) -> None:
         if self._circuit_area is not None:
             self._circuit_area.show_message(
@@ -342,6 +348,11 @@ class MenuBar(QMenuBar):
         has_selection = area is not None and area.has_selection()
         has_components = area is not None and bool(area.selected_objects())
         self._delete_action.setEnabled(not running and has_selection)
+        self._rotate_action.setEnabled(
+            not running
+            and area is not None
+            and any(obj.ROTATABLE for obj in area.selected_objects())
+        )
         for action in (self._cut_action, self._copy_action, self._duplicate_action):
             action.setEnabled(not running and has_components)
         # Their shortcuts say why nothing happens instead
@@ -364,6 +375,7 @@ class MenuBar(QMenuBar):
                 self._paste_action,
                 self._duplicate_action,
                 self._delete_action,
+                self._rotate_action,
                 self._find_action,
                 self._settings_action,
                 self._export_action,

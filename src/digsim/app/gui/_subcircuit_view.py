@@ -191,6 +191,7 @@ class SubCircuitViewScene(QGraphicsScene):
     ) -> ComponentObject:
         component_object = cls(self._app_model, component, position.x, position.y)
         component_object.zlevel = position.z
+        component_object.rotation_angle = position.rotation
         # Read-only: not moved, selected or clicked, also not its ports
         component_object.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, False)
         component_object.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, False)

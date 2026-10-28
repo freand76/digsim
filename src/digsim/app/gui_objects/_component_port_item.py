@@ -142,10 +142,13 @@ class PortGraphicsItem(QGraphicsRectItem):
         return parent
 
     def portParentRect(self) -> QRectF:
-        """The rect of the component that the port belongs to, in scene coordinates"""
+        """
+        The rect of the component that the port belongs to, in scene coordinates (around
+        it, when it is rotated)
+        """
         parent = self._parent_rect_item()
-        return parent.rect().translated(parent.pos())
+        return parent.mapRectToScene(parent.rect())
 
     def portPos(self) -> QPointF:
         """The center of the port, in scene coordinates"""
-        return self._parent_rect_item().pos() + self.rect().center()
+        return self._parent_rect_item().mapToScene(self.rect().center())

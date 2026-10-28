@@ -66,6 +66,7 @@ from digsim.app._wire_path import (
     exits_vertically,
     is_forwards,
 )
+from digsim.app._wire_route import faces_vertically
 from digsim.app.gui import MainWindow
 from digsim.app.gui._circuit_area import (
     CircuitArea,
@@ -415,7 +416,7 @@ class GuiFuzzer:
     def snapshot(self) -> Any:
         """What undo must restore: the components, connections, wires' lines and paths"""
         gui = self.model.objects.components.get_gui_dict()
-        components = {name: (pos.x, pos.y) for name, pos in gui.items()}
+        components = {name: (pos.x, pos.y, pos.rotation) for name, pos in gui.items()}
         connections = sorted(
             (port_key(src_port), port_key(dst_port)) for src_port, dst_port in self.connections()
         )
@@ -845,6 +846,10 @@ class GuiFuzzer:
         """
         wires = self.model.objects.wires
         points = wires.corner_points(wire)
+        if wires._turned_ends(wire) is not None:
+            # To a port of a rotated component, see check_turned_ends()
+            self.check_turned_ends(wire)
+            return
         if not clicks and not is_forwards(points[0], points[-1]) and wires.branch(wire) is None:
             # Backwards without clicks: the automatic route around the component
             return
@@ -884,6 +889,27 @@ class GuiFuzzer:
             step = X_OFFSET
         expected = [*drawn[:-2], (end[0] + step, drawn[-3][1]), (end[0] + step, end[1]), end]
         check(points == expected, f"the wire doesn't keep its drawn shape: {points} != {expected}")
+
+    def check_turned_ends(self, wire: Wire) -> None:
+        """
+        A wire to a port of a rotated component leaves and reaches its ports along their
+        directions: across from a port that faces across, up or down from one that faces
+        up or down
+        """
+        wires = self.model.objects.wires
+        points = simplify(wires.corner_points(wire))
+        directions = wires._turned_ends(wire)
+        assert directions is not None
+        for direction, (port_point, next_point) in zip(
+            directions, ((points[0], points[1]), (points[-1], points[-2])), strict=True
+        ):
+            if direction is None or port_point == next_point:
+                continue
+            vertical = port_point[0] == next_point[0]
+            check(
+                vertical == faces_vertically(direction),
+                f"{drawn_key(wire)}: leaves a port that faces {direction} the other way",
+            )
 
     def check_across(self, wire: Wire) -> None:
         """A new branch leaves (or reaches) a joint across the wire, not along it"""
@@ -1895,6 +1921,8 @@ class GuiFuzzer:
             return wire[0].parent() in moving and wire[1].parent() in moving
 
         old_paths = {wire: (list(wires.path(wire)), between(wire)) for wire in wires.drawn()}
+        # The wires that leave a port up or down follow it across
+        follows = wires.following_ends(moving, wires.moving_wires(moving))
         self.drag(pos, (pos[0] + delta[0], pos[1] + delta[1]))
         after = (obj.pos().x(), obj.pos().y())
         check(after != before, f"{obj.component.name()} didn't move")
@@ -1905,12 +1933,45 @@ class GuiFuzzer:
             expected = [
                 value + (moved[index % 2] if between else 0) for index, value in enumerate(old)
             ]
+            if wire in follows:
+                _, start, end = follows[wire]
+                if start:
+                    expected[0] += moved[0]
+                if end:
+                    expected[-1] += moved[0]
             check(
                 wires.path(wire) == expected,
                 f"{drawn_key(wire)}: {old} -> {wires.path(wire)}, not {expected}",
             )
         names = "+".join(member.component.name() for member in group)
         return f"move {names} by {delta}"
+
+    def rotate_component(self) -> str:
+        """Rotate a component a quarter, like Rotate in its context menu or the Edit menu"""
+        objects = [obj for obj in self.component_objects() if obj.ROTATABLE]
+        if not objects:
+            raise Skip("no component that can be rotated")
+        obj = self.rng.choice(objects)
+        before = obj.rotation_angle
+        center = obj.mapRectToScene(obj.rect()).center()
+        self.model.objects.components.rotate([obj])
+        self.spin()
+        check(obj.rotation_angle == (before + 90) % 360, f"{obj.component.name()} didn't rotate")
+        after = obj.mapRectToScene(obj.rect()).center()
+        check(after == center, f"{obj.component.name()} moved when it rotated")
+        wires = self.model.objects.wires
+        for wire in wires.drawn():
+            src_port, dst_port = wire
+            at_start = wires.branch(wire) is None and src_port.parent() is obj.component
+            at_end = wires.join(wire) is None and dst_port.parent() is obj.component
+            if at_start or at_end:
+                check(
+                    wires.path(wire) == wires.automatic_path(wire),
+                    f"{drawn_key(wire)}: not the automatic path after the rotation",
+                )
+                if wires._turned_ends(wire) is not None:
+                    self.check_turned_ends(wire)
+        return f"rotate {obj.component.name()} to {obj.rotation_angle}"
 
     def undo(self) -> str:
         if not self.history:
@@ -1967,7 +2028,7 @@ class GuiFuzzer:
         line. Not the drawn wires, a joined wire can be a branch after loading.
         """
         gui = self.model.objects.components.get_gui_dict()
-        components = {name: (pos.x, pos.y) for name, pos in gui.items()}
+        components = {name: (pos.x, pos.y, pos.rotation) for name, pos in gui.items()}
         connections = sorted(
             (port_key(src_port), port_key(dst_port)) for src_port, dst_port in self.connections()
         )
@@ -2207,6 +2268,7 @@ class GuiFuzzer:
         ("drag_segment", 3),
         ("edit_segment", 3),
         ("move_component", 2),
+        ("rotate_component", 2),
         ("copy_paste", 2),
         ("undo", 3),
         ("undo_while_dragging", 1),

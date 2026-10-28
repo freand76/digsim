@@ -9,7 +9,7 @@ import abc
 from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, QSize, Qt
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QTransform
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsRectItem,
@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from digsim.app._wire_route import default_direction, rotated
 from digsim.circuit.components.atoms import Component, Port
 from digsim.storage_model import GuiPositionDataClass
 
@@ -48,6 +49,8 @@ class ComponentObject(QGraphicsRectItem):
     PORT_ARROWS = False
     # How far outside its rect the component paints, like the glow of a lit LED
     PAINT_MARGIN = 0
+    # Can be rotated, a quarter at a time
+    ROTATABLE = False
 
     _COMPONENT_NAME_FONT = theme.font(8, bold=True)
     _PORT_NAME_FONT = theme.font(7)
@@ -74,6 +77,8 @@ class ComponentObject(QGraphicsRectItem):
         self._mouse_press_pos: QPoint | None = None
         self._moved = False
         self._save_pos: QPointF | QPoint = self.rect().topLeft()
+        # Clockwise, around the middle of the rect: 0, 90, 180 or 270 degrees
+        self._rotation = 0
 
         # Create ports
         self.create_ports()
@@ -225,6 +230,31 @@ class ComponentObject(QGraphicsRectItem):
         self._set_port_rects(
             self._component.outports(), self.RECT_TO_BORDER + self.width - self.PORT_SIDE - 1
         )
+        self._apply_rotation()
+
+    @property
+    def rotation_angle(self) -> int:
+        """The rotation clockwise, 0, 90, 180 or 270 degrees"""
+        return self._rotation
+
+    @rotation_angle.setter
+    def rotation_angle(self, rotation: int) -> None:
+        self._rotation = rotation % 360 if self.ROTATABLE else 0
+        self._apply_rotation()
+
+    def _apply_rotation(self) -> None:
+        """Rotate the component and its ports around the middle of its rect"""
+        center = self.rect().center()
+        self.setTransform(
+            QTransform()
+            .translate(center.x(), center.y())
+            .rotate(self._rotation)
+            .translate(-center.x(), -center.y())
+        )
+
+    def port_direction(self, port: Port) -> str:
+        """The direction a wire leaves a port in, see digsim.app._wire_route"""
+        return rotated(default_direction(port.is_output()), self._rotation)
 
     def _fit_port_names(self) -> None:
         """Make the component wide enough for the names of its ports"""
@@ -426,5 +456,8 @@ class ComponentObject(QGraphicsRectItem):
 
     def to_gui_dataclass(self) -> GuiPositionDataClass:
         return GuiPositionDataClass(
-            x=int(self._save_pos.x()), y=int(self._save_pos.y()), z=int(self.zlevel)
+            x=int(self._save_pos.x()),
+            y=int(self._save_pos.y()),
+            z=int(self.zlevel),
+            rotation=self._rotation,
         )

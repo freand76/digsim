@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pytest module to test the storage model data classes"""
@@ -15,6 +15,7 @@ from digsim.storage_model import (
     CircuitDataClass,
     CircuitFileDataClass,
     ComponentDataClass,
+    GuiPositionDataClass,
     GuiWireDataClass,
     LineDataClass,
     ModelDataClass,
@@ -145,6 +146,20 @@ def test_positions_saved_as_whole_numbers(tmp_path):
     text = filename.read_text()
     assert "469" not in text
     assert ".0" not in text and ".5" not in text
+
+
+def test_rotation_saved_only_for_rotated_components(tmp_path):
+    """Files of circuits without rotated components stay as they were"""
+    app_file_dc = AppFileDataClass(
+        circuit=CircuitDataClass(name="c"),
+        gui={"a": GuiPositionDataClass(x=10, y=20), "b": GuiPositionDataClass(rotation=90)},
+    )
+    app_file_dc.save(tmp_path / "c.circuit")
+    gui = json.loads((tmp_path / "c.circuit").read_text())["gui"]
+    assert "rotation" not in gui["a"]
+    assert gui["b"]["rotation"] == 90
+    loaded = AppFileDataClass.load(tmp_path / "c.circuit")
+    assert (loaded.gui["a"].rotation, loaded.gui["b"].rotation) == (0, 90)
 
 
 def test_line_connects_its_ports():

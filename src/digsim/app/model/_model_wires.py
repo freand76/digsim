@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Handle the shape of the wires in the model"""
@@ -51,6 +51,10 @@ class ModelWires(WireDrawing):
         component_object = self._app_model.objects.components.get_object(port.parent())
         pos = component_object.get_port_item(port).portPos()
         return pos.x(), pos.y()
+
+    def port_direction(self, port: Port) -> str:
+        component_object = self._app_model.objects.components.get_object(port.parent())
+        return component_object.port_direction(port)
 
     def port_rect(self, port: Port) -> Rect:
         component_object = self._app_model.objects.components.get_object(port.parent())

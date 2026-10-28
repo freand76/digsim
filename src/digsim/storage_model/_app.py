@@ -26,9 +26,15 @@ from ._circuit import (
 
 @dataclass
 class GuiPositionDataClass:
+    """
+    Where a component is in the GUI: the top left corner of it before it is rotated, its
+    place in the stack (z), and its rotation clockwise, 0, 90, 180 or 270 degrees
+    """
+
     x: int = 100
     y: int = 100
     z: int = 0
+    rotation: int = 0
 
 
 @dataclass
@@ -86,6 +92,10 @@ class AppFileDataClass:
             del data["wires"]
         if not self.circuit.wires:
             del data["circuit"]["wires"]
+        # Only the rotated components have a rotation in the file
+        for position in data["gui"].values():
+            if not position["rotation"]:
+                del position["rotation"]
         write_json_file(filename, data)
 
 

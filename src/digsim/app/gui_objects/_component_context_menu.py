@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """A component context menu"""
@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QPoint
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QMenu, QWidget
 
 from digsim.app.settings import ComponentSettingsDialog
@@ -41,6 +41,11 @@ class ComponentContextMenu(QMenu):
         # Settings
         self._add_settings()
         self._component_object.add_context_menu_action(self, parent)
+        if self._component_object.ROTATABLE:
+            rotateAction = QAction("Rotate", self)
+            rotateAction.setShortcut(QKeySequence("Ctrl+R"))
+            self.addAction(rotateAction)
+            rotateAction.triggered.connect(self._rotate)
         self.addSeparator()
         # Bring to front / Send to back
         raiseAction = QAction("Bring to front", self)
@@ -72,6 +77,9 @@ class ComponentContextMenu(QMenu):
 
     def _raise(self) -> None:
         self._app_model.objects.components.bring_to_front(self._component_object)
+
+    def _rotate(self) -> None:
+        self._app_model.objects.components.rotate([self._component_object])
 
     def _lower(self) -> None:
         self._app_model.objects.components.send_to_back(self._component_object)

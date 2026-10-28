@@ -54,6 +54,7 @@ class SymbolObject(ComponentObject):
     """A component drawn as a symbol, the ports at the ends of its leads"""
 
     SHOW_PORT_NAMES = False
+    ROTATABLE = True
 
     def port_ys(self, ports: list[Port]) -> list[float]:
         """The y of each port, in the scene"""
@@ -650,6 +651,9 @@ class LedObject(SymbolObject):
     An LED standing, seen from the side, in the color of the component. Its long leg
     bends to the input, below it.
     """
+
+    # An LED stays upright
+    ROTATABLE = False
 
     WIDTH = 26
     HEIGHT = 40

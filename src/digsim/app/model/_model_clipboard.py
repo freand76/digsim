@@ -118,7 +118,11 @@ class ModelClipboard:
             position = data.gui.get(component_dc.name, GuiPositionDataClass())
             created.append(
                 objects.components.add_placed_object(
-                    component, position.x + dx, position.y + dy, top + position.z
+                    component,
+                    position.x + dx,
+                    position.y + dy,
+                    top + position.z,
+                    position.rotation,
                 )
             )
         if created:

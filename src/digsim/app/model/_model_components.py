@@ -119,6 +119,22 @@ class ModelComponents:
             self._app_model.objects.push_undo_state()
         self._app_model.model_changed()
 
+    def rotate(self, component_objects: list[ComponentObject]) -> None:
+        """
+        Rotate components a quarter clockwise, each around its middle (those that can be
+        rotated). The wires to them get the automatic path.
+        """
+        rotatable = [obj for obj in component_objects if obj.ROTATABLE]
+        if not rotatable:
+            return
+        self._app_model.objects.push_undo_state()
+        for component_object in rotatable:
+            component_object.rotation_angle = component_object.rotation_angle + 90
+        self._app_model.objects.wires.reroute({obj.component for obj in rotatable})
+        self._app_model.model_changed()
+        self._app_model.sig_update_wires.emit()
+        self._app_model.sig_repaint.emit()
+
     def bring_to_front(self, component_object: ComponentObject) -> None:
         """Make the component object the highest in the stack"""
         self._app_model.objects.push_undo_state()
@@ -436,11 +452,12 @@ class ModelComponents:
         self._app_model.sig_delete_component.emit(component_object)
 
     def add_placed_object(
-        self, component: Component, xpos: float, ypos: float, zlevel: float
+        self, component: Component, xpos: float, ypos: float, zlevel: float, rotation: int = 0
     ) -> ComponentObject:
         """Add the object of a component that was added to the circuit, at a position"""
         component_object = self._add_object(component, xpos, ypos)
         component_object.zlevel = zlevel
+        component_object.rotation_angle = rotation
         return component_object
 
     def add_gui_positions(self, gui_dc_dict: dict[str, GuiPositionDataClass]) -> None:
@@ -449,6 +466,7 @@ class ModelComponents:
             gui_dc = gui_dc_dict.get(comp.name(), GuiPositionDataClass())
             component_object = self._add_object(comp, gui_dc.x, gui_dc.y)
             component_object.zlevel = gui_dc.z
+            component_object.rotation_angle = gui_dc.rotation
 
     def get_gui_dict(self) -> dict[str, GuiPositionDataClass]:
         """Return gui dict from component objects"""

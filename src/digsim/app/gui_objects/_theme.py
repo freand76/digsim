@@ -11,6 +11,8 @@ symbol only. Components that are a device, like a switch or a display, have a wh
 
 from __future__ import annotations
 
+import math
+
 from PySide6.QtCore import QPointF, QRectF, Qt
 from PySide6.QtGui import (
     QBrush,
@@ -215,10 +217,37 @@ def paint_text(
     align: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignCenter,
     bold: bool = False,
 ) -> None:
-    """Text in a rect"""
+    """
+    Text in a rect. In a rotated component it reads from below or from the right, like
+    text in a drawing: it is turned around in its rect when it would be upside down or
+    read from the left.
+    """
     painter.setPen(color)
     painter.setFont(font(size, bold))
-    painter.drawText(rect, int(align), text)
+    transform = painter.worldTransform()
+    # The quarters the painter is rotated clockwise
+    quarters = round(math.degrees(math.atan2(transform.m12(), transform.m11())) / 90) % 4
+    if quarters not in (1, 2):
+        painter.drawText(rect, int(align), text)
+        return
+    painter.save()
+    center = rect.center()
+    painter.translate(center)
+    painter.rotate(180)
+    painter.translate(-center)
+    # At the same end of the rect
+    flip = {
+        Qt.AlignmentFlag.AlignLeft: Qt.AlignmentFlag.AlignRight,
+        Qt.AlignmentFlag.AlignRight: Qt.AlignmentFlag.AlignLeft,
+        Qt.AlignmentFlag.AlignTop: Qt.AlignmentFlag.AlignBottom,
+        Qt.AlignmentFlag.AlignBottom: Qt.AlignmentFlag.AlignTop,
+    }
+    turned = align
+    for flag, other in flip.items():
+        if align & flag:
+            turned = (turned & ~flag) | other
+    painter.drawText(rect, int(turned), text)
+    painter.restore()
 
 
 def lead(painter: QPainter, start: QPointF, end: QPointF, width: float = LINE_WIDTH) -> None:

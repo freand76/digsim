@@ -183,6 +183,36 @@ def test_undo_redo_and_delete(gui):
     assert gui.model.objects.components.is_empty()
 
 
+def test_rotate(gui, tmp_path):
+    """Rotate turns the selected symbols a quarter, an undo step, saved in the file"""
+    gate = gui.add("AND")
+    led = gui.add("Led")
+    assert not gui.action("Edit", "Rotate").isEnabled()
+    led.setSelected(True)
+    spin()
+    # An LED isn't rotated
+    assert not gui.action("Edit", "Rotate").isEnabled()
+    gate.setSelected(True)
+    spin()
+    assert gui.action("Edit", "Rotate").isEnabled()
+    gui.trigger("Edit", "Rotate")
+    assert (gate.rotation_angle, led.rotation_angle) == (90, 0)
+    # The output faces down, its port is below the middle of the gate
+    center = gate.mapRectToScene(gate.rect()).center()
+    output = gate.get_port_item(gate.component.Y).portPos()
+    assert abs(output.x() - center.x()) < 1 and output.y() > center.y()
+    # Undo builds the objects again
+    gui.trigger("Edit", "Undo")
+    rotated = [obj.rotation_angle for obj in gui.model.objects.components.get_object_list()]
+    assert rotated == [0, 0]
+    gui.trigger("Edit", "Redo")
+    gui.path = str(tmp_path / "rotated.circuit")
+    gui.trigger("File", "Save")
+    saved = json.loads((tmp_path / "rotated.circuit").read_text())
+    assert saved["gui"]["AND"]["rotation"] == 90
+    assert "rotation" not in saved["gui"]["Led"]
+
+
 def test_simulation(gui):
     """Start turns into Stop while the simulation runs, and the file actions are off"""
     gui.add("Clock")

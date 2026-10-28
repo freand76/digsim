@@ -8,6 +8,8 @@ import pytest
 from digsim.app._line_graph import on_segment
 from digsim.app._wire_key import drawn_key, wire_key
 from digsim.app._wire_lines import PointMove, WireDrawing
+from digsim.app._wire_path import corner_points
+from digsim.app._wire_route import rotated
 from digsim.circuit import Circuit
 from digsim.circuit.components import (
     Led,
@@ -955,3 +957,49 @@ def test_connect_a_line_of_inout_ports(inout_bus):
     assert drawing.drivers(a) == ["B", "P"]
     assert drawing.drivers(b) == ["A", "P"]
     assert drawing.drivers(led) == ["A", "B", "P"]
+
+
+class RotatedDrawing(Drawing):
+    """A drawing where some components are rotated a quarter, clockwise"""
+
+    def __init__(self):
+        super().__init__()
+        self.turned = set()
+
+    def port_pos(self, port):
+        if port.parent() not in self.turned:
+            return super().port_pos(port)
+        # The outputs below the middle of the component, the inputs above it
+        x, y = self.places[port.parent()]
+        return (x + 20, y + 20) if port.is_output() else (x + 20, y - 20)
+
+    def port_direction(self, port):
+        direction = super().port_direction(port)
+        return rotated(direction, 90) if port.parent() in self.turned else direction
+
+
+def test_drawing_with_a_rotated_component():
+    drawing = RotatedDrawing()
+    button = drawing.button("B", 0, 0)
+    led = drawing.led("L", 200, 100)
+    other = drawing.led("M", 200, 300)
+    drawing.turned.add(led.parent())
+    drawing.connect_ports(button, led)
+    # Into the LED's input from above, it faces up
+    points = _route_points(
+        drawing.port_pos(button), drawing.port_pos(led), drawing.path((button, led))
+    )
+    assert points[-2][0] == points[-1][0] == 220
+    assert points[-2][1] < points[-1][1]
+    # A wire between ports that aren't rotated has the path it always had
+    drawing.connect_ports(button, other)
+    assert drawing.path((button, other)) == [190]
+
+
+def _route_points(start, end, path):
+    """The corners of a wire, without the segments without length"""
+    points = []
+    for point in corner_points(start, end, path):
+        if not points or point != points[-1]:
+            points.append(point)
+    return points
