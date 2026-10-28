@@ -28,6 +28,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from digsim.app._app_settings import simulate_hidden_tabs
 from digsim.app._yosys_interface import same_file
 from digsim.app.editor import VerilogEditors
 from digsim.app.gui_objects._subcircuit_object import reload_subcircuits
@@ -174,6 +175,7 @@ class MainWindow(QMainWindow):
         self._menu_bar.sig_close_tab.connect(self.close_current_tab)
         self._menu_bar.sig_open_file.connect(self.open_file)
         self._menu_bar.sig_find_component.connect(self._find_component)
+        self._menu_bar.sig_app_settings_changed.connect(self._app_settings_changed)
         self._tabs = QTabWidget(self)
         self._tabs.setDocumentMode(True)
         self._tabs.setTabsClosable(True)
@@ -417,16 +419,34 @@ class MainWindow(QMainWindow):
         # Then the model is freed, with its circuit
         tab.app_model.disconnect_signals()
 
+    def _app_settings_changed(self) -> None:
+        """Simulations in hidden tabs turned off: the hidden tabs stop"""
+        if simulate_hidden_tabs():
+            return
+        shown = self.current_tab().app_model
+        for tab in self.tabs():
+            if tab.app_model is not shown:
+                tab.app_model.model_stop()
+
     def _tab_changed(self, _: int) -> None:
-        """Another tab is shown: the one that was shown stops, the menu follows the new one"""
+        """
+        Another tab is shown: the one that was shown stops (or goes on without sound, see
+        simulate_hidden_tabs()), the menu follows the new one
+        """
         if self._tabs.count() == 0:
             return
         shown = self._tabs.currentWidget()
         assert isinstance(shown, (CircuitTab, ViewTab))
         tab = self.current_tab()
         # A view of a subcircuit shows the simulation of its circuit, which goes on
-        if self._shown_tab is not None and self._shown_tab.app_model is not shown.app_model:
+        if (
+            self._shown_tab is not None
+            and self._shown_tab.app_model is not shown.app_model
+            and not simulate_hidden_tabs()
+        ):
             self._shown_tab.app_model.model_stop()
+        for circuit_tab in self.tabs():
+            circuit_tab.circuit_area.set_muted(circuit_tab is not tab)
         self._shown_tab = shown
         self._menu_bar.set_tab(tab.app_model, tab.circuit_area, isinstance(shown, ViewTab))
         self._menu_bar.set_vcd(tab.vcd)
@@ -461,7 +481,9 @@ class MainWindow(QMainWindow):
         index = self._tabs.indexOf(tab)
         if index < 0:
             return
-        self._tabs.setTabText(index, tab.title())
+        # A tab that simulates is marked, the hidden ones too (see simulate_hidden_tabs())
+        running = "\u25b6 " if tab.app_model.is_running else ""
+        self._tabs.setTabText(index, f"{running}{tab.title()}")
         path = tab.app_model.circuit_path
         self._tabs.setTabToolTip(index, path or "")
         if tab is not self._tabs.currentWidget():

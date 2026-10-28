@@ -872,6 +872,8 @@ class _CircuitAreaScene(QGraphicsScene):
         self._app_model.sig_audio_start.connect(self._audio_start)
         self._app_model.sig_audio_notify.connect(self._audio_notify)
         self._app_model.sig_oscillating.connect(self._oscillating)
+        # In a tab that isn't shown the buzzers don't sound, see set_muted()
+        self._muted = False
         self._wire_items: list[WireGraphicsItem] = []
         # The wire items of each line
         self._line_items: dict[Node, list[WireGraphicsItem]] = {}
@@ -921,9 +923,17 @@ class _CircuitAreaScene(QGraphicsScene):
     def _audio_start(self, enable: bool) -> None:
         for component_object in self._app_model.objects.get_list():
             if isinstance(component_object, BuzzerObject):
-                component_object.audio_start(enable)
+                component_object.audio_start(enable and not self._muted)
+
+    def set_muted(self, muted: bool) -> None:
+        """No sound from the buzzers (the tab isn't shown), or sound again"""
+        if muted != self._muted:
+            self._muted = muted
+            self._audio_start(self._app_model.is_running)
 
     def _audio_notify(self, component: Component) -> None:
+        if self._muted:
+            return
         # The component may already be gone, if the circuit changed after the signal was sent
         component_object = self._app_model.objects.components.get_dict().get(component)
         if isinstance(component_object, BuzzerObject):
@@ -1529,6 +1539,10 @@ class CircuitArea(QGraphicsView):
         self._message_timer = QTimer(self)
         self._message_timer.setSingleShot(True)
         self._message_timer.timeout.connect(self._message.hide)
+
+    def set_muted(self, muted: bool) -> None:
+        """No sound from the buzzers of the circuit, while its tab isn't shown"""
+        self._scene.set_muted(muted)
 
     def refresh_theme(self) -> None:
         """The background and the message in the colors of the theme, after it changed"""

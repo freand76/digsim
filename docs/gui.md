@@ -45,7 +45,9 @@ Each circuit is in a tab of its own: **File > New Tab** opens an empty one, and 
 opens a circuit in a new tab (or in an empty one). A circuit that is open already gets its
 tab shown. The tab bar is shown with two tabs or more. Only the tab that is shown
 simulates: switching to another tab stops the simulation of the one that is left, and
-Start goes on from where it was.
+Start goes on from where it was. With **Simulate in hidden tabs** in the
+[application settings](#application-settings), the simulations go on in the tabs that
+aren't shown, without sound, and a tab that simulates has a ▶ in front of its name.
 
 A typical circuit consists of:
 
@@ -277,13 +279,15 @@ The circuit cannot be edited while the simulation is running.
 
 ### Application settings
 
-**Edit > Settings** opens the application settings:
+**Edit > Settings** opens the application settings. The first three are saved in the
+circuit file, Simulate in hidden tabs is for all circuits:
 
 | Setting | Description |
 | --- | --- |
 | GUI Update Frequency | How often the display is refreshed (1–100 Hz) |
 | Slow down sim to 'Real Time' | Keep simulation time in step with wall-clock time |
 | Show Wire Value | Color wires by their current logic level |
+| Simulate in hidden tabs | Simulations go on in the tabs that aren't shown, without sound (off: a tab stops when another one is shown) |
 
 ### VCD output
 

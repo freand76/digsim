@@ -5,7 +5,6 @@
 
 from __future__ import annotations
 
-import os
 from collections.abc import Callable
 from functools import partial
 from pathlib import Path
@@ -16,6 +15,7 @@ from PySide6.QtCore import QSettings, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QFileDialog, QMenu, QMenuBar, QMessageBox, QWidget
 
+from digsim.app._app_settings import app_settings
 from digsim.app._clock_step import circuit_clocks
 from digsim.app._recent_files import with_recent, without_file
 from digsim.app.settings import GuiSettingsDialog
@@ -44,6 +44,8 @@ class MenuBar(QMenuBar):
     sig_new_tab = Signal()
     sig_close_tab = Signal()
     sig_open_file = Signal(str)
+    # Edit > Settings changed the settings of the application
+    sig_app_settings_changed = Signal()
 
     def __init__(self, app_model: AppModel, parent: QWidget, package_version: str) -> None:
         super().__init__(parent)
@@ -206,14 +208,8 @@ class MenuBar(QMenuBar):
 
     @staticmethod
     def settings() -> QSettings:
-        """
-        The settings of the application, like the recent files. DIGSIM_SETTINGS_DIR sets
-        another folder for them, like scripts and tests do.
-        """
-        folder = os.environ.get("DIGSIM_SETTINGS_DIR")
-        if folder:
-            return QSettings(str(Path(folder) / "digsim.ini"), QSettings.Format.IniFormat)
-        return QSettings(QSettings.Format.IniFormat, QSettings.Scope.UserScope, "digsim", "digsim")
+        """The settings of the application, like the recent files (see app_settings())"""
+        return app_settings()
 
     def recent_files(self) -> list[str]:
         """The circuit files opened or saved last, the last one first"""
@@ -266,7 +262,8 @@ class MenuBar(QMenuBar):
     # Edit
 
     def _settings_dialog(self) -> None:
-        GuiSettingsDialog(self._window, self._app_model).start()
+        if GuiSettingsDialog(self._window, self._app_model).start():
+            self.sig_app_settings_changed.emit()
 
     def set_tab(
         self, app_model: AppModel, circuit_area: CircuitArea, read_only: bool = False

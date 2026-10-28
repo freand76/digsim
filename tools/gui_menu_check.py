@@ -305,6 +305,64 @@ def test_vcd_output_in_the_menu(gui, tmp_path):
     assert not gui.action("Simulation", "VCD Output").isChecked()
 
 
+def test_a_hidden_tab_stops_unless_the_setting_says_it_goes_on(gui):
+    """Off (the default) a tab stops when another is shown, on it goes on without sound"""
+    from digsim.app._app_settings import HIDDEN_TABS_KEY
+
+    window = gui.window
+    first = window.current_tab()
+    gui.add("Clock")
+    gui.trigger("Simulation", "Start")
+    spin(100)
+    gui.trigger("File", "New Tab")
+    spin(100)
+    assert not first.app_model.is_running
+    try:
+        MenuBar.settings().setValue(HIDDEN_TABS_KEY, True)
+        window._tabs.setCurrentWidget(first)
+        gui.trigger("Simulation", "Start")
+        spin(100)
+        window._tabs.setCurrentIndex(1)
+        spin(100)
+        assert first.app_model.is_running
+        assert first.circuit_area._scene._muted
+        assert window._tabs.tabText(0).startswith("\u25b6 ")
+        assert not window._tabs.tabText(1).startswith("\u25b6")
+        window._tabs.setCurrentWidget(first)
+        spin()
+        assert not first.circuit_area._scene._muted
+        window._tabs.setCurrentIndex(1)
+        spin()
+        # Turned off: the hidden tab stops
+        MenuBar.settings().setValue(HIDDEN_TABS_KEY, False)
+        window._app_settings_changed()
+        spin(100)
+        assert not first.app_model.is_running
+        assert not window._tabs.tabText(0).startswith("\u25b6")
+    finally:
+        MenuBar.settings().setValue(HIDDEN_TABS_KEY, False)
+        for tab in window.tabs():
+            tab.app_model.model_stop()
+            tab.app_model._changed = False
+
+
+def test_the_settings_dialog_saves_simulating_in_hidden_tabs(gui):
+    from PySide6.QtWidgets import QDialog
+
+    from digsim.app._app_settings import HIDDEN_TABS_KEY, simulate_hidden_tabs
+    from digsim.app.settings import GuiSettingsDialog
+
+    assert not simulate_hidden_tabs()
+    dialog = GuiSettingsDialog(gui.window, gui.model)
+    dialog._hidden_tabs.setChecked(True)
+    dialog.exec = lambda: QDialog.DialogCode.Accepted
+    try:
+        assert dialog.start()
+        assert simulate_hidden_tabs()
+    finally:
+        MenuBar.settings().setValue(HIDDEN_TABS_KEY, False)
+
+
 def test_simulation(gui):
     """Start turns into Stop while the simulation runs, and the file actions are off"""
     gui.add("Clock")

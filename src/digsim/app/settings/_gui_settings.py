@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from digsim.app._app_settings import HIDDEN_TABS_KEY, app_settings, simulate_hidden_tabs
+
 from ._dialog_flags import DIALOG_FLAGS
 
 
@@ -47,6 +49,12 @@ class GuiSettingsDialog(QDialog):
 
         self._slow_to_real_time = QCheckBox("", self)
         self._show_wire_value = QCheckBox("", self)
+        # For the application, not saved in the circuit
+        self._hidden_tabs = QCheckBox("", self)
+        self._hidden_tabs.setToolTip(
+            "Simulations go on in the other tabs, without sound. Off: a tab's simulation "
+            "stops when another tab is shown."
+        )
 
         # OK / Cancel
         self.buttonBox = QDialogButtonBox(
@@ -66,11 +74,21 @@ class GuiSettingsDialog(QDialog):
         layout.addWidget(QLabel("Show Wire Value", self), row, 0, 1, 1)
         layout.addWidget(self._show_wire_value, row, 1, 1, 1)
         row += 1
+        heading = QLabel("All circuits", self)
+        font = heading.font()
+        font.setBold(True)
+        heading.setFont(font)
+        layout.addWidget(heading, row, 0, 1, 2)
+        row += 1
+        layout.addWidget(QLabel("Simulate in hidden tabs", self), row, 0, 1, 1)
+        layout.addWidget(self._hidden_tabs, row, 1, 1, 1)
+        row += 1
         layout.addWidget(self.buttonBox, row, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignCenter)
 
         self._settings = self._app_model.settings.get_all()
         self._slow_to_real_time.setChecked(self._settings["real_time"])
         self._show_wire_value.setChecked(self._settings["color_wires"])
+        self._hidden_tabs.setChecked(simulate_hidden_tabs())
 
         frequency = self._settings["update_frequency"]
         if self._update_frequency.findData(frequency) < 0:
@@ -78,8 +96,8 @@ class GuiSettingsDialog(QDialog):
             self._update_frequency.addItem(f"{frequency} Hz", userData=frequency)
         self._update_frequency.setCurrentIndex(self._update_frequency.findData(frequency))
 
-    def start(self) -> None:
-        """Start Dialog"""
+    def start(self) -> bool:
+        """Show the dialog, True if the settings were changed (OK)"""
         result = self.exec()
         if result == QDialog.DialogCode.Accepted:
             self._settings["real_time"] = self._slow_to_real_time.isChecked()
@@ -88,3 +106,6 @@ class GuiSettingsDialog(QDialog):
                 self._update_frequency.currentIndex()
             )
             self._app_model.settings.update(self._settings)
+            app_settings().setValue(HIDDEN_TABS_KEY, self._hidden_tabs.isChecked())
+            return True
+        return False
