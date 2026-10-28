@@ -205,7 +205,7 @@ different values.
 An inout port of a Verilog component, drawn as a diamond, is an output and an input: it
 drives the line and reads it, like a pin on a bidirectional bus. Draw a wire from it like
 from an output. Two inout ports on a line drive each other, so a value can go both ways
-on the same wire, see the [walkie-talkie example](examples.md#walkie-talkies).
+on the same wire, see the [bidirectional port example](examples.md#bidirectional-port).
 
 A new wire can end on any wire, at a corner or anywhere along it, and the pointer shows a
 crosshair where it can. A wire from an input port is a branch there, and a wire from an

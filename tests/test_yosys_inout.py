@@ -26,7 +26,7 @@ from digsim.utils import YosysNetlist
 VERILOG = Path(__file__).parent / "verilog" / "inout.v"
 ROOT = Path(__file__).parents[1]
 BUS_REGISTER = ROOT / "examples" / "yosys_inout" / "bus_register.v"
-WALKIE_TALKIE = ROOT / "circuits" / "walkie_talkie" / "walkie_talkie.circuit"
+WALKIE_TALKIE = ROOT / "circuits" / "bidirectional_port" / "bidirectional_port.circuit"
 
 
 def _netlist(top, functional=False):

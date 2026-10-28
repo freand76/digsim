@@ -860,7 +860,7 @@ def screenshots() -> None:
             dip_switch.select(1)
             dip_switch.onpress()
             simulate(300)
-        elif name == "walkie_talkie":
+        elif name == "bidirectional_port":
             # Walkie-talkie A sends 5 over the bus: both hex digits show it
             dip_switch = circuit.get_component("DipSwitch")
             talk = circuit.get_component("PushButton")
