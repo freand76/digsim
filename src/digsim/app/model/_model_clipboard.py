@@ -22,6 +22,10 @@ if TYPE_CHECKING:
     from ._model import AppModel
 
 
+# The type name of a subcircuit in a circuit file
+SUBCIRCUIT_TYPE = "digsim.circuit.components.SubCircuit"
+
+
 class ModelClipboard:
     """
     Copies of components, with the lines between them, and pasting them: the pasted
@@ -101,6 +105,10 @@ class ModelClipboard:
                     )
                     port_keys[f"{component_dc.name}.{label}"] = f"{component_dc.name}.{new_label}"
             try:
+                if component_dc.type == SUBCIRCUIT_TYPE:
+                    objects.components.check_subcircuit_file(
+                        circuit.load_path(str(component_dc.settings.get("path", "")))
+                    )
                 with circuit.adding_components():
                     component = component_dc.create(circuit)
             except (DigsimException, OSError) as exc:

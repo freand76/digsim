@@ -212,12 +212,12 @@ class ModelComponents:
         self, name: str, pos: QPointF, settings: dict[str, Any]
     ) -> ComponentObject | None:
         """Add component object from class name, None if the component can't be created"""
-        if name == "SubCircuit" and self._uses_this_circuit(str(settings.get("path", ""))):
-            self._app_model.sig_error.emit(
-                f"Could not add the subcircuit {settings['path']}: it uses this circuit's "
-                "file, the circuit would use itself"
-            )
-            return None
+        if name == "SubCircuit":
+            try:
+                self.check_subcircuit_file(str(settings.get("path", "")))
+            except DigsimException as exc:
+                self._app_model.sig_error.emit(f"Could not add the subcircuit: {exc!s}")
+                return None
         self._app_model.objects.push_undo_state()
         component_object = self.add_object(
             self._get_component_class(name), pos.x(), pos.y(), settings
@@ -304,6 +304,8 @@ class ModelComponents:
         if self._app_model.is_running:
             self._app_model.model_stop()
         try:
+            if isinstance(component, SubCircuit) and "path" in changed:
+                self.check_subcircuit_file(str(changed["path"]))
             name, gone = self._app_model.objects.change_component(
                 component.name(), changed, class_name, new_name
             )
@@ -427,13 +429,18 @@ class ModelComponents:
         self._app_model.sig_yosys_updated.emit(update.path)
         return warnings
 
-    def _uses_this_circuit(self, path: str) -> bool:
-        """Does a subcircuit's file use the file of this circuit, or is it that file"""
+    def check_subcircuit_file(self, path: str) -> None:
+        """
+        Raises DigsimException if a subcircuit's file is the file of this circuit, or uses
+        it: the circuit would use itself. Every way a subcircuit's file gets into the
+        circuit checks it (adding, settings and paste).
+        """
         circuit_path = self._app_model.circuit_path
         if not path or circuit_path is None:
-            return False
+            return
         own = Path(circuit_path).resolve()
-        return Path(path).resolve() == own or own in files_used(path)
+        if Path(path).resolve() == own or own in files_used(path):
+            raise DigsimException(f"{path} uses this circuit's file, the circuit would use itself")
 
     def subcircuits(self, path: str | Path) -> list[SubCircuit]:
         """The subcircuits of a circuit file"""

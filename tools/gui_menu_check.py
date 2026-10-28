@@ -501,6 +501,39 @@ def test_double_click_views_a_subcircuit_while_it_runs(gui):
     gui.model._changed = False
 
 
+def test_a_subcircuit_can_not_use_its_own_circuit(gui, tmp_path):
+    """Adding it, a new path in the settings and paste all refuse the circuit's own file"""
+    from pathlib import Path
+
+    source = Path(__file__).parent.parent / "circuits" / "subcircuits" / "half_adder.circuit"
+    half_adder = tmp_path / "half_adder.circuit"
+    half_adder.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+    subcircuit = gui.add("SubCircuit", path=str(half_adder))
+    gui.path = str(tmp_path / "main.circuit")
+    gui.trigger("File", "Save")
+    components = gui.model.objects.components
+    # Adding
+    assert components.add_object_by_name("SubCircuit", QPointF(0, 0), {"path": gui.path}) is None
+    # Settings
+    assert components.change_settings(subcircuit, {"path": gui.path}) is None
+    assert len(gui.errors) == 2
+    assert all("would use itself" in error for error in gui.errors)
+    # Paste into the file of the subcircuit
+    subcircuit.setSelected(True)
+    gui.trigger("Edit", "Copy")
+    gui.path = str(half_adder)
+    gui.trigger("File", "Open...")
+    spin()
+    model = gui.window.current_tab().app_model
+    assert model.circuit_path == gui.path
+    names = {c.name() for c in model.objects.circuit.get_toplevel_components()}
+    gui.trigger("Edit", "Paste")
+    assert {c.name() for c in model.objects.circuit.get_toplevel_components()} == names
+    assert any("would use itself" in warning for warning in gui.warnings)
+    gui.model._changed = False
+    model._changed = False
+
+
 def _pane_input(gui: Gui, widget_type: Any, number: int = 0) -> Any:
     """An input of the settings pane, like its first slider"""
     return gui.window.settings_pane.findChildren(widget_type)[number]
