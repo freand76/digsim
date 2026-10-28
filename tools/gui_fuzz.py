@@ -194,6 +194,23 @@ class GuiFuzzer:
         self.most = 0
         self.spin(200)
 
+    def close(self) -> None:
+        """
+        Close the window before Python exits: taken apart at exit, in no order, queued
+        signals of the model reach a scene that is gone, and Qt crashes
+        """
+        self.closer.stop()
+        self.model.model_stop()
+        # Not "are you sure" about the changed circuit
+        self.model._changed = False
+        self.window.close()
+        self.spin()
+        self.window.deleteLater()
+        self.spin()
+        # Qt crashes at exit with data of its own on the clipboard
+        QApplication.clipboard().clear()
+        self.spin()
+
     # Qt helpers
 
     def spin(self, ms: int = 20) -> None:
@@ -2379,6 +2396,9 @@ def run_seeds(seeds: list[int], steps: int, jobs: int, extra: list[str]) -> int:
         if not found:
             error = (result.stderr.strip().splitlines() or ["no output"])[-1]
             return [f"gui_fuzz CRASHED seed={seed}: {error}"]
+        if result.returncode != 0 and found[0].startswith("gui_fuzz OK"):
+            error = (result.stderr.strip().splitlines() or ["no output"])[-1]
+            return [f"gui_fuzz CRASHED seed={seed} at exit (status {result.returncode}): {error}"]
         return found + [line for line in lines if line.startswith("repeat with:")]
 
     failed = False
@@ -2439,10 +2459,18 @@ def main() -> int:
     out_dir = args.out or Path(tempfile.mkdtemp(prefix="gui_fuzz_"))
     out_dir.mkdir(parents=True, exist_ok=True)
     fuzzer = GuiFuzzer(seed, args.verbose, out_dir)
+    try:
+        return run_steps(fuzzer, seed, args.steps)
+    finally:
+        fuzzer.close()
+
+
+def run_steps(fuzzer: GuiFuzzer, seed: int, steps: int) -> int:
+    """Run the steps of a seed, and print the result"""
     start = time.perf_counter()
     number = 0
     try:
-        for number in range(args.steps):
+        for number in range(steps):
             fuzzer.step(number)
     except FuzzFailure as failure:
         print(f"gui_fuzz FAILED seed={seed} step={number}: {failure}")
@@ -2455,8 +2483,8 @@ def main() -> int:
         )
         return 1
     elapsed = time.perf_counter() - start
-    print(f"gui_fuzz OK seed={seed} steps={args.steps} ({elapsed:.0f} s)")
-    if args.verbose:
+    print(f"gui_fuzz OK seed={seed} steps={steps} ({elapsed:.0f} s)")
+    if fuzzer.verbose:
         components = len(fuzzer.component_objects())
         wires = len(fuzzer.wire_items())
         counts = " ".join(f"{name}={count}" for name, count in sorted(fuzzer.counts.items()))
