@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pytest module to test the Circuit class"""
@@ -8,7 +8,8 @@ from pathlib import Path
 import pytest
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import AND, NOR, SR, Led, PushButton, YosysComponent
+from digsim.circuit.components import AND, NOR, SR, Led, PushButton, SubCircuit, YosysComponent
+from digsim.circuit.components.atoms import DigsimException
 from digsim.storage_model import CircuitDataClass, ComponentDataClass
 
 
@@ -202,6 +203,22 @@ def test_stored_paths_use_forward_slashes(tmp_path):
     loaded = Circuit()
     loaded.from_dataclass(_yosys_circuit_dc(stored), str(tmp_path / "circuits"))
     assert len(loaded.components) > 1
+
+
+def test_no_path_stays_empty(tmp_path):
+    """An empty path (a file setting that was cleared) is not the circuit folder"""
+    circuit = Circuit()
+    assert circuit.store_path("") == ""
+    loaded = Circuit()
+    with pytest.raises(DigsimException, match="needs a Verilog or netlist file"):
+        loaded.from_dataclass(_yosys_circuit_dc(""), str(tmp_path))
+
+
+def test_file_components_need_a_file():
+    with pytest.raises(DigsimException, match="needs a Verilog or netlist file"):
+        YosysComponent(Circuit(), path="")
+    with pytest.raises(DigsimException, match="needs a circuit file"):
+        SubCircuit(Circuit(), "")
 
 
 def test_load_path_stored_on_windows(tmp_path):

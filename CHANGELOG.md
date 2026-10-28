@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - GUI: clearing the file of a Verilog component, ROM or subcircuit in the settings says that it needs a file. It tried to read the circuit's folder as the file and showed an error about that.
  - GUI: an IC, a Verilog component or a subcircuit that is changed to another IC or file in the settings is named after it, it kept the old name. A flip-flop changed to another kind gets the name of the new kind.
  - GUI: an oscillating circuit no longer makes the application look hung: Stop, clicks and keys work at once (Stop took 45 s), the simulation time turns red while it is slower than real time, and the components that oscillate are marked, with a message that names their ports
  - Circuit.run_within(seconds, ...) runs for at most a time on the clock, and Circuit.oscillating_ports() finds the ports that oscillate

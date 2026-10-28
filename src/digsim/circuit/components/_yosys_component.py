@@ -239,6 +239,8 @@ class YosysComponent(MultiComponent):
         states: str | list[str] | None = None,
         parameters: str | Mapping[str, int] | None = None,
     ) -> None:
+        if path is not None and not str(path):
+            raise YosysComponentException("A Yosys component needs a Verilog or netlist file")
         super().__init__(circuit)
         self._path = str(path) if path is not None else None
         self._functional = functional

@@ -115,7 +115,9 @@ class Circuit:
         return list(self._components.values())
 
     def load_path(self, path: str | Path) -> str:
-        """Get the load path relative to the circuit path"""
+        """Get the load path relative to the circuit path, empty for no path"""
+        if not str(path):
+            return ""
         if "\\" in str(path):
             # Stored with backslashes on Windows by an older version, read on all systems
             path = PureWindowsPath(path).as_posix()
@@ -125,8 +127,9 @@ class Circuit:
         return str(load_path)
 
     def store_path(self, path: str | Path) -> str:
-        """Get the store path relative to the circuit path"""
-
+        """Get the store path relative to the circuit path, empty for no path"""
+        if not str(path):
+            return ""
         store_path = Path(path).resolve(strict=False)
         folder_path = Path(self._folder).resolve(strict=False)
         try:

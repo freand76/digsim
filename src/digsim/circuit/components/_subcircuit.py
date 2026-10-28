@@ -218,6 +218,8 @@ class SubCircuit(MultiComponent):
     """
 
     def __init__(self, circuit: Circuit, path: str | Path, name: str | None = None) -> None:
+        if not str(path):
+            raise SubCircuitException("A subcircuit needs a circuit file")
         self._path = Path(path)
         super().__init__(circuit, name or self._path.stem)
         self.set_display_name(self._path.stem)
