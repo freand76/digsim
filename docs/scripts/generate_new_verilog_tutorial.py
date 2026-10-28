@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
     QCommandLinkButton,
+    QMainWindow,
     QMessageBox,
     QPushButton,
     QScrollArea,
@@ -93,6 +94,14 @@ def save(pixmap: QPixmap, name: str, highlights: list[QRect] | None = None) -> N
 def rect_in(window: QWidget, widget: QWidget) -> QRect:
     """The rectangle of a widget in window coordinates"""
     return QRect(widget.mapTo(window, QPoint(0, 0)), widget.size())
+
+
+def menu_rect(window: QMainWindow, title: str) -> QRect:
+    """The title of a menu in the menu bar, like File, in window coordinates"""
+    bar = window.menuBar()
+    action = next(a for a in bar.actions() if a.text().replace("&", "") == title)
+    rect = bar.actionGeometry(action)
+    return QRect(bar.mapTo(window, rect.topLeft()), rect.size())
 
 
 def handle_dialogs(handlers: list[Callable[[QWidget], None]]) -> None:
@@ -219,7 +228,7 @@ def main() -> None:
 def make_screenshots(guide: Guide) -> None:
     window = guide.window
     # A new circuit
-    guide.shot("01_new_circuit", [rect_in(window, guide.button("Clear Circuit"))])
+    guide.shot("01_new_circuit", [menu_rect(window, "File")])
 
     # Add a Yosys component: open a file or a new Verilog file, then its settings
     yosys_item = guide.selector_item("YosysComponent")

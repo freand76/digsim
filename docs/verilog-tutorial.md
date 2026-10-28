@@ -29,7 +29,7 @@ circuit:
 uv run -m digsim.app --load example_circuits/counter_yosys_verilog.circuit
 ```
 
-You can also start DigSim as usual, click **Load Circuit** in the control area, and open
+You can also start DigSim as usual, choose **File > Open**, and open
 `example_circuits/counter_yosys_verilog.circuit`.
 
 ![The counter circuit, with the counter component framed](images/verilog_tutorial/01_circuit.png)
@@ -212,7 +212,7 @@ in the root folder of your clone:
 git checkout examples/yosys_counter/counter.v
 ```
 
-The circuit file itself is not changed, unless you saved it with **Save Circuit**.
+The circuit file itself is not changed, unless you saved it with **File > Save**.
 
 ## What next
 

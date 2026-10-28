@@ -477,7 +477,7 @@ Open a circuit in the application with `--load`, then press **Start Simulation**
 uv run -m digsim.app --load example_circuits/counter_yosys_netlist.circuit
 ```
 
-You can also use **Load Circuit** in the application. See [GUI Reference](gui.md) for how
+You can also use **File > Open** in the application. See [GUI Reference](gui.md) for how
 to work with the editor.
 
 ### Verilog counter

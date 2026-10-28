@@ -38,9 +38,8 @@ The window has a menu bar and three areas:
   press **Enter** to add the first one (the arrow keys choose another). **Esc** clears the
   search.
 - **Circuit area** (red, right): the canvas where you build the circuit.
-- **Control area** (green, top): simulation controls, VCD output, and buttons for
-  loading, saving and clearing circuits, plus **Delete**, **Undo**, **Redo** and
-  **Settings**.
+- **Control area** (green, top): the simulation controls, the simulation time and VCD
+  output. Opening, saving, editing and zooming are in the menus.
 
 Each circuit is in a tab of its own: **File > New Tab** opens an empty one, and Open
 opens a circuit in a new tab (or in an empty one). A circuit that is open already gets its
@@ -77,7 +76,7 @@ Right-click a component to open its context menu:
 | Reload | Reload the Verilog file or netlist ([Yosys components](#yosys-component)) |
 
 Click a component to select it, and drag it to move it. Delete the selected component
-with the **Del** key or the **Delete** button in the control area.
+with the **Del** key or **Edit > Delete**.
 
 ### Settings pane
 
@@ -278,7 +277,7 @@ The circuit cannot be edited while the simulation is running.
 
 ### Application settings
 
-The **Settings** button in the control area opens the application settings:
+**Edit > Settings** opens the application settings:
 
 | Setting | Description |
 | --- | --- |

@@ -22,10 +22,10 @@ Start DigSim:
 digsim-logic-simulator
 ```
 
-The circuit area is empty when DigSim starts. If you already have a circuit open, click
-**Clear Circuit** in the control area.
+The circuit area is empty when DigSim starts. If you already have a circuit open, choose
+**File > New** (or **File > New Tab**).
 
-![The empty DigSim window, with Clear Circuit framed](images/new_verilog/01_new_circuit.png)
+![The empty DigSim window, with the File menu framed](images/new_verilog/01_new_circuit.png)
 
 ## 2. Add a Yosys component
 
@@ -182,7 +182,7 @@ Simulation**.
 
 ## 9. Save the circuit
 
-Click **Save Circuit**, and save the circuit in the folder of `half_adder.v`, for example
+Choose **File > Save** (**Ctrl + S**), and save the circuit in the folder of `half_adder.v`, for example
 as `half_adder.circuit`. The circuit file refers to the Verilog file, by a path relative
 to the circuit, and DigSim synthesizes it again when you load the circuit.
 

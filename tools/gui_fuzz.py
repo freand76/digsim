@@ -75,7 +75,7 @@ from digsim.app.gui._circuit_area import (
     WirePartGraphicsItem,
 )
 from digsim.app.gui._menu_bar import MenuBar
-from digsim.app.gui._top_bar import LoadSaveWidget, SimControlWidget, VcdControlWidget
+from digsim.app.gui._top_bar import SimControlWidget, VcdControlWidget
 from digsim.app.gui_objects import ComponentObject
 from digsim.app.gui_objects import _theme as theme
 from digsim.app.gui_objects._component_port_item import PortGraphicsItem
@@ -2091,8 +2091,6 @@ class GuiFuzzer:
         """
         path = self.out_dir / "fuzz.circuit"
         before = self.file_snapshot()
-        buttons = self.window.findChild(LoadSaveWidget)
-        assert buttons is not None
         dialogs = QFileDialog.getSaveFileName, QFileDialog.getOpenFileName
         chosen = staticmethod(lambda *args, **kwargs: (str(path), ""))
         QFileDialog.getSaveFileName = chosen  # type: ignore[method-assign]
@@ -2103,7 +2101,7 @@ class GuiFuzzer:
             # Save As: Save writes to the file the circuit came from, like an example
             menu_bar.save_circuit_as()
             check(not self.model.is_changed, "the circuit is changed after it was saved")
-            check(not buttons._save_button.isEnabled(), "Save is on after saving")
+            check(not menu_bar._save_action.isEnabled(), "Save is on after saving")
             saved = path.read_text()
             check('"lines"' in saved or not self.connections(), "the file has no lines")
             check('"wires"' not in saved, "the file has the wires of the old format")

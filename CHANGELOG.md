@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - GUI: the top bar has only the simulation controls and VCD output. Open, Save, New, Delete, Undo, Redo, zoom and Settings are in the menus (the buttons for them are gone).
  - GUI: a double-click on a subcircuit shows what is inside it, also while the simulation runs (its context menu is off then)
  - GUI: a click on a switch or button that moves the mouse a little is a click, it moved the component instead
  - The error of a RAM or ROM whose binary file doesn't fit the data width says how many bytes a word has in the file

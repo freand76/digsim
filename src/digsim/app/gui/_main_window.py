@@ -112,7 +112,7 @@ class CircuitTab(QWidget):
     and its Verilog editors
     """
 
-    def __init__(self, app_model: AppModel, menu_bar: MenuBar, window: QWidget) -> None:
+    def __init__(self, app_model: AppModel, window: QWidget) -> None:
         super().__init__(window)
         self.app_model = app_model
 
@@ -122,7 +122,7 @@ class CircuitTab(QWidget):
         layout.setSpacing(0)
 
         self.circuit_editor = CircuitEditor(app_model, self)
-        top_bar = TopBar(app_model, self.circuit_editor, menu_bar, self)
+        top_bar = TopBar(app_model, self)
         layout.addWidget(top_bar)
         layout.setStretchFactor(top_bar, 0)
 
@@ -337,7 +337,7 @@ class MainWindow(QMainWindow):
         """Add a tab with a new circuit (or the circuit of a model), and show it"""
         if app_model is None:
             app_model = AppModel()
-        tab = CircuitTab(app_model, self._menu_bar, self)
+        tab = CircuitTab(app_model, self)
         app_model.sig_error.connect(self.error_dialog)
         app_model.sig_warning_log.connect(self.warning_log_dialog)
         app_model.sig_control_notify.connect(partial(self._update_titles, tab))

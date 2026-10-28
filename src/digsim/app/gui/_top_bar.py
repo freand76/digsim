@@ -8,8 +8,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import qtawesome as qta
-
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -23,14 +21,10 @@ from PySide6.QtWidgets import (
 )
 
 from digsim.app.gui_objects import _theme as theme
-from digsim.app.settings import GuiSettingsDialog
 
 
 if TYPE_CHECKING:
     from digsim.app.model import AppModel
-
-    from ._main_window import CircuitEditor
-    from ._menu_bar import MenuBar
 
 
 class SimControlWidget(QFrame):
@@ -253,104 +247,12 @@ class VcdControlWidget(QFrame):
             self._app_model.objects.circuit.vcd_close()
 
 
-class LoadSaveWidget(QFrame):
-    """
-    The widget with load/save buttons in the top bar
-    """
-
-    def __init__(
-        self,
-        app_model: AppModel,
-        circuit_editor: CircuitEditor,
-        menu_bar: MenuBar,
-        parent: QWidget,
-    ) -> None:
-        super().__init__(parent)
-        self._app_model = app_model
-        self._circuit_editor = circuit_editor
-        layout = QHBoxLayout(self)
-        self.setLayout(layout)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(5)
-        self._zoom_in_button = QPushButton("", self)
-        self._zoom_in_button.setIcon(qta.icon("msc.zoom-in"))
-        self._zoom_in_button.clicked.connect(self._app_model.zoom_in)
-        self._zoom_in_button.setToolTip("Zoom in")
-        self._zoom_out_button = QPushButton("", self)
-        self._zoom_out_button.setIcon(qta.icon("msc.zoom-out"))
-        self._zoom_out_button.clicked.connect(self._app_model.zoom_out)
-        self._zoom_out_button.setToolTip("Zoom out")
-        layout.addWidget(self._zoom_in_button)
-        layout.addWidget(self._zoom_out_button)
-        self._delete_button = QPushButton("", self)
-        self._delete_button.setIcon(qta.icon("mdi.delete-forever"))
-        self._delete_button.clicked.connect(self._app_model.objects.delete_selected)
-        self._delete_button.setToolTip("Delete")
-        layout.addWidget(self._delete_button)
-        self._undo_button = QPushButton("", self)
-        self._undo_button.setIcon(qta.icon("mdi.undo"))
-        self._undo_button.setToolTip("Undo")
-        self._undo_button.clicked.connect(self._app_model.objects.undo)
-        layout.addWidget(self._undo_button)
-        self._redo_button = QPushButton("", self)
-        self._redo_button.setIcon(qta.icon("mdi.redo"))
-        self._redo_button.clicked.connect(self._app_model.objects.redo)
-        self._redo_button.setToolTip("Redo")
-        layout.addWidget(self._redo_button)
-        self._settings_button = QPushButton("", self)
-        self._settings_button.setIcon(qta.icon("mdi.cog"))
-        self._settings_button.clicked.connect(self._settings_dialog)
-        self._settings_button.setToolTip("Settings")
-        layout.addWidget(self._settings_button)
-        self._load_button = QPushButton("Load Circuit", self)
-        self._load_button.clicked.connect(menu_bar.open_circuit)
-        layout.addWidget(self._load_button)
-        self._save_button = QPushButton("Save Circuit", self)
-        self._save_button.clicked.connect(menu_bar.save_circuit)
-        layout.addWidget(self._save_button)
-        self._clear_button = QPushButton("Clear Circuit", self)
-        self._clear_button.clicked.connect(menu_bar.new_circuit)
-        layout.addWidget(self._clear_button)
-        self._app_model.sig_control_notify.connect(self._control_notify)
-        # The Delete button follows the selection
-        circuit_editor.circuit_area.scene().selectionChanged.connect(self._control_notify)
-        self._control_notify()
-
-    def _settings_dialog(self) -> None:
-        settings_dialog = GuiSettingsDialog(self, self._app_model)
-        settings_dialog.start()
-
-    def _control_notify(self) -> None:
-        if self._app_model.is_running:
-            self._load_button.setEnabled(False)
-            self._save_button.setEnabled(False)
-            self._clear_button.setEnabled(False)
-            self._delete_button.setEnabled(False)
-            self._undo_button.setEnabled(False)
-            self._redo_button.setEnabled(False)
-            self._settings_button.setEnabled(False)
-        else:
-            self._load_button.setEnabled(True)
-            self._save_button.setEnabled(self._app_model.is_changed)
-            self._clear_button.setEnabled(not self._app_model.objects.components.is_empty())
-            self._delete_button.setEnabled(self._circuit_editor.circuit_area.has_selection())
-            self._undo_button.setEnabled(self._app_model.objects.can_undo())
-            self._redo_button.setEnabled(self._app_model.objects.can_redo())
-            self._settings_button.setEnabled(True)
-
-
 class TopBar(QFrame):
     """
     The top widget with the control and status widgets
     """
 
-    def __init__(
-        self,
-        app_model: AppModel,
-        circuit_editor: CircuitEditor,
-        menu_bar: MenuBar,
-        parent: QWidget,
-    ) -> None:
+    def __init__(self, app_model: AppModel, parent: QWidget) -> None:
         super().__init__(parent)
         layout = QHBoxLayout(self)
         self.setLayout(layout)
@@ -358,4 +260,3 @@ class TopBar(QFrame):
         layout.addWidget(SimTimeWidget(app_model, self))
         layout.addStretch(1)
         layout.addWidget(VcdControlWidget(app_model, self))
-        layout.addWidget(LoadSaveWidget(app_model, circuit_editor, menu_bar, self))

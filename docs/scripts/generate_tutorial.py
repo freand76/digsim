@@ -109,6 +109,13 @@ class Tutorial:
     def rect_in_window(self, widget: QWidget) -> QRect:
         return QRect(widget.mapTo(self.window, QPoint(0, 0)), widget.size())
 
+    def menu_rect(self, title: str) -> QRect:
+        """The title of a menu in the menu bar, like File, in window coordinates"""
+        bar = self.window.menuBar()
+        action = next(a for a in bar.actions() if a.text().replace("&", "") == title)
+        rect = bar.actionGeometry(action)
+        return QRect(bar.mapTo(self.window, rect.topLeft()), rect.size())
+
     def selector_item(self, name: str) -> SelectableComponentWidget:
         for widget in self.window.findChildren(SelectableComponentWidget):
             if widget._name == name:
@@ -236,7 +243,7 @@ def main() -> None:
     # 10. Stop the simulation and save the circuit
     QTest.mouseClick(tutorial.button("Stop Simulation"), Qt.MouseButton.LeftButton)
     spin(500)
-    tutorial.shot("12_save", [tutorial.rect_in_window(tutorial.button("Save Circuit"))])
+    tutorial.shot("12_save", [tutorial.menu_rect("File")])
 
     tutorial.model.model_stop()
     print(f"Screenshots written to {OUT.relative_to(ROOT)}")

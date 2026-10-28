@@ -29,7 +29,8 @@ The window has three parts:
 - **Component selection** (left): all components, grouped into Input, Output, Gates and
   more. Scroll down to see them all.
 - **Circuit area** (the large gray area): where you build the circuit.
-- **Control area** (top): starts and stops the simulation, and loads and saves circuits.
+- **Control area** (top): starts and stops the simulation. The menu bar above it opens and
+  saves circuits.
 
 ## 2. Add a switch
 
@@ -131,12 +132,13 @@ gate:
 
 ## 9. Stop and save the circuit
 
-Click **Stop Simulation** (or press **Space**). Then click **Save Circuit** and choose a
-file name, for example `first_circuit.circuit`.
+Click **Stop Simulation** (or press **Space**). Then choose **File > Save** (**Ctrl + S**)
+and a file name, for example `first_circuit.circuit`.
 
 ![Saving the circuit](images/tutorial/12_save.png)
 
-To open the circuit again later, click **Load Circuit**, or start DigSim with the file:
+To open the circuit again later, choose **File > Open** (**Ctrl + O**), or start DigSim
+with the file:
 
 ```sh
 digsim-logic-simulator --load first_circuit.circuit
