@@ -15,6 +15,7 @@ from .atoms import (
     Port,
     PortMultiBitWire,
     PortWire,
+    PortWireBit,
 )
 
 
@@ -67,17 +68,17 @@ def _check_groups(groups: list[int]) -> None:
         raise ComponentException(f"The bus has at most {MAX_WIDTH} bits")
 
 
-class _GroupPort(PortWire):
-    """A group of bits of a bus, it updates the bus when it changes"""
+class _GroupPort(PortWireBit):
+    """
+    A group of bits of a bus, it updates the bus when it changes. A PortWireBit wider
+    than a bit, so that code that goes through the bits of a bus finds the groups.
+    """
 
     def __init__(self, parent: Component, bus: _GroupBus, msb: int, lsb: int, output: bool):
-        super().__init__(parent, group_name(msb, lsb), msb - lsb + 1, output)
-        self._bus = bus
+        # Not PortWireBit.__init__(), which makes a port of one bit
+        PortWire.__init__(self, parent, group_name(msb, lsb), msb - lsb + 1, output)
+        self._parent_port = bus
         self.lsb = lsb
-
-    def set_value(self, value: VALUE_TYPE) -> None:
-        super().set_value(value)
-        self._bus.update_value_from_bits()
 
 
 class _GroupBus(PortMultiBitWire):
@@ -86,12 +87,14 @@ class _GroupBus(PortMultiBitWire):
     def __init__(self, parent: Component, groups: list[int], output: bool) -> None:
         # Not PortMultiBitWire.__init__(), which makes a port for each bit
         self._port_driver = None
+        # The groups, as the bits of a PortMultiBitWire
         self._groups: list[_GroupPort] = []
         Port.__init__(self, parent, "bus", sum(groups), output)
         self._groups = [
             _GroupPort(parent, self, msb, lsb, output=not output)
             for msb, lsb in group_ranges(groups)
         ]
+        self._bits = list(self._groups)
 
     def init(self) -> None:
         Port.init(self)
