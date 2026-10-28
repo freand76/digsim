@@ -124,6 +124,7 @@ The available components are:
 | Arithmetic | `Adder`, `Subtractor`, `Multiplier`, `Comparator`, `Negator` |
 | Buses | `Bus2Wires`, `Wires2Bus`, `TristateBuffer`, `LabelWireIn`, `LabelWireOut` |
 | Memory | `RAM`, `ROM`, `MemStdOut` |
+| Circuit ports | `CircuitInput`, `CircuitOutput`, `CircuitInOut` |
 | Complex | `IntegratedCircuit`, `YosysComponent` |
 
 ## Verilog components

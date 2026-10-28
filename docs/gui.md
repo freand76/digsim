@@ -391,6 +391,18 @@ Verilog's `$readmemh` reads, with `//` comments and `@address` to continue at an
 Other files are binary, with the bytes of a word wider than 8 bits in little-endian
 order. The file is stored relative to the circuit file.
 
+### Circuit ports
+
+| Component | Description |
+| --- | --- |
+| ![In](images/components/CircuitInput.png) | **In**: an input of the circuit, 1–32 bits. It drives a value, 0 at the start: **Set Value...** in its context menu sets it, typed as hexadecimal (`0x2A`), binary (`0b101`) or decimal. A click on a 1-bit In toggles it. |
+| ![Out](images/components/CircuitOutput.png) | **Out**: an output of the circuit, it shows the value of its wire. |
+| ![InOut](images/components/CircuitInOut.png) | **InOut**: an inout port of the circuit. It shows the value of its wire, and drives a value set with **Set Value...**, or nothing (`Z`) as at the start. |
+
+The circuit ports make the interface of a circuit: their names (unique in the circuit)
+and widths are the ports of the circuit when it is used as a subcircuit. In the circuit
+itself they work as inputs and outputs, so that it can be tested on its own.
+
 ### IC components
 
 ![IC](images/components/IC.png)

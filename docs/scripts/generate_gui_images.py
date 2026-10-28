@@ -144,6 +144,14 @@ COMPONENT_IMAGES: list[tuple[str, str, dict[str, Any], Callable[..., None] | Non
     ("components/Multiplier.png", "Multiplier", {}, None),
     ("components/Comparator.png", "Comparator", {}, None),
     ("components/Negator.png", "Negator", {}, None),
+    ("components/CircuitInput.png", "CircuitInput", {"label": "a", "width": 8}, None),
+    (
+        "components/CircuitOutput.png",
+        "CircuitOutput",
+        {"label": "y", "width": 8},
+        driven(0x2A, "y"),
+    ),
+    ("components/CircuitInOut.png", "CircuitInOut", {"label": "bus", "width": 8}, None),
     ("components/RAM.png", "RAM", {}, None),
     (
         "components/ROM.png",

@@ -25,6 +25,7 @@
  - GUI: the Logic Analyzer is cleared when the circuit is reset, like the VCD file starts over
  - GUI: a switch clicked while the simulation is stopped changes the circuit at once: it runs for 10 µs so that the change goes through it. Before, the switch changed but the rest of the circuit only when the simulation ran.
  - GUI: tabs, a circuit in each. File > New Tab (Ctrl+T) and Close Tab (Ctrl+W), and Open opens a circuit in a tab of its own. Only the tab that is shown simulates.
+ - New components: In, Out and InOut, the ports of a circuit (CircuitInput, CircuitOutput and CircuitInOut in Python, and Circuit.ports()). They name the interface of a circuit for a subcircuit, and work as inputs and outputs in the circuit itself: Set Value... in the context menu of an In or an InOut sets its value.
 
 ## v1.8.0
  - GUI: a new look. All components are drawn in one style: gates, LEDs, buffers and bus splitters as symbols only, devices like switches and displays with a white body, on a light background with a grid of dots. Most components are smaller, a selected one is blue, and green means on everywhere.

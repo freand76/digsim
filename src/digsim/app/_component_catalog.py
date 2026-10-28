@@ -90,6 +90,14 @@ COMPONENT_GROUPS: list[tuple[str, list[CatalogEntry]]] = [
         ],
     ),
     (
+        "Circuit ports",
+        [
+            CatalogEntry("CircuitInput", "In", "circuit port input pin interface subcircuit"),
+            CatalogEntry("CircuitOutput", "Out", "circuit port output pin interface subcircuit"),
+            CatalogEntry("CircuitInOut", "InOut", "circuit port inout pin interface subcircuit"),
+        ],
+    ),
+    (
         "IC / Verilog",
         [
             CatalogEntry("IntegratedCircuit", "IC", "IC chip 74xx 4000 integrated circuit"),

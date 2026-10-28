@@ -13,7 +13,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path, PureWindowsPath
 from types import TracebackType
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
 
@@ -26,6 +26,10 @@ from .components.atoms import (
     PortMultiBitWire,
     PortOutDelta,
 )
+
+
+if TYPE_CHECKING:
+    from .components._circuit_port import CircuitPort
 
 
 EventPort = PortOutDelta | PortMultiBitWire | PortInOut
@@ -138,6 +142,16 @@ class Circuit:
     def get_toplevel_components(self) -> list[Component]:
         """Get toplevel components in the circuit"""
         return [comp for comp in self._components.values() if comp.is_toplevel()]
+
+    def ports(self) -> list[CircuitPort]:
+        """
+        The circuit ports of the circuit (CircuitInput, CircuitOutput and CircuitInOut), its
+        interface when it is used as a subcircuit, in the order they were added
+        """
+        # Imported here: the components import the circuit
+        from digsim.circuit.components._circuit_port import circuit_ports
+
+        return circuit_ports(self)
 
     def init(self) -> None:
         """

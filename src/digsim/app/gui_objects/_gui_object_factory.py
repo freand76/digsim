@@ -6,6 +6,7 @@
 from digsim.circuit.components.atoms import DigsimException
 
 from ._buzzer_object import BuzzerObject
+from ._circuit_port_object import CircuitInOutObject, CircuitInputObject, CircuitOutputObject
 from ._component_object import ComponentObject
 from ._device_objects import (
     ButtonObject,
@@ -67,6 +68,9 @@ CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "Negator": NegatorObject,
     "Subtractor": SubtractorObject,
     "Bus2Wires": BusBitsObject,
+    "CircuitInput": CircuitInputObject,
+    "CircuitOutput": CircuitOutputObject,
+    "CircuitInOut": CircuitInOutObject,
     "Wires2Bus": BitsBusObject,
     "Clock": ClockObject,
     "DipSwitch": DipSwitchObject,
