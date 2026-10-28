@@ -47,8 +47,8 @@ want to use it as it is.
 
 ## 3. The settings of the component
 
-Next comes the settings dialog of the component. Keep both boxes unchecked and click
-**OK**.
+The new component is selected, and its settings are in the settings pane, to the right of
+the circuit area. Keep both boxes unchecked.
 
 ![The settings of a Yosys component](images/new_verilog/03_settings.png)
 
@@ -57,7 +57,8 @@ Next comes the settings dialog of the component. Keep both boxes unchecked and c
 - **Write all internal signals to the VCD file** records the wires and registers inside
   the design too, when you record a VCD file.
 
-Both can be changed later, with **Settings** in the context menu of the component.
+Both can be changed later: select the component, check the box in the settings pane, and
+click **Apply**.
 
 ## 4. The new component and its Verilog
 

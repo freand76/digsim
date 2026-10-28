@@ -115,6 +115,8 @@ class MenuBar(QMenuBar):
         self._add(
             view_menu, "Zoom to &Fit", lambda: self._app_model.zoom_fit(), ["Ctrl+0", "Home"]
         )
+        view_menu.addSeparator()
+        self._view_menu = view_menu
 
         simulation_menu = self.addMenu("&Simulation")
         # Space starts and stops it, see MainWindow.keyPressEvent(): shown, not a shortcut
@@ -278,6 +280,10 @@ class MenuBar(QMenuBar):
                 getattr(self._circuit_area, method)()
 
         return call
+
+    def add_pane_action(self, action: QAction) -> None:
+        """An action that shows or hides a pane of the window, in the View menu"""
+        self._view_menu.addAction(action)
 
     def _rotate(self) -> None:
         if self._circuit_area is not None:

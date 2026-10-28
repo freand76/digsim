@@ -52,6 +52,8 @@ class AppModel(QThread):
     sig_edit_subcircuit = Signal(str)
     # View Subcircuit: the name of a subcircuit of the circuit, to view in a tab
     sig_view_subcircuit = Signal(str)
+    # Settings in the context menu of a component: show the settings pane
+    sig_show_settings = Signal()
     # The circuit was saved in a file, the subcircuits of the file in other tabs reload
     sig_saved = Signal(str)
 

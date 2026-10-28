@@ -9,8 +9,9 @@ from functools import partial
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent, QKeyEvent
+from PySide6.QtGui import QCloseEvent, QKeyEvent, QKeySequence, QShowEvent
 from PySide6.QtWidgets import (
+    QDockWidget,
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
@@ -24,6 +25,7 @@ from digsim.app._yosys_interface import same_file
 from digsim.app.editor import VerilogEditors
 from digsim.app.gui_objects._subcircuit_object import reload_subcircuits
 from digsim.app.model import AppModel
+from digsim.app.settings._settings_pane import ComponentSettingsPane
 from digsim.circuit.components import SubCircuit
 from digsim.circuit.components._subcircuit import files_used
 
@@ -35,6 +37,10 @@ from ._subcircuit_view import ViewTab
 from ._top_bar import TopBar
 from ._utils import are_you_sure_destroy_circuit
 from ._warning_dialog import WarningDialog
+
+
+# The setting that remembers if the settings pane is shown
+SETTINGS_PANE_KEY = "window/settings_pane"
 
 
 class CircuitEditor(QWidget):
@@ -165,10 +171,62 @@ class MainWindow(QMainWindow):
         self._tabs.tabCloseRequested.connect(self._close_tab_at)
         self._tabs.currentChanged.connect(self._tab_changed)
         self.setCentralWidget(self._tabs)
+        self._add_settings_pane()
         # The tab that was shown last, its simulation stops when another one is shown
         self._shown_tab: CircuitTab | ViewTab | None = None
         self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
         self.add_tab(app_model)
+
+    def _add_settings_pane(self) -> None:
+        """
+        The settings pane, to the right of the circuit: the settings of the selected
+        component. View > Settings Pane (F4) shows and hides it, and that is remembered.
+        """
+        self.settings_pane = ComponentSettingsPane(self)
+        scroll = QScrollArea(self)
+        scroll.setWidget(self.settings_pane)
+        scroll.setWidgetResizable(True)
+        # The inputs fit the width, their texts wrap
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.settings_dock = QDockWidget("Settings", self)
+        self.settings_dock.setObjectName("settings_pane")
+        self.settings_dock.setWidget(scroll)
+        self.settings_dock.setMinimumWidth(220)
+        self.settings_dock.setFeatures(
+            QDockWidget.DockWidgetFeature.DockWidgetClosable
+            | QDockWidget.DockWidgetFeature.DockWidgetMovable
+        )
+        self.settings_dock.setAllowedAreas(
+            Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
+        )
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.settings_dock)
+        self._pane_sized = False
+        action = self.settings_dock.toggleViewAction()
+        action.setText("&Settings Pane")
+        action.setShortcut(QKeySequence("F4"))
+        self.addAction(action)
+        self._menu_bar.add_pane_action(action)
+        shown = MenuBar.settings().value(SETTINGS_PANE_KEY, True, type=bool)
+        self.settings_dock.setVisible(bool(shown))
+        # When the user shows or hides it, and when the window closes (it is hidden then,
+        # see closeEvent())
+        action.triggered.connect(
+            lambda visible: MenuBar.settings().setValue(SETTINGS_PANE_KEY, visible)
+        )
+
+    def showEvent(self, event: QShowEvent) -> None:
+        """QT event callback function"""
+        super().showEvent(event)
+        if not self._pane_sized:
+            # Wide enough for the inputs, like the dialog had them (once it is shown, Qt
+            # doesn't size docks before)
+            self._pane_sized = True
+            self.resizeDocks([self.settings_dock], [340], Qt.Orientation.Horizontal)
+
+    def show_settings_pane(self) -> None:
+        """Show the settings pane, like Settings in the context menu of a component does"""
+        self.settings_dock.show()
+        self.settings_dock.raise_()
 
     # The tabs
 
@@ -231,6 +289,7 @@ class MainWindow(QMainWindow):
         app_model.sig_control_notify.connect(partial(self._update_titles, tab))
         app_model.sig_edit_subcircuit.connect(self.open_file)
         app_model.sig_view_subcircuit.connect(lambda name: self.open_view(app_model, [name]))
+        app_model.sig_show_settings.connect(self.show_settings_pane)
         app_model.sig_saved.connect(partial(self._circuit_saved, tab))
         index = self._tabs.addTab(tab, tab.title())
         self._tabs.setCurrentIndex(index)
@@ -313,6 +372,7 @@ class MainWindow(QMainWindow):
             self._shown_tab.app_model.model_stop()
         self._shown_tab = shown
         self._menu_bar.set_tab(tab.app_model, tab.circuit_area, isinstance(shown, ViewTab))
+        self.settings_pane.set_tab(tab.app_model, tab.circuit_area, isinstance(shown, ViewTab))
         self._update_titles(tab)
 
     def _circuit_saved(self, saved_tab: CircuitTab, path: str) -> None:
@@ -407,6 +467,8 @@ class MainWindow(QMainWindow):
             return
         changed = [tab for tab in tabs if tab.app_model.is_changed]
         if not changed or are_you_sure_destroy_circuit(self, "Close Application"):
+            # Also when its own close button hid it
+            MenuBar.settings().setValue(SETTINGS_PANE_KEY, self.settings_dock.isVisible())
             # Stops the simulation threads and waits for them
             for tab in tabs:
                 tab.app_model.model_stop()

@@ -674,7 +674,7 @@ def add_yosys_from_dialog(
     "new" or "" to cancel), and 'path' the file the file dialog gives ('saved_as' is what
     is typed in the save dialog, the path if not given)
     """
-    from PySide6.QtWidgets import QCheckBox, QDialog, QFileDialog
+    from PySide6.QtWidgets import QCheckBox, QFileDialog
 
     from digsim.app.gui._circuit_area import CircuitArea
     from digsim.app.settings import ComponentSettingsDialog
@@ -690,16 +690,15 @@ def add_yosys_from_dialog(
         lambda *_, **__: (saved.pop(0) if saved else "", ""),
     )
 
-    def accept(dialog):
-        # The settings the dialog asks for
-        gui.asked = [box.text() for box in dialog.findChildren(QCheckBox)]
-        return QDialog.DialogCode.Accepted
+    def accept(_dialog):
+        raise AssertionError("A Yosys component is added without a settings dialog")
 
-    gui.asked = None
     monkeypatch.setattr(ComponentSettingsDialog, "exec", accept)
     area = gui.window.findChild(CircuitArea)
     area.add_component("YosysComponent", None)
     spin()
+    # The settings the settings pane shows for the new component, it is selected
+    gui.asked = [box.accessibleName() for box in gui.window.settings_pane.findChildren(QCheckBox)]
 
 
 def test_new_verilog_file(gui, work_dir, monkeypatch):
@@ -968,7 +967,7 @@ def test_open_netlist_asks_no_synthesis(gui, work_dir, monkeypatch):
     netlist.write_text(json.dumps(YosysComponent.synthesize_file(verilog)), encoding="utf-8")
     add_yosys_from_dialog(gui, monkeypatch, "open", netlist)
     assert len(gui.asked) == 1 and "internal signals" in gui.asked[0]
-    # A Verilog file asks for both
+    # A Verilog file has both
     add_yosys_from_dialog(gui, monkeypatch, "open", verilog)
     assert len(gui.asked) == 2 and "functional blocks" in gui.asked[0]
     # Settings of the netlist component: only the signals

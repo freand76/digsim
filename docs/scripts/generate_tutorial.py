@@ -185,31 +185,17 @@ def main() -> None:
         "03_two_switches", [tutorial.object_rect(switch_a), tutorial.object_rect(switch_b)]
     )
 
-    # 4. The AND gate opens a settings dialog
+    # 4. The AND gate, it is selected: its settings are in the settings pane
     and_item = tutorial.selector_item("AND")
-
-    def grab_dialog() -> None:
-        dialog = QApplication.activeModalWidget()
-        assert dialog is not None
-        spin(200)
-        save(dialog.grab(), "04_and_settings")
-        dialog.accept()
-
-    QTimer.singleShot(300, grab_dialog)
     and_gate = tutorial.add("AND", 0.45, 0.47)
+    spin(200)
+    save(tutorial.window.settings_dock.grab(), "04_and_settings")
     tutorial.shot(
         "05_and_gate", [tutorial.rect_in_window(and_item), tutorial.object_rect(and_gate)]
     )
 
-    # 5. The LED, it asks for its color: red
+    # 5. The LED, red
     led_item = tutorial.selector_item("Led")
-
-    def accept_dialog() -> None:
-        dialog = QApplication.activeModalWidget()
-        assert dialog is not None
-        dialog.accept()
-
-    QTimer.singleShot(300, accept_dialog)
     led = tutorial.add("Led", 0.75, 0.47)
     tutorial.shot("06_led", [tutorial.rect_in_window(led_item), tutorial.object_rect(led)])
 

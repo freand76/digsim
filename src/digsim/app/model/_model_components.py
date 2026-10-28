@@ -14,6 +14,7 @@ from PySide6.QtCore import QPointF
 import digsim.app.gui_objects
 import digsim.circuit.components
 from digsim.app._line_graph import without_ports
+from digsim.app._settings_values import CLASS_PARAMETER, is_flip_flop
 from digsim.app._wire_key import Wire
 from digsim.app._wire_lines import At
 from digsim.app._yosys_interface import (
@@ -258,7 +259,34 @@ class ModelComponents:
         """Get list of component objects"""
         return list(self._component_objects.values())
 
-    def update_settings(self, component_object: ComponentObject, settings: dict[str, Any]) -> None:
+    def change_settings(self, component_object: ComponentObject, changed: dict[str, Any]) -> bool:
+        """
+        Change settings of a component, an undo step (see the settings pane). Settings
+        that can be reconfigured change the component, others build it again, with the
+        wires to the ports it still has (see ModelObjects.change_component). False, with
+        an error, if it can't have the settings.
+        """
+        component = component_object.component
+        changed = dict(changed)
+        class_name = changed.pop(CLASS_PARAMETER, None) if is_flip_flop(component) else None
+        if class_name is None and set(changed) <= set(component.get_reconfigurable_parameters()):
+            return self.update_settings(component_object, changed)
+        if self._app_model.is_running:
+            self._app_model.model_stop()
+        try:
+            gone = self._app_model.objects.change_component(component.name(), changed, class_name)
+        except (DigsimException, OSError) as exc:
+            self._app_model.sig_error.emit(f"Could not change the settings: {exc!s}")
+            return False
+        if gone:
+            self._app_model.sig_warning_log.emit(
+                "Settings Warning",
+                "The wires of these ports are removed, the ports are gone or have another "
+                "width now:\n" + "\n".join(gone),
+            )
+        return True
+
+    def update_settings(self, component_object: ComponentObject, settings: dict[str, Any]) -> bool:
         """Update settings for a component"""
         component = component_object.component
         self._app_model.objects.push_undo_state()
@@ -268,7 +296,7 @@ class ModelComponents:
             # For example a signal for state names that the netlist doesn't have
             self._app_model.objects.drop_undo_state()
             self._app_model.sig_error.emit(f"Could not change the settings: {exc!s}")
-            return
+            return False
         if isinstance(component, YosysComponent):
             # New gates, the simulation starts over
             self._app_model.model_init()
@@ -276,6 +304,7 @@ class ModelComponents:
         # Settings can change the component size
         component_object.update_size()
         self._app_model.sig_repaint.emit()
+        return True
 
     def yosys_components(self, path: str) -> list[YosysComponent]:
         """The Yosys components made from a Verilog or netlist file"""

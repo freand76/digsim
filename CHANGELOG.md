@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - GUI: a settings pane to the right of the circuit shows the settings of the selected component, instead of a settings dialog. Apply changes them, also the ones that change the ports (like the inputs of a gate or the width of a bus): the component is built again with the wires to the ports it still has. A new component gets the default settings and is selected, a file or an IC is asked for first. View > Settings Pane (F4) hides and shows it.
  - A flip-flop with an asynchronous load in a gate netlist (the Yosys cells $_ALDFF_ and $_ALDFFE_) follows the load value while the load is active, like the functional $aldff. Before, it only took the value when the load started.
  - New ICs: 74164 (8-bit serial-in, parallel-out shift register) and 74165 (8-bit parallel-in, serial-out shift register)
  - New ICs: 74161 and 74163 (binary counters), 74157 (quad 2-to-1 multiplexer), 74139 (dual 2-to-4 decoder), 74148 (priority encoder), 74173, 74374 and 74574 (registers with tristate outputs), 74245 (bus transceiver), 4021 (parallel-in shift register), 4029 (up/down counter, binary or decade) and 4094 (shift-and-store bus register)

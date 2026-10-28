@@ -233,14 +233,12 @@ def make_screenshots(guide: Guide) -> None:
         save(dialog.grab(), "02_open_or_new", [rect_in(dialog, new_button)])
         new_button.click()
 
-    def settings(dialog: QWidget) -> None:
-        save(dialog.grab(), "03_settings")
-        dialog.accept()  # type: ignore[attr-defined]
-
-    handle_dialogs([open_or_new, settings])
+    handle_dialogs([open_or_new])
     center = guide.area.mapToScene(guide.area.viewport().rect().center())
     yosys = guide.add("YosysComponent", center)
     spin(500)
+    # It is selected, its settings are in the settings pane
+    save(window.settings_dock.grab(), "03_settings")
     (editor,) = window.verilog_editors.editors()
     editor.resize(*EDITOR_SIZE)
     spin(300)
@@ -277,21 +275,16 @@ def make_screenshots(guide: Guide) -> None:
         pos = guide.port_scene_pos(yosys, port)
         switches[port] = guide.add("OnOffSwitch", QPointF(pos.x() - 160, pos.y() + dy))
 
-    # Two LEDs: green for the sum, red for the carry. The input of an LED is 10 pixels
-    # below its middle.
-    def color(name: str) -> Callable[[QWidget], None]:
-        def pick(dialog: QWidget) -> None:
-            (combo,) = dialog.findChildren(QComboBox)
-            combo.setCurrentText(name)
-            dialog.accept()  # type: ignore[attr-defined]
-
-        return pick
-
+    # Two LEDs: green for the sum, red for the carry, the color in the settings pane. The
+    # input of an LED is 10 pixels below its middle.
     leds = {}
     for port, led_color, dy in (("sum", "green", -40), ("carry", "red", 40)):
-        handle_dialogs([color(led_color)])
         pos = guide.port_scene_pos(yosys, port)
         leds[port] = guide.add("Led", QPointF(pos.x() + 140, pos.y() + dy - 10))
+        (combo,) = window.settings_pane.findChildren(QComboBox)
+        combo.setCurrentText(led_color)
+        window.settings_pane.accept()
+        spin(200)
     guide.click_empty()
     guide.shot(
         "10_parts", [guide.object_rect(item) for item in [*switches.values(), *leds.values()]]

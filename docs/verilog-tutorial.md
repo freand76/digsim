@@ -223,8 +223,8 @@ The circuit file itself is not changed, unless you saved it with **Save Circuit*
 - **A new design:** add a Yosys component, and choose **New Verilog file**. DigSim
   creates the file with a small module and opens it in the editor, see
   [Your First Verilog Component](new-verilog.md).
-- **Faster simulation:** right-click the counter, choose **Settings**, and check
-  **Synthesize Verilog into functional blocks**. The editor then synthesizes the file
+- **Faster simulation:** select the counter, check **Synthesize Verilog into functional
+  blocks** in the settings pane, and click **Apply**. The editor then synthesizes the file
   into functional blocks for it, see
   [Gates or functional blocks](synthesis.md#gates-or-functional-blocks).
 - **All the keys and menus of the editor:** see

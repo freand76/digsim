@@ -22,7 +22,7 @@ all the steps needed to get a component into the component selector:
    [drawn by code](#3b-a-gui-object-drawn-by-code)
 4. [Register the GUI object](#4-register-the-gui-object)
 5. [Add the component to the component selector](#5-add-it-to-the-component-selector)
-6. [Check the settings dialog](#6-the-settings-dialog)
+6. [Check the settings pane](#6-the-settings-pane)
 7. [Try it](#7-try-it)
 
 ## 1. Add the component to DigSim
@@ -265,11 +265,13 @@ layout.addWidget(SelectableComponentWidget("LedBar", self, circuit_area, display
 ![XNOR in the selector](images/guide/selector_xnor.png){ width="80" }
 ![LED bar in the selector](images/guide/selector_led_bar.png){ width="80" }
 
-## 6. The settings dialog
+## 6. The settings pane
 
-When a component is added in the GUI, a settings dialog is created from
-`get_parameters()`, with one input per parameter (components without parameters are
-placed right away). The parameter's `type` selects the input:
+The settings pane of the GUI shows the selected component's parameters from
+`get_parameters()`, with one input per parameter and the component's values from
+`settings_to_dict()`. A new component gets the defaults, only a `path` (the first
+parameter) and an `ic_name` are asked for before it is added. The parameter's `type`
+selects the input:
 
 | `type` | Input | Keys |
 | --- | --- | --- |
@@ -282,15 +284,15 @@ placed right away). The parameter's `type` selects the input:
 | `width_bool` | One checkbox per bit, following a `width` parameter | `default` |
 | `bit_groups` | Text field with the widths of the groups of a bus, like `4, 4` (a list of ints) | `default` |
 | `component_name` | Drop-down that selects another component class | `component_list` (class name to description) |
-| `ic_name` | Drop-down with the built-in ICs | |
-| `path` | File dialog before the other parameters (it must be the first one) | `fileinfo` (file filter), `new_verilog` (asks first to open a file or to make a new Verilog file, which is created with a module). Another parameter with `file_types` (like `[".v", ".sv"]`) is only asked for a file of those types |
+| `ic_name` | The built-in ICs, with a search, asked for before the IC is added | |
+| `path` | File dialog before the component is added (it must be the first parameter), a file field with Browse in the pane | `fileinfo` (file filter), `new_verilog` (asks first to open a file or to make a new Verilog file, which is created with a module). Another parameter with `file_types` (like `[".v", ".sv"]`) is only shown for a file of those types |
 
-Every parameter needs a `description`, the label shown in the dialog. In type-annotated code,
+Every parameter needs a `description`, the label shown in the pane. In type-annotated code,
 `get_parameters()` returns `dict[str, Parameter]`, with `Parameter` from
 `digsim.circuit.components.atoms`, so mypy checks the keys and the `type`. Add
-`"reconfigurable": True` to let the user change the parameter later, with **Settings** in
-the component's context menu. Afterwards, the component's `reconfigure()`
-method and the GUI object's `update_size()` are called.
+`"reconfigurable": True` when the component can change the parameter as it is: Apply then
+sets it, and the component's `reconfigure()` method and the GUI object's `update_size()`
+are called. Other parameters build the component again, with the same name and place.
 
 ## Interactive components
 

@@ -45,7 +45,7 @@ class Gui:
     def __init__(self, monkeypatch: pytest.MonkeyPatch) -> None:
         self.app = QApplication.instance() or QApplication([])
         monkeypatch.setattr(
-            ComponentSettingsDialog, "start", classmethod(lambda *_args: (True, {}))
+            ComponentSettingsDialog, "ask_new_settings", classmethod(lambda *_args: (True, {}))
         )
         self.dragged: list[str] = []
         monkeypatch.setattr(

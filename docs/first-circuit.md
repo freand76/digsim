@@ -57,10 +57,11 @@ press **Del**. If you make a mistake, **Ctrl+Z** undoes it.
 Scroll down to the **Gates** group and drag an **AND** gate into the circuit area,
 between the switches and the right edge.
 
-Some components have settings, and they open a settings dialog when they are added. For
-the AND gate, you choose the number of inputs. Keep **2** and click **OK**.
+The new gate is selected, and its settings are in the settings pane, to the right of the
+circuit area. For the AND gate, that is the number of inputs. Keep **2**. To change it,
+move the slider and click **Apply**.
 
-![The settings dialog of the AND gate](images/tutorial/04_and_settings.png)
+![The settings of the AND gate in the settings pane](images/tutorial/04_and_settings.png)
 
 The gate has two inputs on its left side, **A** and **B**, and an output **Y** on its
 right side.

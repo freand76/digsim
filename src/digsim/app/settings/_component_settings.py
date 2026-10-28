@@ -6,12 +6,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Union
 
 import qtawesome as qta
 
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
-from PySide6.QtGui import QKeyEvent
+from PySide6.QtGui import QKeyEvent, QMouseEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -37,6 +37,7 @@ from PySide6.QtWidgets import (
 
 from digsim.app._editor_text import module_name, new_module_text
 from digsim.app._ic_search import search_ics
+from digsim.app._settings_values import new_settings
 from digsim.circuit.components import IntegratedCircuit
 from digsim.circuit.components._splitter import group_ranges, group_text, parse_groups
 from digsim.circuit.components.atoms import ComponentException, Parameter
@@ -48,6 +49,12 @@ from ._dialog_flags import DIALOG_FLAGS
 if TYPE_CHECKING:
     from digsim.app.model import AppModel
 
+    from ._settings_pane import ComponentSettingsPane
+
+
+# The dialog or the settings pane, that the inputs of the parameters are in
+SettingsHost = Union["ComponentSettingsDialog", "ComponentSettingsPane"]
+
 
 class ComponentSettingsException(Exception):
     """ComponentSettingsException"""
@@ -58,7 +65,7 @@ class ComponentSettingsBase(QFrame):
 
     def __init__(
         self,
-        parent: ComponentSettingsDialog,
+        parent: SettingsHost,
         parameter: str,
         parameter_dict: Parameter,
         settings: dict[str, Any],
@@ -70,6 +77,12 @@ class ComponentSettingsBase(QFrame):
         self._parameter_dict = parameter_dict
         self._settings = settings
         self._parent.sig_value_updated.connect(self._on_setting_change)
+
+    def description_label(self) -> QLabel:
+        """The description of the parameter, on more lines if it is long"""
+        label = QLabel(self._parameter_dict["description"], self)
+        label.setWordWrap(True)
+        return label
 
     def emit_signal(self) -> None:
         """Signal other settings components that a value has changed"""
@@ -88,7 +101,7 @@ class ComponentSettingText(ComponentSettingsBase):
 
     def __init__(
         self,
-        parent: ComponentSettingsDialog,
+        parent: SettingsHost,
         parameter: str,
         parameter_dict: Parameter,
         settings: dict[str, Any],
@@ -96,7 +109,7 @@ class ComponentSettingText(ComponentSettingsBase):
         super().__init__(parent, parameter, parameter_dict, settings)
         layout = QVBoxLayout(self)
         self.setLayout(layout)
-        layout.addWidget(QLabel(self._parameter_dict["description"]))
+        layout.addWidget(self.description_label())
         self._text_edit = QTextEdit(self)
         self._text_edit.setText(self._parameter_dict["default"])
         self._text_edit.textChanged.connect(self._update)
@@ -114,7 +127,7 @@ class ComponentSettingSingleLineText(ComponentSettingsBase):
 
     def __init__(
         self,
-        parent: ComponentSettingsDialog,
+        parent: SettingsHost,
         parameter: str,
         parameter_dict: Parameter,
         settings: dict[str, Any],
@@ -122,7 +135,7 @@ class ComponentSettingSingleLineText(ComponentSettingsBase):
         super().__init__(parent, parameter, parameter_dict, settings)
         layout = QVBoxLayout(self)
         self.setLayout(layout)
-        layout.addWidget(QLabel(self._parameter_dict["description"]))
+        layout.addWidget(self.description_label())
         self._invalid_list = self._parameter_dict.get("invalid_list", [])
         self._line_edit = QLineEdit(self)
         default = self._parameter_dict["default"]
@@ -152,7 +165,7 @@ class ComponentSettingsSlider(ComponentSettingsBase):
 
     def __init__(
         self,
-        parent: ComponentSettingsDialog,
+        parent: SettingsHost,
         parameter: str,
         parameter_dict: Parameter,
         settings: dict[str, Any],
@@ -166,7 +179,7 @@ class ComponentSettingsSlider(ComponentSettingsBase):
         self._settings_slider.setTickPosition(QSlider.TickPosition.TicksBothSides)
         self._settings_slider.valueChanged.connect(self._update)
         self._value_label = QLabel("")
-        layout.addWidget(QLabel(self._parameter_dict["description"]), 0, 0, 1, 6)
+        layout.addWidget(self.description_label(), 0, 0, 1, 6)
         self._setup()
         layout.addWidget(self._value_label, 1, 6, 1, 1)
         layout.addWidget(self._settings_slider, 1, 0, 1, 5)
@@ -224,12 +237,30 @@ class ComponentSettingsIntRangeSlider(ComponentSettingsSlider):
         self.emit_signal()
 
 
+class _CheckBoxLabel(QLabel):
+    """The text of a checkbox, on lines of its own in a narrow pane: a click toggles it"""
+
+    def __init__(self, text: str, checkbox: QCheckBox, parent: QWidget) -> None:
+        super().__init__(text, parent)
+        self._checkbox = checkbox
+        self.setWordWrap(True)
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        """QT event callback function"""
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._checkbox.toggle()
+        super().mousePressEvent(event)
+
+
 class ComponentSettingsCheckBox(ComponentSettingsBase):
-    """SettingsCheckbox"""
+    """
+    SettingsCheckbox. In the settings pane its text is a label beside it, a checkbox
+    can't wrap its text.
+    """
 
     def __init__(
         self,
-        parent: ComponentSettingsDialog,
+        parent: SettingsHost,
         parameter: str,
         parameter_dict: Parameter,
         settings: dict[str, Any],
@@ -238,9 +269,14 @@ class ComponentSettingsCheckBox(ComponentSettingsBase):
         layout = QHBoxLayout(self)
         self.setLayout(layout)
         self._settings[parameter] = parameter_dict["default"]
-        self._settings_checkbox = QCheckBox(parameter_dict["description"], self)
+        text = parameter_dict["description"]
+        in_dialog = isinstance(parent, ComponentSettingsDialog)
+        self._settings_checkbox = QCheckBox(text if in_dialog else "", self)
         self._settings_checkbox.setChecked(parameter_dict["default"])
         layout.addWidget(self._settings_checkbox)
+        if not in_dialog:
+            self._settings_checkbox.setAccessibleName(text)
+            layout.addWidget(_CheckBoxLabel(text, self._settings_checkbox, self), 1)
         self._settings_checkbox.stateChanged.connect(self._update)
         self._settings_checkbox.setFocus()
 
@@ -258,7 +294,7 @@ class ComponentSettingsIcSelector(ComponentSettingsBase):
 
     def __init__(
         self,
-        parent: ComponentSettingsDialog,
+        parent: SettingsHost,
         parameter: str,
         parameter_dict: Parameter,
         settings: dict[str, Any],
@@ -266,7 +302,7 @@ class ComponentSettingsIcSelector(ComponentSettingsBase):
         super().__init__(parent, parameter, parameter_dict, settings)
         layout = QVBoxLayout(self)
         self.setLayout(layout)
-        layout.addWidget(QLabel(self._parameter_dict["description"]))
+        layout.addWidget(self.description_label())
         self._ics = IntegratedCircuit.available()
         self._search = QLineEdit(self)
         self._search.setPlaceholderText("Search, like 74181, counter or shift")
@@ -274,7 +310,9 @@ class ComponentSettingsIcSelector(ComponentSettingsBase):
         self._search.installEventFilter(self)
         layout.addWidget(self._search)
         self._list = QListWidget(self)
-        self._list.setMinimumWidth(380)
+        # Room for the descriptions in the dialog, the pane has its own width
+        if isinstance(parent, ComponentSettingsDialog):
+            self._list.setMinimumWidth(380)
         layout.addWidget(self._list)
         self._search.textChanged.connect(self._filter)
         self._search.returnPressed.connect(self._accept)
@@ -291,7 +329,12 @@ class ComponentSettingsIcSelector(ComponentSettingsBase):
             item = QListWidgetItem(f"{name}  {description}" if description else name)
             item.setData(Qt.ItemDataRole.UserRole, name)
             self._list.addItem(item)
-        self._list.setCurrentRow(0)
+        row = 0
+        default = self._parameter_dict.get("default")
+        for index in range(self._list.count()):
+            if self._list.item(index).data(Qt.ItemDataRole.UserRole) == default:
+                row = index
+        self._list.setCurrentRow(row)
         self._update(self._list.currentItem())
 
     def _update(self, item: QListWidgetItem | None) -> None:
@@ -323,7 +366,7 @@ class ComponentSettingsNameSelector(ComponentSettingsBase):
 
     def __init__(
         self,
-        parent: ComponentSettingsDialog,
+        parent: SettingsHost,
         parameter: str,
         parameter_dict: Parameter,
         settings: dict[str, Any],
@@ -331,11 +374,14 @@ class ComponentSettingsNameSelector(ComponentSettingsBase):
         super().__init__(parent, parameter, parameter_dict, settings)
         layout = QVBoxLayout(self)
         self.setLayout(layout)
-        layout.addWidget(QLabel(self._parameter_dict["description"]))
+        layout.addWidget(self.description_label())
         component_dict = self._parameter_dict["component_list"]
         self._component_selector = QComboBox(parent)
         for component_name, component_desc in component_dict.items():
             self._component_selector.addItem(component_desc, userData=component_name)
+        default = self._parameter_dict.get("default")
+        if default in component_dict:
+            self._component_selector.setCurrentIndex(list(component_dict).index(default))
         layout.addWidget(self._component_selector)
         self._component_selector.currentIndexChanged.connect(self._update)
         self._update(self._component_selector.currentIndex())
@@ -349,7 +395,7 @@ class ComponentSettingsListSelector(ComponentSettingsBase):
 
     def __init__(
         self,
-        parent: ComponentSettingsDialog,
+        parent: SettingsHost,
         parameter: str,
         parameter_dict: Parameter,
         settings: dict[str, Any],
@@ -357,7 +403,7 @@ class ComponentSettingsListSelector(ComponentSettingsBase):
         super().__init__(parent, parameter, parameter_dict, settings)
         layout = QVBoxLayout(self)
         self.setLayout(layout)
-        layout.addWidget(QLabel(self._parameter_dict["description"]))
+        layout.addWidget(self.description_label())
         item_list = self._parameter_dict["items"]
         if len(item_list) == 0:
             raise ComponentSettingsException("No available items to choose from")
@@ -365,6 +411,9 @@ class ComponentSettingsListSelector(ComponentSettingsBase):
         self._item_selector = QComboBox(parent)
         for item in item_list:
             self._item_selector.addItem(item, userData=item)
+        default = self._parameter_dict.get("default")
+        if default in item_list:
+            self._item_selector.setCurrentIndex(item_list.index(default))
         layout.addWidget(self._item_selector)
         self._item_selector.currentIndexChanged.connect(self._update)
         self._update(self._item_selector.currentIndex())
@@ -381,7 +430,7 @@ class ComponentSettingsPath(ComponentSettingsBase):
 
     def __init__(
         self,
-        parent: ComponentSettingsDialog,
+        parent: SettingsHost,
         parameter: str,
         parameter_dict: Parameter,
         settings: dict[str, Any],
@@ -389,13 +438,15 @@ class ComponentSettingsPath(ComponentSettingsBase):
         super().__init__(parent, parameter, parameter_dict, settings)
         layout = QVBoxLayout(self)
         self.setLayout(layout)
-        layout.addWidget(QLabel(self._parameter_dict["description"]))
-        row = QHBoxLayout()
+        layout.addWidget(self.description_label())
         self._line_edit = QLineEdit(self)
         self._line_edit.setText(self._parameter_dict.get("default") or "")
         self._line_edit.setPlaceholderText("No file")
         self._line_edit.textChanged.connect(self._update)
-        row.addWidget(self._line_edit)
+        layout.addWidget(self._line_edit)
+        # The buttons below it, the path gets the whole width
+        row = QHBoxLayout()
+        row.addStretch(1)
         browse_button = QPushButton("Browse...", self)
         browse_button.clicked.connect(self._browse)
         row.addWidget(browse_button)
@@ -421,7 +472,7 @@ class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
 
     def __init__(
         self,
-        parent: ComponentSettingsDialog,
+        parent: SettingsHost,
         parameter: str,
         parameter_dict: Parameter,
         settings: dict[str, Any],
@@ -430,9 +481,11 @@ class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
         layout = QGridLayout(self)
         self.setLayout(layout)
         self._bit_checkboxes: list[QCheckBox] = []
+        enabled = self._parameter_dict.get("default")
         for checkbox_id in range(self.MAX_WIDTH):
             checkbox = QCheckBox(f"bit{checkbox_id}")
-            checkbox.setChecked(True)
+            # All bits without a default
+            checkbox.setChecked(enabled is None or checkbox_id in enabled)
             checkbox.stateChanged.connect(self._update)
             layout.addWidget(checkbox, checkbox_id % 8, checkbox_id // 8, 1, 1)
             self._bit_checkboxes.append(checkbox)
@@ -473,7 +526,7 @@ class ComponentSettingsBitGroups(ComponentSettingsBase):
 
     def __init__(
         self,
-        parent: ComponentSettingsDialog,
+        parent: SettingsHost,
         parameter: str,
         parameter_dict: Parameter,
         settings: dict[str, Any],
@@ -481,7 +534,7 @@ class ComponentSettingsBitGroups(ComponentSettingsBase):
         super().__init__(parent, parameter, parameter_dict, settings)
         layout = QVBoxLayout(self)
         self.setLayout(layout)
-        layout.addWidget(QLabel(self._parameter_dict["description"]))
+        layout.addWidget(self.description_label())
         self._line_edit = QLineEdit(self)
         self._line_edit.setText(group_text(self._parameter_dict["default"]))
         self._line_edit.textChanged.connect(self._update)
@@ -683,47 +736,39 @@ class ComponentSettingsDialog(QDialog):
         return is_file_path, settings, new and len(path) > 0
 
     @classmethod
-    def start(
+    def ask_new_settings(
         cls,
         parent: QWidget | None,
         app_model: AppModel,
         name: str,
         parameters: dict[str, Parameter],
     ) -> tuple[bool, dict[str, Any]]:
-        """Start a settings dialog and return the settings"""
+        """
+        The settings of a new component: what it is made from is asked first, a file
+        (the first parameter) or the IC, and the other settings get their defaults (the
+        settings pane changes them). False if that was cancelled.
+        """
         if len(parameters) == 0:
-            # No parameters, just place component without settings
             return True, {}
-
-        is_file_path, settings, created = cls._is_file_path(parent, parameters)
-        if is_file_path:
-            if len(settings) == 0:
-                return False, {}
-            # The other parameters in a dialog after the file, if there are any, and the
-            # ones for its file type
-            path = str(next(iter(settings.values()))).lower()
-            parameters = {
-                key: value
-                for key, value in parameters.items()
-                if key not in settings and path.endswith(tuple(value.get("file_types", [""])))
-            }
-            if len(parameters) == 0:
-                if created:
-                    app_model.sig_edit_verilog.emit(next(iter(settings.values())))
-                return True, settings
-
-        try:
-            dialog = ComponentSettingsDialog(parent, app_model, name, parameters)
-            result = dialog.exec()
-            if result == QDialog.DialogCode.Rejected:
-                return False, {}
-            if created:
-                # Edit the new file
-                app_model.sig_edit_verilog.emit(next(iter(settings.values())))
-            return True, {**settings, **dialog.get_settings()}
-        except ComponentSettingsException as exc:
-            app_model.sig_error.emit(str(exc))
+        is_file_path, chosen, created = cls._is_file_path(parent, parameters)
+        if is_file_path and len(chosen) == 0:
             return False, {}
+        if "ic_name" in parameters:
+            dialog = ComponentSettingsDialog(
+                parent, app_model, name, {"ic_name": parameters["ic_name"]}
+            )
+            if dialog.exec() == QDialog.DialogCode.Rejected:
+                return False, {}
+            chosen.update(dialog.get_settings())
+        try:
+            settings = new_settings(parameters, chosen)
+        except ComponentException as exc:
+            app_model.sig_error.emit(f"Could not add {name}: {exc!s}")
+            return False, {}
+        if created:
+            # Edit the new file
+            app_model.sig_edit_verilog.emit(next(iter(chosen.values())))
+        return True, settings
 
     def _setup_dialog(self, parameters: dict[str, Parameter]) -> None:
         for parameter, parameter_dict in parameters.items():

@@ -6,9 +6,11 @@
 from __future__ import annotations
 
 from collections import deque
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from digsim.app._line_graph import without_ports
 from digsim.circuit import Circuit
+from digsim.circuit.components.atoms import Component, DigsimException, Port
 from digsim.storage_model import LineDataClass, ModelDataClass
 
 from ._model_clipboard import ModelClipboard
@@ -147,6 +149,61 @@ class ModelObjects:
             self.reset_undo_stack()
         self._app_model.sig_synchronize_gui.emit()
         return exception_str_list
+
+    def change_component(
+        self, name: str, settings: dict[str, Any], class_name: str | None = None
+    ) -> list[str]:
+        """
+        Build the circuit again with other settings for a component, and another class
+        (a flip-flop of another kind), an undo step. It keeps its name and place, and the
+        wires to the ports that it still has. Returns the ports whose wires are gone.
+        Raises DigsimException, and nothing changes, if it can't be built with them.
+        """
+        undo_state = self._app_model.circuit_to_model()
+        model_dc = self._app_model.circuit_to_model()
+        for component_dc in model_dc.circuit.components:
+            if component_dc.name != name:
+                continue
+            component_dc.settings = {**component_dc.settings, **settings}
+            if class_name is not None:
+                module, _, _ = component_dc.type.rpartition(".")
+                component_dc.type = f"{module}.{class_name}"
+                # The display name of the new class
+                component_dc.display_name = ""
+        lines = self._app_model.objects.wires.to_lines()
+        model_dc.circuit.wires = []
+        model_dc.wires = {}
+        model_dc.lines = lines
+        warnings = self._restore_state(model_dc)
+        if self._toplevel(name) is None:
+            self._restore_state(undo_state)
+            self._app_model.sig_synchronize_gui.emit()
+            reasons = [warning for warning in warnings if name in warning] or warnings
+            raise DigsimException("\n".join(reasons) or f"{name} could not be built")
+        # The ports that are gone, or that have another width than their line now
+        gone: set[str] = set()
+        for line in lines:
+            ports = {key: self._port(key) for key in line.ports}
+            width = LineDataClass.width([port for port in ports.values() if port is not None])
+            gone |= {key for key, port in ports.items() if port is None or port.width != width}
+        if gone:
+            model_dc.lines = without_ports(lines, gone)
+            self._restore_state(model_dc)
+        self.add_undo_state(undo_state)
+        self._app_model.sig_synchronize_gui.emit()
+        return sorted(gone)
+
+    def _toplevel(self, name: str) -> Component | None:
+        """A top-level component of the circuit by its name"""
+        return next((c for c in self._circuit.get_toplevel_components() if c.name() == name), None)
+
+    def _port(self, key: str) -> Port | None:
+        """A port of a top-level component by its key, like "and1.A", None if it isn't there"""
+        component_name, _, port_name = key.rpartition(".")
+        component = self._toplevel(component_name)
+        if component is None:
+            return None
+        return next((port for port in component.ports if port.name() == port_name), None)
 
     def reset_undo_stack(self) -> None:
         """Clear undo/redo stacks"""

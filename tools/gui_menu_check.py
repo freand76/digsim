@@ -25,7 +25,7 @@ os.environ.setdefault("DIGSIM_SETTINGS_DIR", tempfile.mkdtemp(prefix="digsim_set
 
 from PySide6.QtCore import QEventLoop, QPointF, QTimer
 from PySide6.QtGui import QAction, QImage, QKeySequence
-from PySide6.QtWidgets import QApplication, QFileDialog, QMessageBox
+from PySide6.QtWidgets import QApplication, QComboBox, QFileDialog, QMessageBox, QSlider
 
 from digsim.app.gui import MainWindow
 from digsim.app.gui._circuit_area import CircuitArea
@@ -54,6 +54,10 @@ class Gui:
         monkeypatch.setattr(QMessageBox, "question", self._yes)
         self.errors: list[str] = []
         monkeypatch.setattr(MainWindow, "error_dialog", lambda _, text: self.errors.append(text))
+        self.warnings: list[str] = []
+        monkeypatch.setattr(
+            MainWindow, "warning_log_dialog", lambda _, _title, text: self.warnings.append(text)
+        )
         self.model = AppModel()
         self.window = MainWindow(self.model, "1.2.3")
         self.window.show()
@@ -401,3 +405,119 @@ def test_subcircuit_view(gui):
     window._tabs.setCurrentIndex(0)
     gui.trigger("File", "Close Tab")
     assert window.view_tabs() == []
+
+
+def _pane_input(gui: Gui, widget_type: Any, number: int = 0) -> Any:
+    """An input of the settings pane, like its first slider"""
+    return gui.window.settings_pane.findChildren(widget_type)[number]
+
+
+def _apply(gui: Gui) -> None:
+    gui.window.settings_pane._apply_button.click()
+    spin()
+
+
+def test_settings_pane_follows_the_selection(gui):
+    pane = gui.window.settings_pane
+    led = gui.add("Led")
+    gate = gui.add("AND")
+    assert pane._title.text() == "Settings"
+    led.setSelected(True)
+    spin()
+    assert pane._title.text() == "Led"
+    # Two components: none of them
+    gate.setSelected(True)
+    spin()
+    assert pane._title.text() == "Settings"
+    led.setSelected(False)
+    spin()
+    assert pane._title.text() == "AND"
+
+
+def test_settings_pane_reconfigures_in_place(gui):
+    """A setting that can be reconfigured changes the component, it stays where it is"""
+    led = gui.add("Led")
+    led.setSelected(True)
+    spin()
+    color = _pane_input(gui, QComboBox)
+    color.setCurrentIndex(color.findData("green"))
+    _apply(gui)
+    assert led.component.color == "green"
+    assert gui.model.objects.components.get_object(led.component) is led
+    gui.trigger("Edit", "Undo")
+    (component,) = gui.model.objects.circuit.get_toplevel_components()
+    assert component.color == "red"
+
+
+def test_settings_pane_builds_the_component_again(gui):
+    """More inputs on a gate: built again, with its wires, an undo step"""
+    switches = [gui.add("OnOffSwitch") for _ in range(2)]
+    gate = gui.add("AND")
+    led = gui.add("Led")
+    wires = gui.model.objects.wires
+    wires.connect_ports(switches[0].component.O, gate.component.A)
+    wires.connect_ports(switches[1].component.O, gate.component.B)
+    wires.connect_ports(gate.component.Y, led.component.I)
+    gui.model.sig_update_wires.emit()
+    spin()
+    gate.setSelected(True)
+    spin()
+    _pane_input(gui, QSlider).setValue(3)
+    _apply(gui)
+    new_gate = gui.model.objects.circuit.get_component("AND")
+    assert [port.name() for port in new_gate.inports()] == ["A", "B", "C"]
+    assert {driver.parent().name() for driver in new_gate.A.get_drivers()} == {"OnOffSwitch"}
+    assert new_gate.Y.wired_ports == [gui.model.objects.circuit.get_component("Led").I]
+    # Still selected, the pane shows it
+    assert gui.window.settings_pane._title.text() == "AND"
+    assert not gui.warnings
+    gui.trigger("Edit", "Undo")
+    gate = gui.model.objects.circuit.get_component("AND")
+    assert len(gate.inports()) == 2
+
+
+def test_settings_pane_removes_the_wires_of_a_port_of_another_width(gui):
+    value = gui.add("StaticValue")
+    led = gui.add("Led")
+    gui.model.objects.wires.connect_ports(value.component.O, led.component.I)
+    value.setSelected(True)
+    spin()
+    # The width is the second slider, after the value
+    _pane_input(gui, QSlider, 1).setValue(4)
+    _apply(gui)
+    assert gui.model.objects.circuit.get_component("StaticValue").O.width == 4
+    assert gui.model.objects.circuit.get_component("Led").I.get_drivers() == []
+    # The line falls apart, one of its ports has the other width
+    (warning,) = gui.warnings
+    assert "StaticValue.O" in warning or "Led.I" in warning
+
+
+def test_settings_pane_changes_the_kind_of_flip_flop(gui):
+    flip_flop = gui.add("SRFF")
+    flip_flop.setSelected(True)
+    spin()
+    kinds = _pane_input(gui, QComboBox)
+    kinds.setCurrentIndex(kinds.findData("ClockedJKFF"))
+    _apply(gui)
+    (component,) = gui.model.objects.circuit.get_toplevel_components()
+    assert type(component).__name__ == "ClockedJKFF"
+    assert component.name() == "SRFF"
+
+
+def test_settings_pane_is_hidden_and_shown(gui):
+    action = gui.action("View", "Settings Pane")
+    assert action.isChecked()
+    gui.trigger("View", "Settings Pane")
+    assert not gui.window.settings_dock.isVisible()
+    assert MenuBar.settings().value("window/settings_pane", type=bool) is False
+    gui.trigger("View", "Settings Pane")
+    assert gui.window.settings_dock.isVisible()
+
+
+def test_added_component_is_selected_without_a_dialog(gui):
+    area = gui.window.findChild(CircuitArea)
+    area.add_component("Counter", None)
+    spin()
+    (counter,) = gui.model.objects.components.get_object_list()
+    assert counter.isSelected()
+    assert gui.window.settings_pane._title.text() == "Counter"

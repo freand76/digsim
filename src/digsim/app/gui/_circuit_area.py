@@ -1830,7 +1830,7 @@ class CircuitArea(QGraphicsView):
             position = self.mapToScene(0, 0) + QPoint(100, 100)
 
         component_parameters = self._app_model.objects.components.get_object_parameters(name)
-        ok, settings = ComponentSettingsDialog.start(
+        ok, settings = ComponentSettingsDialog.ask_new_settings(
             self, self._app_model, name, component_parameters
         )
         if settings.get("name") is not None:
@@ -1846,6 +1846,9 @@ class CircuitArea(QGraphicsView):
             self.grow_scene_rect()
             self._scene.add_scene_component(component_object, True)
             self.grow_scene_rect()
+            # Selected, the settings pane shows its settings
+            self._scene.clearSelection()
+            component_object.setSelected(True)
 
     def grow_scene_rect(self) -> None:
         """

@@ -11,8 +11,7 @@ from PySide6.QtCore import QPoint
 from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import QMenu, QWidget
 
-from digsim.app.settings import ComponentSettingsDialog
-from digsim.circuit.components.atoms import Parameter
+from digsim.app._settings_values import is_flip_flop
 
 
 if TYPE_CHECKING:
@@ -32,7 +31,6 @@ class ComponentContextMenu(QMenu):
         self._app_model = app_model
         self._component_object = component_object
         self._component = self._component_object.component
-        self._reconfigurable_parameters: dict[str, Parameter] = {}
         # Title
         titleAction = QAction(self._component.display_name(), self)
         titleAction.setEnabled(False)
@@ -61,8 +59,7 @@ class ComponentContextMenu(QMenu):
         deleteAction.triggered.connect(self._delete)
 
     def _add_settings(self) -> None:
-        self._reconfigurable_parameters = self._component.get_reconfigurable_parameters()
-        if len(self._reconfigurable_parameters) > 0:
+        if self._component.get_parameters() or is_flip_flop(self._component):
             settingsAction = QAction("Settings", self)
             self.addAction(settingsAction)
             settingsAction.triggered.connect(self._settings)
@@ -85,12 +82,9 @@ class ComponentContextMenu(QMenu):
         self._app_model.objects.components.send_to_back(self._component_object)
 
     def _settings(self) -> None:
-        """Start the settings dialog for reconfiguration"""
-        ok, settings = ComponentSettingsDialog.start(
-            self._parent,
-            self._app_model,
-            self._component.name(),
-            self._reconfigurable_parameters,
-        )
-        if ok:
-            self._app_model.objects.components.update_settings(self._component_object, settings)
+        """Show the component's settings in the settings pane"""
+        scene = self._component_object.scene()
+        if scene is not None:
+            scene.clearSelection()
+        self._component_object.setSelected(True)
+        self._app_model.sig_show_settings.emit()

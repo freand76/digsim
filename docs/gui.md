@@ -25,8 +25,8 @@ The window has a menu bar and three areas:
 
 - **Menu bar** (top): **File** (New Tab, New, Open, Open Recent, Save, Save As, Export
   Image, Close Tab, Quit), **Edit** (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete,
-  Rotate, Find Component, Settings), **View** (zoom in and out, and Zoom to Fit: the
-  whole circuit in the window), **Simulation** (Start, Single Step, Step Clock, Reset)
+  Rotate, Find Component, Settings), **View** (zoom in and out, Zoom to Fit: the whole
+  circuit in the window, and the [settings pane](#settings-pane)), **Simulation** (Start, Single Step, Step Clock, Reset)
   and **Help** (the documentation, and the version of DigSim). Save saves the circuit in
   the file it was opened from or saved to, the window title shows that file, with a `*`
   when the circuit has changed since.
@@ -58,8 +58,9 @@ A typical circuit consists of:
 
 Add a component by **double-clicking** it in the component selection, or by **dragging**
 it into the circuit area. While you drag, a see-through preview shows where the component
-will be placed: centered under the mouse pointer. Components with options open a settings
-dialog when they are added.
+will be placed: centered under the mouse pointer. The new component is selected, and its
+options are in the [settings pane](#settings-pane). A component made from a file asks for
+the file first, and an IC asks which IC it is.
 
 Right-click a component to open its context menu:
 
@@ -68,13 +69,29 @@ Right-click a component to open its context menu:
 | Rotate | Turn the component a quarter clockwise (gates and the other symbols, see [Rotating components](#rotating-components)) |
 | Bring to front / Send to back | Change the drawing order of overlapping components |
 | Delete | Remove the component and its wires |
-| Settings | Change the component's options (only for configurable components) |
+| Settings | Show the component's options in the [settings pane](#settings-pane) |
 | Shortcut | Assign a keyboard shortcut (push buttons and switches) |
 | Edit Verilog... | Open the Verilog file in an editor ([Yosys components](#yosys-component)) |
 | Reload | Reload the Verilog file or netlist ([Yosys components](#yosys-component)) |
 
 Click a component to select it, and drag it to move it. Delete the selected component
 with the **Del** key or the **Delete** button in the control area.
+
+### Settings pane
+
+The **settings pane**, to the right of the circuit area, shows the options of the
+selected component: the number of inputs of a gate, the width of a bus, the color of an
+LED, the file of a Yosys component. Change them and click **Apply**, **Reset** shows the
+options the component has again. Each Apply is one step of Undo.
+
+Some options can be changed in the component as it is, like the color of an LED. The
+others change its ports, like the number of inputs of a gate: the component is built
+again with them, where it was and with the same name, and the wires to the ports that it
+still has stay. The wires of a port that is gone, or that has another width now, are
+removed, and a message lists them.
+
+**View > Settings Pane** (**F4**) hides and shows the pane, and DigSim remembers it. The
+pane is empty while the simulation runs, and when no component or several are selected.
 
 ### Rotating components
 
@@ -284,6 +301,7 @@ paste is one step to undo.
 | **Ctrl + D** | Duplicate the selected components |
 | **Ctrl + R** | Rotate the selected components a quarter clockwise |
 | **Ctrl + 0** / **Home** | Zoom to fit the whole circuit |
+| **F4** | Show / hide the settings pane |
 | **Del** | Delete the selected components and wires |
 | **Space** | Start / stop the simulation |
 | **F10** | Step Clock: run to the next rising edge of a clock, and let the logic settle |
@@ -501,8 +519,8 @@ its values, like the state of a state machine, is also written with the names, a
 [Internal signals and states](synthesis.md#internal-signals-and-states). See
 [Verilog and Yosys](synthesis.md) for how to create netlists.
 
-A netlist is not synthesized, so it only asks for the internal signals. These settings
-can be changed later: right-click the component and choose **Settings**. The component is
+A netlist is not synthesized, so it only has the internal signals. These settings are in
+the [settings pane](#settings-pane) when the component is selected. The component is
 built again with them (a Verilog file is synthesized again when **Synthesize Verilog into
 functional blocks** changes), and the simulation starts over at time 0. The wires stay
 where they are.
