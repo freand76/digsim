@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Handle settings in the model"""
@@ -30,7 +30,9 @@ class ModelSettings:
         self._settings = dict(self.DEFAULT_SETTINGS)
 
     def update(self, settings: dict[str, Any]) -> None:
-        """Update model settings"""
+        """Update model settings, the circuit has changed if one of them is another now"""
+        if all(self._settings.get(key) == value for key, value in settings.items()):
+            return
         self._settings.update(settings)
         self._app_model.model_changed()
         # Settings can change the component sizes

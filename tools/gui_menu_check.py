@@ -359,6 +359,8 @@ def test_the_settings_dialog_saves_simulating_in_hidden_tabs(gui):
     try:
         assert dialog.start()
         assert simulate_hidden_tabs()
+        # A setting for all circuits: the circuit hasn't changed
+        assert not gui.model.is_changed
     finally:
         MenuBar.settings().setValue(HIDDEN_TABS_KEY, False)
 
