@@ -48,6 +48,10 @@ class AppModel(QThread):
     sig_zoom_in_gui = Signal()
     sig_zoom_out_gui = Signal()
     sig_zoom_fit_gui = Signal()
+    # Edit Subcircuit: the circuit file to open in a tab
+    sig_edit_subcircuit = Signal(str)
+    # The circuit was saved in a file, the subcircuits of the file in other tabs reload
+    sig_saved = Signal(str)
 
     def __init__(self) -> None:
         super().__init__()
@@ -331,6 +335,7 @@ class AppModel(QThread):
         self._circuit_path = str(path)
         self._changed = False
         self.sig_control_notify.emit()
+        self.sig_saved.emit(str(path))
 
     def load_circuit(self, path: str | Path) -> None:
         """Load a circuit with GUI information"""

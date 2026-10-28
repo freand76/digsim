@@ -20,8 +20,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from digsim.app._yosys_interface import same_file
 from digsim.app.editor import VerilogEditors
+from digsim.app.gui_objects._subcircuit_object import reload_subcircuits
 from digsim.app.model import AppModel
+from digsim.circuit.components import SubCircuit
+from digsim.circuit.components._subcircuit import files_used
 
 from ._circuit_area import CircuitArea
 from ._component_search import ComponentSearch
@@ -200,6 +204,8 @@ class MainWindow(QMainWindow):
         app_model.sig_error.connect(self.error_dialog)
         app_model.sig_warning_log.connect(self.warning_log_dialog)
         app_model.sig_control_notify.connect(partial(self._update_titles, tab))
+        app_model.sig_edit_subcircuit.connect(self.open_file)
+        app_model.sig_saved.connect(partial(self._circuit_saved, tab))
         index = self._tabs.addTab(tab, tab.title())
         self._tabs.setCurrentIndex(index)
         self._update_titles(tab)
@@ -266,6 +272,23 @@ class MainWindow(QMainWindow):
         self._shown_tab = tab
         self._menu_bar.set_tab(tab.app_model, tab.circuit_area)
         self._update_titles(tab)
+
+    def _circuit_saved(self, saved_tab: CircuitTab, path: str) -> None:
+        """
+        A circuit was saved: the subcircuits in the other tabs that use its file, also
+        through their own subcircuits, are built again from their files
+        """
+        for tab in self.tabs():
+            if tab is saved_tab:
+                continue
+            files = {
+                str(subcircuit.source_file())
+                for subcircuit in tab.app_model.objects.circuit.get_toplevel_components()
+                if isinstance(subcircuit, SubCircuit)
+            }
+            for file in sorted(files):
+                if same_file(file, path) or Path(path).resolve() in files_used(file):
+                    reload_subcircuits(self, tab.app_model, file)
 
     def _find_component(self) -> None:
         self.current_tab().circuit_editor.focus_component_search()

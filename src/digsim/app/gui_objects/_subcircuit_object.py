@@ -60,6 +60,11 @@ class SubCircuitObject(NamedBoxObject):
         return component
 
     def add_context_menu_action(self, menu: QMenu, parent: QWidget | None) -> None:
+        edit_action = QAction("Edit Subcircuit", menu)
+        menu.addAction(edit_action)
+        edit_action.triggered.connect(
+            lambda: self._app_model.sig_edit_subcircuit.emit(str(self.component.source_file()))
+        )
         reload_action = QAction("Reload", menu)
         menu.addAction(reload_action)
         reload_action.triggered.connect(

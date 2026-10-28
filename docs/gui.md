@@ -408,10 +408,14 @@ itself they work as inputs and outputs, so that it can be tested on its own.
 A **Subcircuit** uses another circuit file as a component: choose the file when you add
 it. Its ports are the circuit ports (In, Out and InOut) of the file, named like them, in
 the order they are in the file from top to bottom, and it works like the circuit in the
-file. A subcircuit can use subcircuits, but not the circuit it is in. **Reload** in its
-context menu builds it again from its file after the file has changed. When the ports of
-the file have changed, it lists the changes first, and the wires to the ports that are
-gone are removed.
+file. A subcircuit can use subcircuits, but not the circuit it is in.
+
+**Edit Subcircuit** in its context menu opens its file in a tab (or shows its tab). That
+edits the file, which every subcircuit of it uses: when the file is saved, the subcircuits
+of it in the other tabs are built again from it, also the ones that use it through their
+own subcircuits. **Reload** builds a subcircuit again from its file, after it was changed
+elsewhere. When the ports of the file have changed, the changes are listed first, and the
+wires to the ports that are gone are removed.
 
 ### IC components
 

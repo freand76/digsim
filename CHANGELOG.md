@@ -28,6 +28,7 @@
  - New components: In, Out and InOut, the ports of a circuit (CircuitInput, CircuitOutput and CircuitInOut in Python, and Circuit.ports()). They name the interface of a circuit for a subcircuit, and work as inputs and outputs in the circuit itself: Set Value... in the context menu of an In or an InOut sets its value.
  - Subcircuits: SubCircuit(circuit, path) uses another circuit file as a component, through the In, Out and InOut ports of the file. A subcircuit can use subcircuits, and reload() builds it again after its file changed.
  - GUI: a Subcircuit component, a circuit file used as a component, with Reload in its context menu
+ - GUI: Edit Subcircuit opens the file of a subcircuit in a tab, and saving a circuit builds the subcircuits of its file in the other tabs again
 
 ## v1.8.0
  - GUI: a new look. All components are drawn in one style: gates, LEDs, buffers and bus splitters as symbols only, devices like switches and displays with a white body, on a light background with a grid of dots. Most components are smaller, a selected one is blue, and green means on everywhere.
