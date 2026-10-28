@@ -92,3 +92,17 @@ def test_a_clock_does_not_oscillate():
     Clock(circuit, frequency=1_000_000)
     circuit.init()
     assert circuit.oscillating_ports() == []
+
+
+def test_oscillating_ports_within_a_time():
+    """Out of time it stops, with what it counted: here nothing yet"""
+    circuit = Circuit()
+    enable, _, _, _ = _ring(circuit)
+    circuit.init()
+    circuit.run(ns=20)
+    enable.turn_on()
+    circuit.run(ns=100)
+    before = circuit.time_ns
+    assert circuit.oscillating_ports(max_seconds=0) == []
+    assert circuit.time_ns == before
+    assert circuit.oscillating_ports(max_seconds=10)

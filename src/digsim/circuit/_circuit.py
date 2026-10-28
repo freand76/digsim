@@ -413,7 +413,9 @@ class Circuit:
         """
         self._slice_ns = START_SLICE_NS
 
-    def oscillating_ports(self, ns: int = 200, changes: int = 10) -> list[Port]:
+    def oscillating_ports(
+        self, ns: int = 200, changes: int = 10, max_seconds: float | None = None
+    ) -> list[Port]:
         """
         The ports of the top-level components that oscillate: it runs the simulation for a
         while, a nanosecond at a time, and counts how often each output changes. A port
@@ -423,6 +425,8 @@ class Circuit:
         Args:
             ns: How long it runs, in nanoseconds.
             changes: How many changes make an oscillation.
+            max_seconds: Stop after this long on the clock, with the changes counted so
+                far, in a circuit where a nanosecond takes long.
         """
         ports = [
             port
@@ -432,7 +436,10 @@ class Circuit:
         ]
         counts = dict.fromkeys(ports, 0)
         values = [port.value for port in ports]
+        deadline = None if max_seconds is None else time.perf_counter() + max_seconds
         for _ in range(ns):
+            if deadline is not None and time.perf_counter() > deadline:
+                break
             self.run(ns=1)
             for number, port in enumerate(ports):
                 value = port.value
