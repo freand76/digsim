@@ -67,7 +67,7 @@
         "half_adder": {"x": 220, "y": 100, "z": 0},
         "half_adder_1": {"x": 420, "y": 180, "z": 0},
         "OR": {"x": 620, "y": 260, "z": 0},
-        "CircuitOutput": {"x": 780, "y": 190, "z": 0},
+        "CircuitOutput": {"x": 780, "y": 195, "z": 0},
         "CircuitOutput_1": {"x": 780, "y": 270, "z": 0},
         "Note_2": {"x": 60, "y": 360, "z": 0}
     },
@@ -89,22 +89,22 @@
         },
         {
             "ports": ["half_adder.s", "half_adder_1.a"],
-            "points": {"1": [409, 125], "2": [409, 205]},
+            "points": {"1": [389, 125], "2": [389, 205]},
             "segments": [["half_adder.s", "1"], ["1", "2"], ["2", "half_adder_1.a"]]
         },
         {
             "ports": ["half_adder.c", "OR.A"],
-            "points": {"1": [609, 145], "2": [609, 270]},
+            "points": {"1": [589, 145], "2": [589, 270]},
             "segments": [["half_adder.c", "1"], ["1", "2"], ["2", "OR.A"]]
         },
         {
             "ports": ["half_adder_1.s", "CircuitOutput.s"],
-            "points": {"1": [769, 205], "2": [769, 200]},
-            "segments": [["half_adder_1.s", "1"], ["1", "2"], ["2", "CircuitOutput.s"]]
+            "points": {},
+            "segments": [["half_adder_1.s", "CircuitOutput.s"]]
         },
         {
             "ports": ["half_adder_1.c", "OR.B"],
-            "points": {"1": [609, 225], "2": [609, 290]},
+            "points": {"1": [549, 225], "2": [549, 290]},
             "segments": [["half_adder_1.c", "1"], ["1", "2"], ["2", "OR.B"]]
         },
         {
