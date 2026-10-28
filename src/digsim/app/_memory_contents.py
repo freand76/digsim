@@ -22,8 +22,10 @@ def word_digits(data_width: int) -> int:
     return (data_width + 3) // 4
 
 
-def word_text(value: int, data_width: int) -> str:
-    """A word in hexadecimal, with all its digits"""
+def word_text(value: int | str, data_width: int) -> str:
+    """A word in hexadecimal, with all its digits, or "X" ("Z") in each digit"""
+    if isinstance(value, str):
+        return value * word_digits(data_width)
     return f"{value:0{word_digits(data_width)}X}"
 
 
@@ -41,9 +43,17 @@ def parse_word(text: str, data_width: int) -> int:
     return value
 
 
-def ascii_text(values: list[int]) -> str:
+def ascii_text(values: list[int | str]) -> str:
     """Bytes as the characters they are, a dot for the ones that aren't printable"""
-    return "".join(chr(value) if 0x20 <= value < 0x7F else "." for value in values)
+    return "".join(
+        chr(value) if isinstance(value, int) and 0x20 <= value < 0x7F else "." for value in values
+    )
+
+
+def defined_words(words: list[int | str]) -> tuple[list[int], int]:
+    """The words with 0 for an undefined one ("X"), and how many were undefined"""
+    undefined = sum(1 for value in words if isinstance(value, str))
+    return [value if isinstance(value, int) else 0 for value in words], undefined
 
 
 def read_contents(

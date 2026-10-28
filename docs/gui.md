@@ -441,6 +441,13 @@ anew, as rows of words with `@address` after rows of zeros, so its comments are 
 A RAM without a file asks for one when it is saved. The words before the load address
 are not in the file, they can't be changed.
 
+For a RAM, the editor also shows the RAM as it is now, in the simulation: stop the
+simulation, open **Edit Contents...** and choose **The RAM now** at the top. The words are
+read-only, and the ones that are not what the file fills the RAM with, the ones the
+simulation wrote, are marked. **Save As...** saves them in a file of their own, loaded at
+address 0, and **Use as Contents** puts them in the view of the file, to save as the
+contents the RAM starts with. An undefined word (X) is saved as 0.
+
 ### Circuit ports
 
 | Component | Description |

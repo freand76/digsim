@@ -5,12 +5,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
-from PySide6.QtGui import QFontDatabase
+from PySide6.QtGui import QColor, QFontDatabase
 from PySide6.QtWidgets import (
+    QComboBox,
     QDialog,
     QDialogButtonBox,
     QFileDialog,
@@ -27,11 +29,13 @@ from PySide6.QtWidgets import (
 from digsim.app._memory_contents import (
     WORDS_PER_ROW,
     ascii_text,
+    defined_words,
     parse_word,
     read_contents,
     word_text,
     write_contents,
 )
+from digsim.app.gui_objects import _theme as theme
 from digsim.app.settings._dialog_flags import DIALOG_FLAGS
 from digsim.circuit.components import RAM, ROM
 from digsim.circuit.components._memory import _FILEINFO
@@ -60,9 +64,13 @@ class _WordsModel(QAbstractTableModel):
         self._ascii = data_width == 8
         self.changed = False
 
+    def values(self) -> Sequence[int | str]:
+        """The words that are shown"""
+        return self.words
+
     def rowCount(self, parent: Index | None = None) -> int:
         """QT function"""
-        return (len(self.words) + WORDS_PER_ROW - 1) // WORDS_PER_ROW
+        return (len(self.values()) + WORDS_PER_ROW - 1) // WORDS_PER_ROW
 
     def columnCount(self, parent: Index | None = None) -> int:
         """QT function"""
@@ -73,18 +81,19 @@ class _WordsModel(QAbstractTableModel):
         return index.row() * WORDS_PER_ROW + index.column()
 
     def _is_word(self, index: Index) -> bool:
-        return index.column() < WORDS_PER_ROW and self.address(index) < len(self.words)
+        return index.column() < WORDS_PER_ROW and self.address(index) < len(self.values())
 
     def data(self, index: Index, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
         """QT function"""
         if not index.isValid():
             return None
         if role in (Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole):
+            values = self.values()
             if index.column() == WORDS_PER_ROW:
                 start = index.row() * WORDS_PER_ROW
-                return ascii_text(self.words[start : start + WORDS_PER_ROW])
+                return ascii_text(list(values[start : start + WORDS_PER_ROW]))
             if self._is_word(index):
-                return word_text(self.words[self.address(index)], self._data_width)
+                return word_text(values[self.address(index)], self._data_width)
         if role == Qt.ItemDataRole.TextAlignmentRole:
             return int(Qt.AlignmentFlag.AlignCenter)
         if role == Qt.ItemDataRole.ToolTipRole and self._is_word(index):
@@ -134,11 +143,59 @@ class _WordsModel(QAbstractTableModel):
         return "ASCII" if section == WORDS_PER_ROW else f"{section:X}"
 
 
+class _SimulationWordsModel(_WordsModel):
+    """
+    The words a RAM has now, in the simulation, read-only: the ones that are not what the
+    file fills it with are marked
+    """
+
+    def __init__(
+        self, now: list[int | str], file_words: list[int], data_width: int, load_address: int
+    ) -> None:
+        super().__init__(file_words, data_width, load_address)
+        self.now = now
+
+    def values(self) -> Sequence[int | str]:
+        return self.now
+
+    def is_changed(self, address: int) -> bool:
+        """Is a word not what the file fills the RAM with"""
+        return self.now[address] != self.words[address]
+
+    def data(self, index: Index, role: int = Qt.ItemDataRole.DisplayRole) -> Any:
+        """QT function"""
+        if role == Qt.ItemDataRole.BackgroundRole and self._is_word(index):
+            if self.is_changed(self.address(index)):
+                return QColor(theme.ACCENT).lighter(145)
+            return None
+        if role == Qt.ItemDataRole.ToolTipRole and self._is_word(index):
+            address = self.address(index)
+            if self.is_changed(address):
+                file_word = word_text(self.words[address], self._data_width)
+                return f"{address:#x}: written by the simulation, the file has {file_word}"
+            return f"{address:#x}"
+        return super().data(index, role)
+
+    def flags(self, index: Index) -> Qt.ItemFlag:
+        """QT function: read-only"""
+        if not self._is_word(index):
+            return Qt.ItemFlag.ItemIsEnabled
+        return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
+
+    def setData(self, index: Index, value: Any, role: int = Qt.ItemDataRole.EditRole) -> bool:
+        """QT function: read-only"""
+        return False
+
+
 class HexEditorDialog(QDialog):
     """
     The hex editor of a RAM or ROM: the words its file fills it with, from the load
     address. Save writes them in the file, in its format (text or binary), and the memory
     reads it again: the simulation starts over. A RAM without a file asks for one.
+
+    A RAM also shows the words it has now, in the simulation (it is stopped while the
+    editor is open), read-only, with the words it wrote marked: Save As... saves them in
+    a file of their own, Use as Contents puts them in the file view, to save.
     """
 
     def __init__(
@@ -166,6 +223,20 @@ class HexEditorDialog(QDialog):
         self._show_file()
 
         self.model = _WordsModel(words, self._data_width, self._load_address)
+        self.now_model: _SimulationWordsModel | None = None
+        self._view = QComboBox(self)
+        self._view.addItem("Contents of the file")
+        if isinstance(memory, RAM):
+            time_s = self._app_model.objects.circuit.time_ns / 1e9
+            self._view.addItem(f"The RAM now, in the simulation at {time_s:.6g} s")
+            self.now_model = _SimulationWordsModel(
+                [memory.read(address) for address in range(len(words))],
+                words,
+                self._data_width,
+                self._load_address,
+            )
+            layout.addWidget(self._view)
+        self._view.currentIndexChanged.connect(self._show_view)
         self.table = QTableView(self)
         self.table.setModel(self.model)
         self.table.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
@@ -190,9 +261,62 @@ class HexEditorDialog(QDialog):
         )
         buttons.accepted.connect(self.save)
         buttons.rejected.connect(self.reject)
+        self._save_button = buttons.button(QDialogButtonBox.StandardButton.Save)
+        self._dump_button = buttons.addButton("Save As...", QDialogButtonBox.ButtonRole.ActionRole)
+        self._dump_button.setToolTip("Save the words the RAM has now in a file")
+        self._dump_button.clicked.connect(self.save_simulation_as)
+        self._use_button = buttons.addButton(
+            "Use as Contents", QDialogButtonBox.ButtonRole.ActionRole
+        )
+        self._use_button.setToolTip("Put the words the RAM has now in the file view, to save")
+        self._use_button.clicked.connect(self.use_simulation)
         layout.addWidget(buttons)
+        self._show_view(0)
         width = self.table.verticalHeader().width() + header.length() + 40
         self.resize(max(width, 360), 480)
+
+    def _show_view(self, view: int) -> None:
+        """The file (0, editable) or the RAM in the simulation (1, read-only)"""
+        simulation = view == 1 and self.now_model is not None
+        self.table.setModel(self.now_model if simulation else self.model)
+        self._save_button.setVisible(not simulation)
+        self._dump_button.setVisible(simulation)
+        self._use_button.setVisible(simulation)
+
+    def _simulation_words(self) -> list[int]:
+        """The words of the RAM now, an undefined one ("X") as 0, with a note if any is"""
+        assert self.now_model is not None
+        words, undefined = defined_words(self.now_model.now)
+        if undefined:
+            QMessageBox.information(
+                self,
+                "The RAM now",
+                f"{undefined} words are undefined (X) in the simulation, they are 0 here",
+            )
+        return words
+
+    def save_simulation_as(self) -> bool:
+        """Save As...: the words of the RAM now, in a file of their own (from address 0)"""
+        path, _ = QFileDialog.getSaveFileName(self, "Save the RAM as it is now", "", _FILEINFO)
+        if not path:
+            return False
+        words = self._simulation_words()
+        try:
+            write_contents(path, words, self._data_width, 0)
+        except (OSError, ValueError) as exc:
+            QMessageBox.critical(self, "Save the RAM", f"Could not save {path}: {exc}")
+            return False
+        return True
+
+    def use_simulation(self) -> None:
+        """Use as Contents: the words of the RAM now, in the file view (from the load
+        address, the file has no words before it), to save"""
+        words = self._simulation_words()
+        for address in range(self._load_address, len(words)):
+            self.model.words[address] = words[address]
+        self.model.changed = True
+        self.model.layoutChanged.emit()
+        self._view.setCurrentIndex(0)
 
     @property
     def _memory(self) -> RAM | ROM:

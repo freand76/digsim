@@ -595,3 +595,41 @@ def test_hex_editor_words_before_the_load_address(gui, tmp_path):
     assert model.data(model.index(0, 4)) == "07"
     assert not model.flags(model.index(0, 3)) & Qt.ItemFlag.ItemIsEditable
     assert model.flags(model.index(0, 4)) & Qt.ItemFlag.ItemIsEditable
+
+
+def test_hex_editor_shows_the_ram_in_the_simulation(gui, tmp_path):
+    """The words a RAM has now, the written ones marked: saved as a file, or as contents"""
+    path = tmp_path / "ram.hex"
+    path.write_text("11 22\n", encoding="utf-8")
+    ram = gui.add("RAM", path=str(path), address_width=4, mode="async")
+    gui.model.objects.circuit.init()
+    # As a write in the simulation does
+    ram.component._mem[3] = 0x42
+    editor = _hex_editor(gui, ram)
+    now = editor.now_model
+    assert now is not None
+    assert [now.data(now.index(0, column)) for column in range(4)] == ["11", "22", "00", "42"]
+    assert now.data(now.index(0, 3), Qt.ItemDataRole.BackgroundRole) is not None
+    assert now.data(now.index(0, 1), Qt.ItemDataRole.BackgroundRole) is None
+    assert not now.flags(now.index(0, 3)) & Qt.ItemFlag.ItemIsEditable
+    editor._view.setCurrentIndex(1)
+    assert editor.table.model() is now
+    # Save As: a file of its own, the RAM's file is as it was
+    gui.path = str(tmp_path / "dump.bin")
+    assert editor.save_simulation_as()
+    assert (tmp_path / "dump.bin").read_bytes() == b"\x11\x22\x00\x42"
+    assert path.read_text(encoding="utf-8") == "11 22\n"
+    # Use as Contents, then Save: the file has the word
+    editor.use_simulation()
+    assert editor.table.model() is editor.model
+    assert editor.model.changed
+    assert editor.save()
+    assert path.read_text(encoding="utf-8").split()[:4] == ["11", "22", "00", "42"]
+    editor.close()
+
+
+def test_hex_editor_of_a_rom_has_no_simulation_view(gui, tmp_path):
+    path = tmp_path / "rom.hex"
+    path.write_text("01\n", encoding="utf-8")
+    rom = gui.add("ROM", path=str(path), address_width=4)
+    assert _hex_editor(gui, rom).now_model is None
