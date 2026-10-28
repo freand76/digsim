@@ -133,6 +133,7 @@ def test_menus(gui):
     assert gui.action("File", "Save As...").shortcut() == QKeySequence("Ctrl+Shift+S")
     assert gui.action("Edit", "Undo").shortcut() == QKeySequence("Ctrl+Z")
     assert gui.action("Edit", "Delete").shortcut() == QKeySequence("Del")
+    assert gui.action("Simulation", "Start").shortcut() == QKeySequence("F5")
     assert gui.action("Simulation", "Single Step").shortcut() == QKeySequence("F11")
     assert gui.action("Simulation", "Step Clock").shortcut() == QKeySequence("F10")
 
@@ -251,6 +252,19 @@ def test_flip(gui, tmp_path):
     gui.trigger("File", "Save")
     saved = json.loads((tmp_path / "flipped.circuit").read_text())
     assert saved["gui"]["MUX"]["flipped"] is True
+
+
+def test_f5_starts_and_stops(gui):
+    from PySide6.QtTest import QTest
+
+    gui.add("Clock")
+    gui.window.activateWindow()
+    QTest.keyClick(gui.window, Qt.Key.Key_F5)
+    spin(100)
+    assert gui.model.is_running
+    QTest.keyClick(gui.window, Qt.Key.Key_F5)
+    while gui.model.is_running:
+        spin()
 
 
 def test_simulation(gui):

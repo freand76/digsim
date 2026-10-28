@@ -332,7 +332,7 @@ paste is one step to undo.
 | **Ctrl + 0** / **Home** | Zoom to fit the whole circuit |
 | **F4** | Show / hide the settings pane |
 | **Del** | Delete the selected components and wires |
-| **Space** | Start / stop the simulation |
+| **F5** / **Space** | Start / stop the simulation |
 | **F11** | Single Step: run until the next input event |
 | **F10** | Step Clock: run to the next rising edge of a clock, and let the logic settle |
 | **Esc** | Cancel the wire being drawn |

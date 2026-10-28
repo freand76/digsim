@@ -125,8 +125,11 @@ class MenuBar(QMenuBar):
         self._view_menu = view_menu
 
         simulation_menu = self.addMenu("&Simulation")
-        # Space starts and stops it, see MainWindow.keyPressEvent(): shown, not a shortcut
-        self._start_action = self._add(simulation_menu, "&Start\tSpace", self._start_stop)
+        # F5 starts and stops it, and Space (see MainWindow.keyPressEvent(), not a shortcut:
+        # it would take the space from text fields)
+        self._start_action = self._add(
+            simulation_menu, "&Start\tF5, Space", self._start_stop, "F5"
+        )
         self._single_step_action = self._add(
             simulation_menu, "Single S&tep", lambda: self._app_model.model_single_step(), "F11"
         )
@@ -386,7 +389,7 @@ class MenuBar(QMenuBar):
         for shortcut in self._nothing_to_copy:
             shortcut.setEnabled(area is not None and not running and not has_components)
         self._paste_action.setEnabled(not running and self._can_paste)
-        self._start_action.setText("&Stop\tSpace" if running else "&Start\tSpace")
+        self._start_action.setText("&Stop\tF5, Space" if running else "&Start\tF5, Space")
         self._single_step_action.setEnabled(not running)
         self._clock_step_action.setEnabled(
             not running and bool(circuit_clocks(self._app_model.objects.circuit))
