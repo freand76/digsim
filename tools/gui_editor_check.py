@@ -121,6 +121,9 @@ class Gui:
             editor.code.document().setModified(False)
         self.window.close()
         spin()
+        # Not a queued signal to a window that Python is taking apart at exit
+        self.window.deleteLater()
+        spin()
 
 
 @pytest.fixture(name="work_dir")
