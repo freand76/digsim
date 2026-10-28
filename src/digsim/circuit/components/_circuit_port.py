@@ -33,7 +33,7 @@ def circuit_ports(circuit: Circuit) -> list[CircuitPort]:
     ]
 
 
-def _free_label(base: str, taken: list[str]) -> str:
+def free_label(base: str, taken: list[str]) -> str:
     """The base name, or with a number (in2, in3, ...) if it is taken"""
     if base not in taken:
         return base
@@ -88,7 +88,7 @@ class CircuitPort(CallbackComponent):
             "label": {
                 "type": "str",
                 "single_line": True,
-                "default": _free_label(cls.DEFAULT_LABEL, labels),
+                "default": free_label(cls.DEFAULT_LABEL, labels),
                 "description": "Port name",
                 "invalid_list": labels,
             },

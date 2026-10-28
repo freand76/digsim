@@ -6,10 +6,12 @@
 from __future__ import annotations
 
 import os
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
-from digsim.app._clipboard_lines import lines_between, moved_lines
+from digsim.app._clipboard_lines import lines_between, moved_lines, renamed_port_keys
 from digsim.app._wire_key import port_key
+from digsim.circuit.components._circuit_port import free_label
 from digsim.circuit.components.atoms import DigsimException
 from digsim.storage_model import ClipboardDataClass, ComponentDataClass, GuiPositionDataClass
 
@@ -18,6 +20,14 @@ if TYPE_CHECKING:
     from digsim.app.gui_objects import ComponentObject
 
     from ._model import AppModel
+
+
+# The types of the circuit ports, their labels are unique in a circuit
+CIRCUIT_PORT_TYPES = {
+    "digsim.circuit.components.CircuitInput",
+    "digsim.circuit.components.CircuitOutput",
+    "digsim.circuit.components.CircuitInOut",
+}
 
 
 class ModelClipboard:
@@ -83,9 +93,21 @@ class ModelClipboard:
         undo_state = self._app_model.circuit_to_model()
         top = objects.components.get_top_zlevel() + 1
         names: dict[str, str] = {}
+        # The ports of pasted circuit ports with a new label, "component.label"
+        port_keys: dict[str, str] = {}
         created: list[ComponentObject] = []
         warnings: list[str] = []
         for component_dc in data.components:
+            label = component_dc.settings.get("label")
+            if component_dc.type in CIRCUIT_PORT_TYPES and isinstance(label, str):
+                # A circuit port gets a free label, like it gets a free name
+                taken = [port.label() for port in circuit.ports()]
+                new_label = free_label(label, taken)
+                if new_label != label:
+                    component_dc = replace(
+                        component_dc, settings={**component_dc.settings, "label": new_label}
+                    )
+                    port_keys[f"{component_dc.name}.{label}"] = f"{component_dc.name}.{new_label}"
             try:
                 with circuit.adding_components():
                     component = component_dc.create(circuit)
@@ -106,7 +128,8 @@ class ModelClipboard:
                 for component_object in created
                 for port in component_object.component.ports
             }
-            lines = lines_between(moved_lines(data.lines, names, dx, dy), pasted_ports, {})
+            lines = renamed_port_keys(data.lines, port_keys)
+            lines = lines_between(moved_lines(lines, names, dx, dy), pasted_ports, {})
             for line in lines:
                 line.connect(circuit, warnings)
             objects.wires.add_lines(lines)

@@ -68,3 +68,13 @@ def test_clipboard_json():
     assert ClipboardDataClass.from_json("[1, 2]") is None
     assert ClipboardDataClass.from_json('{"components": []}') is None
     assert ClipboardDataClass.from_json('{"digsim_clipboard": 1, "components": 5}') is None
+
+
+def test_renamed_port_keys():
+    """A pasted circuit port with a new label: its port is renamed in the lines"""
+    from digsim.app._clipboard_lines import renamed_port_keys
+
+    line = LineDataClass(ports=["in1.a", "NOT.A"], segments=[["in1.a", "NOT.A"]])
+    (renamed,) = renamed_port_keys([line], {"in1.a": "in1.a2"})
+    assert renamed.ports == ["in1.a2", "NOT.A"]
+    assert renamed.segments == [["in1.a2", "NOT.A"]]

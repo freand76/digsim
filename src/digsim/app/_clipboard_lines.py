@@ -56,3 +56,19 @@ def moved_lines(
         )
         for line in lines
     ]
+
+
+def renamed_port_keys(lines: list[LineDataClass], keys: dict[str, str]) -> list[LineDataClass]:
+    """Lines with some ports ("component.port") renamed, like a pasted circuit port"""
+
+    def node(name: str) -> str:
+        return keys.get(name, name)
+
+    return [
+        LineDataClass(
+            ports=[node(port) for port in line.ports],
+            points=line.points,
+            segments=[[node(end) for end in segment] for segment in line.segments],
+        )
+        for line in lines
+    ]

@@ -258,3 +258,20 @@ def test_no_message_with_components(gui, wired):
     message = gui.area.findChild(QLabel)
     assert message is None or not message.isVisible()
     assert "PushButton" in QApplication.clipboard().text()
+
+
+def test_paste_a_circuit_port(gui):
+    """A pasted circuit port gets a free label, its port name, and keeps its wire"""
+    port = gui.add("CircuitInput", 100, 100, label="a")
+    inverter = gui.add("NOT", 300, 100)
+    gui.model.objects.wires.connect_ports(port.port("a"), inverter.A)
+    gui.model.sig_update_wires.emit()
+    spin()
+    gui.select(port, inverter)
+    gui.trigger("Copy")
+    gui.trigger("Paste")
+    labels = sorted(p.label() for p in gui.model.objects.circuit.ports())
+    assert labels == ["a", "a2"]
+    (pasted,) = [p for p in gui.model.objects.circuit.ports() if p.label() == "a2"]
+    new_inverter = gui.model.objects.circuit.get_component("NOT_1")
+    assert new_inverter.A in pasted.port("a2").wired_ports
