@@ -280,6 +280,7 @@ placed right away). The parameter's `type` selects the input:
 | `list` | Drop-down | `items` |
 | `width_pow2` | Slider from 0 to 2<sup>width</sup>-1, following a `width` parameter | `default` |
 | `width_bool` | One checkbox per bit, following a `width` parameter | `default` |
+| `bit_groups` | Text field with the widths of the groups of a bus, like `4, 4` (a list of ints) | `default` |
 | `component_name` | Drop-down that selects another component class | `component_list` (class name to description) |
 | `ic_name` | Drop-down with the built-in ICs | |
 | `path` | File dialog before the other parameters (it must be the first one) | `fileinfo` (file filter), `new_verilog` (asks first to open a file or to make a new Verilog file, which is created with a module). Another parameter with `file_types` (like `[".v", ".sv"]`) is only asked for a file of those types |

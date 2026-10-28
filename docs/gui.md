@@ -357,7 +357,11 @@ undefined.
 
 - **Bus2Wires** splits a bus into individual bits.
 - **Wires2Bus** merges individual bits into a bus.
+- **Splitter** splits a bus into groups of bits, like [7:4] and [3:0], or merges groups
+  into a bus. Its groups are the widths from bit 0: `4, 4` is two groups of 4 bits.
 - **Wire Source** / **Wire Sink** connect signals by label, see [Wires](#wires).
+
+![Splitter](images/components/Splitter.png)
 
 ![Tristate buffer](images/components/TRISTATE.png)
 

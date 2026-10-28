@@ -122,7 +122,7 @@ The available components are:
 | Gates | `AND`, `OR`, `NOT`, `XOR`, `XNOR`, `NAND`, `NOR`, `MUX`, `Decoder`, `Demultiplexer` |
 | Flip-flops | `DFF`, `SR`, `FlipFlop`, `SRFF`, `ClockedSRFF`, `ClockedJKFF`, `ClockedTFF`, `Counter` |
 | Arithmetic | `Adder`, `Subtractor`, `Multiplier`, `Comparator`, `Negator` |
-| Buses | `Bus2Wires`, `Wires2Bus`, `TristateBuffer`, `LabelWireIn`, `LabelWireOut` |
+| Buses | `Bus2Wires`, `Wires2Bus`, `Splitter`, `TristateBuffer`, `LabelWireIn`, `LabelWireOut` |
 | Memory | `RAM`, `ROM`, `MemStdOut` |
 | Circuit ports | `CircuitInput`, `CircuitOutput`, `CircuitInOut`, `SubCircuit` |
 | Complex | `IntegratedCircuit`, `YosysComponent` |

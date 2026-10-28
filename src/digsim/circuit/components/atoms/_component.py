@@ -21,6 +21,7 @@ ParameterValue = int | str | bool | list[int] | None
 
 # The settings input for a parameter, see "The settings dialog" in docs/gui-components.md
 ParameterType = Literal[
+    "bit_groups",
     "bool",
     "component_name",
     "ic_name",

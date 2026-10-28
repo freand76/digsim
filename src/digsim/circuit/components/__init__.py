@@ -26,6 +26,7 @@ from ._note import Note
 from ._on_off_switch import OnOffSwitch
 from ._probe import Probe
 from ._seven_segment import SevenSegment
+from ._splitter import Splitter
 from ._static_level import GND, VDD
 from ._static_value import StaticValue
 from ._subcircuit import SubCircuit, SubCircuitException

@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - New component: Splitter, a bus split into groups of bits, like [7:4] and [3:0], or groups merged into a bus. `Splitter(circuit, groups=[4, 4])`, and in the GUI under Bus / Wires.
  - Verilog `inout` ports, of any width: a bidirectional port of a Yosys component (`PortInOut`) drives the wire with what the design drives on it, "Z" while it doesn't, and the design reads the value of the wire, resolved with the other drivers. Wire two inout ports both ways (`a.data.wire = b.data` and `b.data.wire = a.data`). Before, an inout port was an input and the design didn't drive it.
  - GUI: the ports of ICs and Verilog components are arrows that show their direction, an input points into the component and an output out of it
  - GUI: the port of a Wire Source is at the tip of its tag, it was a little inside it

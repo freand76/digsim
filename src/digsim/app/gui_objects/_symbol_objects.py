@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import QPainter, QPainterPath
 
-from digsim.circuit.components import Led
+from digsim.circuit.components import Led, Splitter
 from digsim.circuit.components.atoms import Component, Port
 
 from . import _theme as theme
@@ -746,10 +746,18 @@ class BusBitsObject(SymbolObject):
         self.width = self.WIDTH
         self.update_ports()
 
+    def bits_right(self) -> bool:
+        """True if the bits are to the right of the bar, the bus to the left"""
+        return self.BITS_RIGHT
+
     def _bus_and_bits(self) -> tuple[Port, list[Port]]:
-        if self.BITS_RIGHT:
+        if self.bits_right():
             return self.component.inports()[0], self.component.outports()
         return self.component.outports()[0], self.component.inports()
+
+    def bit_labels(self, bits: list[Port]) -> list[str]:
+        """The text next to each bit, its number (bus_5 is bit 5)"""
+        return [bit.name().rpartition("_")[2] for bit in bits]
 
     @classmethod
     def paint_bus_bits(
@@ -759,13 +767,20 @@ class BusBitsObject(SymbolObject):
         bus_y: float,
         bit_ys: list[float],
         selected: bool,
+        bits_right: bool,
+        labels: list[str],
+        bus_width: int,
+        bit_widths: list[int] | None = None,
     ) -> None:
-        """The bar, the bus to it and the bits from it"""
-        mirror = 1 if cls.BITS_RIGHT else -1
-        bar_x = rect.left() + cls.BAR if cls.BITS_RIGHT else rect.right() - cls.BAR
+        """
+        The bar, the bus to it and the bits from it, each with its label. Bits wider
+        than one (the groups of a splitter) are drawn thicker.
+        """
+        mirror = 1 if bits_right else -1
+        bar_x = rect.left() + cls.BAR if bits_right else rect.right() - cls.BAR
         entry = 4.0
-        bus_end = rect.left() - 1 if cls.BITS_RIGHT else rect.right()
-        bit_end = rect.right() if cls.BITS_RIGHT else rect.left() - 1
+        bus_end = rect.left() - 1 if bits_right else rect.right()
+        bit_end = rect.right() if bits_right else rect.left() - 1
         color = theme.ACCENT if selected else theme.INK
         # The bus, with a slash and its width
         painter.setPen(theme.ink_pen(3.5, color))
@@ -776,7 +791,7 @@ class BusBitsObject(SymbolObject):
         theme.paint_text(
             painter,
             QRectF(slash_x - 8, bus_y - 15, 16, 9),
-            str(len(bit_ys)),
+            str(bus_width),
             6,
             theme.MUTED,
         )
@@ -784,25 +799,28 @@ class BusBitsObject(SymbolObject):
         painter.setPen(theme.ink_pen(4.0, color))
         painter.drawLine(QPointF(bar_x, bit_ys[0] - entry), QPointF(bar_x, bit_ys[-1] + entry))
         # The bits
-        for bit, y in enumerate(bit_ys):
+        widths = bit_widths if bit_widths is not None else [1] * len(bit_ys)
+        text_width = rect.width() - cls.BAR - 2 * entry - 2
+        for label, y, width in zip(labels, bit_ys, widths):
             path = QPainterPath(QPointF(bar_x, y + entry))
             path.lineTo(bar_x + mirror * entry, y)
             path.lineTo(bit_end, y)
-            painter.setPen(theme.ink_pen(theme.LINE_WIDTH, color))
+            pen_width = theme.LINE_WIDTH if width == 1 else 2.5
+            painter.setPen(theme.ink_pen(pen_width, color))
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawPath(path)
             text_rect = (
-                QRectF(bit_end - 18, y - 9, 12, 8)
-                if cls.BITS_RIGHT
-                else QRectF(bit_end + 6, y - 9, 12, 8)
+                QRectF(bit_end - 6 - text_width, y - 9, text_width, 8)
+                if bits_right
+                else QRectF(bit_end + 6, y - 9, text_width, 8)
             )
             theme.paint_text(
                 painter,
                 text_rect,
-                str(bit),
+                label,
                 6,
                 theme.MUTED,
-                Qt.AlignmentFlag.AlignRight if cls.BITS_RIGHT else Qt.AlignmentFlag.AlignLeft,
+                Qt.AlignmentFlag.AlignRight if bits_right else Qt.AlignmentFlag.AlignLeft,
             )
 
     def paint_component(self, painter: QPainter) -> None:
@@ -813,14 +831,32 @@ class BusBitsObject(SymbolObject):
             self.port_ys([bus])[0],
             self.port_ys(bits),
             self.selected,
+            self.bits_right(),
+            self.bit_labels(bits),
+            bus.width,
+            [bit.width for bit in bits],
         )
 
     @classmethod
-    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
+    def paint_bus_bits_icon(
+        cls,
+        painter: QPainter,
+        size: QSize,
+        name: str,
+        labels: list[str],
+        bus_width: int,
+        bit_widths: list[int],
+    ) -> None:
+        """The icon: the bus and the bits, with the dots of their ports"""
+
         def paint(rect: QRectF) -> None:
-            bit_ys = [rect.top() + 5 + 10 * bit for bit in range(4)]
+            spacing = 10 if len(labels) > 3 else 14
+            top = rect.center().y() - spacing * (len(labels) - 1) / 2
+            bit_ys = [top + spacing * bit for bit in range(len(labels))]
             bus_y = rect.center().y()
-            cls.paint_bus_bits(painter, rect, bus_y, bit_ys, False)
+            cls.paint_bus_bits(
+                painter, rect, bus_y, bit_ys, False, cls.BITS_RIGHT, labels, bus_width, bit_widths
+            )
             bus_x = rect.left() - 1 if cls.BITS_RIGHT else rect.right()
             bit_x = rect.right() if cls.BITS_RIGHT else rect.left() - 1
             port_dots(painter, [QPointF(bus_x, bus_y)] + [QPointF(bit_x, y) for y in bit_ys])
@@ -828,8 +864,42 @@ class BusBitsObject(SymbolObject):
         paint_icon(painter, size, (cls.WIDTH, 40), paint, scale=1.15)
         cls.paint_selectable_component_name(painter, QPointF(0, 0), size, name)
 
+    @classmethod
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
+        cls.paint_bus_bits_icon(painter, size, name, ["0", "1", "2", "3"], 4, [1, 1, 1, 1])
+
 
 class BitsBusObject(BusBitsObject):
     """Wires joined into a bus (Wires2Bus), the bus splitter mirrored"""
 
     BITS_RIGHT = False
+
+
+class SplitterObject(BusBitsObject):
+    """
+    A bus split into groups of bits (Splitter), or groups merged into a bus: drawn like
+    Bus2Wires, with the bit range of each group and the groups wider than a bit thicker
+    """
+
+    # Room for the bit ranges, like 31:24
+    WIDTH = 50
+    PORT_DISTANCE = 20
+
+    @property
+    def component(self) -> Splitter:
+        component = self._component
+        assert isinstance(component, Splitter)
+        return component
+
+    def bits_right(self) -> bool:
+        return not self.component.is_merge()
+
+    def bit_labels(self, bits: list[Port]) -> list[str]:
+        return [
+            str(msb) if msb == lsb else f"{msb}:{lsb}"
+            for msb, lsb in self.component.group_ranges()
+        ]
+
+    @classmethod
+    def paint_selectable_component(cls, painter: QPainter, size: QSize, name: str) -> None:
+        cls.paint_bus_bits_icon(painter, size, name, ["3:0", "4", "7:5"], 8, [4, 1, 3])

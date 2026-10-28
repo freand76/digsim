@@ -100,6 +100,8 @@ COMPONENTS: list[tuple[str, dict[str, Any]]] = [
     ("HexDigit", {"digits": 1, "dot": False}),
     ("Wires2Bus", {"width": 4}),
     ("Bus2Wires", {"width": 4}),
+    ("Splitter", {"groups": [1, 3]}),
+    ("Splitter", {"groups": [2, 2], "direction": "merge"}),
     ("TristateBuffer", {"width": 1}),
     ("TristateBuffer", {"width": 1}),
     ("TristateBuffer", {"width": 4}),

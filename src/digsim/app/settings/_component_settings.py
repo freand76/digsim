@@ -38,7 +38,8 @@ from PySide6.QtWidgets import (
 from digsim.app._editor_text import module_name, new_module_text
 from digsim.app._ic_search import search_ics
 from digsim.circuit.components import IntegratedCircuit
-from digsim.circuit.components.atoms import Parameter
+from digsim.circuit.components._splitter import group_ranges, group_text, parse_groups
+from digsim.circuit.components.atoms import ComponentException, Parameter
 from digsim.synth import yosys_path_problem
 
 from ._dialog_flags import DIALOG_FLAGS
@@ -467,6 +468,43 @@ class ComponentSettingsCheckBoxWidthBool(ComponentSettingsBase):
             self._update()
 
 
+class ComponentSettingsBitGroups(ComponentSettingsBase):
+    """The widths of the groups of a bus, like 4, 4, with the bits of each group"""
+
+    def __init__(
+        self,
+        parent: ComponentSettingsDialog,
+        parameter: str,
+        parameter_dict: Parameter,
+        settings: dict[str, Any],
+    ) -> None:
+        super().__init__(parent, parameter, parameter_dict, settings)
+        layout = QVBoxLayout(self)
+        self.setLayout(layout)
+        layout.addWidget(QLabel(self._parameter_dict["description"]))
+        self._line_edit = QLineEdit(self)
+        self._line_edit.setText(group_text(self._parameter_dict["default"]))
+        self._line_edit.textChanged.connect(self._update)
+        layout.addWidget(self._line_edit)
+        self._result = QLabel()
+        layout.addWidget(self._result)
+        self._update()
+
+    def _update(self) -> None:
+        try:
+            groups = parse_groups(self._line_edit.text())
+        except ComponentException as exc:
+            self._result.setText(str(exc))
+            self._parent.sig_enable_ok.emit(False)
+            return
+        self._settings[self._parameter] = groups
+        ranges = ", ".join(
+            f"[{msb}]" if msb == lsb else f"[{msb}:{lsb}]" for msb, lsb in group_ranges(groups)
+        )
+        self._result.setText(f"{sum(groups)} bits: {ranges}")
+        self._parent.sig_enable_ok.emit(True)
+
+
 # The input for each parameter type (see "The settings dialog" in docs/components.md)
 _SETTINGS_WIDGETS: dict[str, type[ComponentSettingsBase]] = {
     "width_pow2": ComponentSettingsSliderWidthPow2,
@@ -479,6 +517,7 @@ _SETTINGS_WIDGETS: dict[str, type[ComponentSettingsBase]] = {
     "component_name": ComponentSettingsNameSelector,
     "list": ComponentSettingsListSelector,
     "path": ComponentSettingsPath,
+    "bit_groups": ComponentSettingsBitGroups,
 }
 
 

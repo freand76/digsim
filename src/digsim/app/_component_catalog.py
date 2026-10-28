@@ -79,6 +79,7 @@ COMPONENT_GROUPS: list[tuple[str, list[CatalogEntry]]] = [
             CatalogEntry("LabelWireOut", "Wire Source", "wire source label tunnel"),
             CatalogEntry("Bus2Wires", "Bus2Wires", "bus splitter split wires bits"),
             CatalogEntry("Wires2Bus", "Wires2Bus", "bus merge join wires bits"),
+            CatalogEntry("Splitter", "Splitter", "bus splitter split merge join groups bits"),
             CatalogEntry("TristateBuffer", "Tristate Buffer", "tristate buffer enable bus"),
         ],
     ),
