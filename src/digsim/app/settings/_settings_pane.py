@@ -159,14 +159,13 @@ class ComponentSettingsPane(QWidget):
         changed = changes(self._values, self._settings)
         if not changed:
             return
-        name = self._object.component.name()
-        self._app_model.objects.components.change_settings(self._object, changed)
-        # Built again, the component has a new object
-        components = self._app_model.objects.components.get_dict()
-        for component, component_object in components.items():
-            if component.name() == name:
-                if self._area is not None:
-                    self._area.scene().clearSelection()
-                component_object.setSelected(True)
+        component_object = self._app_model.objects.components.change_settings(
+            self._object, changed
+        )
+        if component_object is not None:
+            # Built again, the component has a new object
+            if self._area is not None:
+                self._area.scene().clearSelection()
+            component_object.setSelected(True)
         self.refresh(force=True)
         self._title.setFocus(Qt.FocusReason.OtherFocusReason)

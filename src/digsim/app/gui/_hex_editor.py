@@ -364,12 +364,10 @@ class HexEditorDialog(QDialog):
         components = self._app_model.objects.components
         if self._path is None:
             # A new file for the RAM, it is built again with it (an undo step)
-            name = self._memory.name()
-            if not components.change_settings(self._object, {"path": str(Path(path))}):
+            component_object = components.change_settings(self._object, {"path": str(Path(path))})
+            if component_object is None:
                 return False
-            self._object = next(
-                obj for comp, obj in components.get_dict().items() if comp.name() == name
-            )
+            self._object = component_object
         else:
             try:
                 self._memory.reload_contents()

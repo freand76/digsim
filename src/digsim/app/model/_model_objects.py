@@ -5,9 +5,11 @@
 
 from __future__ import annotations
 
+import re
 from collections import deque
 from typing import TYPE_CHECKING, Any
 
+from digsim.app._clipboard_lines import renamed_port
 from digsim.app._line_graph import without_ports
 from digsim.circuit import Circuit
 from digsim.circuit.components.atoms import Component, DigsimException, Port
@@ -152,34 +154,58 @@ class ModelObjects:
 
     def change_component(
         self, name: str, settings: dict[str, Any], class_name: str | None = None
-    ) -> list[str]:
+    ) -> tuple[str, list[str]]:
         """
         Build the circuit again with other settings for a component, and another class
         (a flip-flop of another kind), an undo step. It keeps its name and place, and the
-        wires to the ports that it still has. Returns the ports whose wires are gone.
-        Raises DigsimException, and nothing changes, if it can't be built with them.
+        wires to the ports that it still has. Returns its name, and the ports whose wires
+        are gone. Raises DigsimException, and nothing changes, if it can't be built with them.
+
+        A component with the name it got (like an IC named after its module) gets the
+        name of what it is now, its own name is kept.
         """
         undo_state = self._app_model.circuit_to_model()
         model_dc = self._app_model.circuit_to_model()
-        for component_dc in model_dc.circuit.components:
-            if component_dc.name != name:
-                continue
-            component_dc.settings = {**component_dc.settings, **settings}
-            if class_name is not None:
-                module, _, _ = component_dc.type.rpartition(".")
-                component_dc.type = f"{module}.{class_name}"
-                # The display name of the new class
-                component_dc.display_name = ""
         lines = self._app_model.objects.wires.to_lines()
+        component_dc = next(dc for dc in model_dc.circuit.components if dc.name == name)
+        old_display_name = component_dc.display_name
+        default_name = re.fullmatch(rf"{re.escape(old_display_name)}(_\d+)?", name) is not None
+        component_dc.settings = {**component_dc.settings, **settings}
+        if class_name is not None:
+            module, _, _ = component_dc.type.rpartition(".")
+            component_dc.type = f"{module}.{class_name}"
+        if class_name is not None or default_name:
+            # The display name of the new class, or the new module
+            component_dc.display_name = ""
         model_dc.circuit.wires = []
         model_dc.wires = {}
         model_dc.lines = lines
         warnings = self._restore_state(model_dc)
-        if self._toplevel(name) is None:
+        component = self._toplevel(name)
+        if component is None:
             self._restore_state(undo_state)
             self._app_model.sig_synchronize_gui.emit()
             reasons = [warning for warning in warnings if name in warning] or warnings
             raise DigsimException("\n".join(reasons) or f"{name} could not be built")
+        if default_name and component.display_name() != old_display_name:
+            component.set_name(component.display_name())
+            names = {name: component.name()}
+            component_dc.name = component.name()
+            model_dc.gui = {names.get(key, key): value for key, value in model_dc.gui.items()}
+            lines = [
+                LineDataClass(
+                    ports=[renamed_port(port, names) for port in line.ports],
+                    points=line.points,
+                    segments=[
+                        [renamed_port(end, names) if end in line.ports else end for end in segment]
+                        for segment in line.segments
+                    ],
+                )
+                for line in lines
+            ]
+            model_dc.lines = lines
+            # The VCD file has the new name
+            self._app_model.model_init()
         # The ports that are gone, or that have another width than their line now
         gone: set[str] = set()
         for line in lines:
@@ -191,7 +217,7 @@ class ModelObjects:
             self._restore_state(model_dc)
         self.add_undo_state(undo_state)
         self._app_model.sig_synchronize_gui.emit()
-        return sorted(gone)
+        return component_dc.name, sorted(gone)
 
     def _toplevel(self, name: str) -> Component | None:
         """A top-level component of the circuit by its name"""

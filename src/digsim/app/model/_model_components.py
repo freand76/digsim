@@ -276,32 +276,37 @@ class ModelComponents:
         """Get list of component objects"""
         return list(self._component_objects.values())
 
-    def change_settings(self, component_object: ComponentObject, changed: dict[str, Any]) -> bool:
+    def change_settings(
+        self, component_object: ComponentObject, changed: dict[str, Any]
+    ) -> ComponentObject | None:
         """
         Change settings of a component, an undo step (see the settings pane). Settings
         that can be reconfigured change the component, others build it again, with the
-        wires to the ports it still has (see ModelObjects.change_component). False, with
-        an error, if it can't have the settings.
+        wires to the ports it still has (see ModelObjects.change_component). Returns the
+        object of the component, a new one if it was built again. None, with an error,
+        if it can't have the settings.
         """
         component = component_object.component
         changed = dict(changed)
         class_name = changed.pop(CLASS_PARAMETER, None) if is_flip_flop(component) else None
         if class_name is None and set(changed) <= set(component.get_reconfigurable_parameters()):
-            return self.update_settings(component_object, changed)
+            return component_object if self.update_settings(component_object, changed) else None
         if self._app_model.is_running:
             self._app_model.model_stop()
         try:
-            gone = self._app_model.objects.change_component(component.name(), changed, class_name)
+            name, gone = self._app_model.objects.change_component(
+                component.name(), changed, class_name
+            )
         except (DigsimException, OSError) as exc:
             self._app_model.sig_error.emit(f"Could not change the settings: {exc!s}")
-            return False
+            return None
         if gone:
             self._app_model.sig_warning_log.emit(
                 "Settings Warning",
                 "The wires of these ports are removed, the ports are gone or have another "
                 "width now:\n" + "\n".join(gone),
             )
-        return True
+        return next(obj for comp, obj in self._component_objects.items() if comp.name() == name)
 
     def update_settings(self, component_object: ComponentObject, settings: dict[str, Any]) -> bool:
         """Update settings for a component"""
