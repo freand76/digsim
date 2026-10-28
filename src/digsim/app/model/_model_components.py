@@ -60,6 +60,8 @@ class SubCircuitUpdate:
     path: str
     changes: dict[SubCircuit, InterfaceChanges]
     removed: list[str]
+    # The same ports, in another order in the file (from top to bottom)
+    reordered: bool = False
 
     def ports_change(self) -> bool:
         return any(self.changes.values())
@@ -461,7 +463,8 @@ class ModelComponents:
                 for port in removed_wires(lines, [subcircuit.name()], subcircuit_changes)
             }
         )
-        return SubCircuitUpdate(str(path), changes, removed)
+        reordered = any(list(subcircuit.interface()) != list(new) for subcircuit in changes)
+        return SubCircuitUpdate(str(path), changes, removed, reordered)
 
     def apply_subcircuit_reload(self, update: SubCircuitUpdate) -> list[str]:
         """
@@ -474,6 +477,9 @@ class ModelComponents:
             self._app_model.model_stop()
         if not update.changes:
             return []
+        if not update.ports_change() and update.reordered:
+            # Built again with the ports in their new order, the wires stay
+            return self._app_model.objects.rebuild(self._app_model.objects.wires.to_lines())
         if not update.ports_change():
             self._app_model.objects.push_undo_state()
             try:

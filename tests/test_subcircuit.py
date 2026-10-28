@@ -254,6 +254,33 @@ def test_reload(tmp_path):
         adder.reload()
 
 
+def test_reload_with_moved_and_renamed_ports(tmp_path):
+    """
+    Ports in another order in the file, or other components, are the same ports: the
+    subcircuit is reloaded, its ports keep their order
+    """
+    path = _half_adder(tmp_path / "half_adder.circuit")
+    circuit = Circuit()
+    adder = SubCircuit(circuit, path)
+    order = [port.label for port in adder.file_ports()]
+    data = json.loads(path.read_text())
+    # The input a is another component, and b is above it
+    text = (
+        json.dumps(data)
+        .replace('"CircuitInput"', '"input_a"')
+        .replace('"CircuitInput.', '"input_a.')
+    )
+    data = json.loads(text)
+    data["gui"] = {"CircuitInput_1": {"x": 0, "y": 0}, "input_a": {"x": 0, "y": 100}}
+    path.write_text(json.dumps(data))
+    adder.reload()
+    assert [port.label for port in adder.file_ports()] == order
+    _drive(circuit, adder.a, 1)
+    _drive(circuit, adder.b, 0)
+    _run(circuit)
+    assert (adder.s.value, adder.c.value) == (1, 0)
+
+
 def test_save_and_load_a_circuit_with_a_subcircuit(tmp_path):
     path = _half_adder(tmp_path / "half_adder.circuit")
     circuit = Circuit(name="main")

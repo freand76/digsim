@@ -11,6 +11,7 @@ tests/. Run them offscreen with:
 
 from __future__ import annotations
 
+import json
 import os
 import tempfile
 from contextlib import nullcontext
@@ -1360,3 +1361,29 @@ def test_settings_change_with_a_broken_subcircuit_changes_nothing(gui):
     (error,) = gui.errors
     assert "half_adder" in error
     assert len(objects._undo_stack) == undo_steps
+
+
+def test_subcircuit_with_its_ports_moved_is_built_again(gui):
+    """Ports in another order in the file: built again, in that order, with the wires"""
+    half_adder = gui.work_dir / "half_adder.circuit"
+    source = Path(__file__).parent.parent / "circuits" / "subcircuits" / "half_adder.circuit"
+    data = json.loads(source.read_text(encoding="utf-8"))
+    half_adder.write_text(json.dumps(data), encoding="utf-8")
+    adder = gui.add("SubCircuit", 300, 0, path=str(half_adder))
+    switch = gui.add("OnOffSwitch", 0, 0)
+    gui.model.objects.wires.connect_ports(switch.O, adder.a)
+    # b above a
+    data["gui"]["CircuitInput"]["y"], data["gui"]["CircuitInput_1"]["y"] = (
+        data["gui"]["CircuitInput_1"]["y"],
+        data["gui"]["CircuitInput"]["y"],
+    )
+    half_adder.write_text(json.dumps(data), encoding="utf-8")
+    components = gui.model.objects.components
+    update = components.prepare_subcircuit_reload(half_adder)
+    assert not update.ports_change()
+    assert update.reordered
+    assert components.apply_subcircuit_reload(update) == []
+    adder = gui.model.objects.circuit.get_component("half_adder")
+    labels = [port.label for port in adder.file_ports()]
+    assert labels.index("b") < labels.index("a")
+    assert adder.a.get_drivers()[0].parent().name() == "OnOffSwitch"

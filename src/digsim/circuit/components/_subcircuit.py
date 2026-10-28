@@ -407,14 +407,18 @@ class SubCircuit(MultiComponent):
     def reload(self) -> None:
         """
         Build the parts again from the file, which can have changed. Its circuit ports
-        must be the same (see interface()).
+        must be the same (see interface()), they can be in another order in the file or
+        be other components: the ports keep their order.
 
         Raises:
             SubCircuitException: If the file can't be read, or its ports changed.
         """
         file_dc = self._read_file()
-        if file_ports(file_dc) != self._interface:
+        ports = file_ports(file_dc)
+        if {port.label: (port.direction, port.width) for port in ports} != self.interface():
             raise SubCircuitException(f"The ports of the subcircuit {self._path} changed")
+        order = [port.label for port in self._interface]
+        self._interface = sorted(ports, key=lambda port: order.index(port.label))
         self.remove_all_components()
         self._bridges = []
         self._build(file_dc)
