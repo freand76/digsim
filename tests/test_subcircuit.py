@@ -302,3 +302,12 @@ def test_a_gui_file_with_lines(tmp_path):
     _drive(circuit, sub.b, 0)
     _run(circuit)
     assert (sub.s.value, sub.t.value) == (1, 1)
+
+
+def test_files_used(tmp_path):
+    """The files a subcircuit file uses, also through its subcircuits"""
+    from digsim.circuit.components._subcircuit import files_used
+
+    path = _full_adder(tmp_path)
+    assert files_used(path) == {(tmp_path / "parts" / "half_adder.circuit").resolve()}
+    assert files_used(tmp_path / "parts" / "half_adder.circuit") == set()

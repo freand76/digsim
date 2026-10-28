@@ -403,6 +403,16 @@ The circuit ports make the interface of a circuit: their names (unique in the ci
 and widths are the ports of the circuit when it is used as a subcircuit. In the circuit
 itself they work as inputs and outputs, so that it can be tested on its own.
 
+### Subcircuits
+
+A **Subcircuit** uses another circuit file as a component: choose the file when you add
+it. Its ports are the circuit ports (In, Out and InOut) of the file, named like them, in
+the order they are in the file from top to bottom, and it works like the circuit in the
+file. A subcircuit can use subcircuits, but not the circuit it is in. **Reload** in its
+context menu builds it again from its file after the file has changed. When the ports of
+the file have changed, it lists the changes first, and the wires to the ports that are
+gone are removed.
+
 ### IC components
 
 ![IC](images/components/IC.png)

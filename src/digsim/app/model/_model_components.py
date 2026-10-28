@@ -5,6 +5,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QPointF
@@ -20,11 +22,19 @@ from digsim.app._yosys_interface import (
     components_of_file,
     interface_changes,
     removed_wires,
+    same_file,
     variant_with,
 )
 from digsim.app.gui_objects import ComponentObject
 from digsim.circuit import Circuit
-from digsim.circuit.components import Buzzer, Probe, YosysComponent, YosysVariant
+from digsim.circuit.components import (
+    Buzzer,
+    Probe,
+    SubCircuit,
+    YosysComponent,
+    YosysVariant,
+)
+from digsim.circuit.components._subcircuit import files_used
 from digsim.circuit.components.atoms import (
     CallbackComponent,
     Component,
@@ -40,6 +50,25 @@ if TYPE_CHECKING:
 
 # Where the input of a probe added on a wire is, from the point on the wire
 PROBE_OFFSET = (20, -20)
+
+
+@dataclass
+class SubCircuitUpdate:
+    """The subcircuits of a file to build again, how their ports change, the wires that go"""
+
+    path: str
+    changes: dict[SubCircuit, InterfaceChanges]
+    removed: list[str]
+
+    def ports_change(self) -> bool:
+        return any(self.changes.values())
+
+    def port_changes(self) -> InterfaceChanges:
+        """The changes of the ports (the same for every subcircuit of the file)"""
+        return next(iter(self.changes.values()))
+
+    def names(self) -> str:
+        return ", ".join(subcircuit.name() for subcircuit in self.changes)
 
 
 class ModelComponents:
@@ -147,6 +176,12 @@ class ModelComponents:
         self, name: str, pos: QPointF, settings: dict[str, Any]
     ) -> ComponentObject | None:
         """Add component object from class name, None if the component can't be created"""
+        if name == "SubCircuit" and self._uses_this_circuit(str(settings.get("path", ""))):
+            self._app_model.sig_error.emit(
+                f"Could not add the subcircuit {settings['path']}: it uses this circuit's "
+                "file, the circuit would use itself"
+            )
+            return None
         self._app_model.objects.push_undo_state()
         component_object = self.add_object(
             self._get_component_class(name), pos.x(), pos.y(), settings
@@ -314,6 +349,75 @@ class ModelComponents:
             warnings = self._app_model.objects.rebuild(lines)
         self._app_model.sig_yosys_updated.emit(update.path)
         return warnings
+
+    def _uses_this_circuit(self, path: str) -> bool:
+        """Does a subcircuit's file use the file of this circuit, or is it that file"""
+        circuit_path = self._app_model.circuit_path
+        if not path or circuit_path is None:
+            return False
+        own = Path(circuit_path).resolve()
+        return Path(path).resolve() == own or own in files_used(path)
+
+    def subcircuits(self, path: str | Path) -> list[SubCircuit]:
+        """The subcircuits of a circuit file"""
+        return [
+            component
+            for component in self._circuit.get_toplevel_components()
+            if isinstance(component, SubCircuit) and same_file(component.source_file(), path)
+        ]
+
+    def prepare_subcircuit_reload(self, path: str | Path) -> SubCircuitUpdate:
+        """
+        How the ports of the subcircuits of a file change when they are built again from it
+
+        Raises:
+            SubCircuitException: If the file can't be read.
+        """
+        new = SubCircuit.file_interface(path)
+        changes = {
+            subcircuit: interface_changes(subcircuit.interface(), new)
+            for subcircuit in self.subcircuits(path)
+        }
+        lines = self._app_model.objects.wires.to_lines()
+        removed = sorted(
+            {
+                port
+                for subcircuit, subcircuit_changes in changes.items()
+                for port in removed_wires(lines, [subcircuit.name()], subcircuit_changes)
+            }
+        )
+        return SubCircuitUpdate(str(path), changes, removed)
+
+    def apply_subcircuit_reload(self, update: SubCircuitUpdate) -> list[str]:
+        """
+        Build the subcircuits of a file again (see prepare_subcircuit_reload). With the same
+        ports they are rebuilt, an undo step. When the ports change, the circuit is built
+        again without the wires of the ports that are gone, and the undo steps are dropped.
+        The simulation is stopped. Returns the warnings.
+        """
+        if self._app_model.is_running:
+            self._app_model.model_stop()
+        if not update.changes:
+            return []
+        if not update.ports_change():
+            self._app_model.objects.push_undo_state()
+            try:
+                for subcircuit in update.changes:
+                    subcircuit.reload()
+            except DigsimException as exc:
+                self._app_model.objects.undo()
+                return [str(exc)]
+            self._app_model.model_init()
+            self._app_model.model_changed()
+            self._app_model.sig_repaint.emit()
+            return []
+        gone = {
+            f"{subcircuit.name()}.{port}"
+            for subcircuit, changes in update.changes.items()
+            for port in changes.gone()
+        }
+        lines = without_ports(self._app_model.objects.wires.to_lines(), gone)
+        return self._app_model.objects.rebuild(lines)
 
     def update_sizes(self) -> None:
         """Update all component sizes"""

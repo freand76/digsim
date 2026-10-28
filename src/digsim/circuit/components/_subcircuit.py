@@ -99,6 +99,32 @@ def file_ports(file_dc: AppFileDataClass) -> list[FilePort]:
     return port_order(ports, file_dc.gui)
 
 
+def files_used(path: str | Path) -> set[Path]:
+    """
+    The circuit files that a subcircuit's file uses, through its subcircuits and theirs
+    (resolved paths). A file that can't be read uses nothing more.
+    """
+    found: set[Path] = set()
+    todo = [Path(path)]
+    while todo:
+        current = todo.pop()
+        try:
+            file_dc = AppFileDataClass.load(current)
+        except (OSError, ValueError):
+            continue
+        for component_dc in file_dc.circuit.components:
+            if not component_dc.type.endswith(".SubCircuit"):
+                continue
+            used = Path(str(component_dc.settings.get("path", "")))
+            if not used.is_absolute():
+                used = current.parent / used
+            key = used.resolve()
+            if key not in found:
+                found.add(key)
+                todo.append(used)
+    return found
+
+
 class _InOutBridge(Component):
     """
     Connects an inout port of a subcircuit, which is driven and read bit by bit, to the

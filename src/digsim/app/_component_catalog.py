@@ -102,6 +102,7 @@ COMPONENT_GROUPS: list[tuple[str, list[CatalogEntry]]] = [
         [
             CatalogEntry("IntegratedCircuit", "IC", "IC chip 74xx 4000 integrated circuit"),
             CatalogEntry("YosysComponent", "Yosys", "Yosys Verilog netlist synthesis"),
+            CatalogEntry("SubCircuit", "Subcircuit", "subcircuit circuit file part hierarchy"),
         ],
     ),
     (

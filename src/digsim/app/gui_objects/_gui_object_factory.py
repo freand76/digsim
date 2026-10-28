@@ -34,6 +34,7 @@ from ._named_box_object import (
 )
 from ._probe_object import ProbeObject
 from ._seven_segment_object import SevenSegmentObject
+from ._subcircuit_object import SubCircuitObject
 from ._symbol_objects import (
     AndObject,
     BitsBusObject,
@@ -90,6 +91,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "PushButton": ButtonObject,
     "SevenSegment": SevenSegmentObject,
     "StaticValue": StaticValueObject,
+    "SubCircuit": SubCircuitObject,
     "XOR": XorObject,
     "XNOR": XnorObject,
     "LedBar": LedBarObject,
