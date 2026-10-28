@@ -79,7 +79,8 @@ def _read_binary(path: Path, data_width: int, load_address: int) -> dict[int, in
         value = int.from_bytes(word, "little")
         if value >= 1 << data_width:
             raise ComponentException(
-                f"{path.name}: {value:#x} does not fit in a word of {data_width} bits"
+                f"{path.name}: {value:#x} at address {load_address + index:#x} does not fit "
+                f"in a word of {data_width} bits, a binary file has {word_bytes} bytes per word"
             )
         words[load_address + index] = value
     return words

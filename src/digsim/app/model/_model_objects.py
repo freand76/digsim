@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import re
 from collections import deque
 from typing import TYPE_CHECKING, Any
 
@@ -197,6 +198,8 @@ class ModelObjects:
             self._restore_state(undo_state)
             self._app_model.sig_synchronize_gui.emit()
             reasons = [warning for warning in warnings if name in warning] or warnings
+            # The reason, not the class of the exception that the warning starts with
+            reasons = [re.sub(r"^\w+(Exception|Error):", "", reason) for reason in reasons]
             raise DigsimException("\n".join(reasons) or f"{name} could not be built")
         if follows and given_name(component) != given_name(old_component):
             taken = {c.name() for c in self._circuit.get_toplevel_components()} - {name}

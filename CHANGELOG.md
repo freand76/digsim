@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - The error of a RAM or ROM whose binary file doesn't fit the data width says how many bytes a word has in the file
  - GUI: rename a component with Name at the top of the settings pane. The name is in the VCD file and in Python, the wires, place and shortcut follow it, and a name you gave it stays when it changes to another IC or file.
  - GUI: clearing the file of a Verilog component, ROM or subcircuit in the settings says that it needs a file. It tried to read the circuit's folder as the file and showed an error about that.
  - GUI: an IC, a Verilog component or a subcircuit that is changed to another IC or file in the settings is named after it, it kept the old name. A flip-flop changed to another kind gets the name of the new kind.
