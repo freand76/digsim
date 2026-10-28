@@ -285,8 +285,9 @@ class SubCircuit(MultiComponent):
                 continue
             settings = dict(component_dc.settings)
             if settings.get("path") and not os.path.isabs(str(settings["path"])):
-                # A file of the part, relative to the subcircuit's file
-                settings["path"] = str(folder / str(settings["path"]))
+                # A file of the part, relative to the subcircuit's file. Absolute, or the
+                # circuit would load it relative to its own folder.
+                settings["path"] = os.path.abspath(folder / str(settings["path"]))
             part_dc = ComponentDataClass(
                 name=component_dc.name,
                 type=component_dc.type,
