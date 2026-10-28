@@ -228,6 +228,8 @@ class AppModel(QThread):
         # many events that it would not stop, or handle clicks, for minutes otherwise
         slow = False
         last_check = 0.0
+        # Components are marked as oscillating
+        marked = False
         circuit.restart_slices()
         self.sig_oscillating.emit([])
         self.sig_audio_start.emit(True)
@@ -259,9 +261,13 @@ class AppModel(QThread):
             if complete != (not slow):
                 slow = not complete
                 self.sig_sim_slow.emit(slow)
+                if not slow and marked:
+                    # Real time again: nothing oscillates any more
+                    self.sig_oscillating.emit([])
+                    marked = False
             if slow and time.perf_counter() - last_check > OSCILLATION_CHECK_SECONDS:
                 last_check = time.perf_counter()
-                self._report_oscillation()
+                marked = self._report_oscillation(marked)
 
             self.objects.components.update_callback_objects()
 
@@ -287,11 +293,17 @@ class AppModel(QThread):
         self.sig_audio_start.emit(False)
         # sig_control_notify is sent by _thread_finished(), when the thread has stopped
 
-    def _report_oscillation(self) -> None:
-        """Find the ports that oscillate (it runs the circuit a little), and tell the GUI"""
+    def _report_oscillation(self, marked: bool) -> bool:
+        """
+        Find the ports that oscillate (it runs the circuit a little), and tell the GUI,
+        also that none do any more if some were 'marked'. Returns if some are marked now.
+        """
         ports = self.objects.circuit.oscillating_ports()
         if ports:
             self.sig_oscillating.emit([port_key(port) for port in ports])
+        elif marked:
+            self.sig_oscillating.emit([])
+        return bool(ports)
 
     def _thread_finished(self) -> None:
         """Called in the GUI thread when the simulation thread has finished"""

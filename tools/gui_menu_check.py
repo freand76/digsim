@@ -904,6 +904,15 @@ def test_oscillating_circuit(gui):
     assert True in slow
     assert set(reported[-1]) == {"NAND.Y", "NOT.Y", "NOT_1.Y"}
     assert gate.oscillating and not switch.oscillating
+    # The switch off stops the ring, the marks go while it runs on
+    gui.model.model_add_event(switch.component.onpress)
+    spin(1500)
+    assert reported[-1] == []
+    assert not gate.oscillating
+    # On again, Stop works at once while it oscillates
+    gui.model.model_add_event(switch.component.onpress)
+    spin(1500)
+    assert gate.oscillating
     start = time.perf_counter()
     gui.trigger("Simulation", "Stop")
     assert time.perf_counter() - start < 1
