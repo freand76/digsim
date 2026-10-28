@@ -13,6 +13,7 @@ from digsim.app._settings_values import (
     changes,
     given_name,
     has_given_name,
+    name_problem,
     new_settings,
     pane_parameters,
     pane_values,
@@ -141,3 +142,13 @@ def test_new_wire_source_needs_a_sink():
         new_settings(LabelWireOut.get_circuit_parameters(circuit), {})
     LabelWireIn(circuit, label="clk")
     assert new_settings(LabelWireOut.get_circuit_parameters(circuit), {}) == {"label": "clk"}
+
+
+def test_name_problem():
+    circuit = Circuit()
+    led, other = Led(circuit), Led(circuit)
+    assert name_problem("power", led, circuit) == ""
+    assert name_problem("Led", led, circuit) == ""
+    assert "another component" in name_problem(other.name(), led, circuit)
+    assert "spaces or dots" in name_problem("a.b", led, circuit)
+    assert "spaces or dots" in name_problem("", led, circuit)

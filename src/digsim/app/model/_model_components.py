@@ -14,7 +14,12 @@ from PySide6.QtCore import QPointF
 import digsim.app.gui_objects
 import digsim.circuit.components
 from digsim.app._line_graph import without_ports
-from digsim.app._settings_values import CLASS_PARAMETER, NAME_PARAMETER, is_flip_flop
+from digsim.app._settings_values import (
+    CLASS_PARAMETER,
+    NAME_PARAMETER,
+    is_flip_flop,
+    name_problem,
+)
 from digsim.app._wire_key import Wire
 from digsim.app._wire_lines import At
 from digsim.app._yosys_interface import (
@@ -294,6 +299,11 @@ class ModelComponents:
         new_name = changed.pop(NAME_PARAMETER, None)
         if new_name == component.name():
             new_name = None
+        if new_name is not None:
+            problem = name_problem(str(new_name), component, self._circuit)
+            if problem:
+                self._app_model.sig_error.emit(f"Could not rename {component.name()}: {problem}")
+                return None
         class_name = changed.pop(CLASS_PARAMETER, None) if is_flip_flop(component) else None
         if (
             class_name is None

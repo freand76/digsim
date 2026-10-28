@@ -42,7 +42,8 @@ class ComponentSettingsPane(QWidget):
     """
 
     sig_value_updated = Signal(str)
-    sig_enable_ok = Signal(bool)
+    # An input's parameter, and whether its value is valid
+    sig_enable_ok = Signal(str, bool)
 
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent)
@@ -76,7 +77,9 @@ class ComponentSettingsPane(QWidget):
         buttons.addWidget(self._reset_button)
         buttons.addWidget(self._apply_button)
         layout.addLayout(buttons)
-        self.sig_enable_ok.connect(self._apply_button.setEnabled)
+        # The parameters whose inputs have a value that isn't valid
+        self._invalid: set[str] = set()
+        self.sig_enable_ok.connect(self._input_valid)
         self.refresh()
 
     def set_tab(self, app_model: AppModel, area: QGraphicsView, read_only: bool) -> None:
@@ -119,6 +122,7 @@ class ComponentSettingsPane(QWidget):
             self._form.removeWidget(item)
             item.deleteLater()
         self._inputs = []
+        self._invalid = set()
         self._object = selected
         if self._object is None:
             self._title.setText("Settings")
@@ -149,8 +153,16 @@ class ComponentSettingsPane(QWidget):
             item = widget_class(self, name, parameter, self._settings)
             self._form.addWidget(item)
             self._inputs.append(item)
-        self._apply_button.setEnabled(bool(parameters))
+        self._apply_button.setEnabled(bool(parameters) and not self._invalid)
         self._reset_button.setEnabled(bool(parameters))
+
+    def _input_valid(self, parameter: str, valid: bool) -> None:
+        """Apply is on while the values of all the inputs are valid"""
+        if valid:
+            self._invalid.discard(parameter)
+        else:
+            self._invalid.add(parameter)
+        self._apply_button.setEnabled(self._object is not None and not self._invalid)
 
     def accept(self) -> None:
         """Apply: give the component the settings of the inputs"""

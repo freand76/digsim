@@ -681,6 +681,23 @@ def test_settings_pane_takes_no_name_that_is_used(gui):
     assert gui.window.settings_pane._apply_button.isEnabled()
 
 
+def test_a_bad_name_keeps_apply_off_when_another_input_is_fine(gui):
+    """Apply is on only while every input is valid, the model refuses a bad name too"""
+    gui.add("Led")
+    splitter = gui.add("Splitter")
+    _rename(gui, splitter, "Led")
+    assert not gui.window.settings_pane._apply_button.isEnabled()
+    # The groups are fine, the name still isn't
+    _pane_input(gui, QLineEdit, 1).setText("2, 6")
+    assert not gui.window.settings_pane._apply_button.isEnabled()
+    _pane_input(gui, QLineEdit).setText("bus_split")
+    assert gui.window.settings_pane._apply_button.isEnabled()
+    components = gui.model.objects.components
+    assert components.change_settings(splitter, {"_name": "Led"}) is None
+    assert components.change_settings(splitter, {"_name": "a b"}) is None
+    assert len(gui.errors) == 2
+
+
 def test_a_given_name_follows_the_ic_a_users_name_stays(gui):
     gui.add("IntegratedCircuit", ic_name="74161")
     second = gui.add("IntegratedCircuit", ic_name="74161")

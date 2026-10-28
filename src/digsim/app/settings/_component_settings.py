@@ -84,6 +84,10 @@ class ComponentSettingsBase(QFrame):
         label.setWordWrap(True)
         return label
 
+    def report_valid(self, valid: bool) -> None:
+        """Tell the settings whether the value is valid: OK and Apply need them all valid"""
+        self._parent.sig_enable_ok.emit(self._parameter, valid)
+
     def emit_signal(self) -> None:
         """Signal other settings components that a value has changed"""
         self._parent.sig_value_updated.emit(self._parameter)
@@ -159,7 +163,7 @@ class ComponentSettingSingleLineText(ComponentSettingsBase):
             problem = "No spaces or dots" if value else "Can't be empty"
         else:
             problem = ""
-        self._parent.sig_enable_ok.emit(not problem)
+        self.report_valid(not problem)
         self._invalid_text.setText(problem)
         # No empty line under the text while it is fine
         self._invalid_text.setVisible(bool(problem))
@@ -345,10 +349,10 @@ class ComponentSettingsIcSelector(ComponentSettingsBase):
     def _update(self, item: QListWidgetItem | None) -> None:
         if item is None:
             self._settings.pop(self._parameter, None)
-            self._parent.sig_enable_ok.emit(False)
+            self.report_valid(False)
         else:
             self._settings[self._parameter] = item.data(Qt.ItemDataRole.UserRole)
-            self._parent.sig_enable_ok.emit(True)
+            self.report_valid(True)
 
     def _accept(self) -> None:
         if self._list.currentItem() is not None:
@@ -553,14 +557,14 @@ class ComponentSettingsBitGroups(ComponentSettingsBase):
             groups = parse_groups(self._line_edit.text())
         except ComponentException as exc:
             self._result.setText(str(exc))
-            self._parent.sig_enable_ok.emit(False)
+            self.report_valid(False)
             return
         self._settings[self._parameter] = groups
         ranges = ", ".join(
             f"[{msb}]" if msb == lsb else f"[{msb}:{lsb}]" for msb, lsb in group_ranges(groups)
         )
         self._result.setText(f"{sum(groups)} bits: {ranges}")
-        self._parent.sig_enable_ok.emit(True)
+        self.report_valid(True)
 
 
 # The input for each parameter type (see "The settings dialog" in docs/components.md)
@@ -636,7 +640,8 @@ class ComponentSettingsDialog(QDialog):
     """SettingsDialog"""
 
     sig_value_updated = Signal(str)
-    sig_enable_ok = Signal(bool)
+    # An input's parameter, and whether its value is valid
+    sig_enable_ok = Signal(str, bool)
 
     @staticmethod
     def _open_or_new(parent: QWidget | None) -> str:
@@ -796,6 +801,9 @@ class ComponentSettingsDialog(QDialog):
     ) -> None:
         super().__init__(parent)
         self._app_model = app_model
+        # The parameters whose inputs have a value that isn't valid
+        self._invalid: set[str] = set()
+        self.sig_enable_ok.connect(self._input_valid)
         self._layout = QVBoxLayout(self)
         self.setLayout(self._layout)
         self.setWindowTitle(f"Setup {name}")
@@ -810,10 +818,20 @@ class ComponentSettingsDialog(QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self._layout.addWidget(self.buttonBox)
-        self.sig_enable_ok.connect(self._enable_ok)
+        self._enable_ok()
 
-    def _enable_ok(self, enable: bool) -> None:
-        self.buttonBox.button(QDialogButtonBox.StandardButton.Ok).setEnabled(enable)
+    def _input_valid(self, parameter: str, valid: bool) -> None:
+        if valid:
+            self._invalid.discard(parameter)
+        else:
+            self._invalid.add(parameter)
+        self._enable_ok()
+
+    def _enable_ok(self) -> None:
+        # The inputs report before the buttons are made
+        if hasattr(self, "buttonBox"):
+            ok = self.buttonBox.button(QDialogButtonBox.StandardButton.Ok)
+            ok.setEnabled(not self._invalid)
 
     def get_settings(self) -> dict[str, Any]:
         """Get settings from setting dialog"""

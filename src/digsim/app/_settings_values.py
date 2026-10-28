@@ -63,6 +63,16 @@ def has_given_name(component: Component) -> bool:
     )
 
 
+def name_problem(name: str, component: Component, circuit: Circuit) -> str:
+    """Why a component can't have a name (empty if it can): like the pane's Name says"""
+    if re.fullmatch(NAME_PATTERN, name) is None:
+        return "a name can't be empty or have spaces or dots"
+    for other in circuit.get_toplevel_components():
+        if other is not component and other.name() == name:
+            return f"{name} is the name of another component"
+    return ""
+
+
 def unique_name(name: str, taken: set[str]) -> str:
     """The name, with a suffix like _1 if it is taken"""
     unique, number = name, 1
