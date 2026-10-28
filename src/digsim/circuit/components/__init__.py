@@ -28,6 +28,7 @@ from ._probe import Probe
 from ._seven_segment import SevenSegment
 from ._static_level import GND, VDD
 from ._static_value import StaticValue
+from ._subcircuit import SubCircuit, SubCircuitException
 from ._tristate_buffer import TristateBuffer
 from ._yosys_component import YosysComponent, YosysComponentException, YosysVariant
 from .atoms import PortConnectionError, PortInOut

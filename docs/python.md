@@ -124,7 +124,7 @@ The available components are:
 | Arithmetic | `Adder`, `Subtractor`, `Multiplier`, `Comparator`, `Negator` |
 | Buses | `Bus2Wires`, `Wires2Bus`, `TristateBuffer`, `LabelWireIn`, `LabelWireOut` |
 | Memory | `RAM`, `ROM`, `MemStdOut` |
-| Circuit ports | `CircuitInput`, `CircuitOutput`, `CircuitInOut` |
+| Circuit ports | `CircuitInput`, `CircuitOutput`, `CircuitInOut`, `SubCircuit` |
 | Complex | `IntegratedCircuit`, `YosysComponent` |
 
 ## Verilog components
@@ -149,6 +149,39 @@ circuit.init()
 ```
 
 See [Verilog and Yosys](synthesis.md) for more about synthesis.
+
+## Subcircuits
+
+A circuit file can be used as a component of another circuit: a `SubCircuit`. Its ports
+are the circuit ports of the file, `CircuitInput`, `CircuitOutput` and `CircuitInOut`,
+named by their labels, in the order they are in the file from top to bottom. The
+components of the file are parts of the subcircuit, connected like in the file:
+
+```python
+from digsim.circuit import Circuit
+from digsim.circuit.components import AND, XOR, CircuitInput, CircuitOutput, SubCircuit
+
+half_adder = Circuit(name="half_adder")
+a = CircuitInput(half_adder, label="a")
+b = CircuitInput(half_adder, label="b")
+s = CircuitOutput(half_adder, label="s")
+c = CircuitOutput(half_adder, label="c")
+xor = XOR(half_adder)
+carry = AND(half_adder)
+for gate in (xor, carry):
+    a.port("a").wire = gate.A
+    b.port("b").wire = gate.B
+xor.Y.wire = s.port("s")
+carry.Y.wire = c.port("c")
+half_adder.to_json_file("half_adder.circuit")
+
+circuit = Circuit()
+adder = SubCircuit(circuit, "half_adder.circuit")
+print(adder.interface())  # {'a': ('in', 1), 'b': ('in', 1), 'c': ('out', 1), 's': ('out', 1)}
+```
+
+A subcircuit can use other subcircuits, their files relative to its file, but not itself.
+`reload()` builds the parts again after the file has changed, with the same ports.
 
 ## Testbenches with pytest
 
