@@ -42,10 +42,17 @@ package, but `uv run --with .` from another project can use a stale build (`--re
 
 ## CI
 
-`.github/workflows/` runs ruff, and pytest plus `examples/yosys_counter/*.py`, on Linux
-(3.11–3.15) and Windows, on push only. `docs.yaml` deploys the site on pushes to `main`
-that touch `docs/`, `src/digsim/`, `mkdocs.yml` or `CHANGELOG.md`. Don't watch CI after
-a push, the maintainer reports failures.
+`.github/workflows/` runs on push only: ruff, `full_scope.yaml` (all tests plus
+`examples/yosys_counter/*.py` on Linux x86_64, Python 3.11–3.15, with the native and the
+Python engine) and `minimal_scope.yaml` (Windows x64, Linux arm64 and macOS: the tests
+marked `sanity` with both engines, and `tools/native/` comparing the engines). `docs.yaml`
+deploys the site on pushes to `main` that touch `docs/`, `src/digsim/`, `mkdocs.yml` or
+`CHANGELOG.md`. Don't watch CI after a push, the maintainer reports failures.
+
+- A test file in the minimal scope has `pytestmark = pytest.mark.sanity` (run them with
+  `pytest -m sanity`): the parts that can differ between platforms, like files, paths and
+  line endings, Yosys, the Verilog formatter and the native engine. Mark a new test file
+  that tests such things.
 
 - CI can't load Qt's GUI libraries (no `libEGL`): tests must not import `QtGui` or
   `QtWidgets`. Keep testable logic in Qt-free modules (like `app/_desktop_entry.py`).
