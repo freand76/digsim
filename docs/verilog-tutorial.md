@@ -26,11 +26,11 @@ Open a terminal in the root folder of your clone and start DigSim with the examp
 circuit:
 
 ```sh
-uv run -m digsim.app --load example_circuits/counter_yosys_verilog.circuit
+uv run -m digsim.app --load circuits/yosys_counter/counter_yosys_verilog.circuit
 ```
 
 You can also start DigSim as usual, choose **File > Open**, and open
-`example_circuits/counter_yosys_verilog.circuit`.
+`circuits/yosys_counter/counter_yosys_verilog.circuit`.
 
 ![The counter circuit, with the counter component framed](images/verilog_tutorial/01_circuit.png)
 

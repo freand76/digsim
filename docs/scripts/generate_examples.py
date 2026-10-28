@@ -901,7 +901,7 @@ def screenshots() -> None:
             simulate(1000)
 
     with chdir(ROOT):
-        for path in sorted((ROOT / "example_circuits").glob("*.circuit")):
+        for path in sorted((ROOT / "circuits").glob("*/*.circuit")):
             model.load_circuit(str(path.relative_to(ROOT)))
             simulate(300)
             interact(path.stem)

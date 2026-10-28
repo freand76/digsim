@@ -48,7 +48,7 @@ DigSim uses [uv](https://docs.astral.sh/uv/) for development.
 | `src/digsim/synth/`, `src/digsim/utils/` | Yosys synthesis and netlist parsing |
 | `src/digsim/storage_model/` | The file format for saved circuits |
 | `tests/` | The tests |
-| `examples/`, `example_circuits/` | Python examples and GUI circuits, see [Examples](examples.md) |
+| `examples/`, `circuits/` | Python examples and GUI circuits, see [Examples](examples.md) |
 | `docs/` | This documentation |
 
 To add a component, follow [Creating Components](components.md) and

@@ -1,4 +1,4 @@
-// A walkie-talkie on a shared 4-bit bus, for example_circuits/walkie_talkie.circuit.
+// A walkie-talkie on a shared 4-bit bus, for circuits/walkie_talkie/walkie_talkie.circuit.
 // While talk is pressed it sends its message (the switches m0 to m3) on the bus, and it
 // always shows what is on the bus on heard. The bus is an inout port: the same wire
 // carries the message both ways, from whichever walkie-talkie talks.

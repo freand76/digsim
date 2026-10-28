@@ -320,7 +320,7 @@ def test_example_4_bit_adder(a, b):
 
     from digsim.circuit.components import DipSwitch
 
-    path = Path(__file__).parent.parent / "example_circuits" / "adder_4bit.circuit"
+    path = Path(__file__).parent.parent / "circuits" / "subcircuits" / "adder_4bit.circuit"
     circuit = Circuit()
     circuit.from_json_file(path)
     circuit.init()
@@ -343,5 +343,5 @@ def test_example_loaded_by_a_relative_path(monkeypatch):
 
     monkeypatch.chdir(Path(__file__).parent.parent)
     circuit = Circuit()
-    circuit.from_json_file("example_circuits/adder_4bit.circuit")
+    circuit.from_json_file("circuits/subcircuits/adder_4bit.circuit")
     assert len([c for c in circuit.get_toplevel_components() if isinstance(c, SubCircuit)]) == 4

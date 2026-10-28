@@ -157,7 +157,7 @@ Now that you know the basics, here are some things to try:
 - **More components:** clocks, flip-flops, hex displays and more are described in the
   [GUI Reference](gui.md#component-reference).
 - **Example circuits:** load the circuits in the
-  [`example_circuits`](https://github.com/freand76/digsim/tree/main/example_circuits)
+  [`circuits`](https://github.com/freand76/digsim/tree/main/circuits)
   folder, described in [Examples](examples.md#gui-example-circuits).
 - **Your own Verilog:** write a component in Verilog, see
   [Your First Verilog Component](new-verilog.md), and change one in the editor, see

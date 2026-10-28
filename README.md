@@ -89,7 +89,7 @@ uv run -m digsim.app
 ### Command-line options
 
 ```sh
-digsim-logic-simulator --load example_circuits/counter_yosys_netlist.circuit   # open a circuit
+digsim-logic-simulator --load circuits/yosys_counter/counter_yosys_netlist.circuit   # open a circuit
 digsim-logic-simulator --version                                               # show version
 ```
 

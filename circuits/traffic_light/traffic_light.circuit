@@ -6,7 +6,7 @@
                 "name": "traffic_light",
                 "type": "digsim.circuit.components.YosysComponent",
                 "display_name": "traffic_light",
-                "settings": {"path": "../examples/yosys_fsm/traffic_light.sv", "functional": true}
+                "settings": {"path": "traffic_light.sv", "functional": true}
             },
             {
                 "name": "Clock",

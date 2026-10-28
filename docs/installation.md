@@ -92,7 +92,7 @@ python -m digsim.app
 
 ## Run from source
 
-Clone the repository to get the [example circuits](https://github.com/freand76/digsim/tree/main/example_circuits),
+Clone the repository to get the [example circuits](https://github.com/freand76/digsim/tree/main/circuits),
 the [Python examples](https://github.com/freand76/digsim/tree/main/examples), or to
 contribute to DigSim.
 
@@ -129,7 +129,7 @@ digsim-logic-simulator [--load CIRCUIT] [--version]
 
 | Option | Description |
 | --- | --- |
-| `--load`, `-l` | Load a saved circuit at startup, e.g. `--load example_circuits/counter_yosys_netlist.circuit` |
+| `--load`, `-l` | Load a saved circuit at startup, e.g. `--load circuits/yosys_counter/counter_yosys_netlist.circuit` |
 | `--version`, `-v` | Print the installed version and exit |
 
 `python -m digsim.app` accepts the same options.

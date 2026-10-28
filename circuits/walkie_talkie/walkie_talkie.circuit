@@ -18,7 +18,7 @@
                 "name": "walkie_talkie",
                 "type": "digsim.circuit.components.YosysComponent",
                 "display_name": "Walkie-talkie A",
-                "settings": {"path": "../examples/yosys_inout/walkie_talkie.v"}
+                "settings": {"path": "walkie_talkie.v"}
             },
             {
                 "name": "HexDigit",
@@ -42,7 +42,7 @@
                 "name": "walkie_talkie_1",
                 "type": "digsim.circuit.components.YosysComponent",
                 "display_name": "Walkie-talkie B",
-                "settings": {"path": "../examples/yosys_inout/walkie_talkie.v"}
+                "settings": {"path": "walkie_talkie.v"}
             },
             {
                 "name": "HexDigit_1",

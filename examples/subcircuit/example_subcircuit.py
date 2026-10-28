@@ -3,7 +3,7 @@
 
 """
 Example with a subcircuit: the full adder of the GUI example circuits
-(example_circuits/full_adder.circuit), itself made from two half adder subcircuits,
+(circuits/subcircuits/full_adder.circuit), itself made from two half adder subcircuits,
 used as a component. Its ports are the In and Out ports of the file: a, b, cin, s and
 cout. The example prints its truth table.
 """
@@ -14,13 +14,13 @@ from digsim.circuit import Circuit
 from digsim.circuit.components import StaticValue, SubCircuit
 
 
-example_circuits = pathlib.Path(__file__).parent.parent.parent / "example_circuits"
+subcircuits = pathlib.Path(__file__).parent.parent.parent / "circuits" / "subcircuits"
 
 print(" a  b cin |  s cout")
 for value in range(8):
     a, b, cin = value >> 2 & 1, value >> 1 & 1, value & 1
     circuit = Circuit()
-    adder = SubCircuit(circuit, example_circuits / "full_adder.circuit")
+    adder = SubCircuit(circuit, subcircuits / "full_adder.circuit")
     for port, bit in ((adder.a, a), (adder.b, b), (adder.cin, cin)):
         StaticValue(circuit, value=bit).O.wire = port
     circuit.init()

@@ -4,8 +4,8 @@
 """
 Generate the screenshots for the Verilog editor tutorial (docs/verilog-tutorial.md).
 
-The script loads a copy of example_circuits/counter_yosys_verilog.circuit (and of the
-counter.v it uses) in the real application window, offscreen, and follows the tutorial:
+The script loads a copy of circuits/yosys_counter/counter_yosys_verilog.circuit (and of the
+counter.v next to it) in the real application window, offscreen, and follows the tutorial:
 it runs the counter, opens the Verilog editor from the context menu, formats and changes
 the Verilog, synthesizes it, and runs the counter again.
 
@@ -231,14 +231,11 @@ def main() -> None:
     cache_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=cache_dir, ignore_cleanup_errors=True) as work:
         work_dir = Path(work)
-        (work_dir / "example_circuits").mkdir()
-        (work_dir / "examples" / "yosys_counter").mkdir(parents=True)
-        circuit = work_dir / "example_circuits" / "counter_yosys_verilog.circuit"
-        shutil.copy(ROOT / "example_circuits" / circuit.name, circuit)
-        shutil.copy(
-            ROOT / "examples" / "yosys_counter" / "counter.v",
-            work_dir / "examples" / "yosys_counter" / "counter.v",
-        )
+        folder = work_dir / "yosys_counter"
+        folder.mkdir()
+        circuit = folder / "counter_yosys_verilog.circuit"
+        for name in (circuit.name, "counter.v"):
+            shutil.copy(ROOT / "circuits" / "yosys_counter" / name, folder / name)
         make_screenshots(Tutorial(circuit))
     print(f"Screenshots written to {OUT.relative_to(ROOT)}")
 

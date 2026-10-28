@@ -6,7 +6,7 @@ The repository has two kinds of examples:
   [`examples`](https://github.com/freand76/digsim/tree/main/examples) folder build and
   simulate circuits in code. Most of them write a VCD file with all signals.
 - **[GUI example circuits](#gui-example-circuits)** in the
-  [`example_circuits`](https://github.com/freand76/digsim/tree/main/example_circuits) folder
+  [`circuits`](https://github.com/freand76/digsim/tree/main/circuits) folder
   are ready-made circuits to open in the DigSim application.
 
 To run them, clone the repository and run the commands below from its root folder (see
@@ -447,7 +447,7 @@ the other: no counting, counting up to 15 and wrapping to 0, counting down, and 
 ### Subcircuit (full adder)
 
 [`examples/subcircuit/example_subcircuit.py`](https://github.com/freand76/digsim/blob/main/examples/subcircuit/example_subcircuit.py)
-uses the full adder of the GUI example circuits, `example_circuits/full_adder.circuit`, as a
+uses the full adder of the GUI example circuits, `circuits/subcircuits/full_adder.circuit`, as a
 `SubCircuit`, a component made from a circuit file. The full adder is made from two half
 adder subcircuits itself. Its ports are the In and Out ports of the file, and the example
 prints its truth table:
@@ -470,11 +470,13 @@ uv run python examples/subcircuit/example_subcircuit.py
 
 ## GUI example circuits
 
-Open a circuit in the application with `--load`, then press **Start Simulation** (or
+Each circuit is in a folder of its own in `circuits/`, with the files it uses, like the
+Verilog of a Yosys component or the circuits of its subcircuits. Open a circuit in the
+application with `--load`, then press **Start Simulation** (or
 **Space**):
 
 ```sh
-uv run -m digsim.app --load example_circuits/counter_yosys_netlist.circuit
+uv run -m digsim.app --load circuits/yosys_counter/counter_yosys_netlist.circuit
 ```
 
 You can also use **File > Open** in the application. See [GUI Reference](gui.md) for how

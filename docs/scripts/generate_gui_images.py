@@ -156,7 +156,7 @@ COMPONENT_IMAGES: list[tuple[str, str, dict[str, Any], Callable[..., None] | Non
     (
         "components/SubCircuit.png",
         "SubCircuit",
-        {"path": str(ROOT / "example_circuits" / "full_adder.circuit")},
+        {"path": str(ROOT / "circuits" / "subcircuits" / "full_adder.circuit")},
         None,
     ),
     ("components/RAM.png", "RAM", {}, None),
@@ -226,7 +226,7 @@ def window_screenshots(model: AppModel, window: MainWindow) -> None:
 
     # The application with the Verilog counter
     with chdir(ROOT):
-        model.load_circuit("example_circuits/counter_yosys_netlist.circuit")
+        model.load_circuit("circuits/yosys_counter/counter_yosys_netlist.circuit")
     # Running, with the switch on: the counter counts and the analyzer shows it
     model.model_start()
     spin(300)

@@ -11,10 +11,10 @@ Start it with `digsim-logic-simulator` (or `python -m digsim.app`). See
 circuit right away, pass it with `--load`:
 
 ```sh
-digsim-logic-simulator --load example_circuits/counter_yosys_netlist.circuit
+digsim-logic-simulator --load circuits/yosys_counter/counter_yosys_netlist.circuit
 ```
 
-The [`example_circuits`](https://github.com/freand76/digsim/tree/main/example_circuits)
+The [`circuits`](https://github.com/freand76/digsim/tree/main/circuits)
 folder in the repository has ready-made circuits to explore.
 
 ## The main window

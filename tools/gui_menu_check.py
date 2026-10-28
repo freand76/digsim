@@ -454,7 +454,7 @@ def test_subcircuit_view(gui):
     from pathlib import Path
 
     window = gui.window
-    path = Path(__file__).parent.parent / "example_circuits" / "full_adder.circuit"
+    path = Path(__file__).parent.parent / "circuits" / "subcircuits" / "full_adder.circuit"
     gui.model.load_circuit(str(path))
     spin()
     gui.model.sig_view_subcircuit.emit("half_adder")
@@ -482,7 +482,7 @@ def test_subcircuit_view(gui):
 def test_double_click_views_a_subcircuit_while_it_runs(gui):
     from pathlib import Path
 
-    path = Path(__file__).parent.parent / "example_circuits" / "full_adder.circuit"
+    path = Path(__file__).parent.parent / "circuits" / "subcircuits" / "full_adder.circuit"
     gui.model.load_circuit(str(path))
     spin()
     gui.model.model_start()

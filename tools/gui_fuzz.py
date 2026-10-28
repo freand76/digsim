@@ -84,7 +84,7 @@ from digsim.circuit.components.atoms import Port
 
 
 # The GUI example circuits, also for a subcircuit among the components
-EXAMPLE_CIRCUITS_FOLDER = Path(__file__).parent.parent / "example_circuits"
+EXAMPLE_CIRCUITS_FOLDER = Path(__file__).parent.parent / "circuits"
 # Components with single bit and bus ports, and their settings
 COMPONENTS: list[tuple[str, dict[str, Any]]] = [
     ("PushButton", {}),
@@ -113,7 +113,7 @@ COMPONENTS: list[tuple[str, dict[str, Any]]] = [
     ("Adder", {"width": 4}),
     ("Counter", {"width": 4, "enable": True}),
     ("Decoder", {"select": 2}),
-    ("SubCircuit", {"path": str(EXAMPLE_CIRCUITS_FOLDER / "half_adder.circuit")}),
+    ("SubCircuit", {"path": str(EXAMPLE_CIRCUITS_FOLDER / "subcircuits" / "half_adder.circuit")}),
 ]
 # Components are placed in the cells of a grid, so that they don't overlap
 GRID_COLUMNS, GRID_ROWS = 6, 4
@@ -126,7 +126,7 @@ WINDOW_SIZES = [(1700, 1100), (1200, 800), (900, 650)]
 BACKGROUND = {
     (color.red(), color.green(), color.blue()) for color in (theme.BACKGROUND, theme.GRID)
 }
-EXAMPLE_CIRCUITS = sorted(EXAMPLE_CIRCUITS_FOLDER.glob("*.circuit"))
+EXAMPLE_CIRCUITS = sorted(EXAMPLE_CIRCUITS_FOLDER.glob("*/*.circuit"))
 
 
 class FuzzFailure(Exception):

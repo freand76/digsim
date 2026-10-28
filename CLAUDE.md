@@ -14,7 +14,7 @@ syntax. Dependencies in `pyproject.toml` are pinned to exact versions.
 - `src/digsim/storage_model/`: pydantic models for saving and loading circuits
 - `src/digsim/utils/`: Yosys netlist parsing
 - `tests/`, `examples/` (runnable, with pytest testbenches in `examples/pytest_tb/`),
-  `example_circuits/` (GUI circuits), `tools/gui_fuzz.py` (randomized GUI test)
+  `circuits/` (GUI circuits, a folder each with the files they use), `tools/gui_fuzz.py` (randomized GUI test)
 - `docs/`: MkDocs Material site (`mkdocs.yml`), published to https://freand76.github.io/digsim/
 
 ## Commands

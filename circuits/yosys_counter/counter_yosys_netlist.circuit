@@ -6,7 +6,7 @@
                 "name": "counter",
                 "type": "digsim.circuit.components.YosysComponent",
                 "display_name": "counter",
-                "settings": {"path": "../examples/yosys_counter/counter.v"}
+                "settings": {"path": "counter.json"}
             },
             {
                 "name": "Clock_1",

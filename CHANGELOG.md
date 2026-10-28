@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - The GUI example circuits are in `circuits/`, a folder each with the files they use (the Verilog of a Yosys component, the circuits of a subcircuit), instead of `example_circuits/` with paths into `examples/`
  - GUI: VCD Output and VCD File... in the Simulation menu, like the VCD checkbox and file button
  - GUI: the VCD file field grows with the window, up to a width, and shows the path of the file, shortened in the middle when it is long
  - GUI: F11 is Single Step
