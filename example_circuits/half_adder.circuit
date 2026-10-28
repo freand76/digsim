@@ -1,0 +1,90 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "CircuitInput",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "a", "width": 1}
+            },
+            {
+                "name": "CircuitInput_1",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "b", "width": 1}
+            },
+            {
+                "name": "XOR",
+                "type": "digsim.circuit.components.XOR",
+                "display_name": "XOR",
+                "settings": {"ports": 2}
+            },
+            {
+                "name": "AND",
+                "type": "digsim.circuit.components.AND",
+                "display_name": "AND",
+                "settings": {"ports": 2}
+            },
+            {
+                "name": "CircuitOutput",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "s", "width": 1}
+            },
+            {
+                "name": "CircuitOutput_1",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "c", "width": 1}
+            },
+            {
+                "name": "Note",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {
+                    "text": "A half adder: s = a xor b, c = a and b.\nThe In and Out ports are its interface as a subcircuit (full_adder.circuit).\nClick a or b to set them."
+                }
+            }
+        ]
+    },
+    "gui": {
+        "CircuitInput": {"x": 60, "y": 100, "z": 0},
+        "CircuitInput_1": {"x": 60, "y": 200, "z": 0},
+        "XOR": {"x": 250, "y": 110, "z": 0},
+        "AND": {"x": 250, "y": 210, "z": 0},
+        "CircuitOutput": {"x": 420, "y": 120, "z": 0},
+        "CircuitOutput_1": {"x": 420, "y": 220, "z": 0},
+        "Note": {"x": 60, "y": 300, "z": 0}
+    },
+    "lines": [
+        {
+            "ports": ["CircuitInput.a", "XOR.A", "AND.A"],
+            "points": {"1": [239, 110], "2": [239, 120], "3": [239, 110], "4": [239, 220]},
+            "segments": [
+                ["CircuitInput.a", "1"], ["1", "2"], ["2", "XOR.A"], ["CircuitInput.a", "3"],
+                ["3", "4"], ["4", "AND.A"]
+            ]
+        },
+        {
+            "ports": ["CircuitInput_1.b", "XOR.B", "AND.B"],
+            "points": {"1": [239, 210], "2": [239, 140], "3": [239, 210], "4": [239, 240]},
+            "segments": [
+                ["CircuitInput_1.b", "1"], ["1", "2"], ["2", "XOR.B"], ["CircuitInput_1.b", "3"],
+                ["3", "4"], ["4", "AND.B"]
+            ]
+        },
+        {
+            "ports": ["XOR.Y", "CircuitOutput.s"],
+            "points": {},
+            "segments": [["XOR.Y", "CircuitOutput.s"]]
+        },
+        {
+            "ports": ["AND.Y", "CircuitOutput_1.c"],
+            "points": {},
+            "segments": [["AND.Y", "CircuitOutput_1.c"]]
+        }
+    ],
+    "shortcuts": {},
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 20}
+}

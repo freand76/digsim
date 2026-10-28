@@ -882,6 +882,15 @@ def screenshots() -> None:
             simulate(300)
             request.release()
             simulate(500)
+        elif name == "adder_4bit":
+            # A = 5 and B = 6 on the DIP switches: the hex digit shows B, no carry
+            for switch_name, bits in (("DipSwitch", (0, 2)), ("DipSwitch_1", (1, 2))):
+                dip_switch = circuit.get_component(switch_name)
+                assert isinstance(dip_switch, DipSwitch)
+                for bit in bits:
+                    dip_switch.select(bit)
+                    dip_switch.onpress()
+            simulate(300)
         elif name == "buzzers":
             # Press the third button (screenshot while pressed)
             button = circuit.get_component("PushButton_2")

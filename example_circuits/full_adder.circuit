@@ -1,0 +1,118 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "CircuitInput",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "a", "width": 1}
+            },
+            {
+                "name": "CircuitInput_1",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "b", "width": 1}
+            },
+            {
+                "name": "CircuitInput_2",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "cin", "width": 1}
+            },
+            {
+                "name": "half_adder",
+                "type": "digsim.circuit.components.SubCircuit",
+                "display_name": "half_adder",
+                "settings": {"path": "half_adder.circuit"}
+            },
+            {
+                "name": "half_adder_1",
+                "type": "digsim.circuit.components.SubCircuit",
+                "display_name": "half_adder",
+                "settings": {"path": "half_adder.circuit"}
+            },
+            {
+                "name": "OR",
+                "type": "digsim.circuit.components.OR",
+                "display_name": "OR",
+                "settings": {"ports": 2}
+            },
+            {
+                "name": "CircuitOutput",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "s", "width": 1}
+            },
+            {
+                "name": "CircuitOutput_1",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "cout", "width": 1}
+            },
+            {
+                "name": "Note_2",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {
+                    "text": "A full adder from two half adders (half_adder.circuit), subcircuits.\nRight-click one and choose Edit Subcircuit to open its file in a tab."
+                }
+            }
+        ]
+    },
+    "gui": {
+        "CircuitInput": {"x": 60, "y": 100, "z": 0},
+        "CircuitInput_1": {"x": 60, "y": 160, "z": 0},
+        "CircuitInput_2": {"x": 60, "y": 260, "z": 0},
+        "half_adder": {"x": 220, "y": 100, "z": 0},
+        "half_adder_1": {"x": 420, "y": 180, "z": 0},
+        "OR": {"x": 620, "y": 260, "z": 0},
+        "CircuitOutput": {"x": 780, "y": 190, "z": 0},
+        "CircuitOutput_1": {"x": 780, "y": 270, "z": 0},
+        "Note_2": {"x": 60, "y": 360, "z": 0}
+    },
+    "lines": [
+        {
+            "ports": ["CircuitInput.a", "half_adder.a"],
+            "points": {"1": [209, 110], "2": [209, 125]},
+            "segments": [["CircuitInput.a", "1"], ["1", "2"], ["2", "half_adder.a"]]
+        },
+        {
+            "ports": ["CircuitInput_1.b", "half_adder.b"],
+            "points": {"1": [209, 170], "2": [209, 145]},
+            "segments": [["CircuitInput_1.b", "1"], ["1", "2"], ["2", "half_adder.b"]]
+        },
+        {
+            "ports": ["CircuitInput_2.cin", "half_adder_1.b"],
+            "points": {"1": [409, 270], "2": [409, 225]},
+            "segments": [["CircuitInput_2.cin", "1"], ["1", "2"], ["2", "half_adder_1.b"]]
+        },
+        {
+            "ports": ["half_adder.s", "half_adder_1.a"],
+            "points": {"1": [409, 125], "2": [409, 205]},
+            "segments": [["half_adder.s", "1"], ["1", "2"], ["2", "half_adder_1.a"]]
+        },
+        {
+            "ports": ["half_adder.c", "OR.A"],
+            "points": {"1": [609, 145], "2": [609, 270]},
+            "segments": [["half_adder.c", "1"], ["1", "2"], ["2", "OR.A"]]
+        },
+        {
+            "ports": ["half_adder_1.s", "CircuitOutput.s"],
+            "points": {"1": [769, 205], "2": [769, 200]},
+            "segments": [["half_adder_1.s", "1"], ["1", "2"], ["2", "CircuitOutput.s"]]
+        },
+        {
+            "ports": ["half_adder_1.c", "OR.B"],
+            "points": {"1": [609, 225], "2": [609, 290]},
+            "segments": [["half_adder_1.c", "1"], ["1", "2"], ["2", "OR.B"]]
+        },
+        {
+            "ports": ["OR.Y", "CircuitOutput_1.cout"],
+            "points": {},
+            "segments": [["OR.Y", "CircuitOutput_1.cout"]]
+        }
+    ],
+    "shortcuts": {},
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 20}
+}

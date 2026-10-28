@@ -311,3 +311,37 @@ def test_files_used(tmp_path):
     path = _full_adder(tmp_path)
     assert files_used(path) == {(tmp_path / "parts" / "half_adder.circuit").resolve()}
     assert files_used(tmp_path / "parts" / "half_adder.circuit") == set()
+
+
+@pytest.mark.parametrize(("a", "b"), [(5, 6), (15, 1), (9, 9), (0, 0)])
+def test_example_4_bit_adder(a, b):
+    """The 4-bit adder example: four full adders, each from two half adders"""
+    from pathlib import Path
+
+    from digsim.circuit.components import DipSwitch
+
+    path = Path(__file__).parent.parent / "example_circuits" / "adder_4bit.circuit"
+    circuit = Circuit()
+    circuit.from_json_file(path)
+    circuit.init()
+    for name, value in (("DipSwitch", a), ("DipSwitch_1", b)):
+        switch = circuit.get_component(name)
+        assert isinstance(switch, DipSwitch)
+        for bit in range(4):
+            if value >> bit & 1:
+                switch.select(bit)
+                switch.onpress()
+    circuit.run(ns=1000)
+    total = a + b
+    assert circuit.get_component("HexDigit").val.value == total & 15
+    assert circuit.get_component("Led").I.value == total >> 4
+
+
+def test_example_loaded_by_a_relative_path(monkeypatch):
+    """The files of nested subcircuits are relative to each file, not to the circuit's"""
+    from pathlib import Path
+
+    monkeypatch.chdir(Path(__file__).parent.parent)
+    circuit = Circuit()
+    circuit.from_json_file("example_circuits/adder_4bit.circuit")
+    assert len([c for c in circuit.get_toplevel_components() if isinstance(c, SubCircuit)]) == 4

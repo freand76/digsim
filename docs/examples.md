@@ -444,6 +444,30 @@ the other: no counting, counting up to 15 and wrapping to 0, counting down, and 
 
 ![Up/down counter testbench waveforms](images/examples/testbench_waves.svg)
 
+### Subcircuit (full adder)
+
+[`examples/subcircuit/example_subcircuit.py`](https://github.com/freand76/digsim/blob/main/examples/subcircuit/example_subcircuit.py)
+uses the full adder of the GUI example circuits, `example_circuits/full_adder.circuit`, as a
+`SubCircuit`, a component made from a circuit file. The full adder is made from two half
+adder subcircuits itself. Its ports are the In and Out ports of the file, and the example
+prints its truth table:
+
+```sh
+uv run python examples/subcircuit/example_subcircuit.py
+```
+
+```text
+ a  b cin |  s cout
+ 0  0  0  |  0   0
+ 0  0  1  |  1   0
+ 0  1  0  |  1   0
+ 0  1  1  |  0   1
+ 1  0  0  |  1   0
+ 1  0  1  |  0   1
+ 1  1  0  |  0   1
+ 1  1  1  |  1   1
+```
+
 ## GUI example circuits
 
 Open a circuit in the application with `--load`, then press **Start Simulation** (or
@@ -554,3 +578,14 @@ of the GUI circuits:
 ```sh
 uv run --with pytest python docs/scripts/generate_examples.py
 ```
+
+### Adders from subcircuits
+
+`half_adder.circuit` is a half adder, with In ports for `a` and `b` and Out ports for `s`
+and `c`. `full_adder.circuit` is a full adder from two half adder subcircuits and an OR
+gate, and `adder_4bit.circuit` a 4-bit adder from four full adder subcircuits. The DIP
+switches are A and B, the hex digit shows A + B and the LED the carry. Right-click a
+subcircuit and choose **Edit Subcircuit** to open its file in a tab: a change to the half
+adder, once it is saved, is in every adder that uses it.
+
+![4-bit adder circuit](images/examples/adder_4bit.png)

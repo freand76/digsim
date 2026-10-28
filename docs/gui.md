@@ -405,6 +405,8 @@ itself they work as inputs and outputs, so that it can be tested on its own.
 
 ### Subcircuits
 
+![Subcircuit](images/components/SubCircuit.png)
+
 A **Subcircuit** uses another circuit file as a component: choose the file when you add
 it. Its ports are the circuit ports (In, Out and InOut) of the file, named like them, in
 the order they are in the file from top to bottom, and it works like the circuit in the

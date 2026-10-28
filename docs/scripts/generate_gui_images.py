@@ -152,6 +152,12 @@ COMPONENT_IMAGES: list[tuple[str, str, dict[str, Any], Callable[..., None] | Non
         driven(0x2A, "y"),
     ),
     ("components/CircuitInOut.png", "CircuitInOut", {"label": "bus", "width": 8}, None),
+    (
+        "components/SubCircuit.png",
+        "SubCircuit",
+        {"path": str(ROOT / "example_circuits" / "full_adder.circuit")},
+        None,
+    ),
     ("components/RAM.png", "RAM", {}, None),
     (
         "components/ROM.png",
