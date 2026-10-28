@@ -133,6 +133,8 @@ def test_menus(gui):
     assert gui.action("File", "Save As...").shortcut() == QKeySequence("Ctrl+Shift+S")
     assert gui.action("Edit", "Undo").shortcut() == QKeySequence("Ctrl+Z")
     assert gui.action("Edit", "Delete").shortcut() == QKeySequence("Del")
+    assert gui.action("Simulation", "Single Step").shortcut() == QKeySequence("F11")
+    assert gui.action("Simulation", "Step Clock").shortcut() == QKeySequence("F10")
 
 
 def test_save_as_then_save(gui, tmp_path):

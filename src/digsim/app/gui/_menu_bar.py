@@ -128,7 +128,7 @@ class MenuBar(QMenuBar):
         # Space starts and stops it, see MainWindow.keyPressEvent(): shown, not a shortcut
         self._start_action = self._add(simulation_menu, "&Start\tSpace", self._start_stop)
         self._single_step_action = self._add(
-            simulation_menu, "Single S&tep", lambda: self._app_model.model_single_step()
+            simulation_menu, "Single S&tep", lambda: self._app_model.model_single_step(), "F11"
         )
         self._clock_step_action = self._add(
             simulation_menu, "Step &Clock", lambda: self._app_model.model_clock_step(), "F10"
