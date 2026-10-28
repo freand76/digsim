@@ -1981,7 +1981,10 @@ class GuiFuzzer:
         return components, connections, shapes
 
     def save_and_load(self) -> str:
-        """With Save As and the Load button, the file dialogs give the file"""
+        """
+        Save As (the file dialog gives the file), and load the file again. Not with the
+        Load button: a file that is open already only gets its tab shown.
+        """
         path = self.out_dir / "fuzz.circuit"
         before = self.file_snapshot()
         buttons = self.window.findChild(LoadSaveWidget)
@@ -2000,7 +2003,7 @@ class GuiFuzzer:
             saved = path.read_text()
             check('"lines"' in saved or not self.connections(), "the file has no lines")
             check('"wires"' not in saved, "the file has the wires of the old format")
-            buttons._load_button.click()
+            self.model.load_circuit(path)
         finally:
             QFileDialog.getSaveFileName, QFileDialog.getOpenFileName = dialogs  # type: ignore[method-assign]
         self.spin(50)
