@@ -6,7 +6,7 @@
 [![Documentation](https://img.shields.io/badge/docs-freand76.github.io%2Fdigsim-blue)](https://freand76.github.io/digsim/)
 
 <p align="center">
-  <img alt="The DigSim Application" src="https://raw.githubusercontent.com/freand76/digsim/01f7c787b67d194e7295be94023de5fabf5dedd2/docs/images/screenshot_digsim_app.png" width=85%>
+  <img alt="The DigSim Application" src="https://raw.githubusercontent.com/freand76/digsim/e8d9b34e1c33eae0a63373e8adbada4c1752b8a1/docs/images/screenshot_digsim_app.png" width=85%>
 </p>
 
 DigSim is an interactive digital logic simulator written in Python. It is made for
