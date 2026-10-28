@@ -131,8 +131,10 @@ a push, the maintainer reports failures.
 - Messages are tight and say **why**: what was wrong or missing for the user, not how the
   code changes. Imperative subject, short body.
 - **Never** add a `Co-Authored-By` trailer or any other attribution line.
-- Commit only when asked or when the task asks for commits. Push only when asked, ask
-  before a force push, and don't amend a pushed commit (a follow-up is a new commit).
+- Commit only when asked or when the task asks for commits. When working through a plan
+  with several parts, commit each part when it is done, one commit per feature. Push only
+  when asked, ask before a force push, and don't amend a pushed commit (a follow-up is a
+  new commit).
 - Never commit the untracked files in the root (`dist/`, `requirements.txt`, `uv.lock`,
   `test.circuit`, `plans/`).
 - Never use `git stash`: the maintainer keeps WIP stashes. To test old code, use a
