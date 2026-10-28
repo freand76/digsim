@@ -9,8 +9,6 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Union
 
-import qtawesome as qta
-
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QKeyEvent, QMouseEvent
 from PySide6.QtWidgets import (
@@ -31,6 +29,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSlider,
+    QStyle,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -604,13 +603,13 @@ class OpenOrNewDialog(QDialog):
         self.open_button = QCommandLinkButton(
             "Open a file", "A Verilog file (.v, .sv) or a Yosys netlist (.json)", self
         )
-        self.open_button.setIcon(qta.icon("mdi.folder-open-outline"))
+        self.open_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon))
         self.new_button = QCommandLinkButton(
             "New Verilog file",
             "Start a new design: a file with a small module, opened in the editor",
             self,
         )
-        self.new_button.setIcon(qta.icon("mdi.file-document-edit-outline"))
+        self.new_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon))
         for button, choice in ((self.open_button, "open"), (self.new_button, "new")):
             button.clicked.connect(lambda _=False, choice=choice: self._choose(choice))
             layout.addWidget(button)
