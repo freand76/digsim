@@ -550,6 +550,24 @@ def test_a_subcircuit_can_not_use_its_own_circuit(gui, tmp_path):
     model._changed = False
 
 
+def test_no_save_in_a_file_that_a_subcircuit_uses(gui, tmp_path):
+    """Saved there, the files would use each other"""
+    from pathlib import Path
+
+    folder = Path(__file__).parent.parent / "circuits" / "subcircuits"
+    for name in ("half_adder.circuit", "full_adder.circuit"):
+        (tmp_path / name).write_text((folder / name).read_text(encoding="utf-8"), "utf-8")
+    gui.add("SubCircuit", path=str(tmp_path / "full_adder.circuit"))
+    for name in ("full_adder.circuit", "half_adder.circuit"):
+        before = (tmp_path / name).read_text(encoding="utf-8")
+        gui.path = str(tmp_path / name)
+        gui.trigger("File", "Save As...")
+        assert (tmp_path / name).read_text(encoding="utf-8") == before
+        assert "would use itself" in gui.errors[-1]
+    assert gui.model.circuit_path is None
+    gui.model._changed = False
+
+
 def _pane_input(gui: Gui, widget_type: Any, number: int = 0) -> Any:
     """An input of the settings pane, like its first slider"""
     return gui.window.settings_pane.findChildren(widget_type)[number]

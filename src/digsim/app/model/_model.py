@@ -16,6 +16,8 @@ from PySide6.QtCore import QThread, Signal
 from digsim.app._clock_step import StepTooSlow, step_clock
 from digsim.app._wire_key import port_key
 from digsim.app.gui_objects import ComponentObject
+from digsim.circuit.components import SubCircuit
+from digsim.circuit.components._subcircuit import files_used
 from digsim.circuit.components.atoms import Component, DigsimException
 from digsim.storage_model import AppFileDataClass, ModelDataClass
 
@@ -385,7 +387,21 @@ class AppModel(QThread):
         return model_dc
 
     def save_circuit(self, path: str | Path) -> None:
-        """Save the circuit with GUI information"""
+        """
+        Save the circuit with GUI information. Not in a file that a subcircuit of it is,
+        or uses: the files would use each other, and neither could be opened.
+        """
+        target = Path(path).resolve()
+        for component in self.objects.circuit.get_toplevel_components():
+            if not isinstance(component, SubCircuit):
+                continue
+            source = component.source_file()
+            if source.resolve() == target or target in files_used(source):
+                self.sig_error.emit(
+                    f"Could not save the circuit in {path}: the subcircuit {component.name()} "
+                    "uses that file, the circuit would use itself"
+                )
+                return
         old_circuit_folder = self._circuit_folder
         # Paths in the circuit are stored relative to the circuit file
         self._circuit_folder = str(Path(path).parent)
