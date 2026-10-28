@@ -234,9 +234,13 @@ def window_screenshots(model: AppModel, window: MainWindow) -> None:
         if isinstance(component, components.OnOffSwitch):
             component.turn_on()
     spin(3000)
+    # The circuit, without the settings pane beside it
+    window.settings_dock.hide()
+    spin(200)
     area.centerOn(QPointF(700, 300))
     spin(200)
     window.grab().save(str(IMAGES / "screenshot_digsim_app.png"))
+    window.settings_dock.show()
     model.model_stop()
     spin(300)
 
