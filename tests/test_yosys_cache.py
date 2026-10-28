@@ -15,6 +15,10 @@ from digsim.circuit.components import YosysComponent
 from digsim.synth import Synthesis
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 COUNTER = Path(__file__).parent.parent / "examples" / "yosys_counter" / "counter.v"
 
 

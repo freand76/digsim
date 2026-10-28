@@ -25,6 +25,10 @@ from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 VERILOG = Path(__file__).parent.parent / "verilog"
 SOURCES = {
     "74181": ("74xx/74181.v", "ttl_74181"),

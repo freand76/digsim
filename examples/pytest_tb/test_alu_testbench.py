@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2024-2025
+# Copyright (c) Fredrik Andersson, 2024-2026
 # All rights reserved
 
 import pathlib
@@ -9,6 +9,10 @@ from digsim.circuit import Circuit
 from digsim.circuit.components import YosysComponent
 from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
+
+
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
 
 
 # --- ALU Operation Codes ---

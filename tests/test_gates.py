@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pystest module to test functionality of gates"""
@@ -7,6 +7,10 @@ import pytest
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import AND, DFF, MUX, NAND, NOR, NOT, OR, SR, XNOR, XOR
+
+
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
 
 
 @pytest.mark.parametrize(

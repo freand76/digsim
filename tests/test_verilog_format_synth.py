@@ -14,6 +14,10 @@ from digsim.synth import Synthesis
 from digsim.verilog import VerilogFormatter
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 ROOT = Path(__file__).parent.parent
 # One module in each file
 VERILOG_FILES = [

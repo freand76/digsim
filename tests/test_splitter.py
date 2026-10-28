@@ -11,6 +11,10 @@ from digsim.circuit.components._splitter import group_text, parse_groups
 from digsim.circuit.components.atoms import ComponentException
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 def _run(circuit):
     circuit.init()
     circuit.run(ns=100)

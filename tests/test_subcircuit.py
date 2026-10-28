@@ -23,6 +23,10 @@ from digsim.circuit.components import (
 )
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 def _half_adder(path):
     """A half adder circuit file: s = a ^ b, c = a & b"""
     circuit = Circuit(name="half_adder")

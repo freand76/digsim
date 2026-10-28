@@ -19,6 +19,10 @@ from digsim.synth import (
 from digsim.synth._synthesis import _console_to_file
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 @pytest.fixture
 def verilog_path():
     """Fixture: get path to verilog modules"""

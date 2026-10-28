@@ -14,6 +14,10 @@ from digsim.app._memory_contents import (
 )
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 @pytest.mark.parametrize("name", ["data.hex", "data.bin"])
 @pytest.mark.parametrize("data_width", [8, 12, 32])
 @pytest.mark.parametrize("load_address", [0, 0x20])

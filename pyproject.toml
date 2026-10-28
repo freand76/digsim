@@ -53,6 +53,12 @@ cache-keys = [
   { file = "src/**/*.png" },
 ]
 
+[tool.pytest.ini_options]
+markers = [
+  # The minimal scope: run on the other platforms, all of the tests run on Linux
+  "sanity: also run on Windows, macOS and Linux arm64 (pytest -m sanity)",
+]
+
 [tool.mypy]
 python_version = "3.11"
 files = ["src"]

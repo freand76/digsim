@@ -5,7 +5,13 @@
 
 import os
 
+import pytest
+
 from digsim.app._recent_files import MAX_RECENT_FILES, with_recent, without_file
+
+
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
 
 
 def test_with_recent():

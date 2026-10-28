@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pystest module to test functionality of yosys gates"""
@@ -28,6 +28,10 @@ from digsim.circuit.components._yosys_atoms import (
     _XNOR_,
     _XOR_,
 )
+
+
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
 
 
 @pytest.mark.parametrize(

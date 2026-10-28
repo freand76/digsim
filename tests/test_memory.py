@@ -10,6 +10,10 @@ from digsim.circuit.components import RAM, ROM, MemStdOut
 from digsim.circuit.components.atoms import ComponentException
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 def _clock(circuit, memory):
     memory.clk.value = 1
     circuit.run(ms=1)

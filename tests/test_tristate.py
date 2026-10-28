@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pytest module to test wires with several drivers, tristate outputs and high impedance ("Z")"""
@@ -22,6 +22,10 @@ from digsim.circuit.components import (
 from digsim.circuit.components.atoms._port import resolve
 from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
+
+
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
 
 
 @pytest.mark.parametrize(

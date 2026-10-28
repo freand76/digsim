@@ -12,6 +12,10 @@ from digsim.circuit import Circuit
 from digsim.circuit.components import NAND, NOT, Clock, Counter, OnOffSwitch, StaticValue
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 def test_step_clock_counts_once():
     """Each step is one rising edge: a counter counts one, and its output has settled"""
     circuit = Circuit()

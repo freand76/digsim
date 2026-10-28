@@ -14,6 +14,10 @@ from digsim.circuit.components._yosys_component import YosysComponentException
 from digsim.utils import YosysNetlist
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 COUNTER = Path(__file__).parent.parent / "examples" / "yosys_counter" / "counter.v"
 FSM_PARAMETERS = Path(__file__).parent / "verilog" / "fsm_parameters.v"
 GLOBAL_CLOCK = Path(__file__).parent / "verilog" / "global_clock.v"

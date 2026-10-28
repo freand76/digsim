@@ -16,6 +16,10 @@ from digsim.circuit.components import YosysComponent, YosysVariant
 from digsim.synth import Synthesis
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 VERILOG = Path(__file__).parent / "verilog"
 GATES, FUNCTIONAL = YosysVariant(False), YosysVariant(True)
 

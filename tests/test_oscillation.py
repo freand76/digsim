@@ -5,8 +5,14 @@
 
 import time
 
+import pytest
+
 from digsim.circuit import Circuit
 from digsim.circuit.components import AND, NAND, NOT, Clock, OnOffSwitch
+
+
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
 
 
 def _ring(circuit):

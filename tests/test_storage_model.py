@@ -23,6 +23,10 @@ from digsim.storage_model import (
 from digsim.storage_model._circuit import JSON_WIDTH, json_text
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 def test_model_dataclass_keeps_shortcuts():
     """The model state (also used for undo) holds the shortcuts of a loaded file"""
     app_file_dc = AppFileDataClass(circuit=CircuitDataClass(), shortcuts={"1": "button"})

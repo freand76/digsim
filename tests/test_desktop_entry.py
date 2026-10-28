@@ -14,6 +14,10 @@ import pytest
 from digsim.app import _desktop_entry as cli
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 ICON = b"\x89PNG fake icon"
 
 

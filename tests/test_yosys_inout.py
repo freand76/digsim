@@ -23,6 +23,10 @@ from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 VERILOG = Path(__file__).parent / "verilog" / "inout.v"
 ROOT = Path(__file__).parents[1]
 BUS_REGISTER = ROOT / "examples" / "yosys_inout" / "bus_register.v"

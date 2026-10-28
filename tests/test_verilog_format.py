@@ -12,6 +12,10 @@ from digsim.verilog import VerilogFormatError, VerilogFormatter
 from digsim.verilog.__main__ import main
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 ROOT = Path(__file__).parent.parent
 VERILOG_FILES = sorted(
     [*ROOT.glob("examples/**/*.v"), *ROOT.glob("examples/**/*.sv"), *ROOT.glob("tests/**/*.v")]

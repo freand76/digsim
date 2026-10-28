@@ -1,10 +1,16 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pytest module to test the flip-flop components"""
 
+import pytest
+
 from digsim.circuit import Circuit
 from digsim.circuit.components import SRFF, ClockedJKFF, ClockedSRFF, ClockedTFF
+
+
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
 
 
 def _clock(circuit, flip_flop):

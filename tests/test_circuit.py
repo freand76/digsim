@@ -13,6 +13,10 @@ from digsim.circuit.components.atoms import DigsimException
 from digsim.storage_model import CircuitDataClass, ComponentDataClass
 
 
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
+
+
 def test_delete_component():
     """A deleted component is removed from the circuit and disconnected"""
     circuit = Circuit()

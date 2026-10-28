@@ -1,11 +1,17 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pytest module to test the VCD (waves) output"""
 
+import pytest
+
 from digsim.circuit import Circuit
 from digsim.circuit.components import Led, PushButton, Wires2Bus
 from digsim.circuit.components._yosys_atoms import _NOT_
+
+
+# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
+pytestmark = pytest.mark.sanity
 
 
 def _changes(vcd_text, scope, name):
