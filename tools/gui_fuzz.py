@@ -433,7 +433,7 @@ class GuiFuzzer:
     def snapshot(self) -> Any:
         """What undo must restore: the components, connections, wires' lines and paths"""
         gui = self.model.objects.components.get_gui_dict()
-        components = {name: (pos.x, pos.y, pos.rotation) for name, pos in gui.items()}
+        components = {name: (pos.x, pos.y, pos.rotation, pos.flipped) for name, pos in gui.items()}
         connections = sorted(
             (port_key(src_port), port_key(dst_port)) for src_port, dst_port in self.connections()
         )
@@ -1990,6 +1990,30 @@ class GuiFuzzer:
                     self.check_turned_ends(wire)
         return f"rotate {obj.component.name()} to {obj.rotation_angle}"
 
+    def flip_component(self) -> str:
+        """Mirror a component, like Flip Horizontal or Flip Vertical in the Edit menu"""
+        objects = [obj for obj in self.component_objects() if obj.ROTATABLE]
+        if not objects:
+            raise Skip("no component that can be mirrored")
+        obj = self.rng.choice(objects)
+        horizontal = self.rng.random() < 0.5
+        before = (obj.rotation_angle, obj.flipped)
+        center = obj.mapRectToScene(obj.rect()).center()
+        self.model.objects.components.flip([obj], horizontal)
+        self.spin()
+        expected = (((180 if horizontal else 0) - before[0]) % 360, not before[1])
+        check((obj.rotation_angle, obj.flipped) == expected, f"{obj.component.name()} flip")
+        check(obj.mapRectToScene(obj.rect()).center() == center, "moved when mirrored")
+        wires = self.model.objects.wires
+        for wire in wires.drawn():
+            src_port, dst_port = wire
+            at_start = wires.branch(wire) is None and src_port.parent() is obj.component
+            at_end = wires.join(wire) is None and dst_port.parent() is obj.component
+            if (at_start or at_end) and wires._turned_ends(wire) is not None:
+                self.check_turned_ends(wire)
+        way = "horizontally" if horizontal else "vertically"
+        return f"flip {obj.component.name()} {way}"
+
     def undo(self) -> str:
         if not self.history:
             raise Skip("nothing to undo")
@@ -2045,7 +2069,7 @@ class GuiFuzzer:
         line. Not the drawn wires, a joined wire can be a branch after loading.
         """
         gui = self.model.objects.components.get_gui_dict()
-        components = {name: (pos.x, pos.y, pos.rotation) for name, pos in gui.items()}
+        components = {name: (pos.x, pos.y, pos.rotation, pos.flipped) for name, pos in gui.items()}
         connections = sorted(
             (port_key(src_port), port_key(dst_port)) for src_port, dst_port in self.connections()
         )
@@ -2286,6 +2310,7 @@ class GuiFuzzer:
         ("edit_segment", 3),
         ("move_component", 2),
         ("rotate_component", 2),
+        ("flip_component", 2),
         ("copy_paste", 2),
         ("undo", 3),
         ("undo_while_dragging", 1),

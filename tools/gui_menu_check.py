@@ -217,6 +217,33 @@ def test_rotate(gui, tmp_path):
     assert "rotation" not in saved["gui"]["Led"]
 
 
+def test_flip(gui, tmp_path):
+    """Flip mirrors the selected symbols on the screen, saved in the file"""
+    mux = gui.add("MUX")
+    mux.setSelected(True)
+    spin()
+    center = mux.mapRectToScene(mux.rect()).center()
+    select = mux.get_port_item(mux.component.S).portPos()
+    assert select.y() > center.y()
+    gui.trigger("Edit", "Flip Vertical")
+    # The select input on top, on the left side still
+    select = mux.get_port_item(mux.component.S).portPos()
+    assert select.y() < center.y() and select.x() < center.x()
+    assert (mux.rotation_angle, mux.flipped) == (0, True)
+    gui.trigger("Edit", "Flip Horizontal")
+    # Facing left: the output on the left side
+    output = mux.get_port_item(mux.component.Y).portPos()
+    assert output.x() < center.x()
+    assert (mux.rotation_angle, mux.flipped) == (180, False)
+    gui.trigger("Edit", "Undo")
+    (mux,) = gui.model.objects.components.get_object_list()
+    assert (mux.rotation_angle, mux.flipped) == (0, True)
+    gui.path = str(tmp_path / "flipped.circuit")
+    gui.trigger("File", "Save")
+    saved = json.loads((tmp_path / "flipped.circuit").read_text())
+    assert saved["gui"]["MUX"]["flipped"] is True
+
+
 def test_simulation(gui):
     """Start turns into Stop while the simulation runs, and the file actions are off"""
     gui.add("Clock")

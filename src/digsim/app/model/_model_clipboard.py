@@ -123,6 +123,7 @@ class ModelClipboard:
                     position.y + dy,
                     top + position.z,
                     position.rotation,
+                    position.flipped,
                 )
             )
         if created:

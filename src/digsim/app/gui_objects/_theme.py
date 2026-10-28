@@ -225,6 +225,24 @@ def paint_text(
     painter.setPen(color)
     painter.setFont(font(size, bold))
     transform = painter.worldTransform()
+    if transform.m11() * transform.m22() - transform.m12() * transform.m21() < 0:
+        # In a mirrored component: mirrored back in its rect, not in mirror writing
+        painter.save()
+        center = rect.center()
+        painter.translate(center)
+        painter.scale(1, -1)
+        painter.translate(-center)
+        flip = {
+            Qt.AlignmentFlag.AlignTop: Qt.AlignmentFlag.AlignBottom,
+            Qt.AlignmentFlag.AlignBottom: Qt.AlignmentFlag.AlignTop,
+        }
+        for flag, other in flip.items():
+            if align & flag:
+                align = (align & ~flag) | other
+                break
+        paint_text(painter, rect, text, size, color, align, bold)
+        painter.restore()
+        return
     # The quarters the painter is rotated clockwise
     quarters = round(math.degrees(math.atan2(transform.m12(), transform.m11())) / 90) % 4
     if quarters not in (1, 2):

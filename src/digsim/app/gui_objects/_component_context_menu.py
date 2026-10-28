@@ -44,6 +44,14 @@ class ComponentContextMenu(QMenu):
             rotateAction.setShortcut(QKeySequence("Ctrl+R"))
             self.addAction(rotateAction)
             rotateAction.triggered.connect(self._rotate)
+            for text, shortcut, horizontal in (
+                ("Flip Horizontal", "Ctrl+Shift+H", True),
+                ("Flip Vertical", "Ctrl+Shift+V", False),
+            ):
+                flipAction = QAction(text, self)
+                flipAction.setShortcut(QKeySequence(shortcut))
+                self.addAction(flipAction)
+                flipAction.triggered.connect(lambda _=False, h=horizontal: self._flip(h))
         self.addSeparator()
         # Bring to front / Send to back
         raiseAction = QAction("Bring to front", self)
@@ -74,6 +82,9 @@ class ComponentContextMenu(QMenu):
 
     def _raise(self) -> None:
         self._app_model.objects.components.bring_to_front(self._component_object)
+
+    def _flip(self, horizontal: bool) -> None:
+        self._app_model.objects.components.flip([self._component_object], horizontal)
 
     def _rotate(self) -> None:
         self._app_model.objects.components.rotate([self._component_object])

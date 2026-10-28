@@ -152,14 +152,18 @@ def test_rotation_saved_only_for_rotated_components(tmp_path):
     """Files of circuits without rotated components stay as they were"""
     app_file_dc = AppFileDataClass(
         circuit=CircuitDataClass(name="c"),
-        gui={"a": GuiPositionDataClass(x=10, y=20), "b": GuiPositionDataClass(rotation=90)},
+        gui={
+            "a": GuiPositionDataClass(x=10, y=20),
+            "b": GuiPositionDataClass(rotation=90, flipped=True),
+        },
     )
     app_file_dc.save(tmp_path / "c.circuit")
     gui = json.loads((tmp_path / "c.circuit").read_text())["gui"]
-    assert "rotation" not in gui["a"]
-    assert gui["b"]["rotation"] == 90
+    assert "rotation" not in gui["a"] and "flipped" not in gui["a"]
+    assert (gui["b"]["rotation"], gui["b"]["flipped"]) == (90, True)
     loaded = AppFileDataClass.load(tmp_path / "c.circuit")
     assert (loaded.gui["a"].rotation, loaded.gui["b"].rotation) == (0, 90)
+    assert (loaded.gui["a"].flipped, loaded.gui["b"].flipped) == (False, True)
 
 
 def test_line_connects_its_ports():

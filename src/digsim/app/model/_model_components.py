@@ -136,6 +136,23 @@ class ModelComponents:
         self._app_model.sig_update_wires.emit()
         self._app_model.sig_repaint.emit()
 
+    def flip(self, component_objects: list[ComponentObject], horizontal: bool) -> None:
+        """
+        Mirror components on the screen, each around its middle: left to right
+        ('horizontal'), or top to bottom (those that can be rotated). The wires to them get
+        the automatic path.
+        """
+        rotatable = [obj for obj in component_objects if obj.ROTATABLE]
+        if not rotatable:
+            return
+        self._app_model.objects.push_undo_state()
+        for component_object in rotatable:
+            component_object.flip(horizontal)
+        self._app_model.objects.wires.reroute({obj.component for obj in rotatable})
+        self._app_model.model_changed()
+        self._app_model.sig_update_wires.emit()
+        self._app_model.sig_repaint.emit()
+
     def bring_to_front(self, component_object: ComponentObject) -> None:
         """Make the component object the highest in the stack"""
         self._app_model.objects.push_undo_state()
@@ -481,12 +498,19 @@ class ModelComponents:
         self._app_model.sig_delete_component.emit(component_object)
 
     def add_placed_object(
-        self, component: Component, xpos: float, ypos: float, zlevel: float, rotation: int = 0
+        self,
+        component: Component,
+        xpos: float,
+        ypos: float,
+        zlevel: float,
+        rotation: int = 0,
+        flipped: bool = False,
     ) -> ComponentObject:
         """Add the object of a component that was added to the circuit, at a position"""
         component_object = self._add_object(component, xpos, ypos)
         component_object.zlevel = zlevel
         component_object.rotation_angle = rotation
+        component_object.flipped = flipped
         return component_object
 
     def add_gui_positions(self, gui_dc_dict: dict[str, GuiPositionDataClass]) -> None:
@@ -496,6 +520,7 @@ class ModelComponents:
             component_object = self._add_object(comp, gui_dc.x, gui_dc.y)
             component_object.zlevel = gui_dc.z
             component_object.rotation_angle = gui_dc.rotation
+            component_object.flipped = gui_dc.flipped
 
     def get_gui_dict(self) -> dict[str, GuiPositionDataClass]:
         """Return gui dict from component objects"""

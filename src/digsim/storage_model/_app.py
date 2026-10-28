@@ -28,13 +28,15 @@ from ._circuit import (
 class GuiPositionDataClass:
     """
     Where a component is in the GUI: the top left corner of it before it is rotated, its
-    place in the stack (z), and its rotation clockwise, 0, 90, 180 or 270 degrees
+    place in the stack (z), its rotation clockwise, 0, 90, 180 or 270 degrees, and if it is
+    mirrored top to bottom before the rotation
     """
 
     x: int = 100
     y: int = 100
     z: int = 0
     rotation: int = 0
+    flipped: bool = False
 
 
 @dataclass
@@ -92,10 +94,11 @@ class AppFileDataClass:
             del data["wires"]
         if not self.circuit.wires:
             del data["circuit"]["wires"]
-        # Only the rotated components have a rotation in the file
+        # Only the rotated and mirrored components have a rotation in the file
         for position in data["gui"].values():
-            if not position["rotation"]:
-                del position["rotation"]
+            for key in ("rotation", "flipped"):
+                if not position[key]:
+                    del position[key]
         write_json_file(filename, data)
 
 

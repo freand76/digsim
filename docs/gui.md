@@ -25,7 +25,7 @@ The window has a menu bar and three areas:
 
 - **Menu bar** (top): **File** (New Tab, New, Open, Open Recent, Save, Save As, Export
   Image, Close Tab, Quit), **Edit** (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete,
-  Rotate, Find Component, Settings), **View** (zoom in and out, Zoom to Fit: the whole
+  Rotate, Flip Horizontal, Flip Vertical, Find Component, Settings), **View** (zoom in and out, Zoom to Fit: the whole
   circuit in the window, and the [settings pane](#settings-pane)), **Simulation** (Start, Single Step, Step Clock, Reset)
   and **Help** (the documentation, and the version of DigSim). Save saves the circuit in
   the file it was opened from or saved to, the window title shows that file, with a `*`
@@ -67,6 +67,7 @@ Right-click a component to open its context menu:
 | Menu item | Action |
 | --- | --- |
 | Rotate | Turn the component a quarter clockwise (gates and the other symbols, see [Rotating components](#rotating-components)) |
+| Flip Horizontal / Flip Vertical | Mirror the component, left to right or top to bottom |
 | Bring to front / Send to back | Change the drawing order of overlapping components |
 | Delete | Remove the component and its wires |
 | Settings | Show the component's options in the [settings pane](#settings-pane) |
@@ -100,7 +101,12 @@ decoder and the demultiplexer, Bus2Wires, Wires2Bus and the Splitter) can be rot
 **Rotate** in the context menu, or **Ctrl + R** for the selected components, turns each a
 quarter clockwise around its middle. The wires to a rotated component get a new route,
 that leaves and reaches its ports in the directions they face, up or down too. The text
-of a rotated symbol reads from below or from the right. Components with a body, like the
+of a rotated symbol reads from below or from the right.
+
+**Flip Horizontal** (**Ctrl + Shift + H**) mirrors a symbol left to right, and **Flip
+Vertical** (**Ctrl + Shift + V**) top to bottom: a multiplexer with its select input on
+top, or the bits of a bus splitter in the other order. With the rotations, a symbol can
+face eight ways. Its text is not mirrored. Components with a body, like the
 switches, the LEDs and the ICs, keep their direction.
 
 ## Wires
@@ -300,6 +306,7 @@ paste is one step to undo.
 | **Ctrl + C** / **Ctrl + X** / **Ctrl + V** | Copy / cut / paste the selected components |
 | **Ctrl + D** | Duplicate the selected components |
 | **Ctrl + R** | Rotate the selected components a quarter clockwise |
+| **Ctrl + Shift + H** / **Ctrl + Shift + V** | Flip the selected components horizontally / vertically |
 | **Ctrl + 0** / **Home** | Zoom to fit the whole circuit |
 | **F4** | Show / hide the settings pane |
 | **Del** | Delete the selected components and wires |

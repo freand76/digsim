@@ -79,6 +79,8 @@ class ComponentObject(QGraphicsRectItem):
         self._save_pos: QPointF | QPoint = self.rect().topLeft()
         # Clockwise, around the middle of the rect: 0, 90, 180 or 270 degrees
         self._rotation = 0
+        # Mirrored top to bottom, before the rotation (see flip())
+        self._flipped = False
 
         # Create ports
         self.create_ports()
@@ -242,13 +244,36 @@ class ComponentObject(QGraphicsRectItem):
         self._rotation = rotation % 360 if self.ROTATABLE else 0
         self._apply_rotation()
 
+    @property
+    def flipped(self) -> bool:
+        """
+        Mirrored top to bottom, before it is rotated: the ports stay on their sides, in the
+        other order. With the rotations, a component can face 8 ways.
+        """
+        return self._flipped
+
+    @flipped.setter
+    def flipped(self, flipped: bool) -> None:
+        self._flipped = flipped and self.ROTATABLE
+        self._apply_rotation()
+
+    def flip(self, horizontal: bool) -> None:
+        """
+        Mirror the component on the screen, around its middle: left to right
+        ('horizontal'), or top to bottom
+        """
+        # A mirror on the screen is a mirror of the component, rotated the other way
+        self._rotation = ((180 if horizontal else 0) - self._rotation) % 360
+        self.flipped = not self._flipped
+
     def _apply_rotation(self) -> None:
-        """Rotate the component and its ports around the middle of its rect"""
+        """Rotate (and mirror) the component and its ports around the middle of its rect"""
         center = self.rect().center()
         self.setTransform(
             QTransform()
             .translate(center.x(), center.y())
             .rotate(self._rotation)
+            .scale(1, -1 if self._flipped else 1)
             .translate(-center.x(), -center.y())
         )
 
@@ -460,4 +485,5 @@ class ComponentObject(QGraphicsRectItem):
             y=int(self._save_pos.y()),
             z=int(self.zlevel),
             rotation=self._rotation,
+            flipped=self._flipped,
         )
