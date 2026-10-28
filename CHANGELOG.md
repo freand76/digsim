@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - GUI: the VCD file field grows with the window, up to a width, and shows the path of the file, shortened in the middle when it is long
  - GUI: F11 is Single Step
  - GUI: F5 starts and stops the simulation, like Space
  - qtawesome is no longer a dependency, the icons are Qt's own

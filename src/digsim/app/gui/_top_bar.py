@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import (
     QCheckBox,
     QFileDialog,
@@ -16,6 +17,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QSizePolicy,
     QStyle,
     QWidget,
 )
@@ -114,7 +116,7 @@ class SimTimeWidget(QFrame):
         sim_time_desc = QLabel("Simulation time:")
         sim_time_desc.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         layout.addWidget(sim_time_desc)
-        self._sim_time = QLabel("0 s")
+        self._sim_time = QLabel("0.00 s")
         self._sim_time.setMinimumWidth(60)
         self._sim_time.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         layout.addWidget(self._sim_time)
@@ -136,27 +138,53 @@ class SimTimeWidget(QFrame):
 
 class VcdFilenameWidget(QFrame):
     """
-    The widget showing the vcd filename
+    The widget showing the path of the VCD file: it grows with the window, up to a
+    width, and a path that doesn't fit is shortened in the middle (the tooltip has it all)
     """
+
+    MIN_WIDTH = 200
+    MAX_WIDTH = 480
+    PLACEHOLDER = "<vcd file>"
 
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setFrameShadow(QFrame.Shadow.Sunken)
+        self.setMinimumWidth(self.MIN_WIDTH)
+        self.setMaximumWidth(self.MAX_WIDTH)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         layout = QHBoxLayout(self)
         self.setLayout(layout)
         layout.setContentsMargins(5, 1, 5, 1)
         layout.setSpacing(5)
-        self._vcd_filename = QLabel("<vcd file>")
-        self._vcd_filename.setAlignment(
-            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter
-        )
-        self._vcd_filename.setMinimumWidth(200)
+        self._path = ""
+        self._vcd_filename = QLabel(self)
+        self._vcd_filename.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        # The label follows the frame, its text doesn't set the width
+        self._vcd_filename.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         layout.addWidget(self._vcd_filename)
+        self._show()
 
     def set_filename(self, filename: str) -> None:
-        """Set the filename shown"""
-        self._vcd_filename.setText(filename)
+        """Set the path shown"""
+        self._path = filename
+        self.setToolTip(filename)
+        self._show()
+
+    def _show(self) -> None:
+        if not self._path:
+            self._vcd_filename.setText(self.PLACEHOLDER)
+            return
+        self._vcd_filename.setText(
+            self._vcd_filename.fontMetrics().elidedText(
+                self._path, Qt.TextElideMode.ElideMiddle, self._vcd_filename.width()
+            )
+        )
+
+    def resizeEvent(self, event: QResizeEvent) -> None:
+        """QT event callback function: the path is shortened to the new width"""
+        super().resizeEvent(event)
+        self._show()
 
 
 class VcdControlWidget(QFrame):
@@ -179,9 +207,13 @@ class VcdControlWidget(QFrame):
         self._vcd_path.clicked.connect(self._change_vcd_file)
         self._vcd_path.setToolTip("Select VCD output")
         self._filename_widget = VcdFilenameWidget(self)
+        # Only the file name grows, up to its widest, then the space after it
+        for fixed in (self._enable_vcd, self._vcd_path):
+            fixed.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         layout.addWidget(self._enable_vcd)
         layout.addWidget(self._vcd_path)
-        layout.addWidget(self._filename_widget)
+        layout.addWidget(self._filename_widget, 1)
+        layout.addStretch(0)
         self._enable_buttons(False)
         self._app_model.sig_control_notify.connect(self._control_notify)
 
@@ -208,8 +240,7 @@ class VcdControlWidget(QFrame):
             QTimer.singleShot(0, self._disable_vcd_selection)
             return
         self._vcd_filename = filename
-        display_filename = Path(filename).name
-        self._filename_widget.set_filename(display_filename)
+        self._filename_widget.set_filename(str(Path(filename).resolve()))
         self._enable_buttons(True)
 
     def _open_filedialog(self) -> str | None:
@@ -258,5 +289,7 @@ class TopBar(QFrame):
         self.setLayout(layout)
         layout.addWidget(SimControlWidget(app_model, self))
         layout.addWidget(SimTimeWidget(app_model, self))
-        layout.addStretch(1)
-        layout.addWidget(VcdControlWidget(app_model, self))
+        layout.addSpacing(15)
+        # The VCD file grows with the window (up to its widest), then the space at the end
+        layout.addWidget(VcdControlWidget(app_model, self), 1)
+        layout.addStretch(0)
