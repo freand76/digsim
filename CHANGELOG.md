@@ -1,6 +1,7 @@
 # CHANGELOG
 
-## vx.x.x
+## v1.9.0
+ - A native engine: with digsim-native installed (a dependency on Linux x86_64 and arm64, Windows x64 and macOS), the gates of Yosys components and ICs are simulated in Rust, with the same results, about 3 to 4 times faster for the 6502 example. DIGSIM_ENGINE=python simulates in Python
  - GUI: Simulate in hidden tabs, in the application settings (off by default): the simulations go on in the tabs that aren't shown, without sound, and a tab that simulates has a ▶ in front of its name
  - The GUI example circuits are in `circuits/`, a folder each with the files they use (the Verilog of a Yosys component, the circuits of a subcircuit), instead of `example_circuits/` with paths into `examples/`
  - GUI: VCD Output and VCD File... in the Simulation menu, like the VCD checkbox and file button
