@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - GUI: a dark theme, View > Theme: System (the default, as the system's color scheme), Light or Dark
  - GUI: a hex editor for the contents of a RAM or ROM, Edit Contents... in its context menu. Save writes the words in its file, text or binary, and the memory reads it again. A RAM without a file asks for one.
  - GUI: the hex editor of a RAM shows the RAM as it is in the simulation, while it is stopped, with the words it wrote marked. Save As... dumps them to a file, Use as Contents makes them the contents of its file.
  - RAM and ROM: reload_contents() reads the file again after it changed

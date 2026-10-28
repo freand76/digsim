@@ -287,6 +287,10 @@ class MenuBar(QMenuBar):
 
         return call
 
+    def add_view_menu(self, title: str) -> QMenu:
+        """A submenu of the View menu"""
+        return self._view_menu.addMenu(title)
+
     def add_pane_action(self, action: QAction) -> None:
         """An action that shows or hides a pane of the window, in the View menu"""
         self._view_menu.addAction(action)

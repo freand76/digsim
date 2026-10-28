@@ -25,11 +25,12 @@ The window has a menu bar and three areas:
 
 - **Menu bar** (top): **File** (New Tab, New, Open, Open Recent, Save, Save As, Export
   Image, Close Tab, Quit), **Edit** (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete,
-  Rotate, Flip Horizontal, Flip Vertical, Find Component, Settings), **View** (zoom in and out, Zoom to Fit: the whole
-  circuit in the window, and the [settings pane](#settings-pane)), **Simulation** (Start, Single Step, Step Clock, Reset)
-  and **Help** (the documentation, and the version of DigSim). Save saves the circuit in
-  the file it was opened from or saved to, the window title shows that file, with a `*`
-  when the circuit has changed since.
+  Rotate, Flip Horizontal, Flip Vertical, Find Component, Settings), **View** (zoom in and
+  out, Zoom to Fit: the whole circuit in the window, the
+  [settings pane](#settings-pane) and the [theme](#dark-theme)), **Simulation** (Start,
+  Single Step, Step Clock, Reset) and **Help** (the documentation, and the version of
+  DigSim). Save saves the circuit in the file it was opened from or saved to, the window
+  title shows that file, with a `*` when the circuit has changed since.
 - **Component selection** (blue, left): all available components, grouped by type, with
   a search field above them. Press **Ctrl + K** (or **Ctrl + F**, **Edit > Find
   Component**) and type a few letters of a component, like `led`, `flp` or `mem`: the
@@ -91,7 +92,14 @@ again with them, where it was and with the same name, and the wires to the ports
 still has stay. The wires of a port that is gone, or that has another width now, are
 removed, and a message lists them.
 
-**View > Settings Pane** (**F4**) hides and shows the pane, and DigSim remembers it. The
+**View > Settings Pane** (**F4**) hides and shows the pane, and DigSim remembers it.
+
+### Dark theme
+
+**View > Theme** chooses **Light** or **Dark**, or **System** (the default): light or dark
+as the system's color scheme is, also when it changes while DigSim runs. The theme is for
+the whole application, the circuit and the widgets, and DigSim remembers it. The images
+in this documentation are in the light theme. The
 pane is empty while the simulation runs, and when no component or several are selected.
 
 ### Rotating components

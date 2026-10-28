@@ -633,3 +633,28 @@ def test_hex_editor_of_a_rom_has_no_simulation_view(gui, tmp_path):
     path.write_text("01\n", encoding="utf-8")
     rom = gui.add("ROM", path=str(path), address_width=4)
     assert _hex_editor(gui, rom).now_model is None
+
+
+def test_theme(gui):
+    """View > Theme: dark colors for the widgets and the circuit, and back, remembered"""
+    from PySide6.QtGui import QPalette
+
+    from digsim.app.gui_objects import _theme as theme
+
+    area = gui.window.findChild(CircuitArea)
+    light_background = theme.BACKGROUND.name()
+    gui.window.set_theme("dark")
+    spin()
+    assert theme.is_dark()
+    assert theme.BACKGROUND.lightness() < 64
+    assert area.backgroundBrush().color() == theme.BACKGROUND
+    window = QApplication.palette().color(QPalette.ColorRole.Window)
+    assert window.lightness() < 128
+    assert MenuBar.settings().value("window/theme") == "dark"
+    gui.window.set_theme("light")
+    spin()
+    assert not theme.is_dark()
+    assert theme.BACKGROUND.name() == light_background
+    assert area.backgroundBrush().color() == theme.BACKGROUND
+    assert QApplication.palette().color(QPalette.ColorRole.Window).lightness() >= 128
+    gui.window.set_theme("system")

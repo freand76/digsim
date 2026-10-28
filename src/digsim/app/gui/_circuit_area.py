@@ -1454,23 +1454,30 @@ class _CircuitAreaScene(QGraphicsScene):
         self.addItem(self._new_wire_item)
         # Add selection rect
         self._selection_rect_item = QGraphicsRectItem()
-        self._selection_rect_item.setPen(Qt.PenStyle.DashLine)
-        self._selection_rect_item.setBrush(Qt.BrushStyle.Dense7Pattern)
         self.addItem(self._selection_rect_item)
         # A ring around the selected point, on top of everything
         radius = WirePartGraphicsItem.JUNCTION_RADIUS + 4
         self._point_marker = QGraphicsEllipseItem(-radius, -radius, 2 * radius, 2 * radius)
-        self._point_marker.setPen(QPen(theme.INK, 2))
         self._point_marker.setZValue(1_000_000)
         self._point_marker.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
         self._point_marker.setVisible(False)
         self.addItem(self._point_marker)
         self._point, self._point_stage = None, 0
+        self.refresh_theme()
         # Add component
         for component_object in self._app_model.objects.components.get_object_list():
             self.add_scene_component(component_object)
         # Update (add) wires
         self._update_wires()
+
+    def refresh_theme(self) -> None:
+        """The pens made from the colors of the theme, after it changed"""
+        pen = QPen(theme.INK)
+        pen.setStyle(Qt.PenStyle.DashLine)
+        self._selection_rect_item.setPen(pen)
+        self._selection_rect_item.setBrush(QBrush(theme.INK, Qt.BrushStyle.Dense7Pattern))
+        self._point_marker.setPen(QPen(theme.INK, 2))
+        self.update()
 
 
 class CircuitArea(QGraphicsView):
@@ -1490,7 +1497,6 @@ class CircuitArea(QGraphicsView):
         self._scene = _CircuitAreaScene(app_model, self)
         self._wheel_zoom_mode = False
         self.setScene(self._scene)
-        self.setBackgroundBrush(QBrush(theme.BACKGROUND))
         self.setAcceptDrops(True)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
         self._mouse_pos = QPoint(0, 0)
@@ -1499,13 +1505,21 @@ class CircuitArea(QGraphicsView):
         self._paste_count = 0
         # A short message over the circuit area, see show_message()
         self._message = QLabel(self.viewport())
-        self._message.setStyleSheet(
-            f"background: {theme.INK.name()}; color: white; border-radius: 6px; padding: 6px 12px;"
-        )
         self._message.hide()
+        self.refresh_theme()
         self._message_timer = QTimer(self)
         self._message_timer.setSingleShot(True)
         self._message_timer.timeout.connect(self._message.hide)
+
+    def refresh_theme(self) -> None:
+        """The background and the message in the colors of the theme, after it changed"""
+        self.setBackgroundBrush(QBrush(theme.BACKGROUND))
+        self._message.setStyleSheet(
+            f"background: {theme.INK.name()}; color: {theme.BODY.name()}; "
+            "border-radius: 6px; padding: 6px 12px;"
+        )
+        self._scene.refresh_theme()
+        self.viewport().update()
 
     def drawBackground(self, painter: QPainter, rect: QRectF | QRect) -> None:
         """QT function: the background, with a dot every GRID_STEP pixels"""

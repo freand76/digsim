@@ -52,6 +52,47 @@ LED_OFF = QColor("#b4bcc4")
 ON = QColor("#27a55a")
 OFF = QColor("#c3cad1")
 
+# The colors above in the dark theme, the ones that aren't here stay as they are
+_DARK = {
+    "INK": "#d3dae1",
+    "MUTED": "#8b97a3",
+    "BODY": "#2a3037",
+    "ACCENT": "#4d94ff",
+    "DISPLAY": "#15191d",
+    "SCREEN": "#101317",
+    "BACKGROUND": "#1b1f24",
+    "GRID": "#323942",
+    "NOTE": "#4d4626",
+    "WIRE": "#7a858f",
+    "WIRE_X": "#ff6166",
+    "WIRE_Z": "#5b92ff",
+    "LED_OFF": "#59616a",
+    "ON": "#2fbf6a",
+    "OFF": "#4b535c",
+}
+# The colors of the light theme, as they are above
+_LIGHT = {name: globals()[name].name() for name in _DARK}
+_dark = False
+
+
+def set_dark(dark: bool) -> None:
+    """
+    The dark theme, or the light one. The colors change where they are (the QColor
+    objects), so everything that is painted after has them, also the default arguments
+    of the functions here. What was made from them before, like a brush, has to be made
+    again.
+    """
+    global _dark
+    _dark = dark
+    for name, color in (_DARK if dark else _LIGHT).items():
+        globals()[name].setRgba(QColor(color).rgba())
+
+
+def is_dark() -> bool:
+    """True with the dark theme"""
+    return _dark
+
+
 LINE_WIDTH = 1.5
 SYMBOL_WIDTH = 2.0
 CORNER = 4

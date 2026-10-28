@@ -166,7 +166,10 @@ class _SimulationWordsModel(_WordsModel):
         """QT function"""
         if role == Qt.ItemDataRole.BackgroundRole and self._is_word(index):
             if self.is_changed(self.address(index)):
-                return QColor(theme.ACCENT).lighter(145)
+                # See-through, for the light and the dark theme
+                color = QColor(theme.ACCENT)
+                color.setAlpha(80)
+                return color
             return None
         if role == Qt.ItemDataRole.ToolTipRole and self._is_word(index):
             address = self.address(index)

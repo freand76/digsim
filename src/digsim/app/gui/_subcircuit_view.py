@@ -12,7 +12,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QColor, QPainter, QPen, QResizeEvent, QWheelEvent
+from PySide6.QtGui import QBrush, QColor, QPainter, QPen, QResizeEvent, QWheelEvent
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsScene,
@@ -313,10 +313,15 @@ class SubCircuitView(QGraphicsView):
 
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
-        self.setBackgroundBrush(theme.BACKGROUND)
+        self.refresh_theme()
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
         # It fits the parts when it gets a size, until the wheel zooms
         self._zoomed = False
+
+    def refresh_theme(self) -> None:
+        """The background in the color of the theme, after it changed"""
+        self.setBackgroundBrush(QBrush(theme.BACKGROUND))
+        self.viewport().update()
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         """QT function"""

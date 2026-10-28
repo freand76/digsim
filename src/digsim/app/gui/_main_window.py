@@ -9,7 +9,14 @@ from functools import partial
 from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent, QKeyEvent, QKeySequence, QShowEvent
+from PySide6.QtGui import (
+    QActionGroup,
+    QCloseEvent,
+    QGuiApplication,
+    QKeyEvent,
+    QKeySequence,
+    QShowEvent,
+)
 from PySide6.QtWidgets import (
     QDockWidget,
     QHBoxLayout,
@@ -29,11 +36,12 @@ from digsim.app.settings._settings_pane import ComponentSettingsPane
 from digsim.circuit.components import SubCircuit
 from digsim.circuit.components._subcircuit import files_used
 
+from ._appearance import THEMES, apply_theme
 from ._circuit_area import CircuitArea
 from ._component_search import ComponentSearch
 from ._component_selection import ComponentSelection
 from ._menu_bar import MenuBar
-from ._subcircuit_view import ViewTab
+from ._subcircuit_view import SubCircuitView, ViewTab
 from ._top_bar import TopBar
 from ._utils import are_you_sure_destroy_circuit
 from ._warning_dialog import WarningDialog
@@ -41,6 +49,8 @@ from ._warning_dialog import WarningDialog
 
 # The setting that remembers if the settings pane is shown
 SETTINGS_PANE_KEY = "window/settings_pane"
+# The setting with the theme, see THEMES
+THEME_KEY = "window/theme"
 
 
 class CircuitEditor(QWidget):
@@ -172,6 +182,7 @@ class MainWindow(QMainWindow):
         self._tabs.currentChanged.connect(self._tab_changed)
         self.setCentralWidget(self._tabs)
         self._add_settings_pane()
+        self._add_theme_menu()
         # The tab that was shown last, its simulation stops when another one is shown
         self._shown_tab: CircuitTab | ViewTab | None = None
         self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
@@ -213,6 +224,49 @@ class MainWindow(QMainWindow):
         action.triggered.connect(
             lambda visible: MenuBar.settings().setValue(SETTINGS_PANE_KEY, visible)
         )
+
+    def _add_theme_menu(self) -> None:
+        """
+        View > Theme: as the system has it (the default), light or dark. It is remembered,
+        and used from the start: the circuit areas get its colors when they are made.
+        """
+        choice = str(MenuBar.settings().value(THEME_KEY, "system"))
+        if choice not in THEMES:
+            choice = "system"
+        self._theme = choice
+        apply_theme(choice)
+        menu = self._menu_bar.add_view_menu("&Theme")
+        group = QActionGroup(self)
+        for name, text in THEMES.items():
+            action = menu.addAction(text)
+            action.setCheckable(True)
+            action.setChecked(name == choice)
+            action.setData(name)
+            group.addAction(action)
+        group.triggered.connect(lambda action: self.set_theme(str(action.data())))
+        # The system's color scheme can change while the application runs
+        QGuiApplication.styleHints().colorSchemeChanged.connect(self._system_theme_changed)
+
+    def set_theme(self, choice: str) -> None:
+        """Use a theme (see THEMES), and remember it"""
+        self._theme = choice
+        MenuBar.settings().setValue(THEME_KEY, choice)
+        apply_theme(choice)
+        self._refresh_theme()
+
+    def _system_theme_changed(self) -> None:
+        if self._theme == "system":
+            apply_theme("system")
+            self._refresh_theme()
+
+    def _refresh_theme(self) -> None:
+        """Paint everything again in the colors of the theme"""
+        for area in self.findChildren(CircuitArea):
+            area.refresh_theme()
+        for view in self.findChildren(SubCircuitView):
+            view.refresh_theme()
+        for widget in self.findChildren(QWidget):
+            widget.update()
 
     def showEvent(self, event: QShowEvent) -> None:
         """QT event callback function"""
