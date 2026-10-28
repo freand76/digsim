@@ -1323,3 +1323,40 @@ def test_module_without_parameters(gui, circuit, monkeypatch):
     editor.menu_actions["parameters"].trigger()
     assert messages == ["The module m has no parameters."]
     assert not editor.is_building()
+
+
+def test_settings_change_keeps_a_yosys_component_whose_file_has_an_error(gui, circuit):
+    """
+    Another component is built again from the netlist it has, not from its file, which
+    has an error now: it stays, with its wires
+    """
+    gate = gui.add("AND", 0, 400)
+    circuit.write_text("module m(input a; endmodule\n", encoding="utf-8")
+    components = gui.model.objects.components
+    assert components.change_settings(components.get_object(gate), {"_name": "gate"})
+    m = yosys(gui)
+    assert m.y.wired_ports == [gui.model.objects.circuit.get_component("Led").I]
+    assert gui.model.objects.circuit.get_component("gate") is not None
+    assert not gui.errors
+
+
+def test_settings_change_with_a_broken_subcircuit_changes_nothing(gui):
+    """A subcircuit that can't be built again from its file now: nothing changes"""
+    half_adder = gui.work_dir / "half_adder.circuit"
+    source = Path(__file__).parent.parent / "circuits" / "subcircuits" / "half_adder.circuit"
+    half_adder.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+    gui.add("SubCircuit", 0, 0, path=str(half_adder))
+    gate = gui.add("AND", 0, 300)
+    gate_name = gate.name()
+    half_adder.write_text("{ broken", encoding="utf-8")
+    objects = gui.model.objects
+    undo_steps = len(objects._undo_stack)
+    assert (
+        objects.components.change_settings(objects.components.get_object(gate), {"_name": "gate"})
+        is None
+    )
+    names = {c.name() for c in objects.circuit.get_toplevel_components()}
+    assert names == {"half_adder", gate_name}
+    (error,) = gui.errors
+    assert "half_adder" in error
+    assert len(objects._undo_stack) == undo_steps

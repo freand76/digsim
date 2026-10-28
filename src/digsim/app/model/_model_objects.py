@@ -13,9 +13,11 @@ from digsim.app._clipboard_lines import renamed_port, renamed_port_keys
 from digsim.app._line_graph import without_ports
 from digsim.app._settings_values import given_name, has_given_name, unique_name
 from digsim.circuit import Circuit
-from digsim.circuit.components import CircuitPort
+from digsim.circuit.components import CircuitPort, YosysComponent
+from digsim.circuit.components._yosys_component import YosysVariant
 from digsim.circuit.components.atoms import Component, DigsimException, Port
 from digsim.storage_model import LineDataClass, ModelDataClass
+from digsim.utils import YosysNetlist
 
 from ._model_clipboard import ModelClipboard
 from ._model_components import ModelComponents
@@ -200,22 +202,28 @@ class ModelObjects:
         model_dc.circuit.wires = []
         model_dc.wires = {}
         model_dc.lines = lines
-        warnings = self._restore_state(model_dc)
+        # The other Yosys components are built from the netlists they have now, not from
+        # their files: those may have changed since, or have errors now
+        netlists = self._yosys_netlists()
+
+        def restore(state: ModelDataClass) -> list[str]:
+            with YosysComponent.given_netlists(netlists):
+                return self._restore_state(state)
+
+        self._check_build(model_dc, name, netlists)
+        warnings = restore(model_dc)
         component = self._toplevel(name)
         if component is None:
-            self._restore_state(undo_state)
+            restore(undo_state)
             self._app_model.sig_synchronize_gui.emit()
-            reasons = [warning for warning in warnings if name in warning] or warnings
-            # The reason, not the class of the exception that the warning starts with
-            reasons = [re.sub(r"^\w+(Exception|Error):", "", reason) for reason in reasons]
-            raise DigsimException("\n".join(reasons) or f"{name} could not be built")
+            raise DigsimException(self._reasons(warnings, name) or f"{name} could not be built")
         if follows and given_name(component) != given_name(old_component):
             taken = {c.name() for c in self._circuit.get_toplevel_components()} - {name}
             lines = self._renamed(
                 model_dc, lines, name, unique_name(given_name(component), taken), shown=False
             )
             name = component_dc.name
-            self._restore_state(model_dc)
+            restore(model_dc)
         # The ports that are gone, or that have another width than their line now
         gone: set[str] = set()
         for line in lines:
@@ -224,10 +232,53 @@ class ModelObjects:
             gone |= {key for key, port in ports.items() if port is None or port.width != width}
         if gone:
             model_dc.lines = without_ports(lines, gone)
-            self._restore_state(model_dc)
+            restore(model_dc)
         self.add_undo_state(undo_state)
         self._app_model.sig_synchronize_gui.emit()
         return name, sorted(gone)
+
+    def _yosys_netlists(self) -> list[tuple[str, YosysVariant, YosysNetlist]]:
+        """The netlists of the Yosys components, to build them again without their files"""
+        return [
+            (component.source_file, component.variant, component.netlist())
+            for component in self._circuit.get_toplevel_components()
+            if isinstance(component, YosysComponent) and component.source_file is not None
+        ]
+
+    def _check_build(
+        self,
+        model_dc: ModelDataClass,
+        name: str,
+        netlists: list[tuple[str, YosysVariant, YosysNetlist]],
+    ) -> None:
+        """
+        Raises DigsimException if a component of a state can't be built, before the
+        circuit changes: the component 'name', or another one, like a subcircuit whose
+        file has an error now, which would be gone from the circuit
+        """
+        scratch = Circuit()
+        with YosysComponent.given_netlists(netlists):
+            warnings = scratch.from_dataclass(
+                model_dc.circuit, self._app_model.circuit_folder, component_exceptions=False
+            )
+        built = {component.name() for component in scratch.get_toplevel_components()}
+        missing = [dc.name for dc in model_dc.circuit.components if dc.name not in built]
+        scratch.clear()
+        if name in missing:
+            raise DigsimException(self._reasons(warnings, name) or f"{name} could not be built")
+        if missing:
+            raise DigsimException(
+                f"{', '.join(missing)} can't be built again from "
+                f"{'its file' if len(missing) == 1 else 'their files'} now, so nothing is "
+                "changed:\n" + self._reasons(warnings, "")
+            )
+
+    @staticmethod
+    def _reasons(warnings: list[str], name: str) -> str:
+        """The warnings about a component (all if none is), without the class of the error"""
+        reasons = [warning for warning in warnings if name in warning] or warnings
+        # The reason, not the class of the exception that the warning starts with
+        return "\n".join(re.sub(r"^\w+(Exception|Error):", "", reason) for reason in reasons)
 
     @staticmethod
     def _renamed(
