@@ -441,6 +441,28 @@ def test_subcircuit_view(gui):
     assert window.view_tabs() == []
 
 
+def test_double_click_views_a_subcircuit_while_it_runs(gui):
+    from pathlib import Path
+
+    path = Path(__file__).parent.parent / "example_circuits" / "full_adder.circuit"
+    gui.model.load_circuit(str(path))
+    spin()
+    gui.model.model_start()
+    spin(100)
+    subcircuit = gui.model.objects.circuit.get_component("half_adder_1")
+    component_object = gui.model.objects.components.get_object(subcircuit)
+    center = component_object.mapToScene(component_object.rect().center())
+    for kind in (QEvent.Type.MouseButtonPress, QEvent.Type.MouseButtonRelease):
+        _mouse(gui, kind, center, held=kind == QEvent.Type.MouseButtonPress)
+    _mouse(gui, QEvent.Type.MouseButtonDblClick, center, held=True)
+    _mouse(gui, QEvent.Type.MouseButtonRelease, center, held=False)
+    (view,) = gui.window.view_tabs()
+    assert view.subcircuit is subcircuit
+    assert gui.model.is_running
+    gui.model.model_stop()
+    gui.model._changed = False
+
+
 def _pane_input(gui: Gui, widget_type: Any, number: int = 0) -> Any:
     """An input of the settings pane, like its first slider"""
     return gui.window.settings_pane.findChildren(widget_type)[number]

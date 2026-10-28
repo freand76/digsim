@@ -492,10 +492,11 @@ it. Its ports are the circuit ports (In, Out and InOut) of the file, named like 
 the order they are in the file from top to bottom, and it works like the circuit in the
 file. A subcircuit can use subcircuits, but not the circuit it is in.
 
-**View Subcircuit** in its context menu shows what is inside this subcircuit, in a tab:
-its parts and wires, drawn like its file, with the values of the simulation of the
-circuit it is in. The view is read-only, and the simulation goes on when it is shown. A
-subcircuit in it has View Subcircuit too, to look further inside. Closing the circuit's
+**View Subcircuit** in its context menu, or a double-click on it (also while the
+simulation runs), shows what is inside this subcircuit, in a tab: its parts and wires,
+drawn like its file, with the values of the simulation of the circuit it is in. The view
+is read-only, and the simulation goes on when it is shown. A subcircuit in it has View
+Subcircuit and the double-click too, to look further inside. Closing the circuit's
 tab closes its views.
 
 **Edit Subcircuit** in its context menu opens its file in a tab (or shows its tab). That

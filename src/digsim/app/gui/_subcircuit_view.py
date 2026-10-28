@@ -17,6 +17,7 @@ from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsScene,
     QGraphicsSceneContextMenuEvent,
+    QGraphicsSceneMouseEvent,
     QGraphicsView,
     QHBoxLayout,
     QLabel,
@@ -285,6 +286,18 @@ class SubCircuitViewScene(QGraphicsScene):
             if item is not None and isinstance(item.component, SubCircuit):
                 return item
         return None
+
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        """QT function: a double-click on a subcircuit part views it"""
+        component_object = self.subcircuit_object(event.scenePos())
+        if event.button() == Qt.MouseButton.LeftButton and component_object is not None:
+            part = component_object.component
+            assert isinstance(part, SubCircuit)
+            if part.has_layout():
+                self._open_view(part)
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
 
     def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent) -> None:
         """QT function: View Subcircuit on a subcircuit part"""

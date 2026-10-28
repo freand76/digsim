@@ -7,8 +7,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QMenu, QMessageBox, QWidget
+from PySide6.QtWidgets import QGraphicsSceneMouseEvent, QMenu, QMessageBox, QWidget
 
 from digsim.app._yosys_interface import change_message
 from digsim.circuit.components import SubCircuit
@@ -58,6 +59,14 @@ class SubCircuitObject(NamedBoxObject):
         component = self._component
         assert isinstance(component, SubCircuit)
         return component
+
+    def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        """QT event callback function: view the subcircuit, also while it runs"""
+        if event.button() == Qt.MouseButton.LeftButton and self.component.has_layout():
+            self._app_model.sig_view_subcircuit.emit(self.component.name())
+            event.accept()
+            return
+        super().mouseDoubleClickEvent(event)
 
     def add_context_menu_action(self, menu: QMenu, parent: QWidget | None) -> None:
         edit_action = QAction("Edit Subcircuit", menu)
