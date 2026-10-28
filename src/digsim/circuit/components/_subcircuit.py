@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING
 
 from digsim.storage_model import AppFileDataClass, ComponentDataClass, GuiPositionDataClass
 
-from ._circuit_port import CircuitInOut, CircuitInput, CircuitOutput
+from ._circuit_port import CIRCUIT_PORT_TYPES, CircuitInOut, CircuitOutput
 from .atoms import (
     VALUE_TYPE,
     Component,
@@ -30,13 +30,6 @@ from .atoms import (
 
 if TYPE_CHECKING:
     from digsim.circuit import Circuit
-
-# The type names of the circuit ports in a circuit file, and their directions
-_PORT_TYPES = {
-    "digsim.circuit.components.CircuitInput": CircuitInput.DIRECTION,
-    "digsim.circuit.components.CircuitOutput": CircuitOutput.DIRECTION,
-    "digsim.circuit.components.CircuitInOut": CircuitInOut.DIRECTION,
-}
 
 # The files of the subcircuits that are being loaded, to find a file that uses itself
 _loading: list[Path] = []
@@ -85,7 +78,7 @@ def file_ports(file_dc: AppFileDataClass) -> list[FilePort]:
     """The circuit ports of a circuit file, in the order of port_order()"""
     ports = []
     for component_dc in file_dc.circuit.components:
-        direction = _PORT_TYPES.get(component_dc.type)
+        direction = CIRCUIT_PORT_TYPES.get(component_dc.type)
         if direction is not None:
             settings = component_dc.settings
             ports.append(

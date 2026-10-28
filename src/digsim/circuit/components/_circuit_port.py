@@ -284,3 +284,10 @@ class CircuitInOut(CircuitPort):
     @property
     def active(self) -> bool:
         return self.value not in (0, "X", "Z")
+
+
+# The type names of the circuit ports in a circuit file, and their directions
+CIRCUIT_PORT_TYPES = {
+    f"digsim.circuit.components.{port_class.__name__}": port_class.DIRECTION
+    for port_class in (CircuitInput, CircuitOutput, CircuitInOut)
+}

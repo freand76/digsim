@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING
 
 from digsim.app._clipboard_lines import lines_between, moved_lines, renamed_port_keys
 from digsim.app._wire_key import port_key
-from digsim.circuit.components._circuit_port import free_label
+from digsim.circuit.components._circuit_port import CIRCUIT_PORT_TYPES, free_label
 from digsim.circuit.components.atoms import DigsimException
 from digsim.storage_model import ClipboardDataClass, ComponentDataClass, GuiPositionDataClass
 
@@ -20,14 +20,6 @@ if TYPE_CHECKING:
     from digsim.app.gui_objects import ComponentObject
 
     from ._model import AppModel
-
-
-# The types of the circuit ports, their labels are unique in a circuit
-CIRCUIT_PORT_TYPES = {
-    "digsim.circuit.components.CircuitInput",
-    "digsim.circuit.components.CircuitOutput",
-    "digsim.circuit.components.CircuitInOut",
-}
 
 
 class ModelClipboard:
