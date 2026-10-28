@@ -92,6 +92,12 @@ again with them, where it was and with the same name, and the wires to the ports
 still has stay. The wires of a port that is gone, or that has another width now, are
 removed, and a message lists them.
 
+**Name**, at the top, renames the component. The name is in the VCD file and is the
+component's name in Python (`circuit.get_component("name")`), its wires, place and
+shortcut keep up with it. It can't be the name of another component, or have spaces or
+dots. A component that has the name it got, like `ttl_74161` for a 74161 IC, gets the name
+of what it is when it changes to another IC or file. A name you gave it stays.
+
 **View > Settings Pane** (**F4**) hides and shows the pane, and DigSim remembers it.
 
 ### Oscillating circuits

@@ -299,6 +299,10 @@ class YosysComponent(MultiComponent):
     def _first_module(netlist_object: YosysNetlist) -> tuple[str, YosysModule]:
         return next(iter(netlist_object.get_modules().items()))
 
+    def module_name(self) -> str:
+        """The name of the module of the netlist, the name the component gets"""
+        return self._module_name
+
     def create_from_netlist(self, netlist_object: YosysNetlist) -> None:
         """Create component from netlist object"""
         module_name, netlist_module = self._first_module(netlist_object)

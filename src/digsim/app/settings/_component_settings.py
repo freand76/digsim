@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Union
 
@@ -144,8 +145,9 @@ class ComponentSettingSingleLineText(ComponentSettingsBase):
         self._line_edit.setText(default)
         self._line_edit.textChanged.connect(self._update)
         layout.addWidget(self._line_edit)
-        self._invalid_text = QLabel()
-        if len(self._invalid_list) > 0:
+        self._pattern = self._parameter_dict.get("pattern")
+        self._invalid_text = QLabel(self)
+        if len(self._invalid_list) > 0 or self._pattern is not None:
             layout.addWidget(self._invalid_text)
         self._update()
 
@@ -153,11 +155,15 @@ class ComponentSettingSingleLineText(ComponentSettingsBase):
         value = self._line_edit.text()
         self._settings[self._parameter] = value
         if value in self._invalid_list:
-            self._parent.sig_enable_ok.emit(False)
-            self._invalid_text.setText("Invalid string")
+            problem = "Already used"
+        elif self._pattern is not None and re.fullmatch(self._pattern, value) is None:
+            problem = "No spaces or dots" if value else "Can't be empty"
         else:
-            self._parent.sig_enable_ok.emit(True)
-            self._invalid_text.setText("")
+            problem = ""
+        self._parent.sig_enable_ok.emit(not problem)
+        self._invalid_text.setText(problem)
+        # No empty line under the text while it is fine
+        self._invalid_text.setVisible(bool(problem))
 
 
 class ComponentSettingsSlider(ComponentSettingsBase):

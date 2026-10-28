@@ -10,9 +10,11 @@ without a display)
 from __future__ import annotations
 
 import copy
+import re
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from digsim.circuit.components import FlipFlop
+from digsim.circuit.components import FlipFlop, SubCircuit, YosysComponent
 from digsim.circuit.components.atoms import Component, ComponentException, Parameter
 
 
@@ -22,6 +24,12 @@ if TYPE_CHECKING:
 
 # The parameter that chooses the kind of flip-flop, the class of the component
 CLASS_PARAMETER = "name"
+
+# The name of the component, in the pane but not a setting of the component
+NAME_PARAMETER = "_name"
+
+# A name is a part of the name of a port ("component.port") and of a VCD signal
+NAME_PATTERN = r"[^\s.]+"
 
 # The parameters that are chosen before a component is added, they have no default
 CHOSEN_FIRST = ("path", "ic_name")
@@ -36,13 +44,54 @@ def is_flip_flop(component: Component) -> bool:
     return type(component).__name__ in _flip_flop_classes()
 
 
+def given_name(component: Component) -> str:
+    """
+    The name a component gets when it is made, before a suffix that makes it unique: the
+    module of a Verilog component or IC, the file of a subcircuit, else the class
+    """
+    if isinstance(component, YosysComponent) and component.module_name():
+        return component.module_name()
+    if isinstance(component, SubCircuit):
+        return Path(str(component.settings_to_dict()["path"])).stem
+    return type(component).__name__
+
+
+def has_given_name(component: Component) -> bool:
+    """The component has the name it got, like ttl_7485_1, not one the user gave it"""
+    return (
+        re.fullmatch(rf"{re.escape(given_name(component))}(_\d+)?", component.name()) is not None
+    )
+
+
+def unique_name(name: str, taken: set[str]) -> str:
+    """The name, with a suffix like _1 if it is taken"""
+    unique, number = name, 1
+    while unique in taken:
+        unique, number = f"{name}_{number}", number + 1
+    return unique
+
+
 def pane_parameters(component: Component, circuit: Circuit) -> dict[str, Parameter]:
     """
     The parameters of a component, each with its value as the default: the settings that
-    the settings pane shows. A flip-flop has the kind of flip-flop too.
+    the settings pane shows. The name of the component is first, and a flip-flop has the
+    kind of flip-flop too.
     """
     values = component.settings_to_dict()
-    parameters: dict[str, Parameter] = {}
+    parameters: dict[str, Parameter] = {
+        NAME_PARAMETER: {
+            "type": "str",
+            "description": "Name",
+            "default": component.name(),
+            "single_line": True,
+            "invalid_list": [
+                other.name()
+                for other in circuit.get_toplevel_components()
+                if other is not component
+            ],
+            "pattern": NAME_PATTERN,
+        }
+    }
     if is_flip_flop(component):
         parameter = copy.deepcopy(FlipFlop.get_parameters()[CLASS_PARAMETER])
         parameter["default"] = type(component).__name__

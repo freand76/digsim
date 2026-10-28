@@ -50,6 +50,8 @@ class Parameter(TypedDict):
     reconfigurable: NotRequired[bool]
     single_line: NotRequired[bool]
     invalid_list: NotRequired[list[str]]
+    # A single line text must match it, like no spaces
+    pattern: NotRequired[str]
     items: NotRequired[list[str]]
     range: NotRequired[list[int]]
     default_index: NotRequired[int]

@@ -3,13 +3,20 @@
 
 """Pytest module to test the settings that the settings pane shows and changes"""
 
+import re
+
 import pytest
 
 from digsim.app._settings_values import (
+    NAME_PARAMETER,
+    NAME_PATTERN,
     changes,
+    given_name,
+    has_given_name,
     new_settings,
     pane_parameters,
     pane_values,
+    unique_name,
 )
 from digsim.circuit import Circuit
 from digsim.circuit.components import (
@@ -19,6 +26,7 @@ from digsim.circuit.components import (
     CircuitInput,
     Counter,
     FlipFlop,
+    IntegratedCircuit,
     LabelWireIn,
     LabelWireOut,
     Led,
@@ -30,7 +38,47 @@ def test_values_are_the_components_settings():
     circuit = Circuit()
     counter = Counter(circuit, width=6, enable=True)
     values = pane_values(pane_parameters(counter, circuit))
-    assert values == {"width": 6, "enable": True, "up_down": False, "load": False}
+    assert values == {
+        "_name": "Counter",
+        "width": 6,
+        "enable": True,
+        "up_down": False,
+        "load": False,
+    }
+
+
+def test_the_name_is_first_and_not_taken_by_another():
+    circuit = Circuit()
+    led = Led(circuit)
+    Led(circuit)
+    parameters = pane_parameters(led, circuit)
+    name = parameters[NAME_PARAMETER]
+    assert next(iter(parameters)) == NAME_PARAMETER
+    assert name["default"] == "Led"
+    assert name["invalid_list"] == ["Led_1"]
+
+
+@pytest.mark.parametrize(
+    ("name", "valid"), [("led", True), ("a b", False), ("a.b", False), ("", False)]
+)
+def test_name_pattern(name, valid):
+    assert (re.fullmatch(NAME_PATTERN, name) is not None) == valid
+
+
+def test_given_names():
+    circuit = Circuit()
+    ic = IntegratedCircuit(circuit, "7485")
+    led, other_led = Led(circuit), Led(circuit)
+    assert given_name(ic) == "ttl_7485"
+    assert given_name(led) == "Led"
+    assert has_given_name(other_led)
+    led.set_name("power")
+    assert not has_given_name(led)
+
+
+def test_unique_name():
+    assert unique_name("Led", {"AND"}) == "Led"
+    assert unique_name("Led", {"Led", "Led_1"}) == "Led_2"
 
 
 def test_a_flip_flop_chooses_its_kind():

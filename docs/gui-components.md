@@ -267,7 +267,7 @@ layout.addWidget(SelectableComponentWidget("LedBar", self, circuit_area, display
 
 ## 6. The settings pane
 
-The settings pane of the GUI shows the selected component's parameters from
+The settings pane of the GUI shows the selected component's name and its parameters from
 `get_parameters()`, with one input per parameter and the component's values from
 `settings_to_dict()`. A new component gets the defaults, only a `path` (the first
 parameter) and an `ic_name` are asked for before it is added. The parameter's `type`
@@ -278,7 +278,7 @@ selects the input:
 | `int` | Slider | `min`, `max`, `default` |
 | `intrange` | Slider over a list of values | `range`, `default_index` |
 | `bool` | Checkbox | `default` |
-| `str` | Text field | `default`, `single_line` (one line instead of a text box), `invalid_list` (values not allowed) |
+| `str` | Text field | `default`, `single_line` (one line instead of a text box), `invalid_list` (values not allowed), `pattern` (a regular expression a single line must match) |
 | `list` | Drop-down | `items` |
 | `width_pow2` | Slider from 0 to 2<sup>width</sup>-1, following a `width` parameter | `default` |
 | `width_bool` | One checkbox per bit, following a `width` parameter | `default` |

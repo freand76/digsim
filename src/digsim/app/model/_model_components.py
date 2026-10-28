@@ -14,7 +14,7 @@ from PySide6.QtCore import QPointF
 import digsim.app.gui_objects
 import digsim.circuit.components
 from digsim.app._line_graph import without_ports
-from digsim.app._settings_values import CLASS_PARAMETER, is_flip_flop
+from digsim.app._settings_values import CLASS_PARAMETER, NAME_PARAMETER, is_flip_flop
 from digsim.app._wire_key import Wire
 from digsim.app._wire_lines import At
 from digsim.app._yosys_interface import (
@@ -280,22 +280,30 @@ class ModelComponents:
         self, component_object: ComponentObject, changed: dict[str, Any]
     ) -> ComponentObject | None:
         """
-        Change settings of a component, an undo step (see the settings pane). Settings
-        that can be reconfigured change the component, others build it again, with the
-        wires to the ports it still has (see ModelObjects.change_component). Returns the
+        Change settings of a component, or its name (NAME_PARAMETER), an undo step (see
+        the settings pane). Settings that can be reconfigured change the component, others
+        build it again, with the wires to the ports it still has (see
+        ModelObjects.change_component). Returns the
         object of the component, a new one if it was built again. None, with an error,
         if it can't have the settings.
         """
         component = component_object.component
         changed = dict(changed)
+        new_name = changed.pop(NAME_PARAMETER, None)
+        if new_name == component.name():
+            new_name = None
         class_name = changed.pop(CLASS_PARAMETER, None) if is_flip_flop(component) else None
-        if class_name is None and set(changed) <= set(component.get_reconfigurable_parameters()):
+        if (
+            class_name is None
+            and new_name is None
+            and set(changed) <= set(component.get_reconfigurable_parameters())
+        ):
             return component_object if self.update_settings(component_object, changed) else None
         if self._app_model.is_running:
             self._app_model.model_stop()
         try:
             name, gone = self._app_model.objects.change_component(
-                component.name(), changed, class_name
+                component.name(), changed, class_name, new_name
             )
         except (DigsimException, OSError) as exc:
             self._app_model.sig_error.emit(f"Could not change the settings: {exc!s}")

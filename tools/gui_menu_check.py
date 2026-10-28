@@ -25,7 +25,14 @@ os.environ.setdefault("DIGSIM_SETTINGS_DIR", tempfile.mkdtemp(prefix="digsim_set
 
 from PySide6.QtCore import QEventLoop, QPointF, Qt, QTimer
 from PySide6.QtGui import QAction, QImage, QKeySequence
-from PySide6.QtWidgets import QApplication, QComboBox, QFileDialog, QMessageBox, QSlider
+from PySide6.QtWidgets import (
+    QApplication,
+    QComboBox,
+    QFileDialog,
+    QLineEdit,
+    QMessageBox,
+    QSlider,
+)
 
 from digsim.app.gui import MainWindow
 from digsim.app.gui._circuit_area import CircuitArea
@@ -528,7 +535,62 @@ def test_settings_pane_changes_the_kind_of_flip_flop(gui):
     _apply(gui)
     (component,) = gui.model.objects.circuit.get_toplevel_components()
     assert type(component).__name__ == "ClockedJKFF"
-    assert component.name() == "SRFF"
+    # It had the name it got, it gets the name of the new kind
+    assert component.name() == "ClockedJKFF"
+
+
+def _rename(gui: Gui, component_object: Any, name: str) -> None:
+    """Select a component, and type a name for it in the settings pane"""
+    area = gui.window.findChild(CircuitArea)
+    area.scene().clearSelection()
+    component_object.setSelected(True)
+    spin()
+    _pane_input(gui, QLineEdit).setText(name)
+
+
+def test_settings_pane_renames_a_component(gui):
+    """The new name has the wires, the place and the shortcut, an undo step"""
+    button = gui.add("PushButton")
+    led = gui.add("Led")
+    gui.model.objects.wires.connect_ports(button.component.O, led.component.I)
+    gui.model.shortcuts.set_component("1", button.component)
+    position = button.to_gui_dataclass()
+    _rename(gui, button, "start")
+    _apply(gui)
+    circuit = gui.model.objects.circuit
+    start = circuit.get_component("start")
+    assert start.O.wired_ports == [circuit.get_component("Led").I]
+    assert gui.model.shortcuts.get_component("1") is start
+    assert gui.model.objects.components.get_object(start).to_gui_dataclass() == position
+    assert gui.window.settings_pane._title.text() == "start"
+    gui.trigger("Edit", "Undo")
+    assert {c.name() for c in circuit.get_toplevel_components()} == {"PushButton", "Led"}
+
+
+def test_settings_pane_takes_no_name_that_is_used(gui):
+    gui.add("Led")
+    led = gui.add("Led")
+    for name in ["Led", "a b", "a.b", ""]:
+        _rename(gui, led, name)
+        assert not gui.window.settings_pane._apply_button.isEnabled(), name
+    _rename(gui, led, "power")
+    assert gui.window.settings_pane._apply_button.isEnabled()
+
+
+def test_a_given_name_follows_the_ic_a_users_name_stays(gui):
+    gui.add("IntegratedCircuit", ic_name="74161")
+    second = gui.add("IntegratedCircuit", ic_name="74161")
+    _rename(gui, second, "counter")
+    _apply(gui)
+    components = gui.model.objects.components
+    for name in ["ttl_74161", "counter"]:
+        component_object = next(o for c, o in components.get_dict().items() if c.name() == name)
+        component_object.setSelected(False)
+        assert components.change_settings(component_object, {"ic_name": "74163"}) is not None
+    names = {
+        c.name(): c.display_name() for c in gui.model.objects.circuit.get_toplevel_components()
+    }
+    assert names == {"ttl_74163": "ttl_74163", "counter": "counter"}
 
 
 def test_settings_pane_is_hidden_and_shown(gui):
