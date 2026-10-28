@@ -23,8 +23,8 @@ folder in the repository has ready-made circuits to explore.
 
 The window has a menu bar and three areas:
 
-- **Menu bar** (top): **File** (New, Open, Open Recent, Save, Save As, Export Image,
-  Quit), **Edit** (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete, Find Component,
+- **Menu bar** (top): **File** (New Tab, New, Open, Open Recent, Save, Save As, Export
+  Image, Close Tab, Quit), **Edit** (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete, Find Component,
   Settings), **View** (zoom in and out, and Zoom to Fit: the whole circuit in the
   window), **Simulation** (Start, Single Step, Step Clock, Reset) and **Help** (the
   documentation, and the version of DigSim). Save saves the circuit in the file it was
@@ -40,6 +40,12 @@ The window has a menu bar and three areas:
 - **Control area** (green, top): simulation controls, VCD output, and buttons for
   loading, saving and clearing circuits, plus **Delete**, **Undo**, **Redo** and
   **Settings**.
+
+Each circuit is in a tab of its own: **File > New Tab** opens an empty one, and Open
+opens a circuit in a new tab (or in an empty one). A circuit that is open already gets its
+tab shown. The tab bar is shown with two tabs or more. Only the tab that is shown
+simulates: switching to another tab stops the simulation of the one that is left, and
+Start goes on from where it was.
 
 A typical circuit consists of:
 
@@ -255,6 +261,7 @@ paste is one step to undo.
 | **Ctrl + mouse wheel** | Zoom in and out around the mouse pointer |
 | **Ctrl + +** / **Ctrl + -** | Zoom in / out |
 | **Shift + drag** | Pan the circuit area |
+| **Ctrl + T** / **Ctrl + W** | New tab / close the tab |
 | **Ctrl + N** | New circuit |
 | **Ctrl + O** | Open a circuit |
 | **Ctrl + S** / **Ctrl + Shift + S** | Save / save as |

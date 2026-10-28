@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """The main class module of the digsim.app namespace"""
@@ -58,7 +58,7 @@ def _start(args: argparse.Namespace, package_version: str) -> int:
     window.show()
 
     if args.load is not None:
-        app_model.load_circuit(args.load)
+        window.open_file(args.load)
 
     return app.exec()
 

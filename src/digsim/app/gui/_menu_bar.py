@@ -20,7 +20,6 @@ from digsim.app._recent_files import with_recent, without_file
 from digsim.app.settings import GuiSettingsDialog
 
 from ._circuit_area import CircuitArea
-from ._utils import are_you_sure_destroy_circuit
 
 
 if TYPE_CHECKING:
@@ -38,6 +37,10 @@ class MenuBar(QMenuBar):
 
     # Find Component: bring the component search to the front
     sig_find_component = Signal()
+    # New Tab, Close Tab, and a circuit file to open (in its tab, see MainWindow.open_file)
+    sig_new_tab = Signal()
+    sig_close_tab = Signal()
+    sig_open_file = Signal(str)
 
     def __init__(self, app_model: AppModel, parent: QWidget, package_version: str) -> None:
         super().__init__(parent)
@@ -45,17 +48,18 @@ class MenuBar(QMenuBar):
         self._window = parent
         self._package_version = package_version
         self._time_s: float = 0
-        # The circuit area of the window, see set_circuit_area()
+        # The circuit area of the tab that is shown, see set_tab()
         self._circuit_area: CircuitArea | None = None
         self._can_paste = False
+        # The circuit file of each model when the recent files were last updated
+        self._recent_paths: dict[AppModel, str | None] = {}
 
         file_menu = self.addMenu("&File")
+        self._add(file_menu, "New &Tab", self.sig_new_tab.emit, "Ctrl+T")
         self._new_action = self._add(file_menu, "&New", self.new_circuit, "Ctrl+N")
         self._open_action = self._add(file_menu, "&Open...", self.open_circuit, "Ctrl+O")
         self._recent_menu = file_menu.addMenu("Open &Recent")
         self._recent_menu.aboutToShow.connect(self._fill_recent_menu)
-        # The circuit file when the recent files were last updated, see update_actions()
-        self._recent_path: str | None = None
         self._save_action = self._add(file_menu, "&Save", self.save_circuit, "Ctrl+S")
         self._save_as_action = self._add(
             file_menu, "Save &As...", self.save_circuit_as, "Ctrl+Shift+S"
@@ -63,12 +67,19 @@ class MenuBar(QMenuBar):
         file_menu.addSeparator()
         self._export_action = self._add(file_menu, "&Export Image...", self.export_image, "Ctrl+E")
         file_menu.addSeparator()
+        self._add(file_menu, "&Close Tab", self.sig_close_tab.emit, "Ctrl+W")
         self._add(file_menu, "&Quit", parent.close, "Ctrl+Q")
 
         edit_menu = self.addMenu("&Edit")
-        self._undo_action = self._add(edit_menu, "&Undo", self._app_model.objects.undo, "Ctrl+Z")
+        # The model of the tab that is shown when the action is triggered
+        self._undo_action = self._add(
+            edit_menu, "&Undo", lambda: self._app_model.objects.undo(), "Ctrl+Z"
+        )
         self._redo_action = self._add(
-            edit_menu, "&Redo", self._app_model.objects.redo, ["Ctrl+Y", "Ctrl+Shift+Z"]
+            edit_menu,
+            "&Redo",
+            lambda: self._app_model.objects.redo(),
+            ["Ctrl+Y", "Ctrl+Shift+Z"],
         )
         edit_menu.addSeparator()
         self._cut_action = self._add(edit_menu, "Cu&t", self._area_call("cut_selection"), "Ctrl+X")
@@ -86,7 +97,7 @@ class MenuBar(QMenuBar):
             for key in ("Ctrl+X", "Ctrl+C", "Ctrl+D")
         ]
         self._delete_action = self._add(
-            edit_menu, "&Delete", self._app_model.objects.delete_selected, "Del"
+            edit_menu, "&Delete", lambda: self._app_model.objects.delete_selected(), "Del"
         )
         edit_menu.addSeparator()
         self._find_action = self._add(
@@ -96,20 +107,24 @@ class MenuBar(QMenuBar):
         self._settings_action = self._add(edit_menu, "Se&ttings...", self._settings_dialog)
 
         view_menu = self.addMenu("&View")
-        self._add(view_menu, "Zoom &In", self._app_model.zoom_in, ["Ctrl++", "Ctrl+="])
-        self._add(view_menu, "Zoom &Out", self._app_model.zoom_out, "Ctrl+-")
-        self._add(view_menu, "Zoom to &Fit", self._app_model.zoom_fit, ["Ctrl+0", "Home"])
+        self._add(view_menu, "Zoom &In", lambda: self._app_model.zoom_in(), ["Ctrl++", "Ctrl+="])
+        self._add(view_menu, "Zoom &Out", lambda: self._app_model.zoom_out(), "Ctrl+-")
+        self._add(
+            view_menu, "Zoom to &Fit", lambda: self._app_model.zoom_fit(), ["Ctrl+0", "Home"]
+        )
 
         simulation_menu = self.addMenu("&Simulation")
         # Space starts and stops it, see MainWindow.keyPressEvent(): shown, not a shortcut
         self._start_action = self._add(simulation_menu, "&Start\tSpace", self._start_stop)
         self._single_step_action = self._add(
-            simulation_menu, "Single S&tep", self._app_model.model_single_step
+            simulation_menu, "Single S&tep", lambda: self._app_model.model_single_step()
         )
         self._clock_step_action = self._add(
-            simulation_menu, "Step &Clock", self._app_model.model_clock_step, "F10"
+            simulation_menu, "Step &Clock", lambda: self._app_model.model_clock_step(), "F10"
         )
-        self._reset_action = self._add(simulation_menu, "&Reset", self._app_model.model_reset)
+        self._reset_action = self._add(
+            simulation_menu, "&Reset", lambda: self._app_model.model_reset()
+        )
 
         help_menu = self.addMenu("&Help")
         self._add(help_menu, "&Documentation", self._documentation, "F1")
@@ -117,7 +132,8 @@ class MenuBar(QMenuBar):
 
         self._app_model.sig_control_notify.connect(self.update_actions)
         self._app_model.sig_sim_time_notify.connect(self._sim_time_notify)
-        self.update_actions()
+        QApplication.clipboard().dataChanged.connect(self._clipboard_changed)
+        self._clipboard_changed()
 
     def _add(
         self,
@@ -144,14 +160,10 @@ class MenuBar(QMenuBar):
         self._app_model.clear_circuit()
 
     def open_circuit(self) -> None:
-        """Ask for a circuit file and open it"""
-        if self._app_model.is_changed and not are_you_sure_destroy_circuit(
-            self._window, "Open circuit"
-        ):
-            return
+        """Ask for a circuit file and open it, in a tab of its own (see sig_open_file)"""
         path, _ = QFileDialog.getOpenFileName(self, "Open Circuit", "", CIRCUIT_FILES)
         if path:
-            self._app_model.load_circuit(path)
+            self.sig_open_file.emit(path)
 
     def save_circuit(self) -> None:
         """Save the circuit in its file, or ask for one if it has none"""
@@ -203,15 +215,11 @@ class MenuBar(QMenuBar):
 
     def open_recent(self, path: str) -> None:
         """Open a recent circuit file, it leaves the list if it is gone"""
-        if self._app_model.is_changed and not are_you_sure_destroy_circuit(
-            self._window, "Open circuit"
-        ):
-            return
         if not Path(path).is_file():
             self._set_recent_files(without_file(self.recent_files(), path))
             self._app_model.sig_error.emit(f"Could not open {path}: the file is gone")
             return
-        self._app_model.load_circuit(path)
+        self.sig_open_file.emit(path)
 
     def export_image(self) -> None:
         """Ask for a file and save the circuit as an image in it, PNG or SVG"""
@@ -236,15 +244,24 @@ class MenuBar(QMenuBar):
     def _settings_dialog(self) -> None:
         GuiSettingsDialog(self._window, self._app_model).start()
 
-    def set_circuit_area(self, circuit_area: CircuitArea) -> None:
+    def set_tab(self, app_model: AppModel, circuit_area: CircuitArea) -> None:
         """
-        The circuit area, that Cut, Copy, Paste and Duplicate work on. Delete and Copy
-        follow its selection, Paste the clipboard.
+        The model and the circuit area of the tab that is shown, that the actions work
+        on. Delete and Copy follow the selection of the circuit area, Paste the clipboard.
         """
-        self._circuit_area = circuit_area
-        circuit_area.scene().selectionChanged.connect(self.update_actions)
-        QApplication.clipboard().dataChanged.connect(self._clipboard_changed)
-        self._clipboard_changed()
+        if app_model is not self._app_model:
+            self._app_model.sig_control_notify.disconnect(self.update_actions)
+            self._app_model.sig_sim_time_notify.disconnect(self._sim_time_notify)
+            app_model.sig_control_notify.connect(self.update_actions)
+            app_model.sig_sim_time_notify.connect(self._sim_time_notify)
+            self._app_model = app_model
+            self._time_s = app_model.objects.circuit.time_ns / 1000000000
+        if circuit_area is not self._circuit_area:
+            if self._circuit_area is not None:
+                self._circuit_area.scene().selectionChanged.disconnect(self.update_actions)
+            circuit_area.scene().selectionChanged.connect(self.update_actions)
+            self._circuit_area = circuit_area
+        self.update_actions()
 
     def _area_call(self, method: str) -> Callable[[], None]:
         """A method of the circuit area, for an action"""
@@ -297,9 +314,9 @@ class MenuBar(QMenuBar):
         running = self._app_model.is_running
         # A circuit that was opened or saved is a recent file
         path = self._app_model.circuit_path
-        if path is not None and path != self._recent_path:
+        if path is not None and path != self._recent_paths.get(self._app_model):
             self._set_recent_files(with_recent(self.recent_files(), path))
-        self._recent_path = path
+        self._recent_paths[self._app_model] = path
         self._recent_menu.setEnabled(not running and bool(self.recent_files()))
         self._export_action.setEnabled(
             not running and not self._app_model.objects.components.is_empty()

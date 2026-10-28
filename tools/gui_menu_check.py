@@ -148,7 +148,7 @@ def test_save_as_then_save(gui, tmp_path):
 
 
 def test_open_and_new(gui, tmp_path):
-    """Open loads a file (asking first about a changed circuit), New clears it"""
+    """Open loads a file in a tab of its own, New clears the circuit"""
     gui.add("Led")
     gui.path = str(tmp_path / "led.circuit")
     gui.trigger("File", "Save")
@@ -157,9 +157,12 @@ def test_open_and_new(gui, tmp_path):
     assert gui.model.circuit_path is None
     gui.add("Led")
     gui.trigger("File", "Open...")
-    assert gui.dialogs == ["file", "question", "file"]
-    assert gui.model.circuit_path == gui.path
-    assert len(gui.model.objects.components.get_object_list()) == 1
+    # The changed circuit stays, without a question
+    assert gui.dialogs == ["file", "file"]
+    assert len(gui.window.tabs()) == 2
+    opened = gui.window.current_tab().app_model
+    assert opened.circuit_path == gui.path
+    assert len(opened.objects.components.get_object_list()) == 1
 
 
 def test_undo_redo_and_delete(gui):
@@ -246,7 +249,7 @@ def test_recent_files(gui, tmp_path):
     assert gui.menu_bar.recent_files()[:2] == [str(second), str(first)]
     gui.menu_bar.open_recent(str(first))
     spin()
-    assert gui.model.circuit_path == str(first)
+    assert gui.window.current_tab().app_model.circuit_path == str(first)
     assert gui.menu_bar.recent_files()[0] == str(first)
     second.unlink()
     gui.menu_bar.open_recent(str(second))
@@ -309,3 +312,32 @@ def test_reset_clears_the_logic_analyzer(gui):
     assert 1 in analyzer.signal_data()["A"]
     gui.trigger("Simulation", "Reset")
     assert analyzer.signal_data()["A"] == [0] * 100
+
+
+def test_tabs(gui, tmp_path):
+    """Files open in tabs of their own, once, and only the shown tab simulates"""
+    window = gui.window
+    gui.add("Clock")
+    gui.path = str(tmp_path / "clock.circuit")
+    gui.trigger("File", "Save")
+    gui.trigger("File", "New Tab")
+    assert len(window.tabs()) == 2
+    assert window.current_tab().title() == "Untitled"
+    # The new tab is unused: the file opens in it, and the second time its tab is shown
+    other = tmp_path / "other.circuit"
+    other.write_text((tmp_path / "clock.circuit").read_text())
+    window.open_file(str(other))
+    assert len(window.tabs()) == 2
+    assert window.current_tab().title() == "other.circuit"
+    window.open_file(gui.path)
+    assert window.current_tab() is window.tabs()[0]
+    # Switching tabs stops the simulation of the tab that is left
+    gui.trigger("Simulation", "Start")
+    spin(100)
+    assert gui.model.is_running
+    window.open_file(str(other))
+    while gui.model.is_running:
+        spin()
+    assert gui.menu_bar._app_model is window.current_tab().app_model
+    gui.trigger("File", "Close Tab")
+    assert len(window.tabs()) == 1
