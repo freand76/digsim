@@ -459,6 +459,8 @@ to add the selected IC. Pins with names ending in `_bar` are active low.
 | 74138 | 3-to-8 line decoder with active-low outputs |
 | 74151 | 8-to-1 multiplexer |
 | 74162 | Synchronous decade counter with parallel load |
+| 74164 | 8-bit serial-in, parallel-out shift register |
+| 74165 | 8-bit parallel-in, serial-out shift register |
 | 74193 | Up/down binary counter with separate up and down clocks |
 | 74194 | 4-bit bidirectional universal shift register |
 | 74595 | 8-bit shift register with an output register and tristate outputs (output enable OE_bar) |

@@ -1,0 +1,319 @@
+{
+  "creator": "Yosys 0.70 (git sha1 28ba3cb92, Release, Clang /workspace/YoWASP/yosys/wasi-sdk-33.0-x86_64-linux/share/cmake/../..//bin/clang++ 22.1.0)",
+  "modules": {
+    "ttl_74165": {
+      "attributes": {
+        "hdlname": "ttl_74165",
+        "top": "00000000000000000000000000000001",
+        "src": "verilog/74xx/74165.v:9.1-28.10"
+      },
+      "ports": {
+        "SER": {
+          "direction": "input",
+          "bits": [ 2 ]
+        },
+        "Clk": {
+          "direction": "input",
+          "bits": [ 3 ]
+        },
+        "Clk_inh": {
+          "direction": "input",
+          "bits": [ 4 ]
+        },
+        "SH_LD_bar": {
+          "direction": "input",
+          "bits": [ 5 ]
+        },
+        "D": {
+          "direction": "input",
+          "bits": [ 6, 7, 8, 9, 10, 11, 12, 13 ]
+        },
+        "QH": {
+          "direction": "output",
+          "bits": [ 14 ]
+        },
+        "QH_bar": {
+          "direction": "output",
+          "bits": [ 15 ]
+        }
+      },
+      "cells": {
+        "$auto$ff.cc:337:slice$84": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PNN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/74xx/74165.v:20.4-24.35"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 6 ],
+            "C": [ 3 ],
+            "D": [ 2 ],
+            "E": [ 4 ],
+            "L": [ 5 ],
+            "Q": [ 16 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$85": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PNN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/74xx/74165.v:20.4-24.35"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 7 ],
+            "C": [ 3 ],
+            "D": [ 16 ],
+            "E": [ 4 ],
+            "L": [ 5 ],
+            "Q": [ 17 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$86": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PNN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/74xx/74165.v:20.4-24.35"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 8 ],
+            "C": [ 3 ],
+            "D": [ 17 ],
+            "E": [ 4 ],
+            "L": [ 5 ],
+            "Q": [ 18 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$87": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PNN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/74xx/74165.v:20.4-24.35"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 9 ],
+            "C": [ 3 ],
+            "D": [ 18 ],
+            "E": [ 4 ],
+            "L": [ 5 ],
+            "Q": [ 19 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$88": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PNN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/74xx/74165.v:20.4-24.35"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 10 ],
+            "C": [ 3 ],
+            "D": [ 19 ],
+            "E": [ 4 ],
+            "L": [ 5 ],
+            "Q": [ 20 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$89": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PNN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/74xx/74165.v:20.4-24.35"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 11 ],
+            "C": [ 3 ],
+            "D": [ 20 ],
+            "E": [ 4 ],
+            "L": [ 5 ],
+            "Q": [ 21 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$90": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PNN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/74xx/74165.v:20.4-24.35"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 12 ],
+            "C": [ 3 ],
+            "D": [ 21 ],
+            "E": [ 4 ],
+            "L": [ 5 ],
+            "Q": [ 22 ]
+          }
+        },
+        "$auto$ff.cc:337:slice$91": {
+          "hide_name": 1,
+          "type": "$_ALDFFE_PNN_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/74xx/74165.v:20.4-24.35"
+          },
+          "port_directions": {
+            "AD": "input",
+            "C": "input",
+            "D": "input",
+            "E": "input",
+            "L": "input",
+            "Q": "output"
+          },
+          "connections": {
+            "AD": [ 13 ],
+            "C": [ 3 ],
+            "D": [ 22 ],
+            "E": [ 4 ],
+            "L": [ 5 ],
+            "Q": [ 14 ]
+          }
+        },
+        "$auto$simplemap.cc:46:simplemap_not$92": {
+          "hide_name": 1,
+          "type": "$_NOT_",
+          "parameters": {
+          },
+          "attributes": {
+            "src": "verilog/74xx/74165.v:27.20-27.29"
+          },
+          "port_directions": {
+            "A": "input",
+            "Y": "output"
+          },
+          "connections": {
+            "A": [ 14 ],
+            "Y": [ 15 ]
+          }
+        }
+      },
+      "netnames": {
+        "Clk": {
+          "hide_name": 0,
+          "bits": [ 3 ],
+          "attributes": {
+            "src": "verilog/74xx/74165.v:11.11-11.14"
+          }
+        },
+        "Clk_inh": {
+          "hide_name": 0,
+          "bits": [ 4 ],
+          "attributes": {
+            "src": "verilog/74xx/74165.v:12.11-12.18"
+          }
+        },
+        "D": {
+          "hide_name": 0,
+          "bits": [ 6, 7, 8, 9, 10, 11, 12, 13 ],
+          "attributes": {
+            "src": "verilog/74xx/74165.v:14.17-14.18"
+          }
+        },
+        "QH": {
+          "hide_name": 0,
+          "bits": [ 14 ],
+          "attributes": {
+            "src": "verilog/74xx/74165.v:15.12-15.14"
+          }
+        },
+        "QH_bar": {
+          "hide_name": 0,
+          "bits": [ 15 ],
+          "attributes": {
+            "src": "verilog/74xx/74165.v:16.12-16.18"
+          }
+        },
+        "SER": {
+          "hide_name": 0,
+          "bits": [ 2 ],
+          "attributes": {
+            "src": "verilog/74xx/74165.v:10.11-10.14"
+          }
+        },
+        "SH_LD_bar": {
+          "hide_name": 0,
+          "bits": [ 5 ],
+          "attributes": {
+            "src": "verilog/74xx/74165.v:13.11-13.20"
+          }
+        },
+        "shift": {
+          "hide_name": 0,
+          "bits": [ 16, 17, 18, 19, 20, 21, 22, 14 ],
+          "attributes": {
+            "src": "verilog/74xx/74165.v:18.14-18.19"
+          }
+        }
+      }
+    }
+  }
+}

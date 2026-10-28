@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -27,6 +27,8 @@ SOURCES = {
     "74138": ("74xx/74138.v", "ttl_74138"),
     "74151": ("74xx/74151.v", "ttl_74151"),
     "74162": ("74xx/74162.v", "ttl_74162"),
+    "74164": ("74xx/74164.v", "ttl_74164"),
+    "74165": ("74xx/74165.v", "ttl_74165"),
     "74193": ("74xx/74193.v", "ttl_74193"),
     "74194": ("74xx/74194.v", "ttl_74194"),
     "74595": ("74xx/74595.v", "ttl_74595"),
@@ -505,3 +507,42 @@ def test_4511_display_driver(kind):
     assert _segments(bench) == 0x7F
     bench.set(BI_bar=1)
     assert _segments(bench) == 0x7F
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_74164(kind):
+    """Serial in, A and B, shifted towards QH; a low Clear_bar clears"""
+    bench = Bench("74164", kind)
+    bench.set(Clk=0, Clear_bar=0)
+    bench.set(Clear_bar=1)
+    expected = 0
+    for bit in [1, 0, 1, 1, 0, 0, 1, 0, 1]:
+        bench.set(A=bit, B=1)
+        bench.pulse("Clk")
+        expected = ((expected << 1) | bit) & 0xFF
+        assert bench.get("Q") == expected
+    # B low blocks A
+    bench.set(A=1, B=0)
+    bench.pulse("Clk")
+    assert bench.get("Q") == (expected << 1) & 0xFF
+    bench.set(Clear_bar=0)
+    assert bench.get("Q") == 0
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_74165(kind):
+    """Load in parallel, then shift out of QH, the highest bit first"""
+    bench = Bench("74165", kind)
+    bench.set(Clk=0, Clk_inh=0, SER=0, D=0xB4, SH_LD_bar=0)
+    bench.set(SH_LD_bar=1)
+    out = []
+    for _ in range(8):
+        out.append(bench.get("QH"))
+        assert bench.get("QH_bar") == 1 - out[-1]
+        bench.pulse("Clk")
+    assert out == [(0xB4 >> bit) & 1 for bit in range(7, -1, -1)]
+    # Clk_inh high holds the register
+    bench.set(SH_LD_bar=0)
+    bench.set(SH_LD_bar=1, Clk_inh=1)
+    bench.pulse("Clk")
+    assert bench.get("QH") == 1

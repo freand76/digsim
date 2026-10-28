@@ -44,6 +44,16 @@ python3 -m digsim.synth synth \
         -t ttl_74151
 
 python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/74xx/74164.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74164.json \
+        -t ttl_74164
+
+python3 -m digsim.synth synth \
+        -i $SCRIPT_DIR/74xx/74165.v \
+        -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74165.json \
+        -t ttl_74165
+
+python3 -m digsim.synth synth \
         -i $SCRIPT_DIR/74xx/74193.v \
         -o $SCRIPT_DIR/../src/digsim/circuit/components/ic/74193.json \
         -t ttl_74193

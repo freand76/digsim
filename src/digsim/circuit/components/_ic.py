@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -27,6 +27,8 @@ IC_DESCRIPTIONS = {
     "74138": "3-to-8 line decoder, demultiplexer (demux)",
     "74151": "8-to-1 multiplexer (mux), data selector",
     "74162": "Synchronous decade counter with parallel load",
+    "74164": "8-bit serial-in, parallel-out shift register",
+    "74165": "8-bit parallel-in, serial-out shift register",
     "74181": "4-bit arithmetic logic unit (ALU)",
     "74182": "Look-ahead carry generator for the 74181",
     "74193": "Up/down binary counter with parallel load",

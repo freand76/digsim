@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - New ICs: 74164 (8-bit serial-in, parallel-out shift register) and 74165 (8-bit parallel-in, serial-out shift register)
  - GUI: rotate gates and the other components drawn as a symbol (the tristate buffer, MUX, decoder, demultiplexer and the bus splitters), a quarter at a time, with Rotate in the context menu or Edit > Rotate (Ctrl+R). Wires to a rotated component leave its ports in the directions they face, and the rotation is saved in the circuit file.
  - New component: Splitter, a bus split into groups of bits, like [7:4] and [3:0], or groups merged into a bus. `Splitter(circuit, groups=[4, 4])`, and in the GUI under Bus / Wires.
  - Verilog `inout` ports, of any width: a bidirectional port of a Yosys component (`PortInOut`) drives the wire with what the design drives on it, "Z" while it doesn't, and the design reads the value of the wire, resolved with the other drivers. Wire two inout ports both ways (`a.data.wire = b.data` and `b.data.wire = a.data`). Before, an inout port was an input and the design didn't drive it.
