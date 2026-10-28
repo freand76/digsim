@@ -51,6 +51,8 @@ class MenuBar(QMenuBar):
         # The circuit area of the tab that is shown, see set_tab()
         self._circuit_area: CircuitArea | None = None
         self._can_paste = False
+        # The tab that is shown is a view of a subcircuit, see set_tab()
+        self._read_only = False
         # The circuit file of each model when the recent files were last updated
         self._recent_paths: dict[AppModel, str | None] = {}
 
@@ -244,11 +246,15 @@ class MenuBar(QMenuBar):
     def _settings_dialog(self) -> None:
         GuiSettingsDialog(self._window, self._app_model).start()
 
-    def set_tab(self, app_model: AppModel, circuit_area: CircuitArea) -> None:
+    def set_tab(
+        self, app_model: AppModel, circuit_area: CircuitArea, read_only: bool = False
+    ) -> None:
         """
         The model and the circuit area of the tab that is shown, that the actions work
         on. Delete and Copy follow the selection of the circuit area, Paste the clipboard.
+        A read-only tab (the view of a subcircuit) has no actions that edit the circuit.
         """
+        self._read_only = read_only
         if app_model is not self._app_model:
             self._app_model.sig_control_notify.disconnect(self.update_actions)
             self._app_model.sig_sim_time_notify.disconnect(self._sim_time_notify)
@@ -348,3 +354,20 @@ class MenuBar(QMenuBar):
             not running and bool(circuit_clocks(self._app_model.objects.circuit))
         )
         self._reset_action.setEnabled(not running and self._time_s > 0)
+        if self._read_only:
+            for action in (
+                self._new_action,
+                self._undo_action,
+                self._redo_action,
+                self._cut_action,
+                self._copy_action,
+                self._paste_action,
+                self._duplicate_action,
+                self._delete_action,
+                self._find_action,
+                self._settings_action,
+                self._export_action,
+            ):
+                action.setEnabled(False)
+            for shortcut in self._nothing_to_copy:
+                shortcut.setEnabled(False)

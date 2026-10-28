@@ -222,7 +222,10 @@ class SubCircuit(MultiComponent):
         super().__init__(circuit, name or self._path.stem)
         self.set_display_name(self._path.stem)
         self._bridges: list[_InOutBridge] = []
+        # The parts by their names in the file, and the file they were built from
+        self._parts: dict[str, Component] = {}
         file_dc = self._read_file()
+        self._file_dc = file_dc
         self._interface: list[FilePort] = file_ports(file_dc)
         self._outer: dict[str, Port] = {}
         for file_port in self._interface:
@@ -250,6 +253,30 @@ class SubCircuit(MultiComponent):
             raise SubCircuitException(f"The subcircuit uses itself: {chain}")
         return read_circuit_file(self._path)
 
+    def layout(self) -> AppFileDataClass:
+        """The circuit file as it was when the parts were built: positions and lines"""
+        return self._file_dc
+
+    def has_layout(self) -> bool:
+        """Is it from a GUI file, with positions and lines (not a circuit made in Python)"""
+        return bool(self._file_dc.gui) and bool(self._file_dc.lines)
+
+    def parts(self) -> list[Component]:
+        """The parts, the components of the file (and the bridges of the inout ports)"""
+        return list(self._components)
+
+    def part(self, name: str) -> Component | None:
+        """A part by its name in the file, it can have another name in the circuit"""
+        return self._parts.get(name)
+
+    def file_ports(self) -> list[FilePort]:
+        """The circuit ports of the file, in the order of the ports"""
+        return list(self._interface)
+
+    def outer_port(self, label: str) -> Port:
+        """The port of the subcircuit for a circuit port of the file"""
+        return self._outer[label]
+
     def interface(self) -> dict[str, tuple[str, int]]:
         """The ports, label: (direction, width)"""
         return {port.label: (port.direction, port.width) for port in self._interface}
@@ -268,6 +295,8 @@ class SubCircuit(MultiComponent):
             names = self._create_parts(file_dc)
         finally:
             _loading.pop()
+        self._parts = names
+        self._file_dc = file_dc
         self._connect(file_dc, names)
         # An output driven only by tristate parts is a tristate output (it can share a wire)
         for port in self._outer.values():

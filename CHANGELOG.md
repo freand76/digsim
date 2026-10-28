@@ -29,6 +29,7 @@
  - Subcircuits: SubCircuit(circuit, path) uses another circuit file as a component, through the In, Out and InOut ports of the file. A subcircuit can use subcircuits, and reload() builds it again after its file changed.
  - GUI: a Subcircuit component, a circuit file used as a component, with Reload in its context menu
  - GUI: Edit Subcircuit opens the file of a subcircuit in a tab, and saving a circuit builds the subcircuits of its file in the other tabs again
+ - GUI: View Subcircuit shows the inside of a subcircuit in a read-only tab, with the values of the simulation of its circuit, which goes on while the view is shown
  - New GUI example circuits, half_adder.circuit, full_adder.circuit and adder_4bit.circuit: a 4-bit adder from full adders from half adders, subcircuits. New Python example, examples/subcircuit.
 
 ## v1.8.0

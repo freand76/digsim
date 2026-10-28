@@ -341,3 +341,33 @@ def test_tabs(gui, tmp_path):
     assert gui.menu_bar._app_model is window.current_tab().app_model
     gui.trigger("File", "Close Tab")
     assert len(window.tabs()) == 1
+
+
+def test_subcircuit_view(gui):
+    """A view of a subcircuit shows its parts, and the simulation goes on in it"""
+    from pathlib import Path
+
+    window = gui.window
+    path = Path(__file__).parent.parent / "example_circuits" / "full_adder.circuit"
+    gui.model.load_circuit(str(path))
+    spin()
+    gui.model.sig_view_subcircuit.emit("half_adder")
+    spin()
+    (view,) = window.view_tabs()
+    assert view.subcircuit is gui.model.objects.circuit.get_component("half_adder")
+    # The editing actions are off in a view
+    assert not gui.action("Edit", "Undo").isEnabled()
+    # Viewing it again shows the tab, switching to it doesn't stop the simulation
+    window._tabs.setCurrentIndex(0)
+    gui.model.model_start()
+    spin(100)
+    gui.model.sig_view_subcircuit.emit("half_adder")
+    spin(100)
+    assert len(window.view_tabs()) == 1
+    assert gui.model.is_running
+    gui.model.model_stop()
+    # Closing the circuit's tab closes its views
+    gui.model._changed = False
+    window._tabs.setCurrentIndex(0)
+    gui.trigger("File", "Close Tab")
+    assert window.view_tabs() == []

@@ -31,6 +31,7 @@ from ._circuit_area import CircuitArea
 from ._component_search import ComponentSearch
 from ._component_selection import ComponentSelection
 from ._menu_bar import MenuBar
+from ._subcircuit_view import ViewTab
 from ._top_bar import TopBar
 from ._utils import are_you_sure_destroy_circuit
 from ._warning_dialog import WarningDialog
@@ -165,26 +166,50 @@ class MainWindow(QMainWindow):
         self._tabs.currentChanged.connect(self._tab_changed)
         self.setCentralWidget(self._tabs)
         # The tab that was shown last, its simulation stops when another one is shown
-        self._shown_tab: CircuitTab | None = None
+        self._shown_tab: CircuitTab | ViewTab | None = None
         self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
         self.add_tab(app_model)
 
     # The tabs
 
     def tabs(self) -> list[CircuitTab]:
-        """The tabs, from left to right"""
+        """The tabs with circuits, from left to right (not the views of subcircuits)"""
+        return [tab for tab in self._all_tabs() if isinstance(tab, CircuitTab)]
+
+    def _all_tabs(self) -> list[CircuitTab | ViewTab]:
         tabs = []
         for index in range(self._tabs.count()):
             tab = self._tabs.widget(index)
-            assert isinstance(tab, CircuitTab)
+            assert isinstance(tab, (CircuitTab, ViewTab))
             tabs.append(tab)
         return tabs
 
     def current_tab(self) -> CircuitTab:
-        """The tab that is shown"""
+        """The circuit tab that is shown, or the one of the subcircuit view that is shown"""
         tab = self._tabs.currentWidget()
+        if isinstance(tab, ViewTab):
+            tab = tab.parent_tab
         assert isinstance(tab, CircuitTab)
         return tab
+
+    def view_tabs(self) -> list[ViewTab]:
+        """The tabs with views of subcircuits"""
+        return [tab for tab in self._all_tabs() if isinstance(tab, ViewTab)]
+
+    def open_view(self, app_model: AppModel, names: list[str]) -> None:
+        """
+        View Subcircuit: show the view of a subcircuit instance (by its chain of names),
+        a new tab if it isn't open
+        """
+        for view in self.view_tabs():
+            if view.app_model is app_model and view.names == names:
+                self._tabs.setCurrentWidget(view)
+                return
+        parent_tab = next(tab for tab in self.tabs() if tab.app_model is app_model)
+        view = ViewTab(app_model, names, parent_tab, self.open_view, self)
+        index = self._tabs.addTab(view, view.title())
+        self._tabs.setTabToolTip(index, f"{view.title()}, read-only")
+        self._tabs.setCurrentIndex(index)
 
     @property
     def _app_model(self) -> AppModel:
@@ -205,6 +230,7 @@ class MainWindow(QMainWindow):
         app_model.sig_warning_log.connect(self.warning_log_dialog)
         app_model.sig_control_notify.connect(partial(self._update_titles, tab))
         app_model.sig_edit_subcircuit.connect(self.open_file)
+        app_model.sig_view_subcircuit.connect(lambda name: self.open_view(app_model, [name]))
         app_model.sig_saved.connect(partial(self._circuit_saved, tab))
         index = self._tabs.addTab(tab, tab.title())
         self._tabs.setCurrentIndex(index)
@@ -237,12 +263,21 @@ class MainWindow(QMainWindow):
         """File > Close Tab"""
         self._close_tab_at(self._tabs.currentIndex())
 
+    def _close_view(self, view: ViewTab) -> None:
+        if self._shown_tab is view:
+            self._shown_tab = None
+        self._tabs.removeTab(self._tabs.indexOf(view))
+        view.deleteLater()
+
     def _close_tab_at(self, index: int) -> bool:
         """
         Close a tab, asking first if its circuit has changed, False if that was cancelled.
         The last tab is not closed, it gets an empty circuit.
         """
         tab = self._tabs.widget(index)
+        if isinstance(tab, ViewTab):
+            self._close_view(tab)
+            return True
         assert isinstance(tab, CircuitTab)
         if not tab.verilog_editors.close_all():
             return False
@@ -256,6 +291,10 @@ class MainWindow(QMainWindow):
         return True
 
     def _remove_tab(self, tab: CircuitTab) -> None:
+        # Its views go with it
+        for view in self.view_tabs():
+            if view.parent_tab is tab:
+                self._close_view(view)
         tab.app_model.model_stop()
         if self._shown_tab is tab:
             self._shown_tab = None
@@ -266,11 +305,14 @@ class MainWindow(QMainWindow):
         """Another tab is shown: the one that was shown stops, the menu follows the new one"""
         if self._tabs.count() == 0:
             return
+        shown = self._tabs.currentWidget()
+        assert isinstance(shown, (CircuitTab, ViewTab))
         tab = self.current_tab()
-        if self._shown_tab is not None and self._shown_tab is not tab:
+        # A view of a subcircuit shows the simulation of its circuit, which goes on
+        if self._shown_tab is not None and self._shown_tab.app_model is not shown.app_model:
             self._shown_tab.app_model.model_stop()
-        self._shown_tab = tab
-        self._menu_bar.set_tab(tab.app_model, tab.circuit_area)
+        self._shown_tab = shown
+        self._menu_bar.set_tab(tab.app_model, tab.circuit_area, isinstance(shown, ViewTab))
         self._update_titles(tab)
 
     def _circuit_saved(self, saved_tab: CircuitTab, path: str) -> None:

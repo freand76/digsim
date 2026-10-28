@@ -65,6 +65,12 @@ class SubCircuitObject(NamedBoxObject):
         edit_action.triggered.connect(
             lambda: self._app_model.sig_edit_subcircuit.emit(str(self.component.source_file()))
         )
+        view_action = QAction("View Subcircuit", menu)
+        menu.addAction(view_action)
+        view_action.setEnabled(self.component.has_layout())
+        view_action.triggered.connect(
+            lambda: self._app_model.sig_view_subcircuit.emit(self.component.name())
+        )
         reload_action = QAction("Reload", menu)
         menu.addAction(reload_action)
         reload_action.triggered.connect(
