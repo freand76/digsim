@@ -94,6 +94,15 @@ removed, and a message lists them.
 
 **View > Settings Pane** (**F4**) hides and shows the pane, and DigSim remembers it.
 
+### Oscillating circuits
+
+A circuit that oscillates, like a ring of an odd number of inverting gates, makes an
+event every nanosecond, and can't be simulated in real time. The simulation then runs as
+fast as it can, the simulation time turns red, and the components with ports that
+oscillate are marked with a red dashed outline. A message names the ports. Stop, clicks
+and the keys still work at once, and so does **Step Clock**, which stops after a second.
+The VCD file of an oscillating circuit grows fast.
+
 ### Dark theme
 
 **View > Theme** chooses **Light** or **Dark**, or **System** (the default): light or dark

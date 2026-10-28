@@ -3,9 +3,13 @@
 
 """Pytest module to test Step Clock, running to the next rising edge of a clock"""
 
-from digsim.app._clock_step import step_clock
+import time
+
+import pytest
+
+from digsim.app._clock_step import StepTooSlow, step_clock
 from digsim.circuit import Circuit
-from digsim.circuit.components import NOT, Clock, Counter, StaticValue
+from digsim.circuit.components import NAND, NOT, Clock, Counter, OnOffSwitch, StaticValue
 
 
 def test_step_clock_counts_once():
@@ -45,3 +49,22 @@ def test_step_clock_without_clock():
     StaticValue(circuit)
     circuit.init()
     assert not step_clock(circuit)
+
+
+def test_step_clock_of_an_oscillating_circuit():
+    """It stops after its time limit, the ring keeps it from finding the edge in time"""
+    circuit = Circuit()
+    Clock(circuit, frequency=1)
+    enable = OnOffSwitch(circuit, "EN")
+    gate, first, second = NAND(circuit), NOT(circuit), NOT(circuit)
+    enable.O.wire = gate.A
+    gate.Y.wire = first.A
+    first.Y.wire = second.A
+    second.Y.wire = gate.B
+    circuit.init()
+    circuit.run(ns=20)
+    enable.turn_on()
+    start = time.perf_counter()
+    with pytest.raises(StepTooSlow):
+        step_clock(circuit, max_seconds=0.2)
+    assert time.perf_counter() - start < 2

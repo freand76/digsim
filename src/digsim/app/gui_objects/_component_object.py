@@ -9,7 +9,7 @@ import abc
 from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, QSize, Qt
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QTransform
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen, QTransform
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsRectItem,
@@ -32,6 +32,10 @@ from ._component_port_item import PortGraphicsItem
 
 if TYPE_CHECKING:
     from digsim.app.model import AppModel
+
+
+# How far outside its rect the mark of an oscillating component is
+OSCILLATION_MARK = 3
 
 
 class ComponentObject(QGraphicsRectItem):
@@ -81,6 +85,8 @@ class ComponentObject(QGraphicsRectItem):
         self._rotation = 0
         # Mirrored top to bottom, before the rotation (see flip())
         self._flipped = False
+        # It has a port that oscillates, see Circuit.oscillating_ports()
+        self._oscillating = False
 
         # Create ports
         self.create_ports()
@@ -175,8 +181,9 @@ class ComponentObject(QGraphicsRectItem):
 
     def boundingRect(self) -> QRectF:
         """QT function: the rect and the outline, and what is painted outside the rect"""
-        # The outline of a selected component is 4 pixels wide at most
-        margin = self.PAINT_MARGIN + 2
+        # The outline of a selected component is 4 pixels wide at most, the mark of an
+        # oscillating one is outside of it
+        margin = self.PAINT_MARGIN + 2 + OSCILLATION_MARK
         return QRectF(self.rect()).adjusted(-margin, -margin, margin, margin)
 
     def paint(
@@ -190,6 +197,25 @@ class ComponentObject(QGraphicsRectItem):
         self.paint_component(painter)
         if self.SHOW_PORT_NAMES:
             self.paint_portnames(painter)
+        if self._oscillating:
+            pen = QPen(theme.WIRE_X, 2, Qt.PenStyle.DashLine)
+            painter.setPen(pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            mark = QRectF(self.rect()).adjusted(
+                -OSCILLATION_MARK, -OSCILLATION_MARK, OSCILLATION_MARK, OSCILLATION_MARK
+            )
+            painter.drawRoundedRect(mark, theme.CORNER, theme.CORNER)
+
+    @property
+    def oscillating(self) -> bool:
+        """It has a port that oscillates, it is marked"""
+        return self._oscillating
+
+    @oscillating.setter
+    def oscillating(self, oscillating: bool) -> None:
+        if oscillating != self._oscillating:
+            self._oscillating = oscillating
+            self.update()
 
     @property
     def component(self) -> Component:

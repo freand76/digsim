@@ -9,11 +9,12 @@ from __future__ import annotations
 
 import heapq
 import os
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path, PureWindowsPath
 from types import TracebackType
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, NamedTuple, Self
 
 from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
 
@@ -22,6 +23,7 @@ from .components.atoms import (
     VALUE_TYPE,
     Component,
     DigsimException,
+    Port,
     PortInOut,
     PortMultiBitWire,
     PortOutDelta,
@@ -37,6 +39,23 @@ EventPort = PortOutDelta | PortMultiBitWire | PortInOut
 
 class CircuitError(DigsimException):
     """A circuit error class"""
+
+
+class RunResult(NamedTuple):
+    """
+    How a run with a time limit ended (see Circuit.run_within()): if it stopped for a
+    single step, and if it ran all the time it was asked to
+    """
+
+    single_step: bool
+    complete: bool
+
+
+# The slices of simulated time that run_within() runs, between its looks at the clock: it
+# starts small, so that a circuit that oscillates gets a look soon, and grows while the
+# slices are fast, to at most MAX_SLICE_NS
+START_SLICE_NS = 1_000
+MAX_SLICE_NS = 1_000_000
 
 
 class CircuitEvent(float):
@@ -74,6 +93,8 @@ class Circuit:
         self._time_ns: int = 0
         self._folder: str = "."
         self._vcd: WavesWriter | None = None
+        # The slice of run_within()
+        self._slice_ns = START_SLICE_NS
 
         if vcd is not None:
             self._vcd = WavesWriter(filename=vcd)
@@ -161,6 +182,7 @@ class Circuit:
         self._time_ns = 0
         self._circuit_events = []
         self._events_by_port = {}
+        self._slice_ns = START_SLICE_NS
         if self._vcd is not None:
             self._vcd_init()
         for comp in self._components.values():
@@ -336,6 +358,86 @@ class Circuit:
         if vcd is not None:
             vcd.flush()
         return single_step_stop
+
+    def run_within(
+        self,
+        seconds: float,
+        s: float | None = None,
+        ms: float | None = None,
+        us: float | None = None,
+        ns: float | None = None,
+        single_step: bool = False,
+    ) -> RunResult:
+        """
+        Run the simulation like run(), but for at most a time on the clock: a circuit that
+        oscillates makes so many events that a run could take minutes. It runs slices of
+        the time with run(), and stops after the slice that takes it past the limit. The
+        events are the same as with one run(), only where it stops can be earlier.
+
+        Args:
+            seconds: The most time on the clock it runs (a slice can take more).
+            s: Seconds of simulated time.
+            ms: Milliseconds.
+            us: Microseconds.
+            ns: Nanoseconds.
+            single_step: Stop after the first event on a port of a top-level component,
+                like run().
+
+        Returns:
+            If it stopped for a single step, and if it ran all the time.
+        """
+        stop_time_ns = self.time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
+        deadline = time.perf_counter() + seconds
+        while self.time_ns < stop_time_ns:
+            start = time.perf_counter()
+            step_ns = min(self._slice_ns, stop_time_ns - self.time_ns)
+            if self.run(ns=step_ns, single_step=single_step):
+                return RunResult(single_step=True, complete=True)
+            now = time.perf_counter()
+            # Longer slices while they are fast, shorter when they are slow
+            if now - start < seconds / 20:
+                self._slice_ns = min(MAX_SLICE_NS, self._slice_ns * 2)
+            elif now - start > seconds / 5:
+                self._slice_ns = max(1, self._slice_ns // 2)
+            if now >= deadline and self.time_ns < stop_time_ns:
+                return RunResult(single_step=False, complete=False)
+        return RunResult(single_step=False, complete=True)
+
+    def restart_slices(self) -> None:
+        """
+        Start run_within() with a short slice again, like after an input changed: it can
+        start an oscillation, which a long slice would run for long
+        """
+        self._slice_ns = START_SLICE_NS
+
+    def oscillating_ports(self, ns: int = 200, changes: int = 10) -> list[Port]:
+        """
+        The ports of the top-level components that oscillate: it runs the simulation for a
+        while, a nanosecond at a time, and counts how often each output changes. A port
+        that changes at least 'changes' times in 'ns' nanoseconds oscillates. Run it while
+        the inputs of the circuit don't change. The ones that change the most come first.
+
+        Args:
+            ns: How long it runs, in nanoseconds.
+            changes: How many changes make an oscillation.
+        """
+        ports = [
+            port
+            for component in self.get_toplevel_components()
+            for port in component.ports
+            if port.is_output()
+        ]
+        counts = dict.fromkeys(ports, 0)
+        values = [port.value for port in ports]
+        for _ in range(ns):
+            self.run(ns=1)
+            for number, port in enumerate(ports):
+                value = port.value
+                if value != values[number]:
+                    counts[port] += 1
+                    values[number] = value
+        found = [port for port in ports if counts[port] >= changes]
+        return sorted(found, key=lambda port: -counts[port])
 
     def run_until(
         self,

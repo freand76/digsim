@@ -658,3 +658,29 @@ def test_theme(gui):
     assert area.backgroundBrush().color() == theme.BACKGROUND
     assert QApplication.palette().color(QPalette.ColorRole.Window).lightness() >= 128
     gui.window.set_theme("system")
+
+
+def test_oscillating_circuit(gui):
+    """An oscillating ring: Stop works at once, and the ring is marked"""
+    import time
+
+    switch, gate, first, second = (gui.add(name) for name in ("OnOffSwitch", "NAND", "NOT", "NOT"))
+    wires = gui.model.objects.wires
+    wires.connect_ports(switch.component.O, gate.component.A)
+    wires.connect_ports(gate.component.Y, first.component.A)
+    wires.connect_ports(first.component.Y, second.component.A)
+    wires.connect_ports(second.component.Y, gate.component.B)
+    reported, slow = [], []
+    gui.model.sig_oscillating.connect(reported.append)
+    gui.model.sig_sim_slow.connect(slow.append)
+    gui.model.model_init()
+    gui.trigger("Simulation", "Start")
+    spin(300)
+    gui.model.model_add_event(switch.component.onpress)
+    spin(2500)
+    assert True in slow
+    assert set(reported[-1]) == {"NAND.Y", "NOT.Y", "NOT_1.Y"}
+    assert gate.oscillating and not switch.oscillating
+    start = time.perf_counter()
+    gui.trigger("Simulation", "Stop")
+    assert time.perf_counter() - start < 1

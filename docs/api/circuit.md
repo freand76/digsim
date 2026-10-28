@@ -9,6 +9,9 @@
         - init
         - run
         - run_until
+        - run_within
+        - restart_slices
+        - oscillating_ports
         - process_single_event
         - vcd
         - vcd_close
@@ -20,3 +23,5 @@
         - from_json_file
         - to_dataclass
         - from_dataclass
+
+::: digsim.circuit.RunResult

@@ -66,12 +66,31 @@ gtkwave sr.vcd
 | `init()` | Initialize the circuit, after adding and connecting components |
 | `run(s=, ms=, us=, ns=)` | Run the simulation for a period of time |
 | `run_until(s=, ms=, us=, ns=)` | Run the simulation until an absolute time |
+| `run_within(seconds, s=, ms=, us=, ns=)` | Run like `run()`, but for at most `seconds` on the clock, see [Oscillating circuits](#oscillating-circuits) |
+| `oscillating_ports(ns=200)` | The output ports of the top-level components that oscillate |
 | `process_single_event(stop_time_ns=None)` | Process only the next event, to step through a simulation. Returns two booleans: if an event was processed (not if there were none, or the next one is after `stop_time_ns`), and if it was on a port of a top-level component rather than inside one, like a Yosys component. |
 | `time_ns` | The current simulation time in nanoseconds |
 | `get_component(name)` | Look up a component by name |
 | `vcd(filename)` / `vcd_close()` | Start or finish writing a VCD file |
 | `to_json_file(filename)` | Save the circuit. File paths in it, like a Verilog file, are stored relative to the file. |
 | `from_json_file(filename, folder=None)` | Load a circuit, also a circuit file saved by the GUI, with the connections of its wires. Relative file paths in it are read from the file's folder, or from `folder` if it is given. |
+
+### Oscillating circuits
+
+A circuit that oscillates, like a ring of gates, makes an event every nanosecond or so,
+and a `run()` of a few milliseconds can then take minutes. `run_within()` runs for at
+most a time on the clock, and says if it ran all of the time:
+
+```python
+result = circuit.run_within(0.5, ms=50)
+if not result.complete:
+    for port in circuit.oscillating_ports():
+        print(f"{port.parent().name()}.{port.name()} oscillates")
+```
+
+It runs the same events as `run()`, in slices of the time, so a run that is continued
+with more calls has the same events as one long run. `oscillating_ports()` runs the
+circuit for a short while, 200 ns by default, and counts how often each output changes.
 
 ### Components and ports
 

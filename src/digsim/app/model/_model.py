@@ -12,7 +12,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QThread, Signal
 
-from digsim.app._clock_step import step_clock
+from digsim.app._clock_step import StepTooSlow, step_clock
 from digsim.app._wire_key import port_key
 from digsim.app.gui_objects import ComponentObject
 from digsim.circuit.components.atoms import Component, DigsimException
@@ -25,6 +25,10 @@ from ._model_shortcuts import ModelShortcuts
 
 # How long the circuit runs to settle after an input changed while it was stopped
 SETTLE_US = 10
+# How long Step Clock runs at most on the clock, for a circuit that oscillates
+STEP_CLOCK_SECONDS = 1.0
+# How often a simulation that is slower than real time looks for oscillating ports
+OSCILLATION_CHECK_SECONDS = 1.0
 
 
 class AppModel(QThread):
@@ -56,6 +60,10 @@ class AppModel(QThread):
     sig_show_settings = Signal()
     # The circuit was saved in a file, the subcircuits of the file in other tabs reload
     sig_saved = Signal(str)
+    # The simulation is slower than real time (True), or keeps up again (False)
+    sig_sim_slow = Signal(bool)
+    # The ports that oscillate, as "component.port" (empty when none do any more)
+    sig_oscillating = Signal(list)
 
     def __init__(self) -> None:
         super().__init__()
@@ -129,6 +137,7 @@ class AppModel(QThread):
         self.objects.circuit.init()
         self.objects.init()
         self.sig_sim_time_notify.emit(0)
+        self.sig_oscillating.emit([])
 
     def _wait_finished(self) -> None:
         """
@@ -214,6 +223,13 @@ class AppModel(QThread):
         next_tick = start_time
         sim_tick_ms = 1000 / self._model_settings.get("update_frequency")
         real_time = self._model_settings.get("real_time")
+        circuit = self.objects.circuit
+        # A tick runs for at most a tick on the clock: a circuit that oscillates makes so
+        # many events that it would not stop, or handle clicks, for minutes otherwise
+        slow = False
+        last_check = 0.0
+        circuit.restart_slices()
+        self.sig_oscillating.emit([])
         self.sig_audio_start.emit(True)
         while self._keep_running:
             next_tick += sim_tick_ms / 1000
@@ -222,13 +238,30 @@ class AppModel(QThread):
             if not self._gui_event_queue.empty():
                 gui_event_func = self._gui_event_queue.get()
                 gui_event_func()
+                # An input changed, it can start an oscillation
+                circuit.restart_slices()
 
+            complete = True
             if self._clock_step:
-                step_clock(self.objects.circuit)
+                try:
+                    step_clock(circuit, max_seconds=STEP_CLOCK_SECONDS)
+                except StepTooSlow:
+                    complete = False
                 self._keep_running = False
-            elif self.objects.circuit.run(ms=sim_tick_ms, single_step=self._single_step):
-                # Stopped for a single step
-                self._keep_running = False
+            else:
+                result = circuit.run_within(
+                    sim_tick_ms / 1000, ms=sim_tick_ms, single_step=self._single_step
+                )
+                complete = result.complete
+                if result.single_step:
+                    # Stopped for a single step
+                    self._keep_running = False
+            if complete != (not slow):
+                slow = not complete
+                self.sig_sim_slow.emit(slow)
+            if slow and time.perf_counter() - last_check > OSCILLATION_CHECK_SECONDS:
+                last_check = time.perf_counter()
+                self._report_oscillation()
 
             self.objects.components.update_callback_objects()
 
@@ -249,8 +282,16 @@ class AppModel(QThread):
 
         self._single_step = False
         self._clock_step = False
+        if slow:
+            self.sig_sim_slow.emit(False)
         self.sig_audio_start.emit(False)
         # sig_control_notify is sent by _thread_finished(), when the thread has stopped
+
+    def _report_oscillation(self) -> None:
+        """Find the ports that oscillate (it runs the circuit a little), and tell the GUI"""
+        ports = self.objects.circuit.oscillating_ports()
+        if ports:
+            self.sig_oscillating.emit([port_key(port) for port in ports])
 
     def _thread_finished(self) -> None:
         """Called in the GUI thread when the simulation thread has finished"""

@@ -848,6 +848,10 @@ class NewWireGraphicsItem(QGraphicsPathItem):
             super().paint(painter, option, widget)
 
 
+# The oscillating ports that the message names, the others are counted
+OSCILLATION_SHOWN = 4
+
+
 class _CircuitAreaScene(QGraphicsScene):
     """The circuit area graphics scene"""
 
@@ -867,6 +871,7 @@ class _CircuitAreaScene(QGraphicsScene):
         self._app_model.sig_control_notify.connect(self._control_notify)
         self._app_model.sig_audio_start.connect(self._audio_start)
         self._app_model.sig_audio_notify.connect(self._audio_notify)
+        self._app_model.sig_oscillating.connect(self._oscillating)
         self._wire_items: list[WireGraphicsItem] = []
         # The wire items of each line
         self._line_items: dict[Node, list[WireGraphicsItem]] = {}
@@ -1469,6 +1474,20 @@ class _CircuitAreaScene(QGraphicsScene):
             self.add_scene_component(component_object)
         # Update (add) wires
         self._update_wires()
+
+    def _oscillating(self, port_keys: list[str]) -> None:
+        """Mark the components with ports that oscillate, and say which ones"""
+        names = {key.rpartition(".")[0] for key in port_keys}
+        for component_object in self._app_model.objects.components.get_object_list():
+            component_object.oscillating = component_object.component.name() in names
+        if port_keys:
+            shown = ", ".join(port_keys[:OSCILLATION_SHOWN])
+            more = len(port_keys) - OSCILLATION_SHOWN
+            if more > 0:
+                shown += f" and {more} more"
+            self._view.show_message(
+                f"Oscillating: {shown}. The simulation is slower than real time."
+            )
 
     def refresh_theme(self) -> None:
         """The pens made from the colors of the theme, after it changed"""

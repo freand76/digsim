@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from digsim.app.gui_objects import _theme as theme
 from digsim.app.settings import GuiSettingsDialog
 
 
@@ -124,9 +125,19 @@ class SimTimeWidget(QFrame):
         self._sim_time.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         layout.addWidget(self._sim_time)
         self._app_model.sig_sim_time_notify.connect(self._sim_time_notify)
+        self._app_model.sig_sim_slow.connect(self._sim_slow)
 
     def _sim_time_notify(self, time_s: float) -> None:
         self._sim_time.setText(f"{time_s:.2f} s")
+
+    def _sim_slow(self, slow: bool) -> None:
+        """The time in red while the simulation is slower than real time"""
+        self._sim_time.setStyleSheet(f"color: {theme.WIRE_X.name()}" if slow else "")
+        self._sim_time.setToolTip(
+            "Slower than real time: the circuit makes many events, like a circuit that oscillates"
+            if slow
+            else ""
+        )
 
 
 class VcdFilenameWidget(QFrame):
