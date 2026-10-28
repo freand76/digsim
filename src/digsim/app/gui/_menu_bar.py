@@ -10,6 +10,7 @@ from collections.abc import Callable
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING
+from weakref import WeakKeyDictionary
 
 from PySide6.QtCore import QSettings, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QKeySequence, QShortcut
@@ -55,8 +56,9 @@ class MenuBar(QMenuBar):
         self._can_paste = False
         # The tab that is shown is a view of a subcircuit, see set_tab()
         self._read_only = False
-        # The circuit file of each model when the recent files were last updated
-        self._recent_paths: dict[AppModel, str | None] = {}
+        # The circuit file of each model when the recent files were last updated, weak: the
+        # model of a closed tab isn't kept for it
+        self._recent_paths: WeakKeyDictionary[AppModel, str | None] = WeakKeyDictionary()
 
         file_menu = self.addMenu("&File")
         self._add(file_menu, "New &Tab", self.sig_new_tab.emit, "Ctrl+T")

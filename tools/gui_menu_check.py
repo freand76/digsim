@@ -23,7 +23,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 # Settings of their own, not the recent files of the user
 os.environ.setdefault("DIGSIM_SETTINGS_DIR", tempfile.mkdtemp(prefix="digsim_settings_"))
 
-from PySide6.QtCore import QEvent, QEventLoop, QPointF, Qt, QTimer
+from PySide6.QtCore import QCoreApplication, QEvent, QEventLoop, QPointF, Qt, QTimer
 from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -136,6 +136,22 @@ def test_menus(gui):
     assert gui.action("Simulation", "Start").shortcut() == QKeySequence("F5")
     assert gui.action("Simulation", "Single Step").shortcut() == QKeySequence("F11")
     assert gui.action("Simulation", "Step Clock").shortcut() == QKeySequence("F10")
+
+
+def test_a_closed_tab_is_not_kept_by_the_menu(gui):
+    import gc
+    import weakref
+
+    gui.trigger("File", "New Tab")
+    model = weakref.ref(gui.window.current_tab().app_model)
+    assert model() in gui.menu_bar._recent_paths
+    gui.trigger("File", "Close Tab")
+    for _ in range(3):
+        QCoreApplication.sendPostedEvents(None, int(QEvent.Type.DeferredDelete))
+        gc.collect()
+        spin()
+    assert model() is None
+    assert list(gui.menu_bar._recent_paths) == [gui.model]
 
 
 def test_save_as_then_save(gui, tmp_path):

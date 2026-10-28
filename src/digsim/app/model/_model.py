@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import queue
 import time
+import warnings
 from collections.abc import Callable
 from pathlib import Path
 
@@ -185,6 +186,19 @@ class AppModel(QThread):
         self.objects.components.update_callback_objects()
         self.sig_sim_time_notify.emit(self.objects.circuit.time_ns / 1000000000)
         self.sig_repaint.emit()
+
+    def disconnect_signals(self) -> None:
+        """
+        Disconnect everything from the model's signals, when its tab is closed: the
+        functions connected to them refer to the model, it isn't freed while they are
+        """
+        with warnings.catch_warnings():
+            # A signal with nothing connected
+            warnings.simplefilter("ignore", RuntimeWarning)
+            for name, value in vars(AppModel).items():
+                if isinstance(value, Signal):
+                    getattr(self, name).disconnect()
+            self.finished.disconnect()
 
     def model_stop(self) -> None:
         """Stop model simulation thread"""

@@ -414,6 +414,8 @@ class MainWindow(QMainWindow):
             self._shown_tab = None
         self._tabs.removeTab(self._tabs.indexOf(tab))
         tab.deleteLater()
+        # Then the model is freed, with its circuit
+        tab.app_model.disconnect_signals()
 
     def _tab_changed(self, _: int) -> None:
         """Another tab is shown: the one that was shown stops, the menu follows the new one"""
