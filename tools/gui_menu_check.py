@@ -23,8 +23,8 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 # Settings of their own, not the recent files of the user
 os.environ.setdefault("DIGSIM_SETTINGS_DIR", tempfile.mkdtemp(prefix="digsim_settings_"))
 
-from PySide6.QtCore import QEventLoop, QPointF, Qt, QTimer
-from PySide6.QtGui import QAction, QImage, QKeySequence
+from PySide6.QtCore import QEvent, QEventLoop, QPointF, Qt, QTimer
+from PySide6.QtGui import QAction, QImage, QKeySequence, QMouseEvent
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -610,6 +610,46 @@ def test_added_component_is_selected_without_a_dialog(gui):
     (counter,) = gui.model.objects.components.get_object_list()
     assert counter.isSelected()
     assert gui.window.settings_pane._title.text() == "Counter"
+
+
+def _mouse(gui: Gui, kind: QEvent.Type, pos: QPointF, held: bool) -> None:
+    """A mouse event in the circuit area, at a position in the scene"""
+    area = gui.window.findChild(CircuitArea)
+    view_pos = area.mapFromScene(pos)
+    button = (
+        Qt.MouseButton.NoButton if kind == QEvent.Type.MouseMove else Qt.MouseButton.LeftButton
+    )
+    event = QMouseEvent(
+        kind,
+        QPointF(view_pos),
+        QPointF(area.viewport().mapToGlobal(view_pos)),
+        button,
+        Qt.MouseButton.LeftButton if held else Qt.MouseButton.NoButton,
+        Qt.KeyboardModifier.NoModifier,
+    )
+    QApplication.sendEvent(area.viewport(), event)
+    spin(5)
+
+
+def _press_move_release(gui: Gui, start: QPointF, end: QPointF) -> None:
+    _mouse(gui, QEvent.Type.MouseMove, start, held=False)
+    _mouse(gui, QEvent.Type.MouseButtonPress, start, held=True)
+    _mouse(gui, QEvent.Type.MouseMove, end, held=True)
+    _mouse(gui, QEvent.Type.MouseButtonRelease, end, held=False)
+
+
+def test_a_click_that_shakes_toggles_a_switch(gui):
+    """A click that moves a little is a click, the switch turns on and stays where it is"""
+    switch = gui.add("OnOffSwitch")
+    position = switch.pos()
+    center = switch.mapToScene(switch.rect().center())
+    _press_move_release(gui, center, center + QPointF(3, 2))
+    assert switch.component.O.value == 1
+    assert switch.pos() == position
+    # Further, it is moved
+    _press_move_release(gui, center, center + QPointF(40, 0))
+    assert switch.pos() != position
+    assert switch.component.O.value == 1
 
 
 def _hex_editor(gui: Gui, component_object: Any) -> Any:

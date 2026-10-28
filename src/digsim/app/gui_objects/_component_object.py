@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Any
 from PySide6.QtCore import QPoint, QPointF, QRect, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QPainter, QPen, QTransform
 from PySide6.QtWidgets import (
+    QApplication,
     QGraphicsItem,
     QGraphicsRectItem,
     QGraphicsSceneContextMenuEvent,
@@ -79,6 +80,8 @@ class ComponentObject(QGraphicsRectItem):
         self._port_items: dict[Port, PortGraphicsItem] = {}
         self._parent_widget: QWidget | None = None
         self._mouse_press_pos: QPoint | None = None
+        # Dragged further than a click, the component moves
+        self._dragging = False
         self._moved = False
         self._save_pos: QPointF | QPoint = self.rect().topLeft()
         # Clockwise, around the middle of the rect: 0, 90, 180 or 270 degrees
@@ -150,7 +153,19 @@ class ComponentObject(QGraphicsRectItem):
                 self._app_model.model_add_event(self.component.onpress)
             else:
                 self._mouse_press_pos = event.screenPos()
+                self._dragging = False
                 self.setCursor(Qt.CursorShape.ClosedHandCursor)
+
+    def mouseMoveEvent(self, event: QGraphicsSceneMouseEvent) -> None:
+        """QT event callback function"""
+        if self._mouse_press_pos is not None and not self._dragging:
+            moved = event.screenPos() - self._mouse_press_pos
+            if moved.manhattanLength() < QApplication.startDragDistance():
+                # Still a click, like on a switch: a hand that shakes doesn't move it
+                return
+            # It moves from where it was pressed, Qt keeps the position of the press
+            self._dragging = True
+        super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event: QGraphicsSceneMouseEvent) -> None:
         """QT event callback function"""
@@ -160,7 +175,7 @@ class ComponentObject(QGraphicsRectItem):
                 self._app_model.model_add_event(self.component.onrelease)
             else:
                 self.setCursor(Qt.CursorShape.ArrowCursor)
-                if event.screenPos() != self._mouse_press_pos:
+                if self._dragging:
                     # Move completed, set model to changed
                     self._app_model.objects.components.component_moved()
                     position = self.rect().topLeft() + self.pos()
@@ -169,6 +184,7 @@ class ComponentObject(QGraphicsRectItem):
                     if not self._app_model.objects.new_wire.ongoing():
                         self.single_click_action()
         self._mouse_press_pos = None
+        self._dragging = False
 
     def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent) -> None:
         """QT event callback function"""

@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - GUI: a click on a switch or button that moves the mouse a little is a click, it moved the component instead
  - The error of a RAM or ROM whose binary file doesn't fit the data width says how many bytes a word has in the file
  - GUI: rename a component with Name at the top of the settings pane. The name is in the VCD file and in Python, the wires, place and shortcut follow it, and a name you gave it stays when it changes to another IC or file.
  - GUI: clearing the file of a Verilog component, ROM or subcircuit in the settings says that it needs a file. It tried to read the circuit's folder as the file and showed an error about that.
