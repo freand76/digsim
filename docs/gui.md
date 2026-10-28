@@ -28,7 +28,7 @@ The window has a menu bar and three areas:
   Rotate, Flip Horizontal, Flip Vertical, Find Component, Settings), **View** (zoom in and
   out, Zoom to Fit: the whole circuit in the window, the
   [settings pane](#settings-pane) and the [theme](#dark-theme)), **Simulation** (Start,
-  Single Step, Step Clock, Reset) and **Help** (the documentation, and the version of
+  Single Step, Step Clock, Reset, VCD Output, VCD File) and **Help** (the documentation, and the version of
   DigSim). Save saves the circuit in the file it was opened from or saved to, the window
   title shows that file, with a `*` when the circuit has changed since.
 - **Component selection** (blue, left): all available components, grouped by type, with
@@ -287,8 +287,9 @@ The circuit cannot be edited while the simulation is running.
 
 ### VCD output
 
-Check **VCD output** in the control area to record all signals to a
-[VCD file](https://en.wikipedia.org/wiki/Value_change_dump) while simulating. Open the
+Check **VCD output** in the control area, or **Simulation > VCD Output**, to record all
+signals to a [VCD file](https://en.wikipedia.org/wiki/Value_change_dump) while
+simulating. The file button, or **Simulation > VCD File...**, chooses another file. Open the
 file in [GTKWave](https://gtkwave.sourceforge.net/) or a similar waveform viewer.
 
 The file starts over when the simulation restarts from time 0: on **Reset**, when a

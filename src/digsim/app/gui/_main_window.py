@@ -123,6 +123,7 @@ class CircuitTab(QWidget):
 
         self.circuit_editor = CircuitEditor(app_model, self)
         top_bar = TopBar(app_model, self)
+        self.vcd = top_bar.vcd
         layout.addWidget(top_bar)
         layout.setStretchFactor(top_bar, 0)
 
@@ -426,6 +427,7 @@ class MainWindow(QMainWindow):
             self._shown_tab.app_model.model_stop()
         self._shown_tab = shown
         self._menu_bar.set_tab(tab.app_model, tab.circuit_area, isinstance(shown, ViewTab))
+        self._menu_bar.set_vcd(tab.vcd)
         self.settings_pane.set_tab(tab.app_model, tab.circuit_area, isinstance(shown, ViewTab))
         self._update_titles(tab)
 

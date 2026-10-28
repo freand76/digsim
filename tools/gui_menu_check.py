@@ -267,6 +267,28 @@ def test_f5_starts_and_stops(gui):
         spin()
 
 
+def test_vcd_output_in_the_menu(gui, tmp_path):
+    """VCD Output in the menu is the checkbox of the top bar, both follow each other"""
+    from digsim.app.gui._top_bar import VcdControlWidget
+
+    vcd = gui.window.findChild(VcdControlWidget)
+    assert not gui.action("Simulation", "VCD File...").isEnabled()
+    # No file chosen: it stays off
+    gui.trigger("Simulation", "VCD Output")
+    assert not vcd.enabled
+    assert not gui.action("Simulation", "VCD Output").isChecked()
+    gui.path = str(tmp_path / "first.vcd")
+    gui.trigger("Simulation", "VCD Output")
+    assert vcd.enabled
+    assert gui.action("Simulation", "VCD File...").isEnabled()
+    gui.path = str(tmp_path / "second.vcd")
+    gui.trigger("Simulation", "VCD File...")
+    assert vcd._vcd_filename == gui.path
+    # The checkbox turns the menu item off
+    vcd._enable_vcd.setChecked(False)
+    assert not gui.action("Simulation", "VCD Output").isChecked()
+
+
 def test_simulation(gui):
     """Start turns into Stop while the simulation runs, and the file actions are off"""
     gui.add("Clock")

@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - GUI: VCD Output and VCD File... in the Simulation menu, like the VCD checkbox and file button
  - GUI: the VCD file field grows with the window, up to a width, and shows the path of the file, shortened in the middle when it is long
  - GUI: F11 is Single Step
  - GUI: F5 starts and stops the simulation, like Space

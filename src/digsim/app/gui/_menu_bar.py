@@ -25,6 +25,8 @@ from ._circuit_area import CircuitArea
 if TYPE_CHECKING:
     from digsim.app.model import AppModel
 
+    from ._top_bar import VcdControlWidget
+
 DOCUMENTATION_URL = "https://freand76.github.io/digsim/"
 CIRCUIT_FILES = "Circuit Files (*.circuit);;All Files (*.*)"
 
@@ -139,6 +141,12 @@ class MenuBar(QMenuBar):
         self._reset_action = self._add(
             simulation_menu, "&Reset", lambda: self._app_model.model_reset()
         )
+        simulation_menu.addSeparator()
+        # The VCD output of the tab that is shown, like its top bar (see set_vcd)
+        self._vcd: VcdControlWidget | None = None
+        self._vcd_action = self._add(simulation_menu, "&VCD Output", self._vcd_output)
+        self._vcd_action.setCheckable(True)
+        self._vcd_file_action = self._add(simulation_menu, "VCD &File...", self._vcd_file)
 
         help_menu = self.addMenu("&Help")
         self._add(help_menu, "&Documentation", self._documentation, "F1")
@@ -281,6 +289,23 @@ class MenuBar(QMenuBar):
             self._circuit_area = circuit_area
         self.update_actions()
 
+    def set_vcd(self, vcd: VcdControlWidget) -> None:
+        """The VCD output of the tab that is shown, the VCD actions follow it"""
+        if self._vcd is not None and self._vcd is not vcd:
+            self._vcd.sig_changed.disconnect(self.update_actions)
+        if self._vcd is not vcd:
+            vcd.sig_changed.connect(self.update_actions)
+            self._vcd = vcd
+        self.update_actions()
+
+    def _vcd_output(self) -> None:
+        if self._vcd is not None:
+            self._vcd.set_enabled(self._vcd_action.isChecked())
+
+    def _vcd_file(self) -> None:
+        if self._vcd is not None:
+            self._vcd.choose_file()
+
     def _area_call(self, method: str) -> Callable[[], None]:
         """A method of the circuit area, for an action"""
 
@@ -395,6 +420,10 @@ class MenuBar(QMenuBar):
             not running and bool(circuit_clocks(self._app_model.objects.circuit))
         )
         self._reset_action.setEnabled(not running and self._time_s > 0)
+        vcd_on = self._vcd is not None and self._vcd.enabled
+        self._vcd_action.setChecked(vcd_on)
+        self._vcd_action.setEnabled(not running and self._vcd is not None)
+        self._vcd_file_action.setEnabled(not running and vcd_on)
         if self._read_only:
             for action in (
                 self._new_action,

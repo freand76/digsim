@@ -8,7 +8,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QResizeEvent
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -189,8 +189,11 @@ class VcdFilenameWidget(QFrame):
 
 class VcdControlWidget(QFrame):
     """
-    The widget for controlling the vcd output file
+    The widget for controlling the vcd output file, also from the Simulation menu
     """
+
+    # VCD output was turned on or off, or got another file
+    sig_changed = Signal()
 
     def __init__(self, app_model: AppModel, parent: QWidget) -> None:
         super().__init__(parent)
@@ -202,6 +205,7 @@ class VcdControlWidget(QFrame):
         layout.setSpacing(5)
         self._enable_vcd = QCheckBox("VCD output", self)
         self._enable_vcd.stateChanged.connect(self._enable)
+        self._enable_vcd.stateChanged.connect(lambda _: self.sig_changed.emit())
         self._vcd_path = QPushButton("", self)
         self._vcd_path.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileIcon))
         self._vcd_path.clicked.connect(self._change_vcd_file)
@@ -216,6 +220,19 @@ class VcdControlWidget(QFrame):
         layout.addStretch(0)
         self._enable_buttons(False)
         self._app_model.sig_control_notify.connect(self._control_notify)
+
+    @property
+    def enabled(self) -> bool:
+        """VCD output is on"""
+        return self._enable_vcd.isChecked()
+
+    def set_enabled(self, enabled: bool) -> None:
+        """Turn VCD output on (it asks for a file if it has none) or off"""
+        self._enable_vcd.setChecked(enabled)
+
+    def choose_file(self) -> None:
+        """Ask for another VCD file"""
+        self._change_vcd_file()
 
     def _enable_buttons(self, enable: bool) -> None:
         self._vcd_path.setEnabled(enable)
@@ -242,6 +259,7 @@ class VcdControlWidget(QFrame):
         self._vcd_filename = filename
         self._filename_widget.set_filename(str(Path(filename).resolve()))
         self._enable_buttons(True)
+        self.sig_changed.emit()
 
     def _open_filedialog(self) -> str | None:
         default_filename = self._vcd_filename
@@ -291,5 +309,6 @@ class TopBar(QFrame):
         layout.addWidget(SimTimeWidget(app_model, self))
         layout.addSpacing(15)
         # The VCD file grows with the window (up to its widest), then the space at the end
-        layout.addWidget(VcdControlWidget(app_model, self), 1)
+        self.vcd = VcdControlWidget(app_model, self)
+        layout.addWidget(self.vcd, 1)
         layout.addStretch(0)
