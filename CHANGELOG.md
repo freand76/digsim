@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - A flip-flop with an asynchronous load in a gate netlist (the Yosys cells $_ALDFF_ and $_ALDFFE_) follows the load value while the load is active, like the functional $aldff. Before, it only took the value when the load started.
  - New ICs: 74164 (8-bit serial-in, parallel-out shift register) and 74165 (8-bit parallel-in, serial-out shift register)
  - GUI: rotate gates and the other components drawn as a symbol (the tristate buffer, MUX, decoder, demultiplexer and the bus splitters), a quarter at a time, with Rotate in the context menu or Edit > Rotate (Ctrl+R). Wires to a rotated component leave its ports in the directions they face, and the rotation is saved in the circuit file.
  - New component: Splitter, a bus split into groups of bits, like [7:4] and [3:0], or groups merged into a bus. `Splitter(circuit, groups=[4, 4])`, and in the GUI under Bus / Wires.

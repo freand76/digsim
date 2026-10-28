@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pystest module to test functionality of yosys asynchronous load dff"""
@@ -65,12 +65,21 @@ def test_yosys_aldff_Xx_(test_class, c_edge, l_level):
     circuit.run(ms=1)
     assert _dut.Q.value == 0
 
-    _dut.AD.value = 1
+    # After the load, AD doesn't change Q
     _dut.L.value = inv(l_level)
+    _dut.AD.value = 1
     circuit.run(ms=1)
     assert _dut.Q.value == 0
 
     _dut.L.value = l_level
+    circuit.run(ms=1)
+    assert _dut.Q.value == 1
+
+    # During the load, Q follows AD
+    _dut.AD.value = 0
+    circuit.run(ms=1)
+    assert _dut.Q.value == 0
+    _dut.AD.value = 1
     circuit.run(ms=1)
     assert _dut.Q.value == 1
 
@@ -123,8 +132,9 @@ def test_yosys_aldffe_xxx_(test_class, c_edge, l_level, e_level):
     circuit.run(ms=1)
     assert _dut.Q.value == 0
 
-    _dut.AD.value = 1
+    # After the load, AD doesn't change Q
     _dut.L.value = inv(l_level)
+    _dut.AD.value = 1
     circuit.run(ms=1)
     assert _dut.Q.value == 0
 
@@ -132,9 +142,17 @@ def test_yosys_aldffe_xxx_(test_class, c_edge, l_level, e_level):
     circuit.run(ms=1)
     assert _dut.Q.value == 1
 
-    # Clock Enable = 0
+    # During the load, Q follows AD
     _dut.AD.value = 0
+    circuit.run(ms=1)
+    assert _dut.Q.value == 0
+    _dut.AD.value = 1
+    circuit.run(ms=1)
+    assert _dut.Q.value == 1
+
+    # Clock Enable = 0
     _dut.L.value = inv(l_level)
+    _dut.AD.value = 0
     _dut.E.value = inv(e_level)
 
     _dut.D.value = 0
@@ -152,12 +170,21 @@ def test_yosys_aldffe_xxx_(test_class, c_edge, l_level, e_level):
     circuit.run(ms=1)
     assert _dut.Q.value == 0
 
-    _dut.AD.value = 1
+    # After the load, AD doesn't change Q
     _dut.L.value = inv(l_level)
+    _dut.AD.value = 1
     circuit.run(ms=1)
     assert _dut.Q.value == 0
 
     _dut.L.value = l_level
+    circuit.run(ms=1)
+    assert _dut.Q.value == 1
+
+    # During the load, Q follows AD
+    _dut.AD.value = 0
+    circuit.run(ms=1)
+    assert _dut.Q.value == 0
+    _dut.AD.value = 1
     circuit.run(ms=1)
     assert _dut.Q.value == 1
 

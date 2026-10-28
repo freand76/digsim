@@ -714,7 +714,8 @@ class _ALDFF_(ClockedComponent):
         super().__init__(circuit, name)
         self._clock_edge = self.name_to_level(0)
         self._load_level = self.name_to_level(1)
-        self.add_port(PortWire(self, "AD"))
+        # An input: while the load is active, Q follows AD
+        self.add_port(PortIn(self, "AD"))
         self.add_port(PortIn(self, "C"))
         self.add_port(PortWire(self, "D"))
         self.add_port(PortIn(self, "L"))
@@ -756,7 +757,8 @@ class _ALDFFE_(ClockedComponent):
         self._clock_edge = self.name_to_level(0)
         self._load_level = self.name_to_level(1)
         self._enable_level = self.name_to_level(2)
-        self.add_port(PortWire(self, "AD"))
+        # An input: while the load is active, Q follows AD
+        self.add_port(PortIn(self, "AD"))
         self.add_port(PortIn(self, "C"))
         self.add_port(PortWire(self, "D"))
         self.add_port(PortWire(self, "E"))
