@@ -260,8 +260,9 @@ Once the circuit has inputs and outputs, it can be simulated.
 
 | Control | Action |
 | --- | --- |
-| **Start Simulation** / **Stop Simulation** (or **Space**) | Run or pause the simulation |
-| **Single Step** | Run until the next input event, such as a clock edge |
+| **Start Simulation** / **Stop Simulation** (or **F5** / **Space**) | Run or pause the simulation |
+| **Single Step** (or **F11**) | Run until the next input event, such as a clock edge |
+| **Step Clock** (or **F10**) | Run to the next rising edge of a clock, and let the logic settle |
 | **Reset Simulation** | Restart the simulation from time zero |
 
 While the simulation runs:
