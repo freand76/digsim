@@ -83,7 +83,7 @@ Other things in DigSim that can be useful:
 - **Wires to shape**: wires with corners, wire trees and joints, saved with the circuit.
 - **Subcircuits**: a circuit file used as a component of another circuit, through its
   In, Out and InOut ports, in the GUI and from Python, see [Subcircuits](gui.md#subcircuits).
-- **Ready-made ICs**: 74-series chips, synthesized from Verilog.
+- **Ready-made ICs**: 74-series and 4000-series chips, synthesized from Verilog.
 - **Your own components**: in Python, and in the GUI with an image, see
   [Creating Components](components.md).
 
