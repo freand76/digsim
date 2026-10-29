@@ -100,6 +100,9 @@ class Tutorial:
         spin(300)
         self.model.load_circuit(circuit)
         spin(300)
+        # All of the circuit
+        self.area.zoom_fit()
+        spin(300)
 
     def component(self, name: str) -> ComponentObject:
         for component_object in self.model.objects.get_list():
