@@ -48,7 +48,8 @@ want to use it as it is.
 ## 3. The settings of the component
 
 The new component is selected, and its settings are in the settings pane, to the right of
-the circuit area. Keep both boxes unchecked.
+the circuit area. If the pane isn't shown, press **F4** (or choose **View > Settings
+Pane**). Keep both boxes unchecked.
 
 ![The settings of a Yosys component](images/new_verilog/03_settings.png)
 

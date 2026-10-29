@@ -82,10 +82,10 @@ with the **Del** key or **Edit > Delete**.
 
 ### Settings pane
 
-The **settings pane**, to the right of the circuit area, shows the options of the
-selected component: the number of inputs of a gate, the width of a bus, the color of an
-LED, the file of a Yosys component. Change them and click **Apply**, **Reset** shows the
-options the component has again. Each Apply is one step of Undo.
+The **settings pane**, to the right of the circuit area when it is shown, shows the
+options of the selected component: the number of inputs of a gate, the width of a bus,
+the color of an LED, the file of a Yosys component. Change them and click **Apply**,
+**Reset** shows the options the component has again. Each Apply is one step of Undo.
 
 Some options can be changed in the component as it is, like the color of an LED. The
 others change its ports, like the number of inputs of a gate: the component is built
@@ -99,7 +99,9 @@ shortcut keep up with it. It can't be the name of another component, or have spa
 dots. A component that has the name it got, like `ttl_74161` for a 74161 IC, gets the name
 of what it is when it changes to another IC or file. A name you gave it stays.
 
-**View > Settings Pane** (**F4**) hides and shows the pane, and DigSim remembers it.
+The pane is hidden until you show it: **View > Settings Pane** (**F4**) shows and hides
+it, and **Settings** in the context menu of a component shows it. DigSim remembers if it
+is shown.
 
 ### Oscillating circuits
 

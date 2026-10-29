@@ -39,7 +39,7 @@ from digsim.app.model import AppModel
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "images" / "tutorial"
 
-WINDOW_SIZE = (1100, 680)
+WINDOW_SIZE = (1148, 680)
 HIGHLIGHT_COLOR = QColor(255, 140, 0)
 
 
@@ -192,9 +192,10 @@ def main() -> None:
         "03_two_switches", [tutorial.object_rect(switch_a), tutorial.object_rect(switch_b)]
     )
 
-    # 4. The AND gate, it is selected: its settings are in the settings pane
+    # 4. The AND gate, it is selected: F4 shows its settings in the settings pane
     and_item = tutorial.selector_item("AND")
     and_gate = tutorial.add("AND", 0.45, 0.47)
+    tutorial.window.show_settings_pane()
     spin(200)
     save(tutorial.window.settings_dock.grab(), "04_and_settings")
     tutorial.shot(

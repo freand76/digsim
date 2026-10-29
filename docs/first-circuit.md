@@ -58,8 +58,9 @@ press **Del**. If you make a mistake, **Ctrl+Z** undoes it.
 Scroll down to the **Gates** group and drag an **AND** gate into the circuit area,
 between the switches and the right edge.
 
-The new gate is selected, and its settings are in the settings pane, to the right of the
-circuit area. For the AND gate, that is the number of inputs. Keep **2**. To change it,
+The new gate is selected. Press **F4** (or choose **View > Settings Pane**) to show the
+settings pane, to the right of the circuit area, with its settings. DigSim keeps it shown
+until you hide it. For the AND gate, that is the number of inputs. Keep **2**. To change it,
 move the slider and click **Apply**.
 
 ![The settings of the AND gate in the settings pane](images/tutorial/04_and_settings.png)

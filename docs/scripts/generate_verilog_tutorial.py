@@ -44,7 +44,7 @@ from digsim.app.model import AppModel
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "images" / "verilog_tutorial"
 
-WINDOW_SIZE = (1100, 680)
+WINDOW_SIZE = (1148, 680)
 EDITOR_SIZE = (860, 600)
 HIGHLIGHT_COLOR = QColor(255, 140, 0)
 

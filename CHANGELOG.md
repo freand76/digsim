@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## vx.x.x
+ - GUI: the settings pane is hidden until you show it, with View > Settings Pane (F4) or Settings in the context menu of a component. DigSim remembers it once it is shown.
+
 ## v1.9.0
  - A native engine: with digsim-native installed (a dependency on Linux x86_64 and arm64, Windows x64 and macOS), the gates of Yosys components and ICs are simulated in Rust, with the same results, about 3 to 4 times faster for the 6502 example. DIGSIM_ENGINE=python simulates in Python
  - GUI: Simulate in hidden tabs, in the application settings (off by default): the simulations go on in the tabs that aren't shown, without sound, and a tab that simulates has a ▶ in front of its name

@@ -48,8 +48,10 @@ from ._utils import are_you_sure_destroy_circuit
 from ._warning_dialog import WarningDialog
 
 
-# The setting that remembers if the settings pane is shown
-SETTINGS_PANE_KEY = "window/settings_pane"
+# The setting that remembers if the settings pane is shown, it is hidden until the user
+# shows it. The old key has "shown" in every installation from when it was shown at first.
+SETTINGS_PANE_KEY = "window/settings_pane_shown"
+OLD_SETTINGS_PANE_KEY = "window/settings_pane"
 # The setting with the theme, see THEMES
 THEME_KEY = "window/theme"
 
@@ -194,7 +196,9 @@ class MainWindow(QMainWindow):
     def _add_settings_pane(self) -> None:
         """
         The settings pane, to the right of the circuit: the settings of the selected
-        component. View > Settings Pane (F4) shows and hides it, and that is remembered.
+        component. It is hidden until View > Settings Pane (F4) or Settings in the context
+        menu of a component shows it, and View > Settings Pane hides it again. That is
+        remembered.
         """
         self.settings_pane = ComponentSettingsPane(self)
         scroll = QScrollArea(self)
@@ -220,7 +224,8 @@ class MainWindow(QMainWindow):
         action.setShortcut(QKeySequence("F4"))
         self.addAction(action)
         self._menu_bar.add_pane_action(action)
-        shown = MenuBar.settings().value(SETTINGS_PANE_KEY, True, type=bool)
+        MenuBar.settings().remove(OLD_SETTINGS_PANE_KEY)
+        shown = MenuBar.settings().value(SETTINGS_PANE_KEY, False, type=bool)
         self.settings_dock.setVisible(bool(shown))
         # When the user shows or hides it, and when the window closes (it is hidden then,
         # see closeEvent())

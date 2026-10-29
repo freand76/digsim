@@ -36,6 +36,7 @@ from PySide6.QtWidgets import (
 
 from digsim.app.gui import MainWindow
 from digsim.app.gui._circuit_area import CircuitArea
+from digsim.app.gui._main_window import SETTINGS_PANE_KEY
 from digsim.app.gui._menu_bar import MenuBar
 from digsim.app.model import AppModel
 
@@ -809,13 +810,15 @@ def test_a_given_name_follows_the_ic_a_users_name_stays(gui):
 
 
 def test_settings_pane_is_hidden_and_shown(gui):
+    # Hidden until it is shown
     action = gui.action("View", "Settings Pane")
-    assert action.isChecked()
-    gui.trigger("View", "Settings Pane")
-    assert not gui.window.settings_dock.isVisible()
-    assert MenuBar.settings().value("window/settings_pane", type=bool) is False
+    assert not action.isChecked()
     gui.trigger("View", "Settings Pane")
     assert gui.window.settings_dock.isVisible()
+    assert MenuBar.settings().value(SETTINGS_PANE_KEY, type=bool) is True
+    gui.trigger("View", "Settings Pane")
+    assert not gui.window.settings_dock.isVisible()
+    assert MenuBar.settings().value(SETTINGS_PANE_KEY, type=bool) is False
 
 
 def test_added_component_is_selected_without_a_dialog(gui):

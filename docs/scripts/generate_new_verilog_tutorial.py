@@ -54,7 +54,7 @@ from digsim.app.settings._component_settings import ComponentSettingsDialog
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "images" / "new_verilog"
 
-WINDOW_SIZE = (1100, 680)
+WINDOW_SIZE = (1148, 680)
 EDITOR_SIZE = (860, 560)
 HIGHLIGHT_COLOR = QColor(255, 140, 0)
 
@@ -245,6 +245,7 @@ def make_screenshots(guide: Guide) -> None:
     handle_dialogs([open_or_new])
     center = guide.area.mapToScene(guide.area.viewport().rect().center())
     yosys = guide.add("YosysComponent", center)
+    window.show_settings_pane()
     spin(500)
     # It is selected, its settings are in the settings pane
     save(window.settings_dock.grab(), "03_settings")
