@@ -53,7 +53,7 @@ other open source tools for digital logic:
 | Automated tests | ✅ pytest | ✅ test vectors | ✅ test cases | ✅ Python coroutines | ❌ |
 | Waveforms | ✅ VCD files | ✅ chronogram | ✅ measurement graph | ✅ from the simulator | ❌ |
 | Internal signals and state names of Verilog designs | ✅ | ❌ | ❌ | ✅ | ❌ |
-| Subcircuits in the editor | ❌ use Verilog or ICs | ✅ | ✅ | ❌ | ❌ |
+| Subcircuits in the editor | ✅ also from Python | ✅ | ✅ | ❌ | ❌ |
 | Export to Verilog or VHDL, FPGA boards | ❌ | ✅ | ✅ | ❌ | ❌ |
 | Runs on Linux, Windows and macOS | ✅ | ✅ | ✅ | ✅ | ✅ in a browser |
 | Installed with | pip / uv | installer or JAR | JAR (Java) | pip, plus a simulator | browser or npm |
@@ -62,9 +62,9 @@ other open source tools for digital logic:
 
 In short:
 
-- **Logisim Evolution and Digital** are made for drawing circuits, with subcircuits and
-  export to FPGA boards. DigSim is lighter, but simulates Verilog without other tools,
-  and its circuits can be built and tested from Python.
+- **Logisim Evolution and Digital** are made for drawing circuits, with export to
+  Verilog or VHDL and to FPGA boards. DigSim is lighter, but simulates Verilog without
+  other tools, and its circuits can be built and tested from Python.
 - **cocotb** is the established way to test Verilog and VHDL in Python, with a real HDL
   simulator such as Icarus Verilog or Verilator. It is faster for large designs, but has
   no circuit editor and nothing interactive. DigSim's pytest testbenches need nothing
@@ -81,6 +81,8 @@ Other things in DigSim that can be useful:
   design can be read from Python and are written to the VCD file, with the states by
   name, see [Internal signals and states](synthesis.md#internal-signals-and-states).
 - **Wires to shape**: wires with corners, wire trees and joints, saved with the circuit.
+- **Subcircuits**: a circuit file used as a component of another circuit, through its
+  In, Out and InOut ports, in the GUI and from Python, see [Subcircuits](gui.md#subcircuits).
 - **Ready-made ICs**: 74-series chips, synthesized from Verilog.
 - **Your own components**: in Python, and in the GUI with an image, see
   [Creating Components](components.md).
