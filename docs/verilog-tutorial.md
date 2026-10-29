@@ -17,7 +17,7 @@ repository, which has the example circuits, see
 start with [Your First Circuit](first-circuit.md).
 
 !!! note
-    This guide changes `examples/yosys_counter/counter.v` in your clone. Step 10 shows
+    This guide changes `circuits/yosys_counter/counter.v` in your clone. Step 10 shows
     how to get the original back.
 
 ## 1. Load the counter circuit
@@ -37,7 +37,7 @@ You can also start DigSim as usual, choose **File > Open**, and open
 The circuit has these parts:
 
 - **counter** (framed): a Yosys component, made from the Verilog file
-  `examples/yosys_counter/counter.v`. It has the inputs `clk`, `reset` and `up`, and the
+  `circuits/yosys_counter/counter.v`. It has the inputs `clk`, `reset` and `up`, and the
   4-bit output `cnt`.
 - A **clock** on the left drives `clk`, five times a second. The LED next to it lights
   while the clock is high.
@@ -205,11 +205,11 @@ at 18 - 16 = 2.
 
 ## 10. Get the original back
 
-The guide changed `examples/yosys_counter/counter.v`. To get the original back, run this
+The guide changed `circuits/yosys_counter/counter.v`. To get the original back, run this
 in the root folder of your clone:
 
 ```sh
-git checkout examples/yosys_counter/counter.v
+git checkout circuits/yosys_counter/counter.v
 ```
 
 The circuit file itself is not changed, unless you saved it with **File > Save**.
