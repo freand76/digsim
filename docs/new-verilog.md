@@ -1,11 +1,11 @@
 # Your First Verilog Component
 
 This guide walks you through making a component of your own in Verilog, without leaving
-DigSim. You start a new circuit, add a Yosys component with a new Verilog file, write a
+DigSim. You start a new circuit, add a Verilog component with a new Verilog file, write a
 half adder in the editor, and try it with two switches and two LEDs. It takes about ten
 minutes, and you will learn to:
 
-- add a Yosys component with a new Verilog file,
+- add a Verilog component with a new Verilog file,
 - write a small design in the Verilog editor,
 - synthesize it, so that the component gets the ports and the behavior of your design,
 - connect the new component and run it.
@@ -27,10 +27,10 @@ The circuit area is empty when DigSim starts. If you already have a circuit open
 
 ![The empty DigSim window, with the File menu framed](images/new_verilog/01_new_circuit.png)
 
-## 2. Add a Yosys component
+## 2. Add a Verilog component
 
-Scroll down to the **IC / Verilog** group in the component selection, and drag **Yosys**
-into the middle of the circuit area. A Yosys component gets its behavior from a Verilog
+Scroll down to the **IC / Verilog** group in the component selection, and drag **Verilog**
+into the middle of the circuit area. A Verilog component gets its behavior from a Verilog
 design, and DigSim asks where the design comes from:
 
 ![Open a file, or New Verilog file](images/new_verilog/02_open_or_new.png)
@@ -51,7 +51,7 @@ The new component is selected, and its settings are in the settings pane, to the
 the circuit area. If the pane isn't shown, press **F4** (or choose **View > Settings
 Pane**). Keep both boxes unchecked.
 
-![The settings of a Yosys component](images/new_verilog/03_settings.png)
+![The settings of a Verilog component](images/new_verilog/03_settings.png)
 
 - **Synthesize Verilog into functional blocks** simulates the design faster, with blocks
   like adders and registers instead of gates. That matters for large designs.

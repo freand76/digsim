@@ -1,7 +1,7 @@
 # GUI Examples
 
 Each circuit is in a folder of its own in `circuits/`, with the files it uses, like the
-Verilog of a Yosys component or the circuits of its subcircuits. They come with DigSim:
+Verilog file of a Verilog component or the circuits of its subcircuits. They come with DigSim:
 **File > Examples** copies one to a folder of yours and opens it (see
 [Example circuits](gui.md#example-circuits)). In a copy of the repository, open a circuit
 with `--load`, then press **Start Simulation** (or **Space**):
@@ -16,7 +16,7 @@ to work with the editor.
 ## Verilog counter
 
 `counter_yosys_netlist.circuit` and `counter_yosys_verilog.circuit` are the same circuit:
-the [Verilog counter](python-examples.md#verilog-counter) as a Yosys component, loaded from
+the [Verilog counter](python-examples.md#verilog-counter) as a Verilog component, loaded from
 the netlist or directly from `counter.v`. Notes in the circuit explain each part:
 
 - a 5 Hz clock drives the counter and an LED,
@@ -84,7 +84,7 @@ its message, a Talk button, and a hex digit for what it hears on the bus.
 ## Traffic light
 
 `traffic_light.circuit` is the [traffic light state machine](python-examples.md#state-machine-traffic-light)
-as a Yosys component, made from `traffic_light.sv` with a 4 Hz clock and red, yellow and
+as a Verilog component, made from `traffic_light.sv` with a 4 Hz clock and red, yellow and
 green LEDs.
 
 - Push the upper button (shortcut **1**) to reset it to red.
@@ -111,7 +111,7 @@ second line.
 
 - The processor is the `cpu` subcircuit (`cpu.circuit`): the RV32E core in Verilog
   ([`rv32e.v`](https://github.com/freand76/digsim/blob/main/circuits/rv32e/rv32e.v), a
-  Yosys component that runs one instruction per clock cycle) with its memory system, an
+  Verilog component that runs one instruction per clock cycle) with its memory system, an
   arbiter, a GPIO register and a timer, each a subcircuit of its own. Double-click it to
   see inside it, the memory map is in a note there.
 - A 100 Hz clock drives it. The ROM holds the program, `rv32e_code/lcd.bin`, and the RAM

@@ -36,7 +36,7 @@ You can also start DigSim as usual, choose **File > Open**, and open
 
 The circuit has these parts:
 
-- **counter** (framed): a Yosys component, made from the Verilog file
+- **counter** (framed): a Verilog component, made from the Verilog file
   `circuits/yosys_counter/counter.v`. It has the inputs `clk`, `reset` and `up`, and the
   4-bit output `cnt`.
 - A **clock** on the left drives `clk`, five times a second. The LED next to it lights
@@ -67,7 +67,7 @@ Right-click the **counter** component and choose **Edit Verilog...**.
 
 ![The context menu of the counter, with Edit Verilog...](images/verilog_tutorial/03_context_menu.png)
 
-The menu item is there for every Yosys component made from a Verilog file (`.v` or
+The menu item is there for every Verilog component made from a Verilog file (`.v` or
 `.sv`). A component made from a Yosys netlist (`.json`) only has **Reload**.
 
 ## 4. A look at the editor
@@ -151,7 +151,7 @@ panel opens below the text, and shows each step:
 | Step | What it does |
 | --- | --- |
 | Save | Saves `counter.v`, Yosys reads the file from disk |
-| List modules | Reads the Verilog and checks that the file has one module, as a Yosys component needs |
+| List modules | Reads the Verilog and checks that the file has one module, as a Verilog component needs |
 | Synthesize into gates | Turns the module into a netlist of gates and flip-flops. A component with **Synthesize Verilog into functional blocks** checked gets a step "Synthesize into functional blocks" instead |
 | Check ports | Compares the ports of the new module with the component's. Here they are the same |
 | Update components | Builds the components of the file from the new netlist |
@@ -219,8 +219,8 @@ The circuit file itself is not changed, unless you saved it with **File > Save**
 - **Change the ports:** add an output to the module, like `output carry`, and synthesize.
   DigSim lists the port changes and asks first. New ports are added unconnected, and the
   wires to ports that are removed, or get another width, are removed. See
-  [Yosys component](gui.md#yosys-component).
-- **A new design:** add a Yosys component, and choose **New Verilog file**. DigSim
+  [Verilog component](gui.md#verilog-component).
+- **A new design:** add a Verilog component, and choose **New Verilog file**. DigSim
   creates the file with a small module and opens it in the editor, see
   [Your First Verilog Component](new-verilog.md).
 - **Faster simulation:** select the counter, check **Synthesize Verilog into functional

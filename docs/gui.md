@@ -83,8 +83,8 @@ Right-click a component to open its context menu:
 | Delete | Remove the component and its wires |
 | Settings | Show the component's options in the [settings pane](#settings-pane) |
 | Shortcut | Assign a keyboard shortcut (push buttons and switches) |
-| Edit Verilog... | Open the Verilog file in an editor ([Yosys components](#yosys-component)) |
-| Reload | Reload the Verilog file or netlist ([Yosys components](#yosys-component)) |
+| Edit Verilog... | Open the Verilog file in an editor ([Verilog components](#verilog-component)) |
+| Reload | Reload the Verilog file or netlist ([Verilog components](#verilog-component)) |
 
 Click a component to select it, and drag it to move it. Delete the selected component
 with the **Del** key or **Edit > Delete**.
@@ -93,7 +93,7 @@ with the **Del** key or **Edit > Delete**.
 
 The **settings pane**, to the right of the circuit area when it is shown, shows the
 options of the selected component: the number of inputs of a gate, the width of a bus,
-the color of an LED, the file of a Yosys component. Change them and click **Apply**,
+the color of an LED, the file of a Verilog component. Change them and click **Apply**,
 **Reset** shows the options the component has again. Each Apply is one step of Undo.
 
 Some options can be changed in the component as it is, like the color of an LED. The
@@ -583,15 +583,16 @@ More ICs can be added by placing Yosys JSON netlists in the
 [`src/digsim/circuit/components/ic`](https://github.com/freand76/digsim/tree/main/src/digsim/circuit/components/ic)
 folder.
 
-### Yosys component
+### Verilog component
 
-![Yosys](images/components/YOSYS.png)
+![Verilog](images/components/YOSYS.png)
 
-A Yosys component gets its behavior from your own Verilog. When you add one, DigSim asks
-if you want to open a file or start a new Verilog file. **Open a file** opens a file
-dialog for either a **Verilog file** or a **Yosys netlist** in JSON format. Verilog
-files are synthesized automatically when loaded. Check **Synthesize Verilog into
-functional blocks** in the dialog after the file for a faster simulation, see
+A Verilog component (`YosysComponent` in Python) gets its behavior from your own Verilog,
+synthesized by Yosys. When you add one, DigSim asks if you want to open a file or start a
+new Verilog file. **Open a file** opens a file dialog for either a **Verilog file** or a
+**Yosys netlist** in JSON format. Verilog files are synthesized automatically when loaded.
+Check **Synthesize Verilog into functional blocks** in the dialog after the file for a
+faster simulation, see
 [Gates or functional blocks](synthesis.md#gates-or-functional-blocks). Check **Write the
 internal signals (wires and registers) to the VCD file, states also with their names** to
 see the wires and registers inside the design in the waveforms. A signal with names for
@@ -638,7 +639,7 @@ The circuit is then built again, and the changes before the reload can't be undo
 
 #### The Verilog editor
 
-Right-click a Yosys component made from a Verilog file and choose **Edit Verilog...** to
+Right-click a Verilog component made from a Verilog file and choose **Edit Verilog...** to
 open the file in an editor window, one window for each file. The editor colors the
 Verilog, shows line numbers, and highlights the bracket that matches the one at the
 cursor.

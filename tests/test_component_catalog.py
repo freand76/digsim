@@ -35,6 +35,7 @@ def test_catalog_has_components():
         ("splitter", "Splitter"),
         ("bus2", "Bus2Wires"),
         ("verilog", "YosysComponent"),
+        ("yosys", "YosysComponent"),
         ("74", "IntegratedCircuit"),
         ("wire sink", "LabelWireIn"),
         ("anlz", "LogicAnalyzer"),
