@@ -597,3 +597,14 @@ second line.
   (`riscv64-unknown-elf-gcc`).
 
 ![RV32E CPU system circuit](images/examples/rv32e_demo.png)
+
+### Adders from subcircuits
+
+`half_adder.circuit` is a half adder, with In ports for `a` and `b` and Out ports for `s`
+and `c`. `full_adder.circuit` is a full adder from two half adder subcircuits and an OR
+gate, and `adder_4bit.circuit` a 4-bit adder from four full adder subcircuits. The DIP
+switches are A and B, the hex digit shows A + B and the LED the carry. Right-click a
+subcircuit and choose **Edit Subcircuit** to open its file in a tab: a change to the half
+adder, once it is saved, is in every adder that uses it.
+
+![4-bit adder circuit](images/examples/adder_4bit.png)
