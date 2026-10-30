@@ -1,11 +1,16 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
-"""Label Wire components module"""
+"""
+Label Wire components module. A label belongs to the circuit file of its label wires: the
+top-level circuit, or a subcircuit instance (each instance has labels of its own).
+"""
 
 from __future__ import annotations
 
 import warnings
+from collections.abc import Iterator
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 from .atoms import Component, DigsimException, Parameter, PortWire
@@ -15,17 +20,41 @@ if TYPE_CHECKING:
     from digsim.circuit import Circuit
 
 
-def _drivers(circuit: Circuit) -> dict[str, LabelWireIn]:
-    """The label wire drivers in the circuit, by label"""
-    return {comp.label(): comp for comp in circuit.components if isinstance(comp, LabelWireIn)}
+# The subcircuits whose parts are being created, the innermost last: a part is added to
+# its subcircuit after it is created, a label wire that is created belongs to this one
+_creating_parts_of: list[Component] = []
 
 
-def _sinks(circuit: Circuit, label: str) -> list[LabelWireOut]:
-    """The label wire sinks in the circuit with the label"""
+@contextmanager
+def label_scope(subcircuit: Component) -> Iterator[None]:
+    """The label wires created in it are parts of a subcircuit, with its labels"""
+    _creating_parts_of.append(subcircuit)
+    try:
+        yield
+    finally:
+        _creating_parts_of.pop()
+
+
+def _new_scope() -> Component | None:
+    """The scope of a label wire that is created now, None for the top-level circuit"""
+    return _creating_parts_of[-1] if _creating_parts_of else None
+
+
+def _drivers(circuit: Circuit, scope: Component | None) -> dict[str, LabelWireIn]:
+    """The label wire drivers of a scope (a subcircuit, None for the top level), by label"""
+    return {
+        comp.label(): comp
+        for comp in circuit.components
+        if isinstance(comp, LabelWireIn) and comp.parent is scope
+    }
+
+
+def _sinks(circuit: Circuit, label: str, scope: Component | None) -> list[LabelWireOut]:
+    """The label wire sinks of a scope with the label"""
     return [
         comp
         for comp in circuit.components
-        if isinstance(comp, LabelWireOut) and comp.label() == label
+        if isinstance(comp, LabelWireOut) and comp.label() == label and comp.parent is scope
     ]
 
 
@@ -47,7 +76,7 @@ class LabelWireIn(Component):
         self, circuit: Circuit, name: str | None = None, label: str = "", width: int = 1
     ) -> None:
         # Check before the component is added to the circuit
-        if label in _drivers(circuit):
+        if label in _drivers(circuit, _new_scope()):
             raise DigsimException(f"Wire Driver '{label}' already added")
         super().__init__(circuit, name)
         self._label = label
@@ -66,7 +95,7 @@ class LabelWireIn(Component):
         return self._port_in
 
     def remove_connections(self) -> None:
-        for sink in _sinks(self.circuit, self._label):
+        for sink in _sinks(self.circuit, self._label, self.parent):
             self._port_in.disconnect(sink.port_out)
         super().remove_connections()
 
@@ -95,7 +124,8 @@ class LabelWireIn(Component):
 
     @classmethod
     def get_circuit_parameters(cls, circuit: Circuit) -> dict[str, Parameter]:
-        return cls._label_parameters(list(_drivers(circuit)))
+        # The labels of the circuit that is edited, not of its subcircuits
+        return cls._label_parameters(list(_drivers(circuit, None)))
 
 
 class LabelWireOut(Component):
@@ -115,7 +145,7 @@ class LabelWireOut(Component):
     def __init__(
         self, circuit: Circuit, name: str | None = None, label: str = "", width: int = 1
     ) -> None:
-        driver = _drivers(circuit).get(label)
+        driver = _drivers(circuit, _new_scope()).get(label)
         width = driver.port_in.width if driver is not None else width
         super().__init__(circuit, name)
         self._label = label
@@ -135,7 +165,7 @@ class LabelWireOut(Component):
 
     def init(self) -> None:
         if not self._port_out.has_driver():
-            driver = _drivers(self.circuit).get(self._label)
+            driver = _drivers(self.circuit, self.parent).get(self._label)
             if driver is not None:
                 driver.port_in.wire = self._port_out
             else:
@@ -170,4 +200,5 @@ class LabelWireOut(Component):
 
     @classmethod
     def get_circuit_parameters(cls, circuit: Circuit) -> dict[str, Parameter]:
-        return cls._label_parameters(list(_drivers(circuit)))
+        # The labels of the circuit that is edited, not of its subcircuits
+        return cls._label_parameters(list(_drivers(circuit, None)))

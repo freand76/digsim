@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pytest module to test the label wire components"""
@@ -6,7 +6,16 @@
 import pytest
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import LabelWireIn, LabelWireOut, Led, PushButton
+from digsim.circuit.components import (
+    CircuitInput,
+    CircuitOutput,
+    LabelWireIn,
+    LabelWireOut,
+    Led,
+    PushButton,
+    StaticValue,
+    SubCircuit,
+)
 from digsim.circuit.components.atoms import DigsimException
 
 
@@ -112,3 +121,97 @@ def test_label_wire_mistyped_label_warns():
     LabelWireOut(circuit, "wire_out", label="CLOKC")
     with pytest.warns(UserWarning, match="'CLOKC'"):
         circuit.init()
+
+
+def _label_pass(path, sink_only=False):
+    """A circuit file, y = a through the label wire 'clk' (or only a LabelWireOut 'clk')"""
+    circuit = Circuit(name=path.stem)
+    a = CircuitInput(circuit, label="a")
+    y = CircuitOutput(circuit, label="y")
+    if not sink_only:
+        wire_in = LabelWireIn(circuit, "clk_in", label="clk")
+        a.port("a").wire = wire_in.port("clk")
+    wire_out = LabelWireOut(circuit, "clk_out", label="clk")
+    wire_out.port("clk").wire = y.port("y")
+    circuit.to_json_file(path)
+    return path
+
+
+def _top_label(circuit, value):
+    """The top-level label wire 'clk', driven by a value, and a sink of it"""
+    wire_in = LabelWireIn(circuit, "clk_in", label="clk")
+    StaticValue(circuit, value=value).O.wire = wire_in.port("clk")
+    return LabelWireOut(circuit, "clk_out", label="clk")
+
+
+@pytest.mark.sanity
+def test_label_wires_of_a_subcircuit_are_its_own(tmp_path):
+    """Two instances of a file with the label 'clk', in a circuit with its own 'clk'"""
+    path = _label_pass(tmp_path / "label_pass.circuit")
+    circuit = Circuit(name="top")
+    top_out = _top_label(circuit, 1)
+    first = SubCircuit(circuit, path)
+    second = SubCircuit(circuit, path)
+    StaticValue(circuit, value=0).O.wire = first.a
+    StaticValue(circuit, value=1).O.wire = second.a
+    circuit.init()
+    circuit.run(ns=100)
+    assert (first.y.value, second.y.value) == (0, 1)
+    assert top_out.port("clk").value == 1
+    # The labels of the circuit that is edited, once
+    assert LabelWireIn.get_circuit_parameters(circuit)["label"]["invalid_list"] == ["clk"]
+    assert LabelWireOut.get_circuit_parameters(circuit)["label"]["items"] == ["clk"]
+    # Saved and loaded again
+    saved = tmp_path / "top.circuit"
+    circuit.to_json_file(saved)
+    loaded = Circuit()
+    loaded.from_json_file(str(saved))
+    loaded.init()
+    loaded.run(ns=100)
+    values = {
+        component.name(): component.y.value
+        for component in loaded.get_toplevel_components()
+        if isinstance(component, SubCircuit)
+    }
+    assert sorted(values.values()) == [0, 1]
+
+
+@pytest.mark.sanity
+def test_label_wire_out_of_a_subcircuit_is_not_driven_from_outside(tmp_path):
+    """A LabelWireOut without a LabelWireIn in its file is undefined, like on its own"""
+    path = _label_pass(tmp_path / "sink_only.circuit", sink_only=True)
+    circuit = Circuit()
+    _top_label(circuit, 1)
+    part = SubCircuit(circuit, path)
+    StaticValue(circuit, value=1).O.wire = part.a
+    with pytest.warns(UserWarning, match="no LabelWireIn"):
+        circuit.init()
+    circuit.run(ns=100)
+    assert part.y.value == "X"
+
+
+@pytest.mark.sanity
+def test_label_wires_of_nested_subcircuits(tmp_path):
+    """The same label at each level: the top, a subcircuit and the subcircuit in it"""
+    inner = _label_pass(tmp_path / "inner.circuit")
+    outer = Circuit(name="outer")
+    a = CircuitInput(outer, label="a")
+    y = CircuitOutput(outer, label="y")
+    inner_y = CircuitOutput(outer, label="inner_y")
+    wire_in = LabelWireIn(outer, "clk_in", label="clk")
+    a.port("a").wire = wire_in.port("clk")
+    wire_out = LabelWireOut(outer, "clk_out", label="clk")
+    wire_out.port("clk").wire = y.port("y")
+    part = SubCircuit(outer, inner)
+    StaticValue(outer, value=0).O.wire = part.a
+    part.y.wire = inner_y.port("inner_y")
+    path = tmp_path / "outer.circuit"
+    outer.to_json_file(path)
+
+    circuit = Circuit()
+    top_out = _top_label(circuit, 0)
+    sub = SubCircuit(circuit, path)
+    StaticValue(circuit, value=1).O.wire = sub.a
+    circuit.init()
+    circuit.run(ns=100)
+    assert (top_out.port("clk").value, sub.y.value, sub.inner_y.value) == (0, 1, 0)

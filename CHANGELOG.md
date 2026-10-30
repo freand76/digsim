@@ -15,6 +15,7 @@
  - GUI: the hex editor shows the characters of words wider than 8 bits too (16, 24 or 32 bits, lowest byte first), and highlights the characters of the current word
  - GUI: the hex editor of a ROM no longer shows the dropdown of the RAM views over the name of its file
  - GUI: the hex editor of a RAM or ROM no longer blocks the window, the circuit can be edited and simulated while it is open. Its words can't be changed or saved while the simulation runs. A RAM's editor shows the RAM now first, read again when the simulation stops.
+ - Label wires (Wire Source and Wire Sink) in a subcircuit belong to it: a subcircuit with label wires loads in a circuit with the same labels and can be used more than once, and its labels no longer connect to those of the circuit it is in
 
 ## v1.9.0
  - A native engine: with digsim-native installed (a dependency on Linux x86_64 and arm64, Windows x64 and macOS), the gates of Yosys components and ICs are simulated in Rust, with the same results, about 3 to 4 times faster for the 6502 example. DIGSIM_ENGINE=python simulates in Python

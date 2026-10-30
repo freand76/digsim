@@ -172,7 +172,9 @@ a port behind the output port gets an automatic route around the component inste
 - Both ends must be of the same kind: a single-bit wire, or a bus of the same width.
   Use the [bus/wire converters](#bus-and-wire-components) to split or merge buses.
 - **Wire Source** and **Wire Sink** components connect signals by label instead of with a
-  drawn wire, which keeps large circuits readable.
+  drawn wire, which keeps large circuits readable. A label belongs to its circuit file: the
+  labels of a subcircuit are its own, also when it is used more than once, and don't
+  connect to the labels of the circuit it is in.
 
 Click a wire to select it. Delete the selected wire with the **Del** key or the
 **Delete** button.

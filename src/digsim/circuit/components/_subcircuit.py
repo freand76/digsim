@@ -13,6 +13,7 @@ from typing import TYPE_CHECKING
 from digsim.storage_model import AppFileDataClass, ComponentDataClass, GuiPositionDataClass
 
 from ._circuit_port import CIRCUIT_PORT_TYPES, CircuitInOut, CircuitOutput
+from ._label_wire import label_scope
 from .atoms import (
     VALUE_TYPE,
     Component,
@@ -319,7 +320,8 @@ class SubCircuit(MultiComponent):
                 settings=settings,
             )
             try:
-                part = part_dc.create(self.circuit)
+                with label_scope(self):
+                    part = part_dc.create(self.circuit)
             except DigsimException as exc:
                 raise SubCircuitException(
                     f"Could not create {component_dc.name} of the subcircuit {self._path}: {exc!s}"
