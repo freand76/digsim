@@ -67,7 +67,7 @@ class Clock(CallbackComponent):
             "frequency": {
                 "type": "int",
                 "min": 1,
-                "max": 50,
+                "max": 100,
                 "default": 1,
                 "description": "Clock frequency in Hz",
                 "reconfigurable": True,
