@@ -3,6 +3,7 @@
 ## vx.x.x
  - HD44780: a 16x2 character LCD module, programmed like the real one in 8-bit or 4-bit mode, with the A00 character ROM, custom characters and a blinking cursor. In the GUI it looks like a real module, with a green, blue, amber, white or red backlight.
  - RAM: a byte enable input (the byte_enable setting, off by default): a write only changes the bytes of the word that BE selects, like a processor's byte strobes
+ - GUI: an opened circuit is zoomed to fit, and Zoom to Fit (and Export Image) includes the wires, not only the components
  - GUI: the settings pane is hidden until you show it, with View > Settings Pane (F4) or Settings in the context menu of a component. DigSim remembers it once it is shown.
 
 ## v1.9.0

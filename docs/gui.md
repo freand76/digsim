@@ -26,8 +26,8 @@ The window has a menu bar and three areas:
 - **Menu bar** (top): **File** (New Tab, New, Open, Open Recent, Save, Save As, Export
   Image, Close Tab, Quit), **Edit** (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete,
   Rotate, Flip Horizontal, Flip Vertical, Find Component, Settings), **View** (zoom in and
-  out, Zoom to Fit: the whole circuit in the window, the
-  [settings pane](#settings-pane) and the [theme](#dark-theme)), **Simulation** (Start,
+  out, Zoom to Fit: the whole circuit with its wires in the window, as when a circuit is
+  opened, the [settings pane](#settings-pane) and the [theme](#dark-theme)), **Simulation** (Start,
   Single Step, Step Clock, Reset, VCD Output, VCD File) and **Help** (the documentation, and the version of
   DigSim). Save saves the circuit in the file it was opened from or saved to, the window
   title shows that file, with a `*` when the circuit has changed since.

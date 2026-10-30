@@ -8,7 +8,7 @@ from __future__ import annotations
 from functools import partial
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import (
     QActionGroup,
     QCloseEvent,
@@ -376,9 +376,13 @@ class MainWindow(QMainWindow):
         if not tab.is_unused():
             tab = self.add_tab()
         tab.app_model.load_circuit(path)
-        if tab.app_model.circuit_path is None and len(self.tabs()) > 1 and tab.is_unused():
-            # The file couldn't be loaded (the model said why), the new tab goes again
-            self._remove_tab(tab)
+        if tab.app_model.circuit_path is None:
+            if len(self.tabs()) > 1 and tab.is_unused():
+                # The file couldn't be loaded (the model said why), the new tab goes again
+                self._remove_tab(tab)
+            return
+        # The whole circuit, once the view has its size (a new tab is laid out first)
+        QTimer.singleShot(0, tab.app_model.zoom_fit)
 
     def close_current_tab(self) -> None:
         """File > Close Tab"""

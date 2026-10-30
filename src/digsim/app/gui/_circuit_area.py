@@ -1683,7 +1683,8 @@ class CircuitArea(QGraphicsView):
         """The area of the components and wires, empty if there are none"""
         rect = QRectF()
         for item in self._scene.items():
-            if isinstance(item, (ComponentObject, WireGraphicsItem)):
+            # A wire item draws nothing itself, its segments are parts of it
+            if isinstance(item, (ComponentObject, WirePartGraphicsItem)):
                 rect = rect.united(item.sceneBoundingRect())
         return rect
 
