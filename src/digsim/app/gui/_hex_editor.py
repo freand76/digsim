@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QAbstractTableModel, QModelIndex, QPersistentModelIndex, Qt
-from PySide6.QtGui import QColor, QFontDatabase
+from PySide6.QtGui import QColor, QFontDatabase, QPainter, QPalette
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -21,6 +21,9 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMessageBox,
+    QStyle,
+    QStyledItemDelegate,
+    QStyleOptionViewItem,
     QTableView,
     QVBoxLayout,
     QWidget,
@@ -30,6 +33,7 @@ from digsim.app._memory_contents import (
     WORDS_PER_ROW,
     ascii_text,
     defined_words,
+    has_ascii,
     parse_word,
     read_contents,
     word_text,
@@ -61,7 +65,7 @@ class _WordsModel(QAbstractTableModel):
         self.words = words
         self._data_width = data_width
         self._load_address = load_address
-        self._ascii = data_width == 8
+        self._ascii = has_ascii(data_width)
         self.changed = False
 
     def values(self) -> Sequence[int | str]:
@@ -91,7 +95,7 @@ class _WordsModel(QAbstractTableModel):
             values = self.values()
             if index.column() == WORDS_PER_ROW:
                 start = index.row() * WORDS_PER_ROW
-                return ascii_text(list(values[start : start + WORDS_PER_ROW]))
+                return ascii_text(list(values[start : start + WORDS_PER_ROW]), self._data_width)
             if self._is_word(index):
                 return word_text(values[self.address(index)], self._data_width)
         if role == Qt.ItemDataRole.TextAlignmentRole:
@@ -190,6 +194,46 @@ class _SimulationWordsModel(_WordsModel):
         return False
 
 
+class _TextDelegate(QStyledItemDelegate):
+    """
+    The text of a row, with the characters of the current word highlighted: one, two or
+    four for a word of 8, 16 or 32 bits
+    """
+
+    def __init__(self, table: QTableView, data_width: int) -> None:
+        super().__init__(table)
+        self._table = table
+        self._bytes = data_width // 8
+
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: Index) -> None:
+        """QT function: the cell without its text, then the text with the highlight"""
+        text = str(index.data())
+        cell = QStyleOptionViewItem(option)
+        self.initStyleOption(cell, index)
+        cell.text = ""
+        style = cell.widget.style() if cell.widget is not None else self._table.style()
+        style.drawControl(QStyle.ControlElement.CE_ItemViewItem, cell, painter, cell.widget)
+        metrics = cell.fontMetrics
+        rect = cell.rect
+        left = rect.left() + (rect.width() - metrics.horizontalAdvance(text)) / 2
+        painter.save()
+        painter.setFont(cell.font)
+        painter.setPen(cell.palette.color(QPalette.ColorRole.Text))
+        painter.drawText(rect, int(Qt.AlignmentFlag.AlignCenter), text)
+        current = self._table.currentIndex()
+        if current.isValid() and current.row() == index.row() and current.column() < WORDS_PER_ROW:
+            start = current.column() * self._bytes
+            chars = text[start : start + self._bytes]
+            if chars:
+                mark = rect.adjusted(0, 1, 0, -1)
+                mark.setLeft(int(left + metrics.horizontalAdvance(text[:start])))
+                mark.setWidth(metrics.horizontalAdvance(chars))
+                painter.fillRect(mark, cell.palette.color(QPalette.ColorRole.Highlight))
+                painter.setPen(cell.palette.color(QPalette.ColorRole.HighlightedText))
+                painter.drawText(mark, int(Qt.AlignmentFlag.AlignCenter), chars)
+        painter.restore()
+
+
 class HexEditorDialog(QDialog):
     """
     The hex editor of a RAM or ROM: the words its file fills it with, from the load
@@ -243,6 +287,10 @@ class HexEditorDialog(QDialog):
         self.table = QTableView(self)
         self.table.setModel(self.model)
         self.table.setFont(QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont))
+        if has_ascii(self._data_width):
+            self.table.setItemDelegateForColumn(
+                WORDS_PER_ROW, _TextDelegate(self.table, self._data_width)
+            )
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
         self.table.verticalHeader().setFont(self.table.font())
@@ -276,12 +324,16 @@ class HexEditorDialog(QDialog):
         layout.addWidget(buttons)
         self._show_view(0)
         width = self.table.verticalHeader().width() + header.length() + 40
+        # Wide words, with their text, can be wider than the screen: it scrolls then
+        width = min(width, self.screen().availableGeometry().width())
         self.resize(max(width, 360), 480)
 
     def _show_view(self, view: int) -> None:
         """The file (0, editable) or the RAM in the simulation (1, read-only)"""
         simulation = view == 1 and self.now_model is not None
         self.table.setModel(self.now_model if simulation else self.model)
+        # The text of the row shows which characters the current word is
+        self.table.selectionModel().currentChanged.connect(lambda: self.table.viewport().update())
         self._save_button.setVisible(not simulation)
         self._dump_button.setVisible(simulation)
         self._use_button.setVisible(simulation)

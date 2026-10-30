@@ -43,11 +43,22 @@ def parse_word(text: str, data_width: int) -> int:
     return value
 
 
-def ascii_text(values: list[int | str]) -> str:
-    """Bytes as the characters they are, a dot for the ones that aren't printable"""
-    return "".join(
-        chr(value) if isinstance(value, int) and 0x20 <= value < 0x7F else "." for value in values
-    )
+def has_ascii(data_width: int) -> bool:
+    """Is a word whole bytes, that the editor shows as text too"""
+    return data_width % 8 == 0
+
+
+def ascii_text(values: list[int | str], data_width: int = 8) -> str:
+    """
+    Words as the characters of their bytes, the lowest byte first (like in a binary file),
+    a dot for a byte that isn't printable or a word that is undefined
+    """
+    text = []
+    for value in values:
+        for byte in range(data_width // 8):
+            code = value >> (8 * byte) & 0xFF if isinstance(value, int) else 0
+            text.append(chr(code) if 0x20 <= code < 0x7F else ".")
+    return "".join(text)
 
 
 def defined_words(words: list[int | str]) -> tuple[list[int], int]:

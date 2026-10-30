@@ -893,6 +893,28 @@ def test_hex_editor_saves_the_file(gui, tmp_path):
     editor.close()
 
 
+def test_hex_editor_shows_wide_words_as_text(gui, tmp_path):
+    """A word of whole bytes has its bytes as text, the lowest first, like in the file"""
+    path = tmp_path / "rom.bin"
+    path.write_bytes(b"Hello RV32E!")
+    rom = gui.add("ROM", path=str(path), address_width=4, data_width=32)
+    editor = _hex_editor(gui, rom)
+    model = editor.model
+    assert model.columnCount() == 17
+    assert model.headerData(16, Qt.Orientation.Horizontal) == "ASCII"
+    assert model.data(model.index(0, 16)).startswith("Hello RV32E!....")
+    assert model.setData(model.index(0, 3), "21434241")
+    assert model.data(model.index(0, 16)).startswith("Hello RV32E!ABC!")
+    editor.close()
+    # 12 bits are not whole bytes: no text
+    narrow_path = tmp_path / "narrow.hex"
+    narrow_path.write_text("123 456\n", encoding="utf-8")
+    narrow = gui.add("ROM", path=str(narrow_path), address_width=4, data_width=12)
+    editor = _hex_editor(gui, narrow)
+    assert editor.model.columnCount() == 16
+    editor.close()
+
+
 def test_hex_editor_asks_for_a_file_for_a_ram(gui, tmp_path):
     ram = gui.add("RAM", address_width=4, data_width=16)
     editor = _hex_editor(gui, ram)

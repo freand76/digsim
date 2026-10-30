@@ -7,6 +7,7 @@ import pytest
 
 from digsim.app._memory_contents import (
     ascii_text,
+    has_ascii,
     parse_word,
     read_contents,
     word_text,
@@ -84,3 +85,8 @@ def test_parse_bad_word(text):
 def test_word_text_and_ascii():
     assert word_text(0xA, 12) == "00A"
     assert ascii_text([0x41, 0x00, 0x7A, 0x7F]) == "A.z."
+    # The bytes of a wider word, the lowest first, and dots for an undefined word
+    assert ascii_text([0x6C6C6548, 0x21006F], 32) == "Hello.!."
+    assert ascii_text([0x6948, "X", 0x21], 16) == "Hi..!."
+    assert has_ascii(8) and has_ascii(16) and has_ascii(32)
+    assert not has_ascii(12) and not has_ascii(1)

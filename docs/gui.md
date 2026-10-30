@@ -483,9 +483,11 @@ Other files are binary, with the bytes of a word wider than 8 bits in little-end
 order. The file is stored relative to the circuit file.
 
 **Edit Contents...** in the context menu of a RAM or ROM opens the hex editor: the words
-the file fills it with, 16 to a row with the address of the row first, and the characters
-of the bytes of a memory with 8-bit words. Click a word and type it in hexadecimal, **Go
-to address** shows the row of an address. **Save** writes the words in the file, in its
+the file fills it with, 16 to a row with the address of the row first. A memory with words
+of whole bytes (8, 16, 24 or 32 bits) has the characters of the row's bytes last, the
+lowest byte of a word first, like in a binary file, and the characters of the current word
+are highlighted. Click a word and type it in hexadecimal, **Go to address** shows the row
+of an address. **Save** writes the words in the file, in its
 format, and the memory reads it again: the simulation starts over. A text file is written
 anew, as rows of words with `@address` after rows of zeros, so its comments are not kept.
 A RAM without a file asks for one when it is saved. The words before the load address
