@@ -67,6 +67,8 @@ class _WordsModel(QAbstractTableModel):
         self._load_address = load_address
         self._ascii = has_ascii(data_width)
         self.changed = False
+        # While the simulation runs: the words can't be changed
+        self.read_only = False
 
     def values(self) -> Sequence[int | str]:
         """The words that are shown"""
@@ -113,13 +115,15 @@ class _WordsModel(QAbstractTableModel):
             return Qt.ItemFlag.ItemIsEnabled
         if self.address(index) < self._load_address:
             return Qt.ItemFlag.NoItemFlags
+        if self.read_only:
+            return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
         return (
             Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable
         )
 
     def setData(self, index: Index, value: Any, role: int = Qt.ItemDataRole.EditRole) -> bool:
         """QT function: a word typed in hexadecimal"""
-        if role != Qt.ItemDataRole.EditRole or not self._is_word(index):
+        if role != Qt.ItemDataRole.EditRole or not self._is_word(index) or self.read_only:
             return False
         try:
             word = parse_word(str(value), self._data_width)
@@ -240,9 +244,13 @@ class HexEditorDialog(QDialog):
     address. Save writes them in the file, in its format (text or binary), and the memory
     reads it again: the simulation starts over. A RAM without a file asks for one.
 
-    A RAM also shows the words it has now, in the simulation (it is stopped while the
-    editor is open), read-only, with the words it wrote marked: Save As... saves them in
-    a file of their own, Use as Contents puts them in the file view, to save.
+    A RAM also shows the words it had in the simulation when the editor was opened,
+    read-only, with the words it wrote marked: Save As... saves them in a file of their
+    own, Use as Contents puts them in the file view, to save.
+
+    The editor doesn't block the window: the circuit can be edited and simulated while it
+    is open. It finds its memory by name when it saves, undo, redo and load build the
+    objects of the circuit again.
     """
 
     def __init__(
@@ -253,6 +261,7 @@ class HexEditorDialog(QDialog):
         self._app_model = app_model
         self._object = component_object
         memory = self._memory
+        self.memory_name = memory.name()
         self._path: str | None = memory.parameter_get("path")
         self._data_width: int = memory.parameter_get("data_width")
         self._load_address: int = memory.parameter_get("load_address")
@@ -274,8 +283,7 @@ class HexEditorDialog(QDialog):
         self._view = QComboBox(self)
         self._view.addItem("Contents of the file")
         if isinstance(memory, RAM):
-            time_s = self._app_model.objects.circuit.time_ns / 1e9
-            self._view.addItem(f"The RAM now, in the simulation at {time_s:.6g} s")
+            self._view.addItem(self._now_text())
             self.now_model = _SimulationWordsModel(
                 [memory.read(address) for address in range(len(words))],
                 words,
@@ -325,11 +333,46 @@ class HexEditorDialog(QDialog):
         self._use_button.setToolTip("Put the words the RAM has now in the file view, to save")
         self._use_button.clicked.connect(self.use_simulation)
         layout.addWidget(buttons)
-        self._show_view(0)
+        # A RAM shows what it has now first, the simulation is what it is used for
+        view = 1 if self.now_model is not None else 0
+        self._view.setCurrentIndex(view)
+        self._show_view(view)
+        self._simulation_changed()
+        app_model.sig_control_notify.connect(self._simulation_changed)
         width = self.table.verticalHeader().width() + header.length() + 40
         # Wide words, with their text, can be wider than the screen: it scrolls then
         width = min(width, self.screen().availableGeometry().width())
         self.resize(max(width, 360), 480)
+
+    def _now_text(self) -> str:
+        time_s = self._app_model.objects.circuit.time_ns / 1e9
+        return f"The RAM now, in the simulation at {time_s:.6g} s"
+
+    def _simulation_changed(self) -> None:
+        """
+        The simulation started, stopped, stepped or was reset: nothing is changed or saved
+        while it runs, and the RAM is read again when it has stopped
+        """
+        running = self._app_model.is_running
+        self.model.read_only = running
+        for button in (self._save_button, self._dump_button, self._use_button):
+            button.setEnabled(not running)
+        self._show_file()
+        if not running:
+            self._read_now()
+
+    def _read_now(self) -> None:
+        """The words the RAM has now, in the view of the simulation"""
+        component_object = self._find_object()
+        if self.now_model is None or component_object is None:
+            return
+        self._object = component_object
+        memory = self._memory
+        size = min(len(self.model.words), 1 << memory.parameter_get("address_width"))
+        self.now_model.layoutAboutToBeChanged.emit()
+        self.now_model.now = [memory.read(address) for address in range(size)]
+        self.now_model.layoutChanged.emit()
+        self._view.setItemText(1, self._now_text())
 
     def _show_view(self, view: int) -> None:
         """The file (0, editable) or the RAM in the simulation (1, read-only)"""
@@ -382,12 +425,23 @@ class HexEditorDialog(QDialog):
         assert isinstance(component, (RAM, ROM))
         return component
 
+    def _find_object(self) -> ComponentObject | None:
+        """The object of the memory in the circuit now, None if it is gone"""
+        for component_object in self._app_model.objects.get_list():
+            component = component_object.component
+            if isinstance(component, (RAM, ROM)) and component.name() == self.memory_name:
+                return component_object
+        return None
+
     def _show_file(self) -> None:
         if self._path:
             where = f" at {self._load_address:#x}" if self._load_address else ""
-            self._file_label.setText(f"From {self._path}{where}")
+            text = f"From {self._path}{where}"
         else:
-            self._file_label.setText("No file, the RAM starts with zeros. Save asks for one.")
+            text = "No file, the RAM starts with zeros. Save asks for one."
+        if self._app_model.is_running:
+            text += " Read-only while the simulation runs."
+        self._file_label.setText(text)
 
     def _go_to(self) -> None:
         """Show the row of an address and select its word"""
@@ -408,6 +462,18 @@ class HexEditorDialog(QDialog):
 
     def save(self) -> bool:
         """Save the words in the file, and let the memory read it. False if it wasn't."""
+        component_object = self._find_object()
+        if component_object is None:
+            QMessageBox.critical(
+                self, "Save the contents", f"{self.memory_name} is not in the circuit any more"
+            )
+            return False
+        if self._app_model.is_running:
+            QMessageBox.information(
+                self, "Save the contents", "Stop the simulation to save the contents"
+            )
+            return False
+        self._object = component_object
         path = self._path or self._ask_path()
         if not path:
             return False

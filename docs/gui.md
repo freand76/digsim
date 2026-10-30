@@ -487,16 +487,19 @@ the file fills it with, 16 to a row with the address of the row first. A memory 
 of whole bytes (8, 16, 24 or 32 bits) has the characters of the row's bytes last, the
 lowest byte of a word first, like in a binary file, and the characters of the current word
 are highlighted. Click a word and type it in hexadecimal, **Go to address** shows the row
-of an address. **Save** writes the words in the file, in its
-format, and the memory reads it again: the simulation starts over. A text file is written
-anew, as rows of words with `@address` after rows of zeros, so its comments are not kept.
-A RAM without a file asks for one when it is saved. The words before the load address
-are not in the file, they can't be changed.
+of an address. **Save** writes the words in the file, in its format, and the memory reads
+it again: the simulation starts over. The editor doesn't block the window, the circuit can
+be edited and simulated while it is open, and Edit Contents... of the same memory brings it
+to the front. While the simulation runs, the words can't be changed or saved. A text file
+is written anew, as rows of words with `@address` after rows of zeros, so its comments are
+not kept. A RAM without a file asks for one when it is saved. The words before the load
+address are not in the file, they can't be changed.
 
-For a RAM, the editor also shows the RAM as it is now, in the simulation: stop the
-simulation, open **Edit Contents...** and choose **The RAM now** at the top. The words are
-read-only, and the ones that are not what the file fills the RAM with, the ones the
-simulation wrote, are marked. **Save As...** saves them in a file of their own, loaded at
+For a RAM, the editor first shows **The RAM now**, the words it has in the simulation,
+read again each time the simulation stops. Choose **Contents of the file** at the top to
+edit the words the file fills it with. The words of the RAM now are read-only, and the
+ones that are not what the file fills the RAM with, the ones the simulation wrote, are
+marked. **Save As...** saves them in a file of their own, loaded at
 address 0, and **Use as Contents** puts them in the view of the file, to save as the
 contents the RAM starts with. An undefined word (X) is saved as 0.
 

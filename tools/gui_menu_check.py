@@ -917,6 +917,74 @@ def test_hex_editor_shows_wide_words_as_text(gui, tmp_path):
     editor.close()
 
 
+def test_hex_editor_does_not_block_the_window(gui, monkeypatch, tmp_path):
+    """The circuit can be used while the editor is open, Save finds the memory by name"""
+    from digsim.app.gui._hex_editor import HexEditorDialog
+
+    errors: list[str] = []
+    monkeypatch.setattr(QMessageBox, "critical", lambda _parent, _title, text: errors.append(text))
+    monkeypatch.setattr(
+        QMessageBox, "information", lambda _parent, _title, text: errors.append(text)
+    )
+    path = tmp_path / "rom.hex"
+    path.write_text("01 02\n", encoding="utf-8")
+    rom = gui.add("ROM", path=str(path), address_width=4)
+    area = gui.window.findChild(CircuitArea)
+    rom._edit_contents(area)
+    spin()
+    (editor,) = area.findChildren(HexEditorDialog)
+    assert editor.isVisible() and not editor.isModal()
+    # Edit Contents... again shows the editor that is open
+    rom._edit_contents(area)
+    spin()
+    assert area.findChildren(HexEditorDialog) == [editor]
+    assert editor.model.setData(editor.model.index(0, 1), "a5")
+    # Undo builds the objects of the circuit again, and the simulation runs
+    gui.add("AND")
+    gui.trigger("Edit", "Undo")
+    # Nothing is changed or saved while the simulation runs
+    gui.model.model_start()
+    spin(100)
+    assert not editor.model.setData(editor.model.index(0, 2), "b6")
+    assert not editor._save_button.isEnabled()
+    assert not editor.save()
+    assert errors == ["Stop the simulation to save the contents"]
+    errors.clear()
+    gui.model.model_stop()
+    spin(100)
+    assert editor._save_button.isEnabled()
+    assert editor.save()
+    (memory,) = [c for c in gui.model.objects.circuit.get_toplevel_components()]
+    assert memory.read(1) == 0xA5
+    # The ROM is gone: nothing is saved
+    for component_object in gui.model.objects.get_list():
+        component_object.setSelected(True)
+    gui.model.objects.delete_selected()
+    spin()
+    assert not editor.save()
+    assert errors == ["ROM is not in the circuit any more"]
+    editor.close()
+    spin()
+    assert area.findChildren(HexEditorDialog) == []
+
+
+def test_hex_editor_shows_the_ram_now_first(gui):
+    """A RAM shows what it has now in the simulation first, read again when it stops"""
+    ram = gui.add("RAM", address_width=4, data_width=8)
+    editor = _hex_editor(gui, ram)
+    assert editor.table.model() is editor.now_model
+    assert editor.now_model.data(editor.now_model.index(0, 2)) == "00"
+    # Written while the simulation runs (nothing else uses the RAM), shown when it stops
+    gui.model.model_start()
+    spin(100)
+    ram.component.write(2, 0x55)
+    assert editor.now_model.data(editor.now_model.index(0, 2)) == "00"
+    gui.model.model_stop()
+    spin(100)
+    assert editor.now_model.data(editor.now_model.index(0, 2)) == "55"
+    editor.close()
+
+
 def test_hex_editor_asks_for_a_file_for_a_ram(gui, tmp_path):
     ram = gui.add("RAM", address_width=4, data_width=16)
     editor = _hex_editor(gui, ram)

@@ -111,12 +111,21 @@ class _MemoryObject(NamedBoxObject):
         # Here, the GUI imports the component objects
         from digsim.app.gui._hex_editor import HexEditorDialog
 
+        # Not modal, the circuit can be used while it is open. An editor of this memory
+        # that is open already comes to the front.
+        if parent is not None:
+            for dialog in parent.findChildren(HexEditorDialog):
+                if dialog.memory_name == self.component.name() and dialog.isVisible():
+                    dialog.raise_()
+                    dialog.activateWindow()
+                    return
         try:
             dialog = HexEditorDialog(parent, self._app_model, self)
         except DigsimException as exc:
             self._app_model.sig_error.emit(f"Could not read the contents: {exc!s}")
             return
-        dialog.exec()
+        dialog.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        dialog.show()
 
 
 class RAMObject(_MemoryObject):
