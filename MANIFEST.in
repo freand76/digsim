@@ -1,4 +1,4 @@
 graft src/digsim/app/images
 graft src/digsim/circuit/components/ic
 graft circuits
-global-exclude __pycache__ *.py[co] *.elf *.lst *.hex *.o *.map
+global-exclude *.py[co] *.elf *.lst *.hex
