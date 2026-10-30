@@ -234,7 +234,10 @@ class SubCircuitViewScene(QGraphicsScene):
                 continue
             cls = digsim.app.gui_objects.class_factory(type(part).__name__)
             self._add_object(part, position, cls)
-        self.addItem(_LinesItem([self._line(line, stand_ins) for line in layout.lines]))
+        # Kept here: the scene doesn't keep a Python item alive, and when the last reference
+        # to it went (like in subcircuit_object()) the lines were deleted
+        self._lines_item = _LinesItem([self._line(line, stand_ins) for line in layout.lines])
+        self.addItem(self._lines_item)
 
     def _stand_in(self, direction: str, label: str, width: int) -> CircuitPort:
         """A circuit port in a circuit of its own, it is only drawn"""
