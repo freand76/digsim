@@ -1528,6 +1528,10 @@ class CircuitArea(QGraphicsView):
         self.setScene(self._scene)
         self.setAcceptDrops(True)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.NoAnchor)
+        # The scene is about as large as the view: scroll bars shown as needed would come
+        # and go, change the size of the view and move the circuit
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self._mouse_pos = QPoint(0, 0)
         self._drag_preview: QGraphicsPixmapItem | None = None
         # The pastes since the last copy, each one a step further from the copied ones
@@ -1744,7 +1748,9 @@ class CircuitArea(QGraphicsView):
         if self.transform().m11() > ZOOM_FIT_MAX:
             self.resetTransform()
             self.scale(ZOOM_FIT_MAX, ZOOM_FIT_MAX)
-            self.centerOn(rect.center())
+        # The scene grows to the visible area now, not at the first click (which moved it)
+        self.grow_scene_rect()
+        self.centerOn(rect.center())
 
     def _repaint(self) -> None:
         """Make scene repaint for component update"""
