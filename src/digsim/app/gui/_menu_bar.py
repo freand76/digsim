@@ -11,12 +11,13 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from weakref import WeakKeyDictionary
 
-from PySide6.QtCore import QSettings, QUrl, Signal
+from PySide6.QtCore import QSettings, QStandardPaths, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QFileDialog, QMenu, QMenuBar, QMessageBox, QWidget
 
 from digsim.app._app_settings import app_settings
 from digsim.app._clock_step import circuit_clocks
+from digsim.app._examples import Example, copy_example, example_circuits
 from digsim.app._recent_files import with_recent, without_file
 from digsim.app.settings import GuiSettingsDialog
 
@@ -68,6 +69,8 @@ class MenuBar(QMenuBar):
         self._open_action = self._add(file_menu, "&Open...", self.open_circuit, "Ctrl+O")
         self._recent_menu = file_menu.addMenu("Open &Recent")
         self._recent_menu.aboutToShow.connect(self._fill_recent_menu)
+        self._examples_menu = file_menu.addMenu("E&xamples")
+        self._examples_menu.aboutToShow.connect(self._fill_examples_menu)
         self._save_action = self._add(file_menu, "&Save", self.save_circuit, "Ctrl+S")
         self._save_as_action = self._add(
             file_menu, "Save &As...", self.save_circuit_as, "Ctrl+Shift+S"
@@ -241,6 +244,33 @@ class MenuBar(QMenuBar):
             return
         self.sig_open_file.emit(path)
 
+    def _fill_examples_menu(self) -> None:
+        self._examples_menu.clear()
+        for example in example_circuits():
+            action = self._examples_menu.addAction(example.title)
+            action.triggered.connect(partial(self.open_example, example))
+
+    def open_example(self, example: Example) -> None:
+        """
+        Ask for a folder, copy the folder of an example into it and open the circuit from
+        there: a copy of the user's, with the files it uses, to change and save
+        """
+        start = str(self.settings().value("examples_folder", "")) or (
+            QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DocumentsLocation)
+        )
+        folder = QFileDialog.getExistingDirectory(
+            self, f"Copy the {example.title} Example to", start
+        )
+        if not folder:
+            return
+        try:
+            path = copy_example(example, Path(folder))
+        except OSError as error:
+            self._app_model.sig_error.emit(f"Could not copy the example to {folder}: {error}")
+            return
+        self.settings().setValue("examples_folder", folder)
+        self.sig_open_file.emit(str(path))
+
     def export_image(self) -> None:
         """Ask for a file and save the circuit as an image in it, PNG or SVG"""
         if self._circuit_area is None:
@@ -378,6 +408,7 @@ class MenuBar(QMenuBar):
             self._set_recent_files(with_recent(self.recent_files(), path))
         self._recent_paths[self._app_model] = path
         self._recent_menu.setEnabled(not running and bool(self.recent_files()))
+        self._examples_menu.setEnabled(not running)
         self._export_action.setEnabled(
             not running and not self._app_model.objects.components.is_empty()
         )

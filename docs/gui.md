@@ -23,8 +23,8 @@ folder in the repository has ready-made circuits to explore.
 
 The window has a menu bar and three areas:
 
-- **Menu bar** (top): **File** (New Tab, New, Open, Open Recent, Save, Save As, Export
-  Image, Close Tab, Quit), **Edit** (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete,
+- **Menu bar** (top): **File** (New Tab, New, Open, Open Recent, [Examples](#example-circuits),
+  Save, Save As, Export Image, Close Tab, Quit), **Edit** (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete,
   Rotate, Flip Horizontal, Flip Vertical, Find Component, Settings), **View** (zoom in and
   out, Zoom to Fit: the whole circuit with its wires in the window, as when a circuit is
   opened, the [settings pane](#settings-pane) and the [theme](#dark-theme)), **Simulation** (Start,
@@ -48,6 +48,15 @@ simulates: switching to another tab stops the simulation of the one that is left
 Start goes on from where it was. With **Simulate in hidden tabs** in the
 [application settings](#application-settings), the simulations go on in the tabs that
 aren't shown, without sound, and a tab that simulates has a ▶ in front of its name.
+
+### Example circuits
+
+**File > Examples** has the example circuits that come with DigSim, also when it runs with
+`uvx`. Choose one and a folder: DigSim copies the example's folder into it, with the files
+the circuit uses (Verilog, subcircuits, memory contents), and opens the circuit from
+there. The copy is yours to change and save. When the folder already has a copy, the new
+one gets a number after its name, like `rv32e_2`. The examples are described in
+[Examples](examples.md#gui-example-circuits).
 
 A typical circuit consists of:
 

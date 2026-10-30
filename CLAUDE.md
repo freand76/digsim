@@ -11,8 +11,9 @@ no newer-only syntax. Dependencies in `pyproject.toml` pinned exactly.
 - `src/digsim/app/`: GUI (`cli.py`, `gui/`, `gui_objects/`, `model/`, `settings/`)
 - `src/digsim/synth/` Yosys synthesis, `storage_model/` pydantic save/load, `utils/` netlists
 - `tests/`, `examples/` (pytest testbenches in `examples/pytest_tb/`), `circuits/` (a folder
-  per GUI circuit with its files), `tools/gui_fuzz.py`, `docs/` (MkDocs Material, published
-  to https://freand76.github.io/digsim/)
+  per GUI circuit with its files, packaged as `digsim.examples` by `setup.py` for File >
+  Examples), `tools/gui_fuzz.py`, `docs/` (MkDocs Material, published to
+  https://freand76.github.io/digsim/)
 
 ## Commands
 

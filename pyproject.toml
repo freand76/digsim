@@ -51,6 +51,8 @@ cache-keys = [
   { file = "src/**/*.py" },
   { file = "src/**/*.json" },
   { file = "src/**/*.png" },
+  { file = "setup.py" },
+  { file = "circuits/**" },
 ]
 
 [tool.pytest.ini_options]

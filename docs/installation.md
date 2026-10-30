@@ -30,6 +30,8 @@ fast thanks to uv's cache. Add `@latest` to make sure you get the newest release
 uvx digsim-logic-simulator@latest
 ```
 
+The example circuits are in **File > Examples**, which copies one to a folder of yours.
+
 ## Install as a command-line tool
 
 Install DigSim once into its own isolated environment and get the

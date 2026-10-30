@@ -471,9 +471,10 @@ uv run python examples/subcircuit/example_subcircuit.py
 ## GUI example circuits
 
 Each circuit is in a folder of its own in `circuits/`, with the files it uses, like the
-Verilog of a Yosys component or the circuits of its subcircuits. Open a circuit in the
-application with `--load`, then press **Start Simulation** (or
-**Space**):
+Verilog of a Yosys component or the circuits of its subcircuits. They come with DigSim:
+**File > Examples** copies one to a folder of yours and opens it (see
+[Example circuits](gui.md#example-circuits)). In a copy of the repository, open a circuit
+with `--load`, then press **Start Simulation** (or **Space**):
 
 ```sh
 uv run -m digsim.app --load circuits/yosys_counter/counter_yosys_netlist.circuit
