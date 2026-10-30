@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pytest module to test the Component base class"""
@@ -44,7 +44,7 @@ def test_update_settings_reconfigures_once():
     static_value = RecordingStaticValue(circuit, width=4, value=0)
     circuit.init()
     static_value.update_settings({"width": 4, "value": 9})
-    assert reconfigured == [{"width": 4, "value": 9}]
+    assert reconfigured == [{"width": 4, "value": 9, "radix": "dec"}]
     circuit.run(ms=1)
     assert static_value.O.value == 9
 
@@ -76,3 +76,31 @@ def test_input_without_drivers_is_undefined(width):
     assert sink.value == 1
     value.O.remove_wires()
     assert sink.value == "X"
+
+
+@pytest.mark.parametrize(
+    ("width", "value", "radix", "text"),
+    [
+        (16, 0xF000, "dec", "61440"),
+        (16, 0xF000, "hex", "0xF000"),
+        (6, 5, "hex", "0x05"),
+        (4, 5, "bin", "0b0101"),
+        (1, 1, "hex", "1"),
+    ],
+)
+def test_static_value_text(width, value, radix, text):
+    """A static value is shown in its radix, with all digits for its width"""
+    assert StaticValue(Circuit(), width=width, value=value, radix=radix).text() == text
+
+
+def test_static_value_radix_saved_and_loaded(tmp_path):
+    """The radix is saved, decimal if not given, and an unknown radix is an error"""
+    circuit = Circuit(name="radix")
+    assert StaticValue(circuit, "plain").parameter_get("radix") == "dec"
+    StaticValue(circuit, "base", width=16, value=0xE000, radix="hex")
+    circuit.to_json_file(tmp_path / "radix.json")
+    loaded = Circuit()
+    loaded.from_json_file(tmp_path / "radix.json")
+    assert loaded.get_component("base").text() == "0xE000"
+    with pytest.raises(ComponentException):
+        StaticValue(Circuit(), radix="oct")

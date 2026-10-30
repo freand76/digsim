@@ -15,7 +15,7 @@ from PySide6.QtCore import QPointF, QRectF, QSize, Qt
 from PySide6.QtGui import QAction, QColor, QPainter, QPainterPath
 from PySide6.QtWidgets import QMenu, QWidget
 
-from digsim.circuit.components import OnOffSwitch
+from digsim.circuit.components import OnOffSwitch, StaticValue
 from digsim.circuit.components.atoms import Component
 
 from . import _theme as theme
@@ -185,8 +185,14 @@ class StaticValueObject(DeviceObject):
         self.width = max(self.SIZE[0], math.ceil((text_width + 16) / 10) * 10)
         self.update_ports()
 
+    @property
+    def component(self) -> StaticValue:
+        component = self._component
+        assert isinstance(component, StaticValue)
+        return component
+
     def _text(self) -> str:
-        return str(self.component.parameter_get("value"))
+        return self.component.text()
 
     def paint_component(self, painter: QPainter) -> None:
         self.paint_component_base(painter)

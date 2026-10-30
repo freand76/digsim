@@ -363,7 +363,7 @@ presses the button or toggles the switch.
 | ![Switch](images/components/Switch_ON.png) | **On/Off Switch**: toggles its output each time it is clicked. |
 | ![DIP switch](images/components/DIP_SWITCH.png) | **DIP Switch**: a row of switches, one output per switch. |
 | ![Clock](images/components/Clock.png) | **Clock**: a square wave with a configurable frequency (1–50 Hz). |
-| ![Static value](images/components/ZERO.png) | **Static Value**: a constant value on a wire or a bus (1–16 bits). |
+| ![Static value](images/components/ZERO.png) | **Static Value**: a constant value on a wire or a bus (1–16 bits), shown in decimal, hexadecimal or binary. |
 
 The switches can also be clicked while the simulation is stopped, to set the inputs before
 it starts or before **Step Clock**. The circuit then runs for a moment (10 µs) so that the
