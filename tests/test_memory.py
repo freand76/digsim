@@ -155,6 +155,59 @@ def test_ram_sync_output_enable():
     assert ram.DataOut.value == 0x44
 
 
+def _write_bytes(circuit, ram, address, value, enable):
+    ram.BE.value = enable
+    _write(circuit, ram, address, value)
+
+
+def test_ram_byte_enable():
+    """With a byte enable, a write only changes the bytes that BE selects"""
+    circuit = Circuit()
+    ram = _ram(circuit, mode="async_read", data_width=32, byte_enable=True)
+    assert ram.BE.width == 4
+    _write_bytes(circuit, ram, 3, 0x11223344, 0b1111)
+    assert ram.read(3) == 0x11223344
+    _write_bytes(circuit, ram, 3, 0xAABBCCDD, 0b0010)
+    assert ram.read(3) == 0x1122CC44
+    _write_bytes(circuit, ram, 3, 0xAABBCCDD, 0b1100)
+    assert ram.read(3) == 0xAABBCC44
+    _write_bytes(circuit, ram, 3, 0x55667788, 0)
+    assert ram.read(3) == 0xAABBCC44
+    ram.Address.value = 3
+    circuit.run(ms=1)
+    assert ram.DataOut.value == 0xAABBCC44
+
+
+def test_ram_byte_enable_partial_byte():
+    """A data width that isn't whole bytes has a byte enable bit for the bits above them"""
+    circuit = Circuit()
+    ram = _ram(circuit, mode="async_read", data_width=12, byte_enable=True)
+    assert ram.BE.width == 2
+    _write_bytes(circuit, ram, 0, 0xABC, 0b11)
+    _write_bytes(circuit, ram, 0, 0x123, 0b10)
+    assert ram.read(0) == 0x1BC
+
+
+def test_ram_byte_enable_undefined():
+    """A write with an undefined byte enable makes the word undefined"""
+    circuit = Circuit()
+    ram = _ram(circuit, mode="async_read", data_width=16, byte_enable=True)
+    _write_bytes(circuit, ram, 1, 0x1234, 0b11)
+    _write_bytes(circuit, ram, 1, 0x5678, "X")
+    assert ram.read(1) == "X"
+
+
+def test_ram_byte_enable_setting():
+    """The byte enable input is only there with the setting, which is saved"""
+    circuit = Circuit()
+    assert "BE" not in _port_names(RAM(circuit))
+    ram = RAM(circuit, data_width=16, byte_enable=True)
+    assert "BE" in _port_names(ram)
+    assert ram.settings_to_dict()["byte_enable"] is True
+    assert RAM.get_parameters()["byte_enable"]["default"] is False
+    assert "byte_enable" not in ROM.get_parameters()
+
+
 def test_ram_preload_binary(tmp_path):
     """A binary file is loaded at the load address, little-endian words"""
     data = tmp_path / "data.bin"

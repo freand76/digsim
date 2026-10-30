@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - RAM: a byte enable input (the byte_enable setting, off by default): a write only changes the bytes of the word that BE selects, like a processor's byte strobes
  - GUI: the settings pane is hidden until you show it, with View > Settings Pane (F4) or Settings in the context menu of a component. DigSim remembers it once it is shown.
 
 ## v1.9.0

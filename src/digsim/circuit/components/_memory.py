@@ -130,6 +130,7 @@ class _Memory(Component):
         output_enable: bool,
         path: str | Path | None,
         load_address: int,
+        byte_enable: bool = False,
     ) -> None:
         super().__init__(circuit, name)
         if not 1 <= address_width <= MAX_ADDRESS_WIDTH:
@@ -150,6 +151,7 @@ class _Memory(Component):
         self._sync_read = mode == "sync"
         self._rising = edge == "rising"
         self._output_enable = output_enable
+        self._byte_enable = byte_enable
         # The value read on the last clock edge (sync), and the value on DataOut (async)
         self._read_value: VALUE_TYPE = "X"
         self._driven: VALUE_TYPE = "X"
@@ -160,6 +162,8 @@ class _Memory(Component):
         self.parameter_set("output_enable", output_enable)
         self.parameter_set("path", path)
         self.parameter_set("load_address", load_address)
+        if self._WRITABLE:
+            self.parameter_set("byte_enable", byte_enable)
 
         # With a synchronous read, only the clock (and OE) update the memory
         input_class = PortWire if self._sync_read else PortIn
@@ -169,6 +173,8 @@ class _Memory(Component):
         if self._WRITABLE:
             self.add_port(input_class(self, "DataIn", width=data_width))
             self.add_port(input_class(self, "WE"))
+            if byte_enable:
+                self.add_port(input_class(self, "BE", width=(data_width + 7) // 8))
         if output_enable:
             self.add_port(PortIn(self, "OE"))
         data_out = PortOutDelta(self, "DataOut", width=data_width)
@@ -319,6 +325,10 @@ class RAM(_Memory):
     - "async": no clock. DataIn is written while WE is 1, DataOut is the word at the
       address at all times. Like an asynchronous SRAM.
 
+    With `byte_enable`, a write only changes the bytes of the word that BE selects, like
+    the byte strobes of a processor's store: bit 0 of BE is bits 7:0 of the word, bit 1
+    bits 15:8 and so on.
+
     The file is binary, with the bytes of each word in little-endian order, or text (.hex,
     .mem or .txt) with hexadecimal words like Verilog's $readmemh reads, also with
     @address lines.
@@ -328,6 +338,8 @@ class RAM(_Memory):
         Address: Input, `address_width` bits.
         DataIn: Input, `data_width` bits.
         WE: Write enable input.
+        BE: Byte enable input, with `byte_enable`, one bit for each byte of a word (8 bits
+            of `data_width`, rounded up).
         OE: Output enable input, with `output_enable`. DataOut is "Z" while it is 0.
         DataOut: Output, `data_width` bits. Tristate with `output_enable`.
 
@@ -341,6 +353,7 @@ class RAM(_Memory):
         output_enable: Add an output enable input.
         path: A file with the contents to load, optional.
         load_address: The address to load the file at.
+        byte_enable: Add a byte enable input, see above.
     """
 
     _MODES = ("sync", "async_read", "async")
@@ -357,6 +370,7 @@ class RAM(_Memory):
         output_enable: bool = False,
         path: str | Path | None = None,
         load_address: int = 0,
+        byte_enable: bool = False,
     ) -> None:
         super().__init__(
             circuit,
@@ -368,12 +382,28 @@ class RAM(_Memory):
             output_enable,
             path,
             load_address,
+            byte_enable,
         )
 
     def _write(self) -> None:
         address = self.Address.value
         if self.WE.value == 1 and isinstance(address, int):
-            self._mem[address] = self.DataIn.value
+            value = self.DataIn.value
+            if self._byte_enable:
+                value = self._merge_bytes(self._mem[address], value, self.BE.value)
+            self._mem[address] = value
+
+    def _merge_bytes(self, old: VALUE_TYPE, new: VALUE_TYPE, enable: VALUE_TYPE) -> VALUE_TYPE:
+        """The word after a write of the bytes that enable selects"""
+        all_bytes = (1 << self.BE.width) - 1
+        if enable == all_bytes:
+            return new
+        if enable == 0:
+            return old
+        if not (isinstance(old, int) and isinstance(new, int) and isinstance(enable, int)):
+            return "X"
+        mask = sum(0xFF << (8 * byte) for byte in range(self.BE.width) if enable >> byte & 1)
+        return (old & ~mask | new & mask) & ((1 << self.DataIn.width) - 1)
 
     def write(self, address: int, value: VALUE_TYPE) -> None:
         """
@@ -398,6 +428,11 @@ class RAM(_Memory):
                     "async": "no clock",
                 }
             ),
+            "byte_enable": {
+                "type": "bool",
+                "default": False,
+                "description": "Byte enable input (a write only changes the bytes BE selects)",
+            },
             "path": {
                 "type": "path",
                 "fileinfo": _FILEINFO,

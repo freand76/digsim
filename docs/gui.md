@@ -456,6 +456,11 @@ The clock edge is rising or falling. With **Output enable input**, the memory ha
 input, and DataOut is not driven while it is low, so several memories can share a data
 bus.
 
+With **Byte enable input**, a RAM has a BE input with a bit for each byte of a word, and
+a write only changes the bytes whose bit is high: bit 0 is bits 7:0 of the word, bit 1
+bits 15:8 and so on. A processor's byte strobes connect to it, so that a byte or halfword
+store leaves the rest of the word as it is.
+
 The ROM is filled from a file, chosen when it is added. A RAM can start with the contents
 of a file, and is otherwise filled with zeros. Reset fills it from the file again. A file
 ending in `.hex`, `.mem` or `.txt` has hexadecimal words separated by whitespace, like
