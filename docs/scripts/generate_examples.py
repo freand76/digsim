@@ -891,6 +891,15 @@ def screenshots() -> None:
                     dip_switch.select(bit)
                     dip_switch.onpress()
             simulate(300)
+        elif name == "rv32e_demo":
+            # Reset the processor, then run until the LCD shows the uptime and the bar on
+            # GPIO bits 15:8 runs (100 Hz clock)
+            reset = circuit.get_component("reset")
+            assert isinstance(reset, PushButton)
+            reset.push()
+            simulate(100)
+            reset.release()
+            simulate(19000)
         elif name == "buzzers":
             # Press the third button (screenshot while pressed)
             button = circuit.get_component("PushButton_2")
@@ -902,6 +911,9 @@ def screenshots() -> None:
 
     with chdir(ROOT):
         for path in sorted((ROOT / "circuits").glob("*/*.circuit")):
+            if path.parent.name == "rv32e" and path.stem != "rv32e_demo":
+                # The subcircuits of the RV32E demo, shown in it
+                continue
             model.load_circuit(str(path.relative_to(ROOT)))
             simulate(300)
             interact(path.stem)

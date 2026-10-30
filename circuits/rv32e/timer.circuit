@@ -1,0 +1,84 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "clk",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "clk", "width": 1}
+            },
+            {
+                "name": "rst",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "rst", "width": 1}
+            },
+            {
+                "name": "count",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "count", "width": 32}
+            },
+            {
+                "name": "one",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {"width": 32, "value": 1}
+            },
+            {
+                "name": "adder",
+                "type": "digsim.circuit.components.Adder",
+                "display_name": "Adder",
+                "settings": {"width": 32, "carry_in": false}
+            },
+            {
+                "name": "reg",
+                "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
+                "settings": {"async_reset": true, "clock_enable": false, "width": 32}
+            },
+            {
+                "name": "Note_0",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {
+                    "text": "Timer: a free-running 32-bit counter. It counts the rising clock edges,\ngoes from 0xFFFFFFFF to 0, and reset clears it."
+                }
+            }
+        ]
+    },
+    "gui": {
+        "clk": {"x": 40, "y": 20, "z": 0},
+        "rst": {"x": 40, "y": 50, "z": 0},
+        "count": {"x": 700, "y": 190, "z": 0},
+        "one": {"x": 220, "y": 170, "z": 0},
+        "adder": {"x": 300, "y": 165, "z": 0},
+        "reg": {"x": 480, "y": 170, "z": 0},
+        "Note_0": {"x": 40, "y": 300, "z": 0}
+    },
+    "lines": [
+        {
+            "ports": ["clk.clk", "reg.C"],
+            "points": {"1": [460, 30], "2": [460, 220]},
+            "segments": [["clk.clk", "1"], ["1", "2"], ["2", "reg.C"]]
+        },
+        {
+            "ports": ["rst.rst", "reg.R"],
+            "points": {"1": [450, 60], "2": [450, 200]},
+            "segments": [["rst.rst", "1"], ["1", "2"], ["2", "reg.R"]]
+        },
+        {"ports": ["one.O", "adder.A"], "points": {}, "segments": [["one.O", "adder.A"]]},
+        {"ports": ["adder.S", "reg.D"], "points": {}, "segments": [["adder.S", "reg.D"]]},
+        {
+            "ports": ["reg.Q", "count.count", "adder.B"],
+            "points": {"1": [600, 200], "2": [600, 260], "3": [270, 260], "4": [270, 200]},
+            "segments": [
+                ["reg.Q", "1"], ["1", "count.count"], ["1", "2"], ["2", "3"], ["3", "4"],
+                ["4", "adder.B"]
+            ]
+        }
+    ],
+    "shortcuts": {},
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 20}
+}

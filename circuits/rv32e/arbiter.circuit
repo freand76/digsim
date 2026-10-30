@@ -1,0 +1,383 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "clk",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "clk", "width": 1}
+            },
+            {
+                "name": "rst",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "rst", "width": 1}
+            },
+            {
+                "name": "ilm_data",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "ilm_data", "width": 32}
+            },
+            {
+                "name": "ilm_addr",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "ilm_addr", "width": 14}
+            },
+            {
+                "name": "ilm_ram",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "ilm_ram", "width": 1}
+            },
+            {
+                "name": "dlm_addr",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "dlm_addr", "width": 14}
+            },
+            {
+                "name": "dlm_ram",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "dlm_ram", "width": 1}
+            },
+            {
+                "name": "dlm_rom",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "dlm_rom", "width": 1}
+            },
+            {
+                "name": "dlm_re",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "dlm_re", "width": 1}
+            },
+            {
+                "name": "ilm_rdata",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "ilm_rdata", "width": 32}
+            },
+            {
+                "name": "dlm_ready",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "dlm_ready", "width": 1}
+            },
+            {
+                "name": "rom_addr",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "rom_addr", "width": 14}
+            },
+            {
+                "name": "ram_addr",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "ram_addr", "width": 14}
+            },
+            {
+                "name": "ram_we",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "ram_we", "width": 1}
+            },
+            {
+                "name": "ram_re",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "ram_re", "width": 1}
+            },
+            {
+                "name": "insn_mux",
+                "type": "digsim.circuit.components.MUX",
+                "display_name": "MUX",
+                "settings": {"ports": 2, "width": 32}
+            },
+            {
+                "name": "insn_latch",
+                "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
+                "settings": {"async_reset": false, "clock_enable": false, "width": 32}
+            },
+            {
+                "name": "phase",
+                "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
+                "settings": {"async_reset": true, "clock_enable": false, "width": 1}
+            },
+            {
+                "name": "not_phase",
+                "type": "digsim.circuit.components.NOT",
+                "display_name": "NOT",
+                "settings": {}
+            },
+            {
+                "name": "owns_ram",
+                "type": "digsim.circuit.components.AND",
+                "display_name": "AND",
+                "settings": {"ports": 2}
+            },
+            {
+                "name": "owns_rom",
+                "type": "digsim.circuit.components.NOR",
+                "display_name": "NOR",
+                "settings": {"ports": 2}
+            },
+            {
+                "name": "wait_ram",
+                "type": "digsim.circuit.components.AND",
+                "display_name": "AND",
+                "settings": {"ports": 2}
+            },
+            {
+                "name": "wait_rom",
+                "type": "digsim.circuit.components.AND",
+                "display_name": "AND",
+                "settings": {"ports": 2}
+            },
+            {
+                "name": "stall",
+                "type": "digsim.circuit.components.OR",
+                "display_name": "OR",
+                "settings": {"ports": 2}
+            },
+            {
+                "name": "ready",
+                "type": "digsim.circuit.components.NOT",
+                "display_name": "NOT",
+                "settings": {}
+            },
+            {
+                "name": "rom_mux",
+                "type": "digsim.circuit.components.MUX",
+                "display_name": "MUX",
+                "settings": {"ports": 2, "width": 14}
+            },
+            {
+                "name": "ram_mux",
+                "type": "digsim.circuit.components.MUX",
+                "display_name": "MUX",
+                "settings": {"ports": 2, "width": 14}
+            },
+            {
+                "name": "not_re",
+                "type": "digsim.circuit.components.NOT",
+                "display_name": "NOT",
+                "settings": {}
+            },
+            {
+                "name": "we",
+                "type": "digsim.circuit.components.AND",
+                "display_name": "AND",
+                "settings": {"ports": 3}
+            },
+            {
+                "name": "re",
+                "type": "digsim.circuit.components.NOT",
+                "display_name": "NOT",
+                "settings": {}
+            },
+            {
+                "name": "Note_0",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {
+                    "text": "Memory arbiter. The ILM (instruction fetch) and the DLM (loads and stores) share the ROM\nand the RAM. When both want the same memory, the ILM reads the instruction first while\nthe DLM waits (dlm_ready = 0). The phase flip-flop then gives the DLM the memory for one\ncycle, and the processor sees the instruction held in insn_latch.\nowns_ram and owns_rom: the ILM uses that memory in this cycle (ilm_ram is 1 for the RAM).\nram_re is 1 while the RAM is not written."
+                }
+            }
+        ]
+    },
+    "gui": {
+        "clk": {"x": 40, "y": 20, "z": 0},
+        "rst": {"x": 40, "y": 50, "z": 0},
+        "ilm_data": {"x": 40, "y": 110, "z": 0},
+        "ilm_addr": {"x": 40, "y": 230, "z": 0},
+        "ilm_ram": {"x": 40, "y": 270, "z": 0},
+        "dlm_addr": {"x": 40, "y": 310, "z": 0},
+        "dlm_ram": {"x": 40, "y": 540, "z": 0},
+        "dlm_rom": {"x": 40, "y": 580, "z": 0},
+        "dlm_re": {"x": 40, "y": 650, "z": 0},
+        "ilm_rdata": {"x": 1100, "y": 150, "z": 0},
+        "dlm_ready": {"x": 1100, "y": 190, "z": 0},
+        "rom_addr": {"x": 1100, "y": 310, "z": 0},
+        "ram_addr": {"x": 1100, "y": 240, "z": 0},
+        "ram_we": {"x": 1100, "y": 640, "z": 0},
+        "ram_re": {"x": 1100, "y": 690, "z": 0},
+        "insn_mux": {"x": 600, "y": 140, "z": 0},
+        "insn_latch": {"x": 420, "y": 150, "z": 0},
+        "phase": {"x": 460, "y": 380, "z": 0},
+        "not_phase": {"x": 540, "y": 400, "z": 0},
+        "owns_ram": {"x": 620, "y": 400, "z": 0},
+        "owns_rom": {"x": 620, "y": 460, "z": 0},
+        "wait_ram": {"x": 780, "y": 410, "z": 0},
+        "wait_rom": {"x": 780, "y": 470, "z": 0},
+        "stall": {"x": 880, "y": 450, "z": 0},
+        "ready": {"x": 970, "y": 460, "z": 0},
+        "rom_mux": {"x": 960, "y": 300, "z": 0},
+        "ram_mux": {"x": 960, "y": 230, "z": 0},
+        "not_re": {"x": 620, "y": 650, "z": 0},
+        "we": {"x": 780, "y": 630, "z": 0},
+        "re": {"x": 900, "y": 690, "z": 0},
+        "Note_0": {"x": 40, "y": 780, "z": 0}
+    },
+    "lines": [
+        {
+            "ports": ["clk.clk", "insn_latch.C", "phase.C"],
+            "points": {"1": [320, 30], "2": [320, 430], "3": [320, 180]},
+            "segments": [
+                ["clk.clk", "1"], ["1", "3"], ["3", "2"], ["2", "phase.C"], ["3", "insn_latch.C"]
+            ]
+        },
+        {
+            "ports": ["rst.rst", "phase.R"],
+            "points": {"1": [300, 60], "2": [300, 410]},
+            "segments": [["rst.rst", "1"], ["1", "2"], ["2", "phase.R"]]
+        },
+        {
+            "ports": ["ilm_data.ilm_data", "insn_mux.A"],
+            "points": {"1": [570, 120], "2": [570, 150]},
+            "segments": [["ilm_data.ilm_data", "1"], ["1", "2"], ["2", "insn_mux.A"]]
+        },
+        {
+            "ports": ["insn_latch.Q", "insn_mux.B"],
+            "points": {},
+            "segments": [["insn_latch.Q", "insn_mux.B"]]
+        },
+        {
+            "ports": ["insn_mux.Y", "ilm_rdata.ilm_rdata", "insn_latch.D"],
+            "points": {"1": [660, 160], "2": [660, 220], "3": [340, 220], "4": [340, 160]},
+            "segments": [
+                ["insn_mux.Y", "1"], ["1", "ilm_rdata.ilm_rdata"], ["1", "2"], ["2", "3"],
+                ["3", "4"], ["4", "insn_latch.D"]
+            ]
+        },
+        {
+            "ports": ["phase.Q", "not_phase.A", "insn_mux.S", "owns_rom.A"],
+            "points": {"1": [525, 410], "2": [525, 190], "3": [525, 470]},
+            "segments": [
+                ["phase.Q", "1"], ["1", "not_phase.A"], ["1", "2"], ["2", "insn_mux.S"],
+                ["1", "3"], ["3", "owns_rom.A"]
+            ]
+        },
+        {
+            "ports": ["not_phase.Y", "owns_ram.A"],
+            "points": {},
+            "segments": [["not_phase.Y", "owns_ram.A"]]
+        },
+        {
+            "ports": ["ilm_ram.ilm_ram", "owns_ram.B", "owns_rom.B"],
+            "points": {"1": [600, 280], "2": [600, 490], "3": [600, 430]},
+            "segments": [
+                ["ilm_ram.ilm_ram", "1"], ["1", "3"], ["3", "2"], ["2", "owns_rom.B"],
+                ["3", "owns_ram.B"]
+            ]
+        },
+        {
+            "ports": ["owns_ram.Y", "wait_ram.A", "ram_mux.S"],
+            "points": {"1": [690, 420], "2": [690, 270], "3": [940, 270], "4": [940, 280]},
+            "segments": [
+                ["owns_ram.Y", "1"], ["1", "wait_ram.A"], ["1", "2"], ["2", "3"], ["3", "4"],
+                ["4", "ram_mux.S"]
+            ]
+        },
+        {
+            "ports": ["owns_rom.Y", "wait_rom.A", "rom_mux.S"],
+            "points": {"1": [710, 480], "2": [710, 350]},
+            "segments": [["owns_rom.Y", "1"], ["1", "wait_rom.A"], ["1", "2"], ["2", "rom_mux.S"]]
+        },
+        {
+            "ports": ["dlm_ram.dlm_ram", "wait_ram.B", "we.B"],
+            "points": {"1": [740, 550], "2": [740, 440], "3": [740, 650]},
+            "segments": [
+                ["dlm_ram.dlm_ram", "1"], ["1", "2"], ["2", "wait_ram.B"], ["1", "3"],
+                ["3", "we.B"]
+            ]
+        },
+        {
+            "ports": ["dlm_rom.dlm_rom", "wait_rom.B"],
+            "points": {"1": [760, 590], "2": [760, 500]},
+            "segments": [["dlm_rom.dlm_rom", "1"], ["1", "2"], ["2", "wait_rom.B"]]
+        },
+        {
+            "ports": ["wait_ram.Y", "stall.A"],
+            "points": {"1": [850, 430], "2": [850, 460]},
+            "segments": [["wait_ram.Y", "1"], ["1", "2"], ["2", "stall.A"]]
+        },
+        {
+            "ports": ["wait_rom.Y", "stall.B"],
+            "points": {"1": [850, 490], "2": [850, 480]},
+            "segments": [["wait_rom.Y", "1"], ["1", "2"], ["2", "stall.B"]]
+        },
+        {
+            "ports": ["stall.Y", "ready.A", "phase.D"],
+            "points": {"1": [950, 470], "2": [950, 360], "3": [440, 360], "4": [440, 390]},
+            "segments": [
+                ["stall.Y", "1"], ["1", "ready.A"], ["1", "2"], ["2", "3"], ["3", "4"],
+                ["4", "phase.D"]
+            ]
+        },
+        {
+            "ports": ["ready.Y", "dlm_ready.dlm_ready", "we.A"],
+            "points": {
+                "1": [1060, 470],
+                "2": [1060, 200],
+                "3": [1060, 600],
+                "4": [770, 600],
+                "5": [770, 640]
+            },
+            "segments": [
+                ["ready.Y", "1"], ["1", "2"], ["2", "dlm_ready.dlm_ready"], ["1", "3"],
+                ["3", "4"], ["4", "5"], ["5", "we.A"]
+            ]
+        },
+        {
+            "ports": ["ilm_addr.ilm_addr", "rom_mux.B", "ram_mux.B"],
+            "points": {"1": [900, 240], "2": [900, 330], "3": [900, 260]},
+            "segments": [
+                ["ilm_addr.ilm_addr", "1"], ["1", "3"], ["3", "2"], ["2", "rom_mux.B"],
+                ["3", "ram_mux.B"]
+            ]
+        },
+        {
+            "ports": ["dlm_addr.dlm_addr", "rom_mux.A", "ram_mux.A"],
+            "points": {"1": [920, 320], "2": [920, 240], "3": [920, 310]},
+            "segments": [
+                ["dlm_addr.dlm_addr", "1"], ["1", "3"], ["3", "2"], ["2", "ram_mux.A"],
+                ["3", "rom_mux.A"]
+            ]
+        },
+        {
+            "ports": ["rom_mux.Y", "rom_addr.rom_addr"],
+            "points": {},
+            "segments": [["rom_mux.Y", "rom_addr.rom_addr"]]
+        },
+        {
+            "ports": ["ram_mux.Y", "ram_addr.ram_addr"],
+            "points": {},
+            "segments": [["ram_mux.Y", "ram_addr.ram_addr"]]
+        },
+        {
+            "ports": ["dlm_re.dlm_re", "not_re.A"],
+            "points": {},
+            "segments": [["dlm_re.dlm_re", "not_re.A"]]
+        },
+        {"ports": ["not_re.Y", "we.C"], "points": {}, "segments": [["not_re.Y", "we.C"]]},
+        {
+            "ports": ["we.Y", "ram_we.ram_we", "re.A"],
+            "points": {"1": [870, 650], "2": [870, 700]},
+            "segments": [["we.Y", "1"], ["1", "ram_we.ram_we"], ["1", "2"], ["2", "re.A"]]
+        },
+        {
+            "ports": ["re.Y", "ram_re.ram_re"],
+            "points": {},
+            "segments": [["re.Y", "ram_re.ram_re"]]
+        }
+    ],
+    "shortcuts": {},
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 20}
+}

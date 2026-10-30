@@ -1,0 +1,517 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "clk",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "clk", "width": 1}
+            },
+            {
+                "name": "rst",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "rst", "width": 1}
+            },
+            {
+                "name": "rom_data",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "rom_data", "width": 32}
+            },
+            {
+                "name": "ram_rdata",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "ram_rdata", "width": 32}
+            },
+            {
+                "name": "rom_addr",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "rom_addr", "width": 14}
+            },
+            {
+                "name": "ram_addr",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "ram_addr", "width": 14}
+            },
+            {
+                "name": "ram_we",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "ram_we", "width": 1}
+            },
+            {
+                "name": "ram_re",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "ram_re", "width": 1}
+            },
+            {
+                "name": "gpio",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "gpio", "width": 32}
+            },
+            {
+                "name": "pc",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "pc", "width": 32}
+            },
+            {
+                "name": "ram_wdata",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "ram_wdata", "width": 32}
+            },
+            {
+                "name": "ram_wstrb",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "ram_wstrb", "width": 4}
+            },
+            {
+                "name": "halted",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "halted", "width": 1}
+            },
+            {
+                "name": "rv32",
+                "type": "digsim.circuit.components.YosysComponent",
+                "display_name": "rv32",
+                "settings": {
+                    "path": "rv32e.v",
+                    "functional": true,
+                    "parameters": "ILM_ADDR_WIDTH=29"
+                }
+            },
+            {
+                "name": "one",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {"width": 1, "value": 1, "radix": "dec"}
+            },
+            {
+                "name": "ilm_split",
+                "type": "digsim.circuit.components.Splitter",
+                "display_name": "Splitter",
+                "settings": {"groups": [2, 14, 12, 1], "direction": "split"}
+            },
+            {
+                "name": "ilm_mux",
+                "type": "digsim.circuit.components.MUX",
+                "display_name": "MUX",
+                "settings": {"ports": 2, "width": 32}
+            },
+            {
+                "name": "dlm_split",
+                "type": "digsim.circuit.components.Splitter",
+                "display_name": "Splitter",
+                "settings": {"groups": [2, 14, 16], "direction": "split"}
+            },
+            {
+                "name": "rom_base",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {"width": 16, "value": 0, "radix": "hex"}
+            },
+            {
+                "name": "ram_base",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {"width": 16, "value": 4096, "radix": "hex"}
+            },
+            {
+                "name": "timer_base",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {"width": 16, "value": 57344, "radix": "hex"}
+            },
+            {
+                "name": "gpio_base",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {"width": 16, "value": 61440, "radix": "hex"}
+            },
+            {
+                "name": "rom_cmp",
+                "type": "digsim.circuit.components.Comparator",
+                "display_name": "Comparator",
+                "settings": {"width": 16, "signed": false}
+            },
+            {
+                "name": "rom_load",
+                "type": "digsim.circuit.components.AND",
+                "display_name": "AND",
+                "settings": {"ports": 2}
+            },
+            {
+                "name": "ram_cmp",
+                "type": "digsim.circuit.components.Comparator",
+                "display_name": "Comparator",
+                "settings": {"width": 16, "signed": false}
+            },
+            {
+                "name": "timer_cmp",
+                "type": "digsim.circuit.components.Comparator",
+                "display_name": "Comparator",
+                "settings": {"width": 16, "signed": false}
+            },
+            {
+                "name": "gpio_cmp",
+                "type": "digsim.circuit.components.Comparator",
+                "display_name": "Comparator",
+                "settings": {"width": 16, "signed": false}
+            },
+            {
+                "name": "rd_sel",
+                "type": "digsim.circuit.components.Wires2Bus",
+                "display_name": "Wires2Bus",
+                "settings": {"width": 2}
+            },
+            {
+                "name": "rd_mux",
+                "type": "digsim.circuit.components.MUX",
+                "display_name": "MUX",
+                "settings": {"ports": 4, "width": 32}
+            },
+            {
+                "name": "arbiter",
+                "type": "digsim.circuit.components.SubCircuit",
+                "display_name": "arbiter",
+                "settings": {"path": "arbiter.circuit"}
+            },
+            {
+                "name": "gpio_reg",
+                "type": "digsim.circuit.components.SubCircuit",
+                "display_name": "gpio",
+                "settings": {"path": "gpio.circuit"}
+            },
+            {
+                "name": "timer",
+                "type": "digsim.circuit.components.SubCircuit",
+                "display_name": "timer",
+                "settings": {"path": "timer.circuit"}
+            },
+            {
+                "name": "Note_0",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {
+                    "text": "RV32E processor (rv32.v, one instruction per clock cycle) with its memory system.\nConnect a ROM to rom_addr and rom_data, and a RAM to ram_addr, ram_rdata, ram_wdata\nand ram_we, both with 14 address bits and 32-bit words (word addresses). The RAM is\nread without a clock and written on the rising clock edge (RAM mode async_read).\nram_wstrb has the byte strobes of a store, for the BE input of a RAM with Byte enable.\nHold rst for a clock edge to start at address 0. pc and halted show the processor."
+                }
+            },
+            {
+                "name": "Note_1",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {
+                    "text": "Memory map\n0x00000000 - 0x0000FFFF   ROM     instructions (ILM), loads (DLM)\n0x10000000 - 0x1000FFFF   RAM     instructions (ILM), loads and stores (DLM)\n0xE0000000 - 0xE000FFFF   timer   loads (DLM), a free-running 32-bit counter\n0xF0000000 - 0xF000FFFF   GPIO    stores (DLM), write only\n\nILM: address bit 28 selects the ROM or the RAM, a pc above 0x1FFFFFFF traps.\nDLM: the comparators match address bits 31:16 with 0x0000 (ROM, loads only),\n0x1000 (RAM), 0xE000 (timer) and 0xF000 (GPIO). The read mux gives the processor\nthe ROM, the timer or else the RAM.\nWhen the ILM and the DLM both use the ROM or the RAM, the arbiter adds a wait cycle."
+                }
+            }
+        ]
+    },
+    "gui": {
+        "clk": {"x": 20, "y": 20, "z": 0},
+        "rst": {"x": 20, "y": 50, "z": 0},
+        "rom_data": {"x": 20, "y": 140, "z": 0},
+        "ram_rdata": {"x": 20, "y": 170, "z": 0},
+        "rom_addr": {"x": 2110, "y": 235, "z": 0},
+        "ram_addr": {"x": 2110, "y": 200, "z": 0},
+        "ram_we": {"x": 2110, "y": 270, "z": 0},
+        "ram_re": {"x": 2110, "y": 305, "z": 0},
+        "gpio": {"x": 2110, "y": 490, "z": 0},
+        "pc": {"x": 560, "y": 470, "z": 0},
+        "ram_wdata": {"x": 2110, "y": 520, "z": 0},
+        "ram_wstrb": {"x": 2110, "y": 550, "z": 0},
+        "halted": {"x": 560, "y": 570, "z": 0},
+        "rv32": {"x": 300, "y": 355, "z": 0},
+        "one": {"x": 260, "y": 490, "z": 0},
+        "ilm_split": {"x": 560, "y": 170, "z": 0},
+        "ilm_mux": {"x": 400, "y": 140, "z": 0},
+        "dlm_split": {"x": 580, "y": 270, "z": 0},
+        "rom_base": {"x": 620, "y": 370, "z": 0},
+        "ram_base": {"x": 940, "y": 370, "z": 0},
+        "timer_base": {"x": 1180, "y": 370, "z": 0},
+        "gpio_base": {"x": 1420, "y": 370, "z": 0},
+        "rom_cmp": {"x": 720, "y": 335, "z": 0},
+        "rom_load": {"x": 860, "y": 360, "z": 0},
+        "ram_cmp": {"x": 1030, "y": 335, "z": 0},
+        "timer_cmp": {"x": 1270, "y": 335, "z": 0},
+        "gpio_cmp": {"x": 1514, "y": 335, "z": 0},
+        "rd_sel": {"x": 818, "y": 495, "z": 0, "rotation": 180, "flipped": true},
+        "rd_mux": {"x": 200, "y": 495, "z": 0},
+        "arbiter": {"x": 1760, "y": 115, "z": 0},
+        "gpio_reg": {"x": 1760, "y": 365, "z": 0},
+        "timer": {"x": 1960, "y": 365, "z": 0},
+        "Note_0": {"x": 20, "y": 730, "z": 0},
+        "Note_1": {"x": 900, "y": 730, "z": 0}
+    },
+    "lines": [
+        {
+            "ports": ["clk.clk", "gpio_reg.clk", "timer.clk", "rv32.clk", "arbiter.clk"],
+            "points": {
+                "1": [230, 30],
+                "2": [1630, 30],
+                "3": [2350, 30],
+                "4": [2350, 355],
+                "5": [1940, 355],
+                "6": [1740, 355],
+                "7": [1740, 390],
+                "8": [1940, 390],
+                "9": [230, 440],
+                "10": [1630, 140]
+            },
+            "segments": [
+                ["clk.clk", "1"], ["1", "2"], ["2", "3"], ["3", "4"], ["4", "5"], ["5", "6"],
+                ["6", "7"], ["7", "gpio_reg.clk"], ["5", "8"], ["8", "timer.clk"], ["1", "9"],
+                ["9", "rv32.clk"], ["2", "10"], ["10", "arbiter.clk"]
+            ]
+        },
+        {
+            "ports": ["rst.rst", "gpio_reg.rst", "timer.rst", "rv32.rst", "arbiter.rst"],
+            "points": {
+                "1": [220, 60],
+                "2": [1610, 60],
+                "3": [2340, 60],
+                "4": [2340, 345],
+                "5": [1930, 345],
+                "6": [1730, 345],
+                "7": [1730, 410],
+                "8": [1930, 410],
+                "9": [220, 460],
+                "10": [1610, 160]
+            },
+            "segments": [
+                ["rst.rst", "1"], ["1", "2"], ["2", "3"], ["3", "4"], ["4", "5"], ["5", "6"],
+                ["6", "7"], ["7", "gpio_reg.rst"], ["5", "8"], ["8", "timer.rst"], ["1", "9"],
+                ["9", "rv32.rst"], ["2", "10"], ["10", "arbiter.rst"]
+            ]
+        },
+        {
+            "ports": ["rom_data.rom_data", "ilm_mux.A", "rd_mux.B"],
+            "points": {"1": [170, 150], "2": [170, 515]},
+            "segments": [
+                ["rom_data.rom_data", "1"], ["1", "ilm_mux.A"], ["1", "2"], ["2", "rd_mux.B"]
+            ]
+        },
+        {
+            "ports": ["ram_rdata.ram_rdata", "ilm_mux.B", "rd_mux.A"],
+            "points": {"1": [180, 180], "2": [370, 180], "3": [370, 170], "4": [180, 505]},
+            "segments": [
+                ["ram_rdata.ram_rdata", "1"], ["1", "2"], ["2", "3"], ["3", "ilm_mux.B"],
+                ["1", "4"], ["4", "rd_mux.A"]
+            ]
+        },
+        {
+            "ports": ["rv32.imem_addr", "ilm_split.bus"],
+            "points": {"1": [520, 380], "2": [520, 210]},
+            "segments": [["rv32.imem_addr", "1"], ["1", "2"], ["2", "ilm_split.bus"]]
+        },
+        {
+            "ports": ["rv32.dmem_addr", "dlm_split.bus"],
+            "points": {"1": [560, 400], "2": [560, 300]},
+            "segments": [["rv32.dmem_addr", "1"], ["1", "2"], ["2", "dlm_split.bus"]]
+        },
+        {
+            "ports": ["rv32.dmem_re", "arbiter.dlm_re", "rom_load.B"],
+            "points": {"1": [845, 420], "2": [1690, 420], "3": [1690, 300], "4": [845, 390]},
+            "segments": [
+                ["rv32.dmem_re", "1"], ["1", "2"], ["2", "3"], ["3", "arbiter.dlm_re"],
+                ["1", "4"], ["4", "rom_load.B"]
+            ]
+        },
+        {
+            "ports": ["rv32.dmem_wdata", "ram_wdata.ram_wdata", "gpio_reg.wdata"],
+            "points": {"1": [1670, 440], "2": [1670, 470], "3": [1670, 530]},
+            "segments": [
+                ["rv32.dmem_wdata", "1"], ["1", "2"], ["2", "3"], ["3", "ram_wdata.ram_wdata"],
+                ["2", "gpio_reg.wdata"]
+            ]
+        },
+        {
+            "ports": ["rv32.dmem_wstrb", "ram_wstrb.ram_wstrb", "gpio_reg.wstrb"],
+            "points": {"1": [1650, 460], "2": [1650, 560], "3": [1650, 450]},
+            "segments": [
+                ["rv32.dmem_wstrb", "1"], ["1", "2"], ["2", "ram_wstrb.ram_wstrb"], ["1", "3"],
+                ["3", "gpio_reg.wstrb"]
+            ]
+        },
+        {"ports": ["rv32.pc_out", "pc.pc"], "points": {}, "segments": [["rv32.pc_out", "pc.pc"]]},
+        {
+            "ports": ["rv32.halted", "halted.halted"],
+            "points": {},
+            "segments": [["rv32.halted", "halted.halted"]]
+        },
+        {
+            "ports": ["one.O", "rv32.imem_ready"],
+            "points": {},
+            "segments": [["one.O", "rv32.imem_ready"]]
+        },
+        {
+            "ports": ["ilm_split.bus_15_2", "arbiter.ilm_addr"],
+            "points": {"1": [650, 200], "2": [650, 200]},
+            "segments": [["ilm_split.bus_15_2", "1"], ["1", "2"], ["2", "arbiter.ilm_addr"]]
+        },
+        {
+            "ports": ["ilm_split.bus_28", "arbiter.ilm_ram", "ilm_mux.S"],
+            "points": {
+                "1": [630, 240],
+                "2": [630, 220],
+                "3": [630, 255],
+                "4": [380, 255],
+                "5": [380, 190]
+            },
+            "segments": [
+                ["ilm_split.bus_28", "1"], ["1", "2"], ["2", "arbiter.ilm_ram"], ["1", "3"],
+                ["3", "4"], ["4", "5"], ["5", "ilm_mux.S"]
+            ]
+        },
+        {
+            "ports": ["ilm_mux.Y", "arbiter.ilm_data"],
+            "points": {"1": [1099, 160], "2": [1099, 180]},
+            "segments": [["ilm_mux.Y", "1"], ["1", "2"], ["2", "arbiter.ilm_data"]]
+        },
+        {
+            "ports": ["dlm_split.bus_15_2", "arbiter.dlm_addr"],
+            "points": {"1": [680, 300], "2": [680, 240]},
+            "segments": [["dlm_split.bus_15_2", "1"], ["1", "2"], ["2", "arbiter.dlm_addr"]]
+        },
+        {
+            "ports": [
+                "dlm_split.bus_31_16", "gpio_cmp.A", "rom_cmp.A", "ram_cmp.A", "timer_cmp.A"
+            ],
+            "points": {
+                "1": [705, 320],
+                "2": [1000, 320],
+                "3": [1255, 320],
+                "4": [1470, 320],
+                "5": [1470, 360],
+                "6": [705, 360],
+                "7": [1011, 320],
+                "8": [1011, 360],
+                "9": [1255, 360]
+            },
+            "segments": [
+                ["dlm_split.bus_31_16", "1"], ["1", "2"], ["2", "3"], ["3", "4"], ["4", "5"],
+                ["5", "gpio_cmp.A"], ["1", "6"], ["6", "rom_cmp.A"], ["2", "7"], ["7", "8"],
+                ["8", "ram_cmp.A"], ["3", "9"], ["9", "timer_cmp.A"]
+            ]
+        },
+        {
+            "ports": ["rom_base.O", "rom_cmp.B"],
+            "points": {},
+            "segments": [["rom_base.O", "rom_cmp.B"]]
+        },
+        {
+            "ports": ["ram_base.O", "ram_cmp.B"],
+            "points": {},
+            "segments": [["ram_base.O", "ram_cmp.B"]]
+        },
+        {
+            "ports": ["timer_base.O", "timer_cmp.B"],
+            "points": {},
+            "segments": [["timer_base.O", "timer_cmp.B"]]
+        },
+        {
+            "ports": ["gpio_base.O", "gpio_cmp.B"],
+            "points": {"1": [1489, 380]},
+            "segments": [["gpio_base.O", "1"], ["1", "gpio_cmp.B"]]
+        },
+        {
+            "ports": ["rom_cmp.EQ", "rom_load.A"],
+            "points": {},
+            "segments": [["rom_cmp.EQ", "rom_load.A"]]
+        },
+        {
+            "ports": ["rom_load.Y", "rd_sel.bus_0", "arbiter.dlm_rom"],
+            "points": {"1": [918, 380], "2": [918, 510], "3": [918, 280]},
+            "segments": [
+                ["rom_load.Y", "1"], ["1", "2"], ["2", "rd_sel.bus_0"], ["1", "3"],
+                ["3", "arbiter.dlm_rom"]
+            ]
+        },
+        {
+            "ports": ["ram_cmp.EQ", "arbiter.dlm_ram"],
+            "points": {"1": [1170, 370], "2": [1170, 260]},
+            "segments": [["ram_cmp.EQ", "1"], ["1", "2"], ["2", "arbiter.dlm_ram"]]
+        },
+        {
+            "ports": ["timer_cmp.EQ", "rd_sel.bus_1"],
+            "points": {"1": [1400, 370], "2": [1400, 520]},
+            "segments": [["timer_cmp.EQ", "1"], ["1", "2"], ["2", "rd_sel.bus_1"]]
+        },
+        {
+            "ports": ["gpio_cmp.EQ", "gpio_reg.sel"],
+            "points": {"1": [1710, 370], "2": [1710, 430]},
+            "segments": [["gpio_cmp.EQ", "1"], ["1", "2"], ["2", "gpio_reg.sel"]]
+        },
+        {
+            "ports": ["rd_sel.bus", "rd_mux.S"],
+            "points": {"1": [699, 515], "2": [699, 649], "3": [189, 649], "4": [189, 555]},
+            "segments": [
+                ["rd_sel.bus", "1"], ["1", "2"], ["2", "3"], ["3", "4"], ["4", "rd_mux.S"]
+            ]
+        },
+        {
+            "ports": ["rd_mux.Y", "rv32.dmem_rdata"],
+            "points": {},
+            "segments": [["rd_mux.Y", "rv32.dmem_rdata"]]
+        },
+        {
+            "ports": ["arbiter.ilm_rdata", "rv32.imem_rdata"],
+            "points": {"1": [2310, 170], "2": [2310, 690], "3": [250, 690], "4": [250, 480]},
+            "segments": [
+                ["arbiter.ilm_rdata", "1"], ["1", "2"], ["2", "3"], ["3", "4"],
+                ["4", "rv32.imem_rdata"]
+            ]
+        },
+        {
+            "ports": ["arbiter.dlm_ready", "rv32.dmem_ready"],
+            "points": {"1": [2300, 190], "2": [2300, 680], "3": [270, 680], "4": [270, 540]},
+            "segments": [
+                ["arbiter.dlm_ready", "1"], ["1", "2"], ["2", "3"], ["3", "4"],
+                ["4", "rv32.dmem_ready"]
+            ]
+        },
+        {
+            "ports": ["arbiter.ram_addr", "ram_addr.ram_addr"],
+            "points": {},
+            "segments": [["arbiter.ram_addr", "ram_addr.ram_addr"]]
+        },
+        {
+            "ports": ["arbiter.rom_addr", "rom_addr.rom_addr"],
+            "points": {"1": [2000, 230], "2": [2000, 245]},
+            "segments": [["arbiter.rom_addr", "1"], ["1", "2"], ["2", "rom_addr.rom_addr"]]
+        },
+        {
+            "ports": ["arbiter.ram_we", "ram_we.ram_we"],
+            "points": {"1": [1990, 250], "2": [1990, 280]},
+            "segments": [["arbiter.ram_we", "1"], ["1", "2"], ["2", "ram_we.ram_we"]]
+        },
+        {
+            "ports": ["arbiter.ram_re", "ram_re.ram_re"],
+            "points": {"1": [1980, 270], "2": [1980, 315]},
+            "segments": [["arbiter.ram_re", "1"], ["1", "2"], ["2", "ram_re.ram_re"]]
+        },
+        {
+            "ports": ["gpio_reg.gpio", "gpio.gpio"],
+            "points": {"1": [1900, 430], "2": [1900, 500]},
+            "segments": [["gpio_reg.gpio", "1"], ["1", "2"], ["2", "gpio.gpio"]]
+        },
+        {
+            "ports": ["timer.count", "rd_mux.C"],
+            "points": {"1": [2290, 400], "2": [2290, 710], "3": [150, 710], "4": [150, 525]},
+            "segments": [
+                ["timer.count", "1"], ["1", "2"], ["2", "3"], ["3", "4"], ["4", "rd_mux.C"]
+            ]
+        }
+    ],
+    "shortcuts": {},
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 20}
+}

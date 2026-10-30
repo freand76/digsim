@@ -10,6 +10,7 @@
  - GUI: a click in the circuit no longer moves it a few pixels after the circuit was opened or zoomed to fit
  - Clock: the frequency setting goes up to 100 Hz (was 50 Hz)
  - GUI: the wires of a subcircuit view no longer disappear after a right-click on one of its ports
+ - An RV32E CPU system example circuit (`circuits/rv32e/`): a RISC-V processor in Verilog with an arbiter, GPIO and a timer as subcircuits, running a C program that writes to an HD44780 LCD and runs a bar on LEDs
 
 ## v1.9.0
  - A native engine: with digsim-native installed (a dependency on Linux x86_64 and arm64, Windows x64 and macOS), the gates of Yosys components and ICs are simulated in Rust, with the same results, about 3 to 4 times faster for the 6502 example. DIGSIM_ENGINE=python simulates in Python

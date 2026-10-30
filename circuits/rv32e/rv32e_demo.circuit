@@ -1,0 +1,354 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "cpu",
+                "type": "digsim.circuit.components.SubCircuit",
+                "display_name": "cpu:rv32e",
+                "settings": {"path": "cpu.circuit"}
+            },
+            {
+                "name": "clock",
+                "type": "digsim.circuit.components.Clock",
+                "display_name": "Clock",
+                "settings": {"frequency": 100}
+            },
+            {
+                "name": "reset",
+                "type": "digsim.circuit.components.PushButton",
+                "display_name": "PushButton",
+                "settings": {}
+            },
+            {
+                "name": "rom",
+                "type": "digsim.circuit.components.ROM",
+                "display_name": "ROM",
+                "settings": {
+                    "address_width": 14,
+                    "data_width": 32,
+                    "mode": "async",
+                    "edge": "rising",
+                    "output_enable": false,
+                    "path": "rv32e_code/lcd.bin",
+                    "load_address": 0
+                }
+            },
+            {
+                "name": "ram",
+                "type": "digsim.circuit.components.RAM",
+                "display_name": "RAM",
+                "settings": {
+                    "address_width": 14,
+                    "data_width": 32,
+                    "mode": "async_read",
+                    "edge": "rising",
+                    "output_enable": false,
+                    "load_address": 0,
+                    "byte_enable": true
+                }
+            },
+            {
+                "name": "gpio_split",
+                "type": "digsim.circuit.components.Splitter",
+                "display_name": "Splitter",
+                "settings": {"groups": [8, 8, 8, 8], "direction": "split"}
+            },
+            {
+                "name": "light_bits",
+                "type": "digsim.circuit.components.Bus2Wires",
+                "display_name": "Bus2Wires",
+                "settings": {"width": 8, "enable": [0, 1, 2, 3, 4, 5, 6, 7]}
+            },
+            {
+                "name": "light",
+                "type": "digsim.circuit.components.LedBar",
+                "display_name": "LedBar",
+                "settings": {"width": 8, "color": "red"}
+            },
+            {
+                "name": "pc",
+                "type": "digsim.circuit.components.HexDigit",
+                "display_name": "HexDigit",
+                "settings": {"digits": 8, "dot": false}
+            },
+            {
+                "name": "halted",
+                "type": "digsim.circuit.components.Led",
+                "display_name": "Led",
+                "settings": {"color": "red"}
+            },
+            {
+                "name": "Note_0",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {"text": "Clock, 100 Hz"}
+            },
+            {
+                "name": "Note_1",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {"text": "Reset, key 1"}
+            },
+            {
+                "name": "Note_2",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {"text": "GPIO bits 7:0"}
+            },
+            {
+                "name": "Note_4",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {"text": "pc"}
+            },
+            {
+                "name": "Note_5",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {"text": "halted (EBREAK, ECALL or a trap)"}
+            },
+            {
+                "name": "Note_6",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {
+                    "text": "RV32E demo: the rv32e subcircuit (rv32e.circuit) with a ROM and a RAM.\nThe RAM has Byte enable, for the byte strobes of the processor's stores.\nThe ROM (lcd.hex, built from lcd.c with make) drives the HD44780 LCD in 4-bit mode\nthrough the GPIO register: bits 3:0 are D7:D4, bit 4 RS and bit 5 E.\nIt writes a line of text with a custom character, and the time since reset\n(from the timer) on the second line.\nprogram.hex, the earlier demo (a running light), can be chosen in the ROM's settings.\nStart the simulation and press Reset (key 1). Double-click the rv32e component\nto see inside it."
+                }
+            },
+            {
+                "name": "lcd",
+                "type": "digsim.circuit.components.HD44780",
+                "display_name": "HD44780",
+                "settings": {"backlight": "green"}
+            },
+            {
+                "name": "lcd_rw",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {"width": 1, "value": 0, "radix": "dec"}
+            },
+            {
+                "name": "light_bits_1",
+                "type": "digsim.circuit.components.Bus2Wires",
+                "display_name": "Bus2Wires",
+                "settings": {"width": 8, "enable": [0, 1, 2, 3, 4, 5, 6, 7]}
+            },
+            {
+                "name": "light_1",
+                "type": "digsim.circuit.components.LedBar",
+                "display_name": "LedBar",
+                "settings": {"width": 8, "color": "green"}
+            },
+            {
+                "name": "Note_2_1",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {"text": "GPIO bits 15:8"}
+            }
+        ]
+    },
+    "gui": {
+        "cpu": {"x": 500, "y": 300, "z": 0},
+        "clock": {"x": 60, "y": 355, "z": 0},
+        "reset": {"x": 60, "y": 420, "z": 0},
+        "rom": {"x": 700, "y": 230, "z": 0},
+        "ram": {"x": 900, "y": 280, "z": 0},
+        "gpio_split": {"x": 772, "y": 600, "z": 0},
+        "light_bits": {"x": 880, "y": 545, "z": 0},
+        "light": {"x": 960, "y": 545, "z": 0},
+        "pc": {"x": 774, "y": 769, "z": 0},
+        "halted": {"x": 780, "y": 890, "z": 0},
+        "Note_0": {"x": 60, "y": 320, "z": 0},
+        "Note_1": {"x": 60, "y": 480, "z": 0},
+        "Note_2": {"x": 1016, "y": 574, "z": 0},
+        "Note_4": {"x": 1162, "y": 789, "z": 0},
+        "Note_5": {"x": 850, "y": 905, "z": 0},
+        "Note_6": {"x": 60, "y": 30, "z": 0},
+        "lcd": {"x": 1420, "y": 560, "z": 0},
+        "lcd_rw": {"x": 1362, "y": 536, "z": 0},
+        "light_bits_1": {"x": 880, "y": 643, "z": 1},
+        "light_1": {"x": 960, "y": 643, "z": 1},
+        "Note_2_1": {"x": 1014, "y": 669, "z": 2}
+    },
+    "lines": [
+        {
+            "ports": ["cpu.ram_addr", "ram.Address"],
+            "points": {},
+            "segments": [["cpu.ram_addr", "ram.Address"]]
+        },
+        {
+            "ports": ["cpu.rom_addr", "rom.Address"],
+            "points": {"1": [685, 345], "2": [685, 255]},
+            "segments": [["cpu.rom_addr", "1"], ["1", "2"], ["2", "rom.Address"]]
+        },
+        {"ports": ["cpu.ram_we", "ram.WE"], "points": {}, "segments": [["cpu.ram_we", "ram.WE"]]},
+        {
+            "ports": ["cpu.pc", "pc.val"],
+            "points": {"1": [740, 405], "2": [740, 804]},
+            "segments": [["cpu.pc", "1"], ["1", "2"], ["2", "pc.val"]]
+        },
+        {
+            "ports": ["cpu.gpio", "gpio_split.bus"],
+            "points": {"1": [730, 425], "2": [730, 640]},
+            "segments": [["cpu.gpio", "1"], ["1", "2"], ["2", "gpio_split.bus"]]
+        },
+        {
+            "ports": ["cpu.ram_wdata", "ram.DataIn"],
+            "points": {"1": [850, 445], "2": [850, 345]},
+            "segments": [["cpu.ram_wdata", "1"], ["1", "2"], ["2", "ram.DataIn"]]
+        },
+        {
+            "ports": ["cpu.ram_wstrb", "ram.BE"],
+            "points": {"1": [870, 465], "2": [870, 385]},
+            "segments": [["cpu.ram_wstrb", "1"], ["1", "2"], ["2", "ram.BE"]]
+        },
+        {
+            "ports": ["cpu.halted", "halted.I"],
+            "points": {"1": [710, 485], "2": [710, 920]},
+            "segments": [["cpu.halted", "1"], ["1", "2"], ["2", "halted.I"]]
+        },
+        {
+            "ports": ["clock.O", "cpu.clk", "ram.clk"],
+            "points": {"1": [130, 375], "2": [130, 205], "3": [880, 205], "4": [880, 305]},
+            "segments": [
+                ["clock.O", "1"], ["1", "cpu.clk"], ["1", "2"], ["2", "3"], ["3", "4"],
+                ["4", "ram.clk"]
+            ]
+        },
+        {
+            "ports": ["reset.O", "cpu.rst"],
+            "points": {"1": [460, 440], "2": [460, 395]},
+            "segments": [["reset.O", "1"], ["1", "2"], ["2", "cpu.rst"]]
+        },
+        {
+            "ports": ["rom.DataOut", "cpu.rom_data"],
+            "points": {"1": [1320, 255], "2": [1320, 990], "3": [470, 990], "4": [470, 415]},
+            "segments": [
+                ["rom.DataOut", "1"], ["1", "2"], ["2", "3"], ["3", "4"], ["4", "cpu.rom_data"]
+            ]
+        },
+        {
+            "ports": ["ram.DataOut", "cpu.ram_rdata"],
+            "points": {"1": [1310, 345], "2": [1310, 980], "3": [480, 980], "4": [480, 435]},
+            "segments": [
+                ["ram.DataOut", "1"], ["1", "2"], ["2", "3"], ["3", "4"], ["4", "cpu.ram_rdata"]
+            ]
+        },
+        {
+            "ports": ["gpio_split.bus_7_0", "light_bits.bus"],
+            "points": {"1": [850, 610], "2": [850, 590]},
+            "segments": [["gpio_split.bus_7_0", "1"], ["1", "2"], ["2", "light_bits.bus"]]
+        },
+        {
+            "ports": ["gpio_split.bus_15_8", "light_bits_1.bus"],
+            "points": {"1": [850, 630], "2": [850, 688]},
+            "segments": [["gpio_split.bus_15_8", "1"], ["1", "2"], ["2", "light_bits_1.bus"]]
+        },
+        {
+            "ports": ["light_bits.bus_0", "light.0", "lcd.D4"],
+            "points": {"1": [936, 555], "2": [936, 507], "3": [1550, 507]},
+            "segments": [
+                ["light_bits.bus_0", "light.0"], ["light_bits.bus_0", "1"], ["1", "2"],
+                ["2", "3"], ["3", "lcd.D4"]
+            ]
+        },
+        {
+            "ports": ["light_bits.bus_1", "light.1", "lcd.D5"],
+            "points": {"1": [940, 565], "2": [940, 513], "3": [1560, 513]},
+            "segments": [
+                ["light_bits.bus_1", "light.1"], ["light_bits.bus_1", "1"], ["1", "2"],
+                ["2", "3"], ["3", "lcd.D5"]
+            ]
+        },
+        {
+            "ports": ["light_bits.bus_2", "light.2", "lcd.D6"],
+            "points": {"1": [944, 575], "2": [944, 519], "3": [1570, 519]},
+            "segments": [
+                ["light_bits.bus_2", "light.2"], ["light_bits.bus_2", "1"], ["1", "2"],
+                ["2", "3"], ["3", "lcd.D6"]
+            ]
+        },
+        {
+            "ports": ["light_bits.bus_3", "light.3", "lcd.D7"],
+            "points": {"1": [948, 585], "2": [948, 525], "3": [1580, 525]},
+            "segments": [
+                ["light_bits.bus_3", "light.3"], ["light_bits.bus_3", "1"], ["1", "2"],
+                ["2", "3"], ["3", "lcd.D7"]
+            ]
+        },
+        {
+            "ports": ["light_bits.bus_4", "light.4", "lcd.RS"],
+            "points": {"1": [928, 595], "2": [928, 495], "3": [1480, 495]},
+            "segments": [
+                ["light_bits.bus_4", "light.4"], ["light_bits.bus_4", "1"], ["1", "2"],
+                ["2", "3"], ["3", "lcd.RS"]
+            ]
+        },
+        {
+            "ports": ["light_bits.bus_5", "light.5", "lcd.E"],
+            "points": {"1": [932, 605], "2": [932, 501], "3": [1500, 501]},
+            "segments": [
+                ["light_bits.bus_5", "light.5"], ["light_bits.bus_5", "1"], ["1", "2"],
+                ["2", "3"], ["3", "lcd.E"]
+            ]
+        },
+        {
+            "ports": ["light_bits.bus_6", "light.6"],
+            "points": {},
+            "segments": [["light_bits.bus_6", "light.6"]]
+        },
+        {
+            "ports": ["light_bits.bus_7", "light.7"],
+            "points": {},
+            "segments": [["light_bits.bus_7", "light.7"]]
+        },
+        {
+            "ports": ["lcd_rw.O", "lcd.RW"],
+            "points": {"1": [1400, 546], "2": [1400, 545], "3": [1490, 545]},
+            "segments": [["lcd_rw.O", "1"], ["1", "2"], ["2", "3"], ["3", "lcd.RW"]]
+        },
+        {
+            "ports": ["light_bits_1.bus_0", "light_1.0"],
+            "points": {},
+            "segments": [["light_bits_1.bus_0", "light_1.0"]]
+        },
+        {
+            "ports": ["light_bits_1.bus_1", "light_1.1"],
+            "points": {},
+            "segments": [["light_bits_1.bus_1", "light_1.1"]]
+        },
+        {
+            "ports": ["light_bits_1.bus_2", "light_1.2"],
+            "points": {},
+            "segments": [["light_bits_1.bus_2", "light_1.2"]]
+        },
+        {
+            "ports": ["light_bits_1.bus_3", "light_1.3"],
+            "points": {},
+            "segments": [["light_bits_1.bus_3", "light_1.3"]]
+        },
+        {
+            "ports": ["light_bits_1.bus_4", "light_1.4"],
+            "points": {},
+            "segments": [["light_bits_1.bus_4", "light_1.4"]]
+        },
+        {
+            "ports": ["light_bits_1.bus_5", "light_1.5"],
+            "points": {},
+            "segments": [["light_bits_1.bus_5", "light_1.5"]]
+        },
+        {
+            "ports": ["light_bits_1.bus_6", "light_1.6"],
+            "points": {},
+            "segments": [["light_bits_1.bus_6", "light_1.6"]]
+        },
+        {
+            "ports": ["light_bits_1.bus_7", "light_1.7"],
+            "points": {},
+            "segments": [["light_bits_1.bus_7", "light_1.7"]]
+        }
+    ],
+    "shortcuts": {"1": "reset"},
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 10}
+}

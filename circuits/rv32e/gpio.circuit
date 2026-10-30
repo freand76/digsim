@@ -1,0 +1,241 @@
+{
+    "circuit": {
+        "name": "DigSimCircuit",
+        "components": [
+            {
+                "name": "clk",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "clk", "width": 1}
+            },
+            {
+                "name": "rst",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "rst", "width": 1}
+            },
+            {
+                "name": "sel",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "sel", "width": 1}
+            },
+            {
+                "name": "wstrb",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "wstrb", "width": 4}
+            },
+            {
+                "name": "wdata",
+                "type": "digsim.circuit.components.CircuitInput",
+                "display_name": "CircuitInput",
+                "settings": {"label": "wdata", "width": 32}
+            },
+            {
+                "name": "gpio",
+                "type": "digsim.circuit.components.CircuitOutput",
+                "display_name": "CircuitOutput",
+                "settings": {"label": "gpio", "width": 32}
+            },
+            {
+                "name": "zero",
+                "type": "digsim.circuit.components.StaticValue",
+                "display_name": "StaticValue",
+                "settings": {"width": 4, "value": 0}
+            },
+            {
+                "name": "strb_mux",
+                "type": "digsim.circuit.components.MUX",
+                "display_name": "MUX",
+                "settings": {"ports": 2, "width": 4}
+            },
+            {
+                "name": "strb_split",
+                "type": "digsim.circuit.components.Splitter",
+                "display_name": "Splitter",
+                "settings": {"groups": [1, 1, 1, 1], "direction": "split"}
+            },
+            {
+                "name": "data_split",
+                "type": "digsim.circuit.components.Splitter",
+                "display_name": "Splitter",
+                "settings": {"groups": [8, 8, 8, 8], "direction": "split"}
+            },
+            {
+                "name": "byte0",
+                "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
+                "settings": {"async_reset": true, "clock_enable": true, "width": 8}
+            },
+            {
+                "name": "byte1",
+                "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
+                "settings": {"async_reset": true, "clock_enable": true, "width": 8}
+            },
+            {
+                "name": "byte2",
+                "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
+                "settings": {"async_reset": true, "clock_enable": true, "width": 8}
+            },
+            {
+                "name": "byte3",
+                "type": "digsim.circuit.components.DFF",
+                "display_name": "DFF",
+                "settings": {"async_reset": true, "clock_enable": true, "width": 8}
+            },
+            {
+                "name": "merge",
+                "type": "digsim.circuit.components.Splitter",
+                "display_name": "Splitter",
+                "settings": {"groups": [8, 8, 8, 8], "direction": "merge"}
+            },
+            {
+                "name": "Note_0",
+                "type": "digsim.circuit.components.Note",
+                "display_name": "Note",
+                "settings": {
+                    "text": "GPIO register, 32 bits, write only.\nA store with sel = 1 writes the bytes that its byte strobes (wstrb) select,\nso SB, SH and SW all work. Reset clears it."
+                }
+            }
+        ]
+    },
+    "gui": {
+        "clk": {"x": 40, "y": 20, "z": 0},
+        "rst": {"x": 40, "y": 50, "z": 0},
+        "sel": {"x": 40, "y": 80, "z": 0},
+        "wstrb": {"x": 40, "y": 310, "z": 0},
+        "wdata": {"x": 40, "y": 400, "z": 0},
+        "gpio": {"x": 900, "y": 345, "z": 0},
+        "zero": {"x": 280, "y": 290, "z": 0},
+        "strb_mux": {"x": 360, "y": 290, "z": 0},
+        "strb_split": {"x": 440, "y": 270, "z": 0},
+        "data_split": {"x": 180, "y": 370, "z": 0},
+        "byte0": {"x": 640, "y": 120, "z": 0},
+        "byte1": {"x": 640, "y": 250, "z": 0},
+        "byte2": {"x": 640, "y": 380, "z": 0},
+        "byte3": {"x": 640, "y": 510, "z": 0},
+        "merge": {"x": 820, "y": 315, "z": 0},
+        "Note_0": {"x": 40, "y": 620, "z": 0}
+    },
+    "lines": [
+        {
+            "ports": ["clk.clk", "byte0.C", "byte1.C", "byte2.C", "byte3.C"],
+            "points": {
+                "1": [620, 30],
+                "2": [620, 580],
+                "3": [620, 190],
+                "4": [620, 320],
+                "5": [620, 450]
+            },
+            "segments": [
+                ["clk.clk", "1"], ["1", "3"], ["3", "4"], ["4", "5"], ["5", "2"],
+                ["2", "byte3.C"], ["3", "byte0.C"], ["4", "byte1.C"], ["5", "byte2.C"]
+            ]
+        },
+        {
+            "ports": ["rst.rst", "byte0.R", "byte1.R", "byte2.R", "byte3.R"],
+            "points": {
+                "1": [600, 60],
+                "2": [600, 540],
+                "3": [600, 150],
+                "4": [600, 280],
+                "5": [600, 410]
+            },
+            "segments": [
+                ["rst.rst", "1"], ["1", "3"], ["3", "4"], ["4", "5"], ["5", "2"],
+                ["2", "byte3.R"], ["3", "byte0.R"], ["4", "byte1.R"], ["5", "byte2.R"]
+            ]
+        },
+        {
+            "ports": ["sel.sel", "strb_mux.S"],
+            "points": {"1": [345, 90], "2": [345, 340]},
+            "segments": [["sel.sel", "1"], ["1", "2"], ["2", "strb_mux.S"]]
+        },
+        {"ports": ["zero.O", "strb_mux.A"], "points": {}, "segments": [["zero.O", "strb_mux.A"]]},
+        {
+            "ports": ["wstrb.wstrb", "strb_mux.B"],
+            "points": {},
+            "segments": [["wstrb.wstrb", "strb_mux.B"]]
+        },
+        {
+            "ports": ["strb_mux.Y", "strb_split.bus"],
+            "points": {},
+            "segments": [["strb_mux.Y", "strb_split.bus"]]
+        },
+        {
+            "ports": ["wdata.wdata", "data_split.bus"],
+            "points": {},
+            "segments": [["wdata.wdata", "data_split.bus"]]
+        },
+        {
+            "ports": ["merge.bus", "gpio.gpio"],
+            "points": {},
+            "segments": [["merge.bus", "gpio.gpio"]]
+        },
+        {
+            "ports": ["strb_split.bus_0", "byte0.E"],
+            "points": {"1": [520, 280], "2": [520, 170]},
+            "segments": [["strb_split.bus_0", "1"], ["1", "2"], ["2", "byte0.E"]]
+        },
+        {
+            "ports": ["data_split.bus_7_0", "byte0.D"],
+            "points": {"1": [250, 380], "2": [250, 130]},
+            "segments": [["data_split.bus_7_0", "1"], ["1", "2"], ["2", "byte0.D"]]
+        },
+        {
+            "ports": ["byte0.Q", "merge.bus_7_0"],
+            "points": {"1": [790, 160], "2": [790, 325]},
+            "segments": [["byte0.Q", "1"], ["1", "2"], ["2", "merge.bus_7_0"]]
+        },
+        {
+            "ports": ["strb_split.bus_1", "byte1.E"],
+            "points": {},
+            "segments": [["strb_split.bus_1", "byte1.E"]]
+        },
+        {
+            "ports": ["data_split.bus_15_8", "byte1.D"],
+            "points": {"1": [260, 400], "2": [260, 260]},
+            "segments": [["data_split.bus_15_8", "1"], ["1", "2"], ["2", "byte1.D"]]
+        },
+        {
+            "ports": ["byte1.Q", "merge.bus_15_8"],
+            "points": {"1": [770, 290], "2": [770, 345]},
+            "segments": [["byte1.Q", "1"], ["1", "2"], ["2", "merge.bus_15_8"]]
+        },
+        {
+            "ports": ["strb_split.bus_2", "byte2.E"],
+            "points": {"1": [530, 320], "2": [530, 430]},
+            "segments": [["strb_split.bus_2", "1"], ["1", "2"], ["2", "byte2.E"]]
+        },
+        {
+            "ports": ["data_split.bus_23_16", "byte2.D"],
+            "points": {"1": [270, 420], "2": [270, 390]},
+            "segments": [["data_split.bus_23_16", "1"], ["1", "2"], ["2", "byte2.D"]]
+        },
+        {
+            "ports": ["byte2.Q", "merge.bus_23_16"],
+            "points": {"1": [770, 420], "2": [770, 365]},
+            "segments": [["byte2.Q", "1"], ["1", "2"], ["2", "merge.bus_23_16"]]
+        },
+        {
+            "ports": ["strb_split.bus_3", "byte3.E"],
+            "points": {"1": [520, 340], "2": [520, 560]},
+            "segments": [["strb_split.bus_3", "1"], ["1", "2"], ["2", "byte3.E"]]
+        },
+        {
+            "ports": ["data_split.bus_31_24", "byte3.D"],
+            "points": {"1": [250, 440], "2": [250, 520]},
+            "segments": [["data_split.bus_31_24", "1"], ["1", "2"], ["2", "byte3.D"]]
+        },
+        {
+            "ports": ["byte3.Q", "merge.bus_31_24"],
+            "points": {"1": [790, 550], "2": [790, 385]},
+            "segments": [["byte3.Q", "1"], ["1", "2"], ["2", "merge.bus_31_24"]]
+        }
+    ],
+    "shortcuts": {},
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 20}
+}

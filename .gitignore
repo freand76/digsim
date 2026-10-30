@@ -5,7 +5,9 @@ build/
 *.vcd
 *.o
 *.map
+*.elf
+*.lst
+*.hex
 examples/synthesis/fibonacci.json
 examples/load_save/pulse_circuit.json
-
 site/
