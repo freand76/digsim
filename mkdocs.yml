@@ -8,16 +8,16 @@ edit_uri: edit/main/docs/
 nav:
   - Home: index.md
   - Installation: installation.md
-  - GUI Examples: gui-examples.md
-  - Python Examples: python-examples.md
   - GUI Application:
       - Your First Circuit: first-circuit.md
+      - GUI Examples: gui-examples.md
       - GUI Reference: gui.md
       - Your First Verilog Component: new-verilog.md
       - Editing a Verilog Component: verilog-tutorial.md
       - Adding Components to the GUI: gui-components.md
   - Python:
       - Python Circuits: python.md
+      - Python Examples: python-examples.md
       - Verilog and Yosys: synthesis.md
       - Verilog Testbench with pytest: testbenches.md
       - Creating Components: components.md
