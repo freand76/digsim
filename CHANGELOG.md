@@ -13,6 +13,7 @@
  - An RV32E CPU system example circuit (`circuits/rv32e/`): a RISC-V processor in Verilog with an arbiter, GPIO and a timer as subcircuits, running a C program that writes to an HD44780 LCD and runs a bar on LEDs
  - GUI: File > Examples, the example circuits come with the package (also with uvx): one is copied, with the files it uses, to a folder of your choice and opened from there
  - GUI: the hex editor shows the characters of words wider than 8 bits too (16, 24 or 32 bits, lowest byte first), and highlights the characters of the current word
+ - GUI: the hex editor of a ROM no longer shows the dropdown of the RAM views over the name of its file
 
 ## v1.9.0
  - A native engine: with digsim-native installed (a dependency on Linux x86_64 and arm64, Windows x64 and macOS), the gates of Yosys components and ICs are simulated in Rust, with the same results, about 3 to 4 times faster for the 6502 example. DIGSIM_ENGINE=python simulates in Python

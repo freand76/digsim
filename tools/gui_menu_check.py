@@ -902,6 +902,8 @@ def test_hex_editor_shows_wide_words_as_text(gui, tmp_path):
     model = editor.model
     assert model.columnCount() == 17
     assert model.headerData(16, Qt.Orientation.Horizontal) == "ASCII"
+    # A ROM has only the file, not the view of the simulation to choose
+    assert editor._view.isHidden()
     assert model.data(model.index(0, 16)).startswith("Hello RV32E!....")
     assert model.setData(model.index(0, 3), "21434241")
     assert model.data(model.index(0, 16)).startswith("Hello RV32E!ABC!")
@@ -918,6 +920,7 @@ def test_hex_editor_shows_wide_words_as_text(gui, tmp_path):
 def test_hex_editor_asks_for_a_file_for_a_ram(gui, tmp_path):
     ram = gui.add("RAM", address_width=4, data_width=16)
     editor = _hex_editor(gui, ram)
+    assert not editor._view.isHidden()
     editor.model.setData(editor.model.index(0, 1), "1234")
     gui.path = str(tmp_path / "ram.bin")
     assert editor.save()

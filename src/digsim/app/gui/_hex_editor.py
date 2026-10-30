@@ -283,6 +283,9 @@ class HexEditorDialog(QDialog):
                 self._load_address,
             )
             layout.addWidget(self._view)
+        else:
+            # A ROM has only its file, the view is not in the layout: not shown in a corner
+            self._view.hide()
         self._view.currentIndexChanged.connect(self._show_view)
         self.table = QTableView(self)
         self.table.setModel(self.model)
