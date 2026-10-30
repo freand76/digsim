@@ -6,6 +6,7 @@
  - RAM: a byte enable input (the byte_enable setting, off by default): a write only changes the bytes of the word that BE selects, like a processor's byte strobes
  - GUI: an opened circuit is zoomed to fit, and Zoom to Fit (and Export Image) includes the wires, not only the components
  - GUI: the settings pane is hidden until you show it, with View > Settings Pane (F4) or Settings in the context menu of a component. DigSim remembers it once it is shown.
+ - GUI: no RuntimeError (Internal C++ object already deleted) when DigSim quits with components selected
 
 ## v1.9.0
  - A native engine: with digsim-native installed (a dependency on Linux x86_64 and arm64, Windows x64 and macOS), the gates of Yosys components and ICs are simulated in Rust, with the same results, about 3 to 4 times faster for the 6502 example. DIGSIM_ENGINE=python simulates in Python

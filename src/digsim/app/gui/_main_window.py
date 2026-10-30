@@ -18,6 +18,7 @@ from PySide6.QtGui import (
     QShowEvent,
 )
 from PySide6.QtWidgets import (
+    QApplication,
     QDockWidget,
     QHBoxLayout,
     QMainWindow,
@@ -192,6 +193,18 @@ class MainWindow(QMainWindow):
         self._shown_tab: CircuitTab | ViewTab | None = None
         self.setAcceptDrops(True)  # Needed to avoid "No drag target set."
         self.add_tab(app_model)
+        app = QApplication.instance()
+        if app is not None:
+            app.aboutToQuit.connect(self._about_to_quit)
+
+    def _about_to_quit(self) -> None:
+        """
+        The scenes stop telling the menu bar and the settings pane that the selection
+        changed: when the application is torn down, a scene deletes its selected items
+        after the objects that the menu bar and the settings pane use are deleted
+        """
+        for tab in self.tabs():
+            tab.circuit_area.scene().blockSignals(True)
 
     def _add_settings_pane(self) -> None:
         """
