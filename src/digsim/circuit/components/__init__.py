@@ -14,6 +14,7 @@ from ._decoder import Decoder, Demultiplexer
 from ._dip_switch import DipSwitch
 from ._flip_flops import SRFF, ClockedJKFF, ClockedSRFF, ClockedTFF, FlipFlop
 from ._gates import AND, DFF, MUX, NAND, NOR, NOT, OR, SR, XNOR, XOR
+from ._hd44780 import HD44780
 from ._hexdigit import HexDigit
 from ._ic import IntegratedCircuit
 from ._label_wire import LabelWireIn, LabelWireOut

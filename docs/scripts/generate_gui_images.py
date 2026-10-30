@@ -103,6 +103,27 @@ def after_init(action: Callable[[Component], None]) -> Callable[[Circuit, Compon
     return setup
 
 
+def lcd_text(component: Component) -> None:
+    """Write two lines of text to an LCD, with the cursor after them"""
+
+    def write(rs: int, byte: int) -> None:
+        component.RS.value = rs
+        component.RW.value = 0
+        for bit in range(8):
+            component.port(f"D{bit}").value = (byte >> bit) & 1
+        component.E.value = 1
+        component.E.value = 0
+
+    # Two lines, the display and the cursor on, clear
+    for instruction in (0x38, 0x0E, 0x06, 0x01):
+        write(0, instruction)
+    for char in "Hello, World!":
+        write(1, ord(char))
+    write(0, 0xC0)
+    for char in "DigSim LCD 16x2":
+        write(1, ord(char))
+
+
 def dip_switch(component: Component) -> None:
     assert isinstance(component, components.DipSwitch)
     for bit in (0, 2):
@@ -122,6 +143,7 @@ COMPONENT_IMAGES: list[tuple[str, str, dict[str, Any], Callable[..., None] | Non
     ("components/LedBar.png", "LedBar", {"width": 8}, lit_ports(["1", "2", "4", "7"])),
     ("HexDigit.png", "HexDigit", {}, driven(10, "val")),
     ("SevenSegment.png", "SevenSegment", {}, lit_ports(["A", "B", "G", "E", "D"])),
+    ("components/HD44780.png", "HD44780", {}, after_init(lcd_text)),
     ("components/Buzzer.png", "Buzzer", {}, driven(1)),
     ("components/Analyzer.png", "LogicAnalyzer", {}, clocked(["A", "B", "C"])),
     ("components/Probe.png", "Probe", {"width": 8}, driven(0x2A)),

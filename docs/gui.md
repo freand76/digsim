@@ -377,6 +377,7 @@ change goes through it, and the outputs show it at once.
 | ![LED bar](images/components/LedBar.png) | **LED Bar**: a column of 1–16 LEDs, each with an input of its own, LED 0 at the top, in one of the LED colors. It fits next to a DIP switch. |
 | ![Hex digit](images/HexDigit.png) | **Hex Digit**: shows a bus value in hexadecimal, with 1–8 digits (4 bits each) and an optional decimal point. |
 | ![7-segment](images/SevenSegment.png) | **7-Segment Display**: like a hex digit, but each segment is controlled individually. |
+| ![LCD 16x2](images/components/HD44780.png) | **LCD 16x2**: a character LCD module with an HD44780 controller, programmed like the real one through RS, RW, E and D0–D7, in 8-bit or 4-bit mode, with custom characters and a blinking cursor. The power, contrast and backlight pins are not connected. The backlight is green, blue, amber, white or red, chosen in its settings. |
 | ![Buzzer](images/components/Buzzer.png) | **Buzzer**: plays a tone, with a selectable note, when its input is high. |
 | ![Logic analyzer](images/components/Analyzer.png) | **Logic Analyzer**: plots signal levels over time, live. A sample at the time an input changes, like at a clock edge, shows the value from just before. Reset clears it. |
 | ![Probe](images/components/Probe.png) | **Probe**: shows the value of a wire or a bus (1–32 bits) in hexadecimal, decimal or binary, "X" in red when it is undefined and "Z" in blue when nothing drives it. Right-click a wire and choose **Add probe** to put one on it. The radix can be changed in its settings. |

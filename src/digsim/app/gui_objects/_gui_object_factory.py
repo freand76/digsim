@@ -19,6 +19,7 @@ from ._dip_switch_object import DipSwitchObject
 from ._gui_note_object import GuiNoteObject
 from ._hexdigit_object import HexDigitObject
 from ._label_object import LabelWireInObject, LabelWireOutObject
+from ._lcd_object import LcdObject
 from ._led_bar_object import LedBarObject
 from ._logic_analyzer_object import LogicAnalyzerObject
 from ._named_box_object import (
@@ -79,6 +80,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "DipSwitch": DipSwitchObject,
     "DFF": FlipFlopObject,
     "HexDigit": HexDigitObject,
+    "HD44780": LcdObject,
     "LabelWireIn": LabelWireInObject,
     "LabelWireOut": LabelWireOutObject,
     "Led": LedObject,

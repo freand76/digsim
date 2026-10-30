@@ -26,6 +26,8 @@ def test_catalog_has_components():
         ("and", "AND"),
         ("flp", "FlipFlop"),
         ("7seg", "SevenSegment"),
+        ("lcd", "HD44780"),
+        ("hd44780", "HD44780"),
         ("mem", "RAM"),
         ("rom", "ROM"),
         ("prb", "Probe"),

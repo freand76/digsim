@@ -99,6 +99,7 @@ COMPONENTS: list[tuple[str, dict[str, Any]]] = [
     ("StaticValue", {"width": 4, "value": 5}),
     ("LedBar", {"width": 4}),
     ("HexDigit", {"digits": 1, "dot": False}),
+    ("HD44780", {}),
     ("Wires2Bus", {"width": 4}),
     ("Bus2Wires", {"width": 4}),
     ("Splitter", {"groups": [1, 3]}),

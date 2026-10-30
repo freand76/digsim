@@ -39,6 +39,7 @@ COMPONENT_GROUPS: list[tuple[str, list[CatalogEntry]]] = [
             CatalogEntry("LedBar", "LED bar", "LEDs bar graph"),
             CatalogEntry("HexDigit", "Hex-digit", "hex digit display number"),
             CatalogEntry("SevenSegment", "7-Seg", "seven segment display"),
+            CatalogEntry("HD44780", "LCD 16x2", "HD44780 LCD character display text 1602"),
             CatalogEntry("Buzzer", "Buzzer", "sound tone speaker beep"),
             CatalogEntry("LogicAnalyzer", "Logic Analyzer", "logic analyzer waveform plot"),
             CatalogEntry("Probe", "Probe", "probe value meter show"),
