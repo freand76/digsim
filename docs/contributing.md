@@ -48,7 +48,7 @@ DigSim uses [uv](https://docs.astral.sh/uv/) for development.
 | `src/digsim/synth/`, `src/digsim/utils/` | Yosys synthesis and netlist parsing |
 | `src/digsim/storage_model/` | The file format for saved circuits |
 | `tests/` | The tests |
-| `examples/`, `circuits/` | Python examples and GUI circuits, see [Examples](examples.md) |
+| `examples/`, `circuits/` | Python examples and GUI circuits, see [Python Examples](python-examples.md) and [GUI Examples](gui-examples.md) |
 | `docs/` | This documentation |
 
 To add a component, follow [Creating Components](components.md) and
@@ -74,7 +74,8 @@ For documentation changes, preview the site while you edit it, at <http://127.0.
 uv tool run --with mkdocs-material --with mkdocstrings-python --with ruff mkdocs serve
 ```
 
-If you change an example, regenerate the images on the [Examples](examples.md) page:
+If you change an example, regenerate the images on the [Python Examples](python-examples.md)
+and [GUI Examples](gui-examples.md) pages:
 
 ```sh
 uv run --with pytest python docs/scripts/generate_examples.py

@@ -2,7 +2,8 @@
 # All rights reserved
 
 """
-Generate the images for the examples documentation (docs/examples.md):
+Generate the images for the examples documentation (docs/python-examples.md and
+docs/gui-examples.md):
 
  * Schematics (SVG) of the circuits built by the Python examples
  * Waveforms (SVG) from the VCD files written by the Python examples

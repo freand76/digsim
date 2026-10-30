@@ -103,7 +103,7 @@ synthesis = Synthesis(["counter.v"], "counter", functional=True)
 
 A netlist with functional blocks has far fewer cells, so it simulates faster. Between
 functional blocks, the bits of a port are also sent as one word instead of one bit at a
-time. The 6502 CPU in the [examples](examples.md#6502-cpu) has 2047 cells as gates and 431
+time. The 6502 CPU in the [examples](python-examples.md#6502-cpu) has 2047 cells as gates and 431
 as functional blocks, and runs about 1.6 times faster. The simulation is the same for the
 ports of the design. Inside it there are no gates, and the signals between the functional
 blocks are not in a VCD file, only the ports of the design and the blocks' ports to them.
@@ -152,7 +152,7 @@ cpu.Y.wire = second.data
 A testbench can drive an inout port directly, `dut.data.value = 0x5A`, and let go of it
 with `dut.data.value = "Z"`. Each bit is resolved by itself, but the value of a port is a
 word: a word of which only some bits are driven is `"X"` for the ports it drives. See the
-[bus register example](examples.md#bus-registers-inout-ports).
+[bus register example](python-examples.md#bus-registers-inout-ports).
 
 ## Internal signals and states
 

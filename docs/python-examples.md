@@ -1,13 +1,9 @@
-# Examples
+# Python Examples
 
-The repository has two kinds of examples:
-
-- **[Python examples](#python-examples)** in the
-  [`examples`](https://github.com/freand76/digsim/tree/main/examples) folder build and
-  simulate circuits in code. Most of them write a VCD file with all signals.
-- **[GUI example circuits](#gui-example-circuits)** in the
-  [`circuits`](https://github.com/freand76/digsim/tree/main/circuits) folder
-  are ready-made circuits to open in the DigSim application.
+The [`examples`](https://github.com/freand76/digsim/tree/main/examples) folder of the
+repository has examples that build and simulate circuits in code. Most of them write a VCD
+file with all signals. The ready-made circuits for the DigSim application are on
+[GUI Examples](gui-examples.md).
 
 To run them, clone the repository and run the commands below from its root folder (see
 [Run from source](installation.md#run-from-source)):
@@ -22,9 +18,7 @@ To look at the waveforms yourself, open the VCD file in
 [GTKWave](https://gtkwave.sourceforge.net/) or another VCD viewer, for example
 `gtkwave sr.vcd`.
 
-## Python examples
-
-### SR latch
+## SR latch
 
 [`examples/example_sr.py`](https://github.com/freand76/digsim/blob/main/examples/example_sr.py)
 connects two push buttons to the set and reset inputs of an SR latch (built from two NOR
@@ -56,7 +50,7 @@ reset:
 
 ![SR latch waveforms](images/examples/sr_waves.svg)
 
-### Clock
+## Clock
 
 [`examples/example_clock.py`](https://github.com/freand76/digsim/blob/main/examples/example_clock.py)
 connects a 20 Hz clock to an LED and simulates one second.
@@ -84,7 +78,7 @@ The first 300 ms of `clock.vcd`:
 
 ![Clock waveforms](images/examples/clock_waves.svg)
 
-### Save a circuit (pulse generator)
+## Save a circuit (pulse generator)
 
 [`examples/load_save/example_save_circuit.py`](https://github.com/freand76/digsim/blob/main/examples/load_save/example_save_circuit.py)
 builds a pulse generator: a push button drives one AND input directly and the other through
@@ -118,7 +112,7 @@ moving through the gates:
 
 ![Pulse generator waveforms](images/examples/pulse_waves.svg)
 
-### Load a circuit (logic gates)
+## Load a circuit (logic gates)
 
 [`examples/load_save/example_load_circuit.py`](https://github.com/freand76/digsim/blob/main/examples/load_save/example_load_circuit.py)
 loads the circuit in
@@ -156,7 +150,7 @@ The waveforms in `circuit.vcd`:
 
 ![Logic gates waveforms](images/examples/load_waves.svg)
 
-### Verilog counter
+## Verilog counter
 
 The two examples in
 [`examples/yosys_counter`](https://github.com/freand76/digsim/tree/main/examples/yosys_counter)
@@ -201,7 +195,7 @@ OUT 15
 
 ![Counter waveforms](images/examples/counter_waves.svg)
 
-### Synthesis (Fibonacci sequence)
+## Synthesis (Fibonacci sequence)
 
 [`examples/synthesis/example_synthesis.py`](https://github.com/freand76/digsim/blob/main/examples/synthesis/example_synthesis.py)
 synthesizes [`fibonacci.v`](https://github.com/freand76/digsim/blob/main/examples/synthesis/fibonacci.v),
@@ -234,7 +228,7 @@ The netlist is written to `examples/synthesis/fibonacci.json` and the waveforms 
 
 ![Fibonacci waveforms](images/examples/fibonacci_waves.svg)
 
-### 6502 CPU
+## 6502 CPU
 
 [`examples/yosys_6502/example_yosys_6502.py`](https://github.com/freand76/digsim/blob/main/examples/yosys_6502/example_yosys_6502.py)
 simulates a synthesized [6502 CPU](https://en.wikipedia.org/wiki/MOS_Technology_6502)
@@ -325,7 +319,7 @@ onwards, then writing `48`, the character `H`, to the text output at address `80
 To change the program, edit the assembly files and rebuild `code.bin` with `compile.sh`,
 which needs the [cc65](https://cc65.github.io/) assembler and linker.
 
-### State machine (traffic light)
+## State machine (traffic light)
 
 [`examples/yosys_fsm/example_yosys_fsm.py`](https://github.com/freand76/digsim/blob/main/examples/yosys_fsm/example_yosys_fsm.py)
 simulates a traffic light, a state machine in
@@ -373,7 +367,7 @@ b10 0!
 sGREEN 1!
 ```
 
-### Bus registers (inout ports)
+## Bus registers (inout ports)
 
 [`examples/yosys_inout/example_yosys_inout.py`](https://github.com/freand76/digsim/blob/main/examples/yosys_inout/example_yosys_inout.py)
 puts two registers on a shared 8-bit data bus, with a tristate buffer that drives the bus
@@ -409,7 +403,7 @@ CPU drives 0x33 too (contention)   bus=X    a drives=Z    a=0x5a b=0x5a
 Nothing drives the bus             bus=Z    a drives=Z    a=0x5a b=0x5a
 ```
 
-### pytest testbenches
+## pytest testbenches
 
 [`examples/pytest_tb`](https://github.com/freand76/digsim/tree/main/examples/pytest_tb) tests
 two Verilog designs with [pytest](https://pytest.org/): an 8-bit ALU (`alu.v`) and a 4-bit
@@ -444,7 +438,7 @@ the other: no counting, counting up to 15 and wrapping to 0, counting down, and 
 
 ![Up/down counter testbench waveforms](images/examples/testbench_waves.svg)
 
-### Subcircuit (full adder)
+## Subcircuit (full adder)
 
 [`examples/subcircuit/example_subcircuit.py`](https://github.com/freand76/digsim/blob/main/examples/subcircuit/example_subcircuit.py)
 uses the full adder of the GUI example circuits, `circuits/subcircuits/full_adder.circuit`, as a
@@ -467,144 +461,3 @@ uv run python examples/subcircuit/example_subcircuit.py
  1  1  0  |  0   1
  1  1  1  |  1   1
 ```
-
-## GUI example circuits
-
-Each circuit is in a folder of its own in `circuits/`, with the files it uses, like the
-Verilog of a Yosys component or the circuits of its subcircuits. They come with DigSim:
-**File > Examples** copies one to a folder of yours and opens it (see
-[Example circuits](gui.md#example-circuits)). In a copy of the repository, open a circuit
-with `--load`, then press **Start Simulation** (or **Space**):
-
-```sh
-uv run -m digsim.app --load circuits/yosys_counter/counter_yosys_netlist.circuit
-```
-
-You can also use **File > Open** in the application. See [GUI Reference](gui.md) for how
-to work with the editor.
-
-### Verilog counter
-
-`counter_yosys_netlist.circuit` and `counter_yosys_verilog.circuit` are the same circuit:
-the [Verilog counter](#verilog-counter) as a Yosys component, loaded from the netlist or
-directly from `counter.v`. Notes in the circuit explain each part:
-
-- a 5 Hz clock drives the counter and an LED,
-- a push button resets the counter (shortcut **1**),
-- a switch enables counting (shortcut **2**),
-- a hex digit shows the counter value,
-- a logic analyzer shows the clock, button, switch and the four counter bits, connected
-  through Wire Sources/Sinks and a bus splitter,
-- a buzzer sounds while the reset button is pressed.
-
-![Verilog counter circuit](images/examples/counter_yosys_netlist.png)
-
-Turn on the switch to start counting.
-
-### 74162 counter
-
-`74162_counter.circuit` rebuilds a classic counter board with two ICs from the built-in IC
-library: a 74162 synchronous decade counter and a 7448 BCD to 7-segment decoder.
-
-- A 5 Hz clock drives the counter, and the switch enables counting (`ENP` and `ENT`).
-- The 7448 decodes the counter value to the 7-segment display.
-- The LED shows the counter's ripple-carry output (`RCO`), which is high on the count of 9.
-- The DIP switch sets a value that is loaded with one push button (`Load`), and another push
-  button clears the counter (`Clear`). Both inputs are active low, hence the NOT gates.
-- The third push button drives the 7448 lamp-test input (`lt`).
-
-![74162 counter circuit](images/examples/74162_counter.png)
-
-### Shift register
-
-`shift_register.circuit` is a 6-bit shift register: six D flip-flops in a chain, clocked
-by a 5 Hz clock, with an LED on each output. Press the push button to shift ones into the
-register and watch them move along the LEDs.
-
-![Shift register circuit](images/examples/shift_register.png)
-
-### Tristate bus
-
-`tristate.circuit` has four static values (3, 7, 10 and 14) that share one 4-bit bus to a
-hex digit, each through a tristate buffer. The four switches of the DIP switch enable one
-buffer each.
-
-- With one buffer enabled, the hex digit shows its value.
-- With no buffer enabled, the bus is not driven (high impedance) and blue. With two or
-  more enabled, it is undefined and red. The hex digit is blank in both cases.
-
-![Tristate bus circuit](images/examples/tristate.png)
-
-### Bidirectional port
-
-`bidirectional_port.circuit` shows a bidirectional bus for a first look: two
-walkie-talkies, the same Verilog module
-([`walkie_talkie.v`](https://github.com/freand76/digsim/blob/main/circuits/bidirectional_port/walkie_talkie.v))
-twice, share one 4-bit bus wire. The bus port of each, drawn as a diamond, is an `inout`
-port: it can send on the wire and listen to it. Each walkie-talkie has four switches for
-its message, a Talk button, and a hex digit for what it hears on the bus.
-
-- Hold Talk A (shortcut **1**): A sends its message, and both hex digits show it.
-- Hold Talk B (shortcut **2**) instead: the same wire carries B's message the other way.
-- Hold both, with different messages: the two collide, and the bus is undefined (red).
-- With nobody talking the bus is not driven (blue), and the hex digits are blank.
-
-![Bidirectional port circuit](images/examples/bidirectional_port.png)
-
-### Traffic light
-
-`traffic_light.circuit` is the [traffic light state machine](#state-machine-traffic-light)
-as a Yosys component, made from `traffic_light.sv` with a 4 Hz clock and red, yellow and
-green LEDs.
-
-- Push the upper button (shortcut **1**) to reset it to red.
-- Push the lower button (shortcut **2**) to request green: red and yellow, green, yellow,
-  and red again.
-
-![Traffic light circuit](images/examples/traffic_light.png)
-
-### Buzzers
-
-`buzzers.circuit` has five push buttons, each connected to a buzzer with its own tone
-(C, D, E, F and G). Press the buttons, or the shortcut keys **1** to **5**, while the
-simulation runs to play a tune.
-
-![Buzzers circuit](images/examples/buzzers.png)
-
-### RV32E CPU system
-
-`rv32e_demo.circuit` in `circuits/rv32e/` is a small computer: a RISC-V RV32E processor
-that runs a C program and writes to an HD44780 character LCD. Start the simulation and
-press Reset (shortcut **1**). After a few seconds of simulated time the LCD shows
-"Hello RV32E!" between two hearts (a custom character), and the time since reset on the
-second line.
-
-- The processor is the `cpu` subcircuit (`cpu.circuit`): the RV32E core in Verilog
-  ([`rv32e.v`](https://github.com/freand76/digsim/blob/main/circuits/rv32e/rv32e.v), a
-  Yosys component that runs one instruction per clock cycle) with its memory system, an
-  arbiter, a GPIO register and a timer, each a subcircuit of its own. Double-click it to
-  see inside it, the memory map is in a note there.
-- A 100 Hz clock drives it. The ROM holds the program, `rv32e_code/lcd.bin`, and the RAM
-  has a byte enable input for the byte strobes of the processor's stores.
-- The program drives the LCD in 4-bit mode through byte 0 of the GPIO register: bits 3:0
-  are D7:D4, bit 4 is RS and bit 5 is E. Once the text is written, byte 1 (bits 15:8) is a
-  running bar that fills up and empties again. The register writes only the bytes of a
-  store, so the program writes each byte by itself, as a field of a struct.
-- Two LED bars show GPIO bits 7:0 and 15:8, a hex display the program counter, and an LED
-  lights when the processor halts (EBREAK, ECALL or a trap).
-- `rv32e_code/` has the program's source: `lcd.c`, the startup code `crt0.S` and the
-  linker script `link.ld`. `make` there builds `lcd.bin` again with the RISC-V GCC
-  (`riscv64-unknown-elf-gcc`).
-
-![RV32E CPU system circuit](images/examples/rv32e_demo.png)
-
-### Adders from subcircuits
-
-`half_adder.circuit` is a half adder, with In ports for `a` and `b` and Out ports for `s`
-and `c`. `full_adder.circuit` is a full adder from two half adder subcircuits and an OR
-gate, and `adder_4bit.circuit` a 4-bit adder from four full adder subcircuits. The DIP
-switches are A and B, the hex digit shows A + B and the LED the carry. Right-click a
-subcircuit and choose **Edit Subcircuit** to open its file in a tab: a change to the half
-adder, once it is saved, is in every adder that uses it.
-
-![4-bit adder circuit](images/examples/adder_4bit.png)

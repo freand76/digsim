@@ -97,7 +97,7 @@ welcome as [issues](https://github.com/freand76/digsim/issues).
 3. Look up components and controls in the [GUI reference](gui.md).
 4. Script circuits and testbenches with the [Python API](python.md).
 5. Bring your own [Verilog designs](synthesis.md).
-6. Try the [examples](examples.md).
+6. Try the [GUI examples](gui-examples.md) and the [Python examples](python-examples.md).
 7. [Create your own components](components.md), [add them to the GUI](gui-components.md)
    and [contribute](contributing.md) them.
 

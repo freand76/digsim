@@ -8,7 +8,8 @@ edit_uri: edit/main/docs/
 nav:
   - Home: index.md
   - Installation: installation.md
-  - Examples: examples.md
+  - GUI Examples: gui-examples.md
+  - Python Examples: python-examples.md
   - GUI Application:
       - Your First Circuit: first-circuit.md
       - GUI Reference: gui.md

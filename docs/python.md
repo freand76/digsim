@@ -210,7 +210,7 @@ and assert on its outputs. See [Verilog Testbench with pytest](testbenches.md).
 
 ## More examples
 
-See [Examples](examples.md) for a walkthrough of every example, with circuit diagrams,
+See [Python Examples](python-examples.md) for a walkthrough of every example, with circuit diagrams,
 expected output and waveforms.
 
 

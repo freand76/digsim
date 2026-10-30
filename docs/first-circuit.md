@@ -159,7 +159,7 @@ Now that you know the basics, here are some things to try:
   [GUI Reference](gui.md#component-reference).
 - **Example circuits:** load the circuits in the
   [`circuits`](https://github.com/freand76/digsim/tree/main/circuits)
-  folder, described in [Examples](examples.md#gui-example-circuits).
+  folder, described in [GUI Examples](gui-examples.md).
 - **Your own Verilog:** write a component in Verilog, see
   [Your First Verilog Component](new-verilog.md), and change one in the editor, see
   [Editing a Verilog Component](verilog-tutorial.md).

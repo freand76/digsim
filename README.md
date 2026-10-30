@@ -139,8 +139,10 @@ Read more in the documentation:
   testbenches
 - [Verilog and Yosys](https://freand76.github.io/digsim/synthesis/): synthesizing your own
   designs
-- [Examples](https://freand76.github.io/digsim/examples/): every example with circuit
-  diagrams, expected output and waveforms
+- [GUI Examples](https://freand76.github.io/digsim/gui-examples/): the example circuits of
+  the application
+- [Python Examples](https://freand76.github.io/digsim/python-examples/): every Python
+  example with circuit diagrams, expected output and waveforms
 - [Creating Components](https://freand76.github.io/digsim/components/): write your own
   components for Python circuits, and
   [add them to the GUI](https://freand76.github.io/digsim/gui-components/)

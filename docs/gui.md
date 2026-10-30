@@ -56,7 +56,7 @@ aren't shown, without sound, and a tab that simulates has a ▶ in front of its 
 the circuit uses (Verilog, subcircuits, memory contents), and opens the circuit from
 there. The copy is yours to change and save. When the folder already has a copy, the new
 one gets a number after its name, like `rv32e_2`. The examples are described in
-[Examples](examples.md#gui-example-circuits).
+[GUI Examples](gui-examples.md).
 
 A typical circuit consists of:
 
@@ -220,7 +220,7 @@ different values.
 An inout port of a Verilog component, drawn as a diamond, is an output and an input: it
 drives the line and reads it, like a pin on a bidirectional bus. Draw a wire from it like
 from an output. Two inout ports on a line drive each other, so a value can go both ways
-on the same wire, see the [bidirectional port example](examples.md#bidirectional-port).
+on the same wire, see the [bidirectional port example](gui-examples.md#bidirectional-port).
 
 A new wire can end on any wire, at a corner or anywhere along it, and the pointer shows a
 crosshair where it can. A wire from an input port is a branch there, and a wire from an
