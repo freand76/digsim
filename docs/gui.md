@@ -460,7 +460,11 @@ bus.
 With **Byte enable input**, a RAM has a BE input with a bit for each byte of a word, and
 a write only changes the bytes whose bit is high: bit 0 is bits 7:0 of the word, bit 1
 bits 15:8 and so on. A processor's byte strobes connect to it, so that a byte or halfword
-store leaves the rest of the word as it is.
+store leaves the rest of the word as it is. BE is read at the same time as WE, on the
+clock edge or (in async mode) while WE is 1. A data width that is not a multiple of 8 has
+a smaller last byte: with 12 bits, BE has 2 bits and bit 1 is bits 11:8. Writing all
+bytes, or none, works like a RAM without byte enable. When some of the bytes are written
+and the old word, DataIn or BE is undefined (X), the whole word becomes undefined.
 
 The ROM is filled from a file, chosen when it is added. A RAM can start with the contents
 of a file, and is otherwise filled with zeros. Reset fills it from the file again. A file

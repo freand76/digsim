@@ -327,7 +327,9 @@ class RAM(_Memory):
 
     With `byte_enable`, a write only changes the bytes of the word that BE selects, like
     the byte strobes of a processor's store: bit 0 of BE is bits 7:0 of the word, bit 1
-    bits 15:8 and so on.
+    bits 15:8 and so on. BE is read together with WE. A write of some of the bytes, with
+    the old word, DataIn or BE undefined, makes the word "X". `write()` always writes the
+    whole word.
 
     The file is binary, with the bytes of each word in little-endian order, or text (.hex,
     .mem or .txt) with hexadecimal words like Verilog's $readmemh reads, also with
