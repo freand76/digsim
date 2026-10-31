@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 import digsim.circuit.components._yosys_atoms
 from digsim.synth import Synthesis
-from digsim.utils import NetPort, Nets, YosysCell, YosysModule, YosysNetlist
+from digsim.utils import NetPort, Nets, YosysCell, YosysModule, YosysNetlist, YosysPort
 from digsim.utils._yosys_netlist import NET_TYPE
 
 from ._static_level import GND, VDD
@@ -155,6 +155,19 @@ def _given_key(path: str | Path, variant: YosysVariant) -> tuple[str, YosysVaria
     return str(Path(path).resolve()), variant
 
 
+class NetlistParts(NamedTuple):
+    """
+    What a component was built from: the ports of the module, its cells (with the
+    comparisons grouped, see group_comparisons()), the component of each cell (and of
+    the constants, "VDD" and "GND"), and the nets between them
+    """
+
+    ports: dict[str, YosysPort]
+    cells: dict[str, YosysCell]
+    components: dict[str, Component]
+    nets: Nets
+
+
 class SignalPort(PortMultiBitWire):
     """
     A named signal of a Yosys component, a wire or register of the Verilog (see the
@@ -256,6 +269,7 @@ class YosysComponent(MultiComponent):
         self._state_ports: dict[str, StatePort] = {}
         self._netlist_module: YosysModule | None = None
         self._module_name = ""
+        self._parts: NetlistParts | None = None
         # The cells of the netlist, as components
         self._gates_comp = MultiComponent(self._circuit, "gates")
         self.add(self._gates_comp)
@@ -655,6 +669,7 @@ class YosysComponent(MultiComponent):
         nets = YosysModule(ports=module.ports, cells=cells).get_nets()
         # Create cells
         components_dict = self._create_cells(cells)
+        self._parts = NetlistParts(module.ports, cells, components_dict, nets)
         # Connect cells, functional cells to each other as words
         linked = self._link_functional_cells(components_dict, cells, nets)
         self._connect_cells(components_dict, nets, linked)
@@ -688,6 +703,12 @@ class YosysComponent(MultiComponent):
             assert source.bit_index is not None
             return self._bus_port(source.name).get_bit(source.bit_index)
         return self._cell_port(components_dict[source.cell], source)
+
+    def netlist_parts(self) -> NetlistParts:
+        """What the component is built from now, a new one when it is built again"""
+        if self._parts is None:
+            raise YosysComponentException("No netlist loaded")
+        return self._parts
 
     def _create_signals(self, components_dict: dict[str, Component], nets: Nets) -> None:
         """The named signals, as ports wired from their nets"""

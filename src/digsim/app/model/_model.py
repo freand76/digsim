@@ -57,7 +57,8 @@ class AppModel(QThread):
     sig_zoom_fit_gui = Signal()
     # Edit Subcircuit: the circuit file to open in a tab
     sig_edit_subcircuit = Signal(str)
-    # View Subcircuit: the name of a subcircuit of the circuit, to view in a tab
+    # View Subcircuit or View Netlist: the name of a subcircuit or Verilog component of the
+    # circuit, to view in a tab
     sig_view_subcircuit = Signal(str)
     # Settings in the context menu of a component: show the settings pane
     sig_show_settings = Signal()

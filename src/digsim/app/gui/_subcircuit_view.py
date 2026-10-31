@@ -9,15 +9,14 @@ with the values of the simulation of the circuit it is in
 from __future__ import annotations
 
 from collections.abc import Callable
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import QPoint, QPointF, QRectF, Qt
+from PySide6.QtCore import QPoint, QPointF, Qt
 from PySide6.QtGui import (
     QBrush,
-    QColor,
     QMouseEvent,
     QPainter,
-    QPen,
     QResizeEvent,
     QWheelEvent,
 )
@@ -30,21 +29,14 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMenu,
-    QStyleOptionGraphicsItem,
     QVBoxLayout,
     QWidget,
 )
 
 import digsim.app.gui_objects
 from digsim.app._line_graph import junctions
-from digsim.app._value_text import value_text
 from digsim.app.gui_objects import ComponentObject
 from digsim.app.gui_objects import _theme as theme
-from digsim.app.gui_objects._circuit_port_object import (
-    CircuitInOutObject,
-    CircuitInputObject,
-    CircuitOutputObject,
-)
 from digsim.circuit import Circuit
 from digsim.circuit.components import (
     CircuitInOut,
@@ -52,11 +44,20 @@ from digsim.circuit.components import (
     CircuitOutput,
     CircuitPort,
     SubCircuit,
+    YosysComponent,
 )
-from digsim.circuit.components.atoms import VALUE_TYPE, Component, Port, PortInOut
+from digsim.circuit.components.atoms import Component, Port
 from digsim.storage_model import LineDataClass
 
+from ._netlist_view import NetlistViewScene
 from ._top_bar import SimControlWidget, SimTimeWidget
+from ._view_items import (
+    LinesItem,
+    OuterPortValue,
+    ViewInOut,
+    ViewInput,
+    ViewOutput,
+)
 
 
 if TYPE_CHECKING:
@@ -67,10 +68,22 @@ FIT_MARGIN = 20
 FIT_MAX = 2.0
 
 
-def find_instance(circuit: Circuit, names: list[str]) -> SubCircuit | None:
+def can_view(component: Component) -> bool:
+    """A component has a view: a subcircuit (drawn like its file), or a Verilog component"""
+    if isinstance(component, SubCircuit):
+        return component.has_layout()
+    return isinstance(component, YosysComponent)
+
+
+def view_action_text(component: Component) -> str:
+    """The context menu action that shows the view of a component"""
+    return "View Netlist" if isinstance(component, YosysComponent) else "View Subcircuit"
+
+
+def find_instance(circuit: Circuit, names: list[str]) -> SubCircuit | YosysComponent | None:
     """
-    A subcircuit by its chain of names: the name of a subcircuit of the circuit, then the
-    names in the files of the subcircuits in it. None if it is gone.
+    A subcircuit or Verilog component by its chain of names: the name of a component of the
+    circuit, then the names in the files of the subcircuits it is in. None if it is gone.
     """
     component: Component | None = None
     for index, name in enumerate(names):
@@ -80,109 +93,23 @@ def find_instance(circuit: Circuit, names: list[str]) -> SubCircuit | None:
             )
         elif isinstance(component, SubCircuit):
             component = component.part(name)
-        if not isinstance(component, SubCircuit):
+        else:
             return None
-    return component if isinstance(component, SubCircuit) else None
-
-
-def _port_value(port: Port) -> VALUE_TYPE:
-    """The value on a port's wire: what an inout port reads, the value of other ports"""
-    if isinstance(port, PortInOut):
-        return port.read_value()
-    return port.value
-
-
-class _OuterPortValue:
-    """A circuit port drawn in a view, with the value of the subcircuit's port"""
-
-    outer: Port
-    _component: Component
-
-    def _texts(self) -> tuple[str, str]:
-        port = self._component
-        assert isinstance(port, CircuitPort)
-        return port.label(), value_text(_port_value(self.outer), port.width)
-
-
-class _ViewInput(_OuterPortValue, CircuitInputObject):
-    """An In of the subcircuit, with the value that drives the subcircuit's input"""
-
-
-class _ViewOutput(_OuterPortValue, CircuitOutputObject):
-    """An Out of the subcircuit, with the value of the subcircuit's output"""
-
-
-class _ViewInOut(_OuterPortValue, CircuitInOutObject):
-    """An InOut of the subcircuit, with the value of the wire of its inout port"""
-
-
-class _LinesItem(QGraphicsItem):
-    """
-    The lines of the subcircuit's file, each with the value of its wire: the value a
-    port on it reads, colored like the wires of the circuit area
-    """
-
-    def __init__(
-        self, lines: list[tuple[list[tuple[QPointF, QPointF]], list[QPointF], Port | None]]
-    ) -> None:
-        super().__init__()
-        # For each line: its segments, its dots, and the port whose value it has
-        self._lines = lines
-        rect = QRectF()
-        for segments, _, _ in lines:
-            for start, end in segments:
-                rect = rect.united(QRectF(start, end).normalized())
-        self._rect = rect.adjusted(-6, -6, 6, 6)
-        self.setZValue(-1)
-        self.setAcceptedMouseButtons(Qt.MouseButton.NoButton)
-
-    def boundingRect(self) -> QRectF:
-        """QT function"""
-        return self._rect
-
-    @staticmethod
-    def _color(value: VALUE_TYPE, width: int) -> QColor:
-        if value == "X":
-            return QColor(theme.WIRE_X)
-        if value == "Z":
-            return QColor(theme.WIRE_Z)
-        if not isinstance(value, int) or value == 0:
-            return QColor(theme.WIRE)
-        return theme.dim(theme.ON, 0.4 + 0.6 * value / (2**width - 1), theme.WIRE)
-
-    def paint(
-        self,
-        painter: QPainter,
-        option: QStyleOptionGraphicsItem,
-        widget: QWidget | None = None,
-    ) -> None:
-        """QT function"""
-        for segments, dots, port in self._lines:
-            width = port.width if port is not None else 1
-            color = self._color(_port_value(port) if port is not None else "Z", width)
-            pen = QPen(color, 4 if width > 1 else 2)
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing, False)
-            painter.setPen(pen)
-            for start, end in segments:
-                painter.drawLine(start, end)
-            painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(color)
-            for dot in dots:
-                painter.drawEllipse(dot, 4 if width > 1 else 3, 4 if width > 1 else 3)
+    return component if isinstance(component, (SubCircuit, YosysComponent)) else None
 
 
 class SubCircuitViewScene(QGraphicsScene):
     """
     The parts of a subcircuit, where they are in its file, read-only. A subcircuit part
-    has View Subcircuit in its context menu, to look inside it too.
+    has View Subcircuit in its context menu, and a Verilog part View Netlist, to look inside
+    them too.
     """
 
     def __init__(
         self,
         app_model: AppModel,
         subcircuit: SubCircuit,
-        open_view: Callable[[SubCircuit], None],
+        open_view: Callable[[Component], None],
     ) -> None:
         super().__init__()
         self._app_model = app_model
@@ -217,9 +144,9 @@ class SubCircuitViewScene(QGraphicsScene):
         layout = subcircuit.layout()
         stand_ins: dict[str, tuple[ComponentObject, Port, Port]] = {}
         classes: dict[str, type[ComponentObject]] = {
-            CircuitInput.DIRECTION: _ViewInput,
-            CircuitOutput.DIRECTION: _ViewOutput,
-            CircuitInOut.DIRECTION: _ViewInOut,
+            CircuitInput.DIRECTION: ViewInput,
+            CircuitOutput.DIRECTION: ViewOutput,
+            CircuitInOut.DIRECTION: ViewInOut,
         }
         for file_port in subcircuit.file_ports():
             position = layout.gui.get(file_port.component)
@@ -229,7 +156,7 @@ class SubCircuitViewScene(QGraphicsScene):
             stand_in = self._stand_in(file_port.direction, file_port.label, file_port.width)
             component_object = self._add_object(stand_in, position, object_class)
             outer = subcircuit.outer_port(file_port.label)
-            assert isinstance(component_object, _OuterPortValue)
+            assert isinstance(component_object, OuterPortValue)
             component_object.outer = outer
             stand_ins[file_port.component] = (
                 component_object,
@@ -243,8 +170,8 @@ class SubCircuitViewScene(QGraphicsScene):
             cls = digsim.app.gui_objects.class_factory(type(part).__name__)
             self._add_object(part, position, cls)
         # Kept here: the scene doesn't keep a Python item alive, and when the last reference
-        # to it went (like in subcircuit_object()) the lines were deleted
-        self._lines_item = _LinesItem([self._line(line, stand_ins) for line in layout.lines])
+        # to it went (like in part_object()) the lines were deleted
+        self._lines_item = LinesItem([self._line(line, stand_ins) for line in layout.lines])
         self.addItem(self._lines_item)
 
     def _stand_in(self, direction: str, label: str, width: int) -> CircuitPort:
@@ -290,42 +217,44 @@ class SubCircuitViewScene(QGraphicsScene):
         value_port = readers[0] if readers else drivers[0] if drivers else None
         return segments, dots, value_port
 
-    def subcircuit_object(self, pos: QPointF) -> ComponentObject | None:
+    def is_current(self, component: Component) -> bool:
+        """The scene shows a subcircuit as it is built now"""
+        return component is self.subcircuit and self.parts == self.subcircuit.parts()
+
+    def part_object(self, pos: QPointF) -> ComponentObject | None:
+        """The subcircuit or Verilog part at a place"""
         for item in self.items(pos):
             while item is not None and not isinstance(item, ComponentObject):
                 item = item.parentItem()
-            if item is not None and isinstance(item.component, SubCircuit):
+            if item is not None and isinstance(item.component, (SubCircuit, YosysComponent)):
                 return item
         return None
 
     def mouseDoubleClickEvent(self, event: QGraphicsSceneMouseEvent) -> None:
-        """QT function: a double-click on a subcircuit part views it"""
-        component_object = self.subcircuit_object(event.scenePos())
+        """QT function: a double-click on a subcircuit or Verilog part views it"""
+        component_object = self.part_object(event.scenePos())
         if event.button() == Qt.MouseButton.LeftButton and component_object is not None:
-            part = component_object.component
-            assert isinstance(part, SubCircuit)
-            if part.has_layout():
-                self._open_view(part)
+            if can_view(component_object.component):
+                self._open_view(component_object.component)
             event.accept()
             return
         super().mouseDoubleClickEvent(event)
 
     def contextMenuEvent(self, event: QGraphicsSceneContextMenuEvent) -> None:
-        """QT function: View Subcircuit on a subcircuit part"""
-        component_object = self.subcircuit_object(event.scenePos())
+        """QT function: View Subcircuit or View Netlist on a part"""
+        component_object = self.part_object(event.scenePos())
         if component_object is None:
             return
         part = component_object.component
-        assert isinstance(part, SubCircuit)
         menu = QMenu()
-        action = menu.addAction("View Subcircuit")
-        action.setEnabled(part.has_layout())
+        action = menu.addAction(view_action_text(part))
+        action.setEnabled(can_view(part))
         action.triggered.connect(lambda: self._open_view(part))
         menu.exec(event.screenPos())
         event.accept()
 
-    def parts_name(self, part: SubCircuit) -> str | None:
-        """The name in the file of a subcircuit part of this subcircuit"""
+    def parts_name(self, part: Component) -> str | None:
+        """The name in the file of a part of this subcircuit"""
         for name in self.subcircuit.layout().gui:
             if self.subcircuit.part(name) is part:
                 return name
@@ -427,12 +356,11 @@ class SubCircuitView(QGraphicsView):
         """An arrow over a part that can be viewed (a double-click), else the hand"""
         scene = self.scene()
         component_object = (
-            scene.subcircuit_object(self.mapToScene(pos))
+            scene.part_object(self.mapToScene(pos))
             if isinstance(scene, SubCircuitViewScene)
             else None
         )
-        part = None if component_object is None else component_object.component
-        viewable = isinstance(part, SubCircuit) and part.has_layout()
+        viewable = component_object is not None and can_view(component_object.component)
         self.viewport().setCursor(
             Qt.CursorShape.ArrowCursor if viewable else Qt.CursorShape.OpenHandCursor
         )
@@ -445,8 +373,9 @@ class SubCircuitView(QGraphicsView):
 
 class ViewTab(QWidget):
     """
-    A tab with a read-only view of a subcircuit instance, in the simulation of the circuit
-    of another tab (its model): the simulation goes on when the tab is shown
+    A tab with a read-only view of a subcircuit instance, or of the netlist of a Verilog
+    component, in the simulation of the circuit of another tab (its model): the simulation
+    goes on when the tab is shown
     """
 
     def __init__(
@@ -474,7 +403,7 @@ class ViewTab(QWidget):
         layout.addWidget(bar)
         self.view = SubCircuitView(self)
         layout.addWidget(self.view, 1)
-        self._scene: SubCircuitViewScene | None = None
+        self._scene: SubCircuitViewScene | NetlistViewScene | None = None
         self.refresh()
         app_model.sig_repaint.connect(self._repaint)
         app_model.sig_sim_time_notify.connect(self._repaint)
@@ -482,8 +411,8 @@ class ViewTab(QWidget):
         app_model.sig_control_notify.connect(self.refresh)
 
     @property
-    def subcircuit(self) -> SubCircuit | None:
-        """The instance, None if it is gone"""
+    def instance(self) -> SubCircuit | YosysComponent | None:
+        """The subcircuit or Verilog component, None if it is gone"""
         return find_instance(self.app_model.objects.circuit, self.names)
 
     def title(self) -> str:
@@ -491,29 +420,31 @@ class ViewTab(QWidget):
 
     def refresh(self) -> None:
         """Build the scene again when the instance was built again, or is gone"""
-        subcircuit = self.subcircuit
-        if (
-            self._scene is not None
-            and subcircuit is not None
-            and self._scene.subcircuit is subcircuit
-            and self._scene.parts == subcircuit.parts()
-        ):
+        instance = self.instance
+        if self._scene is not None and instance is not None and self._scene.is_current(instance):
             return
-        if subcircuit is None:
-            self._label.setText(f"{self.title()}: the subcircuit is gone")
+        if instance is None:
+            self._label.setText(f"{self.title()}: it is gone")
             self.view.setScene(QGraphicsScene(self))
             self._scene = None
             return
-        self._scene = SubCircuitViewScene(self.app_model, subcircuit, self._view_part)
+        if isinstance(instance, YosysComponent):
+            self._scene = NetlistViewScene(self.app_model, instance)
+            source = instance.source_file
+            name = Path(source).name if source is not None else instance.module_name()
+            kind = "functional blocks" if instance.functional else "gates"
+            about = f"{name}, {kind}"
+        else:
+            self._scene = SubCircuitViewScene(self.app_model, instance, self._view_part)
+            about = instance.source_file().name
         self.view.setScene(self._scene)
         self.view.fit()
         self._label.setText(
-            f"  {self.title()} ({subcircuit.source_file().name}), read-only: the values of "
-            "the simulation of its circuit"
+            f"  {self.title()} ({about}), read-only: the values of the simulation of its circuit"
         )
 
-    def _view_part(self, part: SubCircuit) -> None:
-        if self._scene is None:
+    def _view_part(self, part: Component) -> None:
+        if not isinstance(self._scene, SubCircuitViewScene):
             return
         name = self._scene.parts_name(part)
         if name is not None:

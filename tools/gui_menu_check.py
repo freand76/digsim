@@ -537,7 +537,7 @@ def test_subcircuit_view(gui):
     gui.model.sig_view_subcircuit.emit("half_adder")
     spin()
     (view,) = window.view_tabs()
-    assert view.subcircuit is gui.model.objects.circuit.get_component("half_adder")
+    assert view.instance is gui.model.objects.circuit.get_component("half_adder")
     # The editing actions are off in a view
     assert not gui.action("Edit", "Undo").isEnabled()
     # Viewing it again shows the tab, switching to it doesn't stop the simulation
@@ -556,6 +556,40 @@ def test_subcircuit_view(gui):
     assert window.view_tabs() == []
 
 
+def test_double_click_views_the_netlist_of_a_verilog_component(gui):
+    """A double-click on a Verilog component shows its netlist, built again on a reload"""
+    from pathlib import Path
+
+    from digsim.app.gui._netlist_view import CellItem, NetlistViewScene
+
+    path = Path(__file__).parent.parent / "circuits" / "traffic_light" / "traffic_light.circuit"
+    gui.model.load_circuit(str(path))
+    spin()
+    gui.model.model_start()
+    spin(100)
+    component = gui.model.objects.circuit.get_component("traffic_light")
+    component_object = gui.model.objects.components.get_object(component)
+    center = component_object.mapToScene(component_object.rect().center())
+    for kind in (QEvent.Type.MouseButtonPress, QEvent.Type.MouseButtonRelease):
+        _mouse(gui, kind, center, held=kind == QEvent.Type.MouseButtonPress)
+    _mouse(gui, QEvent.Type.MouseButtonDblClick, center, held=True)
+    _mouse(gui, QEvent.Type.MouseButtonRelease, center, held=False)
+    (view,) = gui.window.view_tabs()
+    assert view.instance is component
+    assert gui.model.is_running
+    gui.model.model_stop()
+    spin()
+    scene = view.view.scene()
+    assert isinstance(scene, NetlistViewScene)
+    cells = [item for item in scene.items() if isinstance(item, CellItem)]
+    assert len(cells) == len(component.netlist_parts().components) - 2  # Not VDD and GND
+    # Reloaded, the component is built again, and so is the view
+    component.reload_file()
+    view.refresh()
+    assert view.view.scene() is not scene
+    gui.model._changed = False
+
+
 def test_double_click_views_a_subcircuit_while_it_runs(gui):
     from pathlib import Path
 
@@ -572,7 +606,7 @@ def test_double_click_views_a_subcircuit_while_it_runs(gui):
     _mouse(gui, QEvent.Type.MouseButtonDblClick, center, held=True)
     _mouse(gui, QEvent.Type.MouseButtonRelease, center, held=False)
     (view,) = gui.window.view_tabs()
-    assert view.subcircuit is subcircuit
+    assert view.instance is subcircuit
     assert gui.model.is_running
     gui.model.model_stop()
     gui.model._changed = False

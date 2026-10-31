@@ -84,6 +84,7 @@ Right-click a component to open its context menu:
 | Settings | Show the component's options in the [settings pane](#settings-pane) |
 | Shortcut | Assign a keyboard shortcut (push buttons and switches) |
 | Edit Verilog... | Open the Verilog file in an editor ([Verilog components](#verilog-component)) |
+| View Netlist | Show the gates or blocks of a Verilog component in a tab ([Viewing the netlist](#viewing-the-netlist)) |
 | Reload | Reload the Verilog file or netlist ([Verilog components](#verilog-component)) |
 
 Click a component to select it, and drag it to move it. Delete the selected component
@@ -531,7 +532,8 @@ simulation runs), shows what is inside this subcircuit, in a tab: its parts and 
 drawn like its file, with the values of the simulation of the circuit it is in. The view
 is read-only, and the simulation goes on when it is shown. It opens zoomed to fit, a
 drag with the mouse pans it, and the wheel and the View menu zoom it. A subcircuit in it
-has View Subcircuit and the double-click too, to look further inside. Closing the
+has View Subcircuit and the double-click too, to look further inside, and a Verilog
+component View Netlist (see [Viewing the netlist](#viewing-the-netlist)). Closing the
 circuit's tab closes its views.
 
 **Edit Subcircuit** in its context menu opens its file in a tab (or shows its tab). That
@@ -637,6 +639,21 @@ Every component made from the same file is reloaded. If the ports of the module 
 a dialog lists the changes and the wires that are removed with them: the wires to ports
 that are gone, or that have another width or direction. New ports are added unconnected.
 The circuit is then built again, and the changes before the reload can't be undone.
+
+#### Viewing the netlist
+
+**View Netlist** in the context menu of a Verilog component, or a double-click on it (also
+while the simulation runs), shows what Yosys made of the design, in a read-only tab: the
+gates (AND, OR, XOR and NOT as their symbols, flip-flops and other cells as blocks with
+the name of their type) or the functional blocks, and the wires between them. The ports
+show the values of the simulation. The inputs are on the left and the outputs and inouts on the
+right, the cells in between from left to right in the order the signals go through them.
+Feedback, like a flip-flop's output to its input, goes back to the left. A constant on an
+input is written next to it. Hover over a cell to see its Yosys name. A Verilog component
+in a subcircuit view has View Netlist and the double-click too. The view is built again
+when the component is reloaded.
+
+![The netlist view of the Verilog counter](images/NetlistView.png)
 
 #### The Verilog editor
 

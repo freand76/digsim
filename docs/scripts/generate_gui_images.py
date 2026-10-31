@@ -4,8 +4,8 @@
 """
 Generate the images of the GUI documentation that are not tutorial steps: the component
 images of the GUI reference (docs/images/components/ and the digits and the note), the
-screenshots of the application and the main window, and the images of the guide to
-adding components (docs/images/guide/). Also draws the application icon
+screenshots of the application, the main window and a netlist view, and the images of the
+guide to adding components (docs/images/guide/). Also draws the application icon
 (src/digsim/app/images/app_icon.png, and its copy docs/images/app_icon.png).
 
 Each component is drawn by its GUI object, the way the application draws it, after a
@@ -292,6 +292,27 @@ def window_screenshots(model: AppModel, window: MainWindow) -> None:
     model.clear_circuit()
 
 
+def netlist_view_screenshot(model: AppModel, window: MainWindow) -> None:
+    """The netlist view of the Verilog counter, running: its gates, flip-flops and wires"""
+    with chdir(ROOT):
+        model.load_circuit("circuits/yosys_counter/counter_yosys_verilog.circuit")
+    model.model_start()
+    spin(300)
+    for component in model.objects.circuit.get_toplevel_components():
+        if isinstance(component, components.OnOffSwitch):
+            component.turn_on()
+    spin(1500)
+    model.sig_view_subcircuit.emit("counter")
+    spin(500)
+    window.grab().save(str(IMAGES / "NetlistView.png"))
+    model.model_stop()
+    spin(300)
+    for view in window.view_tabs():
+        window._close_view(view)
+    model.clear_circuit()
+    spin(100)
+
+
 def guide_images(model: AppModel, window: MainWindow) -> None:
     """The XNOR gate and the LED bar of the guide to adding components"""
     selector_icon(window, "XNOR", "XNOR").save(str(IMAGES / "guide" / "selector_xnor.png"))
@@ -378,6 +399,7 @@ def main() -> None:
     app_icon()
     component_images(model)
     window_screenshots(model, window)
+    netlist_view_screenshot(model, window)
     guide_images(model, window)
     # Not "are you sure" about the circuit when the window closes
     model._changed = False
