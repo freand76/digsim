@@ -590,6 +590,31 @@ def test_double_click_views_the_netlist_of_a_verilog_component(gui):
     gui.model._changed = False
 
 
+@pytest.mark.parametrize("circuit", ["subcircuits/adder_4bit.circuit", "rv32e/rv32e_demo.circuit"])
+def test_auto_layout_keeps_the_connections_and_is_one_undo_step(gui, circuit):
+    from pathlib import Path
+
+    from digsim.app._wire_key import port_key
+
+    def connections() -> list[tuple[str, str]]:
+        return sorted((port_key(a), port_key(b)) for a, b in gui.model.objects.wires.connections())
+
+    warnings = []
+    gui.model.sig_warning_log.connect(lambda title, text: warnings.append(text))
+    gui.model.load_circuit(str(Path(__file__).parent.parent / "circuits" / circuit))
+    spin()
+    before_state = gui.model.circuit_to_model()
+    before = connections()
+    assert gui.action("Edit", "Auto Layout").isEnabled()
+    gui.trigger("Edit", "Auto Layout")
+    assert connections() == before
+    assert gui.model.circuit_to_model().gui != before_state.gui
+    assert warnings == []
+    gui.trigger("Edit", "Undo")
+    assert gui.model.circuit_to_model() == before_state
+    gui.model._changed = False
+
+
 def test_double_click_views_a_subcircuit_while_it_runs(gui):
     from pathlib import Path
 

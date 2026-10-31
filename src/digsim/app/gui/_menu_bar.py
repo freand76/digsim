@@ -118,6 +118,9 @@ class MenuBar(QMenuBar):
         self._flip_vertical_action = self._add(
             edit_menu, "Flip &Vertical", lambda: self._flip(False), "Ctrl+Shift+V"
         )
+        self._auto_layout_action = self._add(
+            edit_menu, "&Auto Layout", lambda: self._app_model.objects.auto_layout()
+        )
         edit_menu.addSeparator()
         self._find_action = self._add(
             edit_menu, "&Find Component...", self.sig_find_component.emit, ["Ctrl+K", "Ctrl+F"]
@@ -465,6 +468,9 @@ class MenuBar(QMenuBar):
         for shortcut in self._nothing_to_copy:
             shortcut.setEnabled(area is not None and not running and not has_components)
         self._paste_action.setEnabled(not running and self._can_paste)
+        self._auto_layout_action.setEnabled(
+            not running and not self._app_model.objects.components.is_empty()
+        )
         self._start_action.setText("&Stop\tF5, Space" if running else "&Start\tF5, Space")
         self._single_step_action.setEnabled(not running)
         self._clock_step_action.setEnabled(
@@ -488,6 +494,7 @@ class MenuBar(QMenuBar):
                 self._rotate_action,
                 self._flip_horizontal_action,
                 self._flip_vertical_action,
+                self._auto_layout_action,
                 self._find_action,
                 self._settings_action,
                 self._export_action,

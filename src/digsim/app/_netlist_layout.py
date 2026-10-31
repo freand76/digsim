@@ -34,6 +34,10 @@ SLOT_SPACING = 10.0
 TRACK_SPACING = 8.0
 GAP_MARGIN = 16.0
 ORDER_SWEEPS = 4
+# The priority of a wire through a column, before any node (see _priority_place())
+SLOT_PRIORITY = 1_000_000
+# The most items of a column whose nodes are swapped to be nearer their targets
+SWAP_LIMIT = 60
 STRAIGHTEN_ROUNDS = 3
 
 
@@ -92,10 +96,13 @@ def _columns(
     inputs: list[str],
     outputs: list[str],
     connections: list[tuple[Pin, Pin]],
+    pull_sources: bool = False,
 ) -> dict[str, int]:
     """
     The column of each node: the inputs in the first, then each cell after the cells that
-    drive it (without feedback, which goes back), and the outputs in the last
+    drive it (without feedback, which goes back), and the outputs in the last. With
+    'pull_sources', a node that nothing drives (an input too) is in the column before the
+    first node it drives: near where it is used.
     """
     ports = set(inputs) | set(outputs)
     cells = [node for node in nodes if node not in ports]
@@ -145,12 +152,83 @@ def _columns(
     last = max(column.values(), default=0) + 1
     column.update(dict.fromkeys(inputs, 0))
     column.update(dict.fromkeys(outputs, last))
+    if pull_sources:
+        driven_columns: dict[str, list[int]] = {}
+        for source, sink in connections:
+            if source.node != sink.node:
+                driven_columns.setdefault(source.node, []).append(column[sink.node])
+        undriven = [*inputs, *(cell for cell in cells if not drivers[cell])]
+        for node in undriven:
+            if node in driven_columns:
+                column[node] = max(min(driven_columns[node]) - 1, 0)
     return column
 
 
 def _spacing(item: _Item) -> float:
     """The space above an item in its column"""
     return NODE_SPACING if item.node is not None else SLOT_SPACING
+
+
+def _balanced_place(items: list[_Item], targets: list[float | None]) -> list[float]:
+    """
+    The tops of the items of a column, in their order: stacked from the top, the items
+    pushed down by the ones above them, and from the bottom, pushed up, and in between,
+    as near to their targets as they can be
+    """
+    down: list[float] = []
+    for index, (item, target) in enumerate(zip(items, targets, strict=True)):
+        if index == 0:
+            y = target if target is not None else 0.0
+        else:
+            y = down[-1] + items[index - 1].height + _spacing(item)
+            if target is not None:
+                y = max(y, target)
+        down.append(y)
+    up = list(down)
+    for index in range(len(items) - 2, -1, -1):
+        target = targets[index]
+        y = target if target is not None else down[index]
+        limit = up[index + 1] - items[index].height - _spacing(items[index + 1])
+        up[index] = min(y, limit)
+    return [(low + high) / 2 for low, high in zip(down, up, strict=True)]
+
+
+def _priority_place(
+    items: list[_Item], targets: list[float | None], priorities: list[int]
+) -> list[float]:
+    """
+    The tops of the items of a column, in their order (the priority method of Sugiyama):
+    the items with the highest priority first, each as near its target as the items placed
+    before it allow, pushing the others out of its way
+    """
+    count = len(items)
+    # The least distance from the top of the first item to the top of each item
+    reach = [0.0] * count
+    for index in range(1, count):
+        reach[index] = reach[index - 1] + items[index - 1].height + _spacing(items[index])
+    tops = list(reach)
+    placed = [False] * count
+    for index in sorted(range(count), key=lambda i: -priorities[i]):
+        target = targets[index]
+        if target is None:
+            continue
+        above = next((i for i in range(index - 1, -1, -1) if placed[i]), None)
+        below = next((i for i in range(index + 1, count) if placed[i]), None)
+        low = -math.inf if above is None else tops[above] + reach[index] - reach[above]
+        high = math.inf if below is None else tops[below] - (reach[below] - reach[index])
+        tops[index] = min(max(target, low), high)
+        placed[index] = True
+        for i in range(index - 1, -1, -1):
+            limit = tops[i + 1] - (reach[i + 1] - reach[i])
+            if placed[i] or tops[i] <= limit:
+                break
+            tops[i] = limit
+        for i in range(index + 1, count):
+            limit = tops[i - 1] + reach[i] - reach[i - 1]
+            if placed[i] or tops[i] >= limit:
+                break
+            tops[i] = limit
+    return tops
 
 
 def _vertical(x: float, start: float, end: float, ys: list[float]) -> list[Segment]:
@@ -172,12 +250,19 @@ class _Router:
         inputs: list[str],
         outputs: list[str],
         connections: list[tuple[Pin, Pin]],
+        order_ports: bool = False,
+        gap_margin: float = GAP_MARGIN,
+        bundles: bool = False,
     ) -> None:
         self.nodes = nodes
+        self.bundles = bundles
+        self.order_ports = order_ports
+        self.gap_margin = gap_margin
         self.inputs = inputs
         self.outputs = outputs
         self.connections = list(dict.fromkeys(connections))
-        self.column = _columns(nodes, inputs, outputs, self.connections)
+        # The inputs of a circuit (not the ports of a module) go where they are used
+        self.column = _columns(nodes, inputs, outputs, self.connections, order_ports)
         self.last = max(self.column.values(), default=0)
         self.items: list[list[_Item]] = [[] for _ in range(self.last + 1)]
         self.node_items: dict[str, _Item] = {}
@@ -275,10 +360,15 @@ class _Router:
     def _order(self) -> None:
         """
         Order the columns of cells by the places of the items they are wired to, in the
-        column on the left, then on the right. The ports keep the order of the module.
+        column on the left, then on the right. The ports keep their order, unless they are
+        ordered too ('order_ports').
         """
+        first, last = (0, self.last) if self.order_ports else (1, self.last - 1)
         for _ in range(ORDER_SWEEPS):
-            for columns in (range(1, self.last), range(self.last - 1, 0, -1)):
+            for columns in (
+                range(max(first, 1), last + 1),
+                range(min(last, self.last - 1), first - 1, -1),
+            ):
                 for column in columns:
                     side = column - columns.step
                     place = {id(item): index for index, item in enumerate(self.items[side])}
@@ -317,26 +407,75 @@ class _Router:
                     item.y = y
                     y += item.height + NODE_SPACING
                 continue
+            if self.bundles:
+                items = self._swap_nodes(column, wanted)
             targets = [self._target(item, wanted) for item in items]
-            # Stacked from the top, items pushed down by the ones above them, and from the
-            # bottom, pushed up: in between, as near to the targets as they can be
-            down: list[float] = []
-            for index, (item, target) in enumerate(zip(items, targets, strict=True)):
-                if index == 0:
-                    y = target if target is not None else 0.0
-                else:
-                    y = down[-1] + items[index - 1].height + _spacing(item)
-                    if target is not None:
-                        y = max(y, target)
-                down.append(y)
-            up = list(down)
-            for index in range(len(items) - 2, -1, -1):
-                target = targets[index]
-                y = target if target is not None else down[index]
-                limit = up[index + 1] - items[index].height - _spacing(items[index + 1])
-                up[index] = min(y, limit)
-            for item, low, high in zip(items, down, up, strict=True):
-                item.y = (low + high) / 2
+            if self.bundles:
+                priorities = [self._priority(item, wanted) for item in items]
+                tops = _priority_place(items, targets, priorities)
+            else:
+                tops = _balanced_place(items, targets)
+            for item, top in zip(items, tops, strict=True):
+                # In whole pixels, like the components of a circuit
+                item.y = round(top)
+
+    def _swap_nodes(
+        self, column: int, wanted: dict[str, list[tuple[_Item | Pin, float]]]
+    ) -> list[_Item]:
+        """
+        The order of a column, with neighboring nodes swapped where that brings the nodes
+        nearer to their targets (weighed by their priorities): a big node between two
+        others doesn't keep a bundle of wires from being straight. In a small column.
+        """
+        items = self.items[column]
+        if len(items) > SWAP_LIMIT:
+            return items
+        targets = {id(item): self._target(item, wanted) for item in items}
+        priorities = {id(item): self._priority(item, wanted) for item in items}
+
+        def cost(order: list[_Item]) -> float:
+            tops = _priority_place(
+                order, [targets[id(i)] for i in order], [priorities[id(i)] for i in order]
+            )
+            return sum(
+                priorities[id(item)] * abs(top - target)
+                for item, top in zip(order, tops, strict=True)
+                if (target := targets[id(item)]) is not None
+            )
+
+        best = cost(items)
+        for _ in range(len(items)):
+            improved = False
+            for index in range(len(items) - 1):
+                first, second = items[index], items[index + 1]
+                if first.node is None or second.node is None:
+                    continue
+                order = [*items[:index], second, first, *items[index + 2 :]]
+                order_cost = cost(order)
+                if order_cost < best - 0.5:
+                    items, best, improved = order, order_cost, True
+            if not improved:
+                break
+        self.items[column] = items
+        return items
+
+    def _priority(self, item: _Item, wanted: dict[str, list[tuple[_Item | Pin, float]]]) -> int:
+        """
+        How much an item gets its place before the others of its column: a wire that
+        passes the column is straight first, then the nodes with the most parallel wires
+        from one place on the left (a node with a bundle of wires before one with single
+        wires)
+        """
+        if item.node is None:
+            return SLOT_PRIORITY
+        bundles: dict[int, int] = {}
+        for start, _ in wanted.get(item.node, []):
+            key = id(self.node_items[start.node]) if isinstance(start, Pin) else id(start)
+            if isinstance(start, _Item) and start.source is not None:
+                # The slots of the wires from the pins of one node are one bundle
+                key = id(self.node_items[start.source.node])
+            bundles[key] = bundles.get(key, 0) + 1
+        return max(bundles.values(), default=0)
 
     def _straighten(self) -> None:
         """
@@ -452,7 +591,7 @@ class _Router:
             exit_left = self.nodes[source.node].on_left(source.port)
             segments: list[Segment] = [(pin_point(source), edge(source, exit_left))]
             for (first, _, _), (second, gap, back) in pairwise(path):
-                x = gap_left[gap] + GAP_MARGIN + tracks[(source, gap, back)] * TRACK_SPACING
+                x = gap_left[gap] + self.gap_margin + tracks[(source, gap, back)] * TRACK_SPACING
                 # A pin leaves on its side, a slot on the side it goes to, and the wire
                 # enters a slot going back on its right, else on the left
                 leaves_left = exit_left if isinstance(first, Pin) else back
@@ -512,7 +651,7 @@ class _Router:
             right.append(x + width)
             gap_left[column] = x + width
             tracks = max(gap_tracks.get(column, 0) - 1, 0)
-            x += width + 2 * GAP_MARGIN + tracks * TRACK_SPACING
+            x += width + 2 * self.gap_margin + tracks * TRACK_SPACING
         return left, right, gap_left
 
 
@@ -521,9 +660,19 @@ def netlist_layout(
     inputs: Iterable[str],
     outputs: Iterable[str],
     connections: Iterable[tuple[Pin, Pin]],
+    order_ports: bool = False,
+    gap_margin: float = GAP_MARGIN,
+    bundles: bool = False,
 ) -> Layout:
     """
     Lay out the nodes in columns, the 'inputs' (nodes) in the first and the 'outputs' in
-    the last, and route the wires of the connections (source pin, sink pin)
+    the last, and route the wires of the connections (source pin, sink pin). The inputs
+    and outputs keep their order, unless 'order_ports' (they are ordered like the others,
+    to cross few wires). The tracks of the wires between two columns are 'gap_margin' from
+    the columns. With 'bundles', the wires that pass columns and the bundles of parallel
+    wires are straight first (the priority method), which makes a big netlist much higher.
     """
-    return _Router(nodes, list(inputs), list(outputs), list(connections)).route()
+    router = _Router(
+        nodes, list(inputs), list(outputs), list(connections), order_ports, gap_margin, bundles
+    )
+    return router.route()

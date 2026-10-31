@@ -25,7 +25,8 @@ The window has a menu bar and three areas:
 
 - **Menu bar** (top): **File** (New Tab, New, Open, Open Recent, [Examples](#example-circuits),
   Save, Save As, Export Image, Close Tab, Quit), **Edit** (Undo, Redo, Cut, Copy, Paste, Duplicate, Delete,
-  Rotate, Flip Horizontal, Flip Vertical, Find Component, Settings), **View** (zoom in and
+  Rotate, Flip Horizontal, Flip Vertical, [Auto Layout](#auto-layout), Find Component,
+  Settings), **View** (zoom in and
   out, Zoom to Fit: the whole circuit with its wires in the window, as when a circuit is
   opened, the [settings pane](#settings-pane) and the [theme](#dark-theme)), **Simulation** (Start,
   Single Step, Step Clock, Reset, VCD Output, VCD File) and **Help** (the documentation, and the version of
@@ -144,6 +145,23 @@ Vertical** (**Ctrl + Shift + V**) top to bottom: a multiplexer with its select i
 top, or the bits of a bus splitter in the other order. With the rotations, a symbol can
 face eight ways. Its text is not mirrored. Components with a body, like the
 switches, the LEDs and the ICs, keep their direction.
+
+### Auto layout
+
+**Edit > Auto Layout** places all the components again and draws their wires anew, with
+the same connections. The components go in columns from left to right in the order the
+signals go through them, the switches, buttons and other components that only drive a
+wire just before the first component they drive, and the LEDs, displays and other
+components that only read a wire on the right. Feedback, like a counter's output to its
+input, goes back to the left. A bundle of parallel wires, like the bits from a Bus2Wires
+to a LED bar, is kept straight. The ports on the top of a component, like those of the
+LCD, are reached from above. The components are not rotated or flipped anymore. Notes
+and the components without wires go in rows below the circuit. The view is zoomed to fit.
+
+The same circuit always gets the same layout, also when it is laid out again. **Edit >
+Undo** brings back the circuit as it was, in one step.
+
+![The 4-bit adder example after Auto Layout](images/AutoLayout.png)
 
 ## Wires
 

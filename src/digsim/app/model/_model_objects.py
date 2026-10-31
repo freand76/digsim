@@ -9,13 +9,16 @@ import re
 from collections import deque
 from typing import TYPE_CHECKING, Any
 
+from digsim.app._auto_layout import auto_layout
 from digsim.app._clipboard_lines import renamed_port, renamed_port_keys
 from digsim.app._line_graph import without_ports
+from digsim.app._netlist_layout import NodeShape
 from digsim.app._settings_values import given_name, has_given_name, unique_name
+from digsim.app._wire_route import rotated
 from digsim.circuit import Circuit
 from digsim.circuit.components import CircuitPort, YosysComponent
 from digsim.circuit.components._yosys_component import YosysVariant
-from digsim.circuit.components.atoms import Component, DigsimException, Port
+from digsim.circuit.components.atoms import Component, DigsimException, Port, PortInOut
 from digsim.storage_model import LineDataClass, ModelDataClass
 from digsim.utils import YosysNetlist
 
@@ -112,6 +115,62 @@ class ModelObjects:
         # An undo step only if something was deleted
         if self._app_model.circuit_to_model() != undo_state:
             self.add_undo_state(undo_state)
+
+    def auto_layout(self) -> None:
+        """
+        Edit > Auto Layout: place the components in columns from the inputs on the left to
+        the outputs on the right, not rotated, and draw the wires again between them. One
+        undo step, then zoomed to fit.
+        """
+        if self._app_model.is_running or self._model_components.is_empty():
+            return
+        undo_state = self._app_model.circuit_to_model()
+        model_dc = self._app_model.circuit_to_model()
+        shapes: dict[str, NodeShape] = {}
+        directions: dict[str, dict[str, str]] = {}
+        for component, component_object in self._model_components.get_dict().items():
+            # Not rotated: the ports where they are in the rect of the component
+            rect = component_object.rect()
+            pins: dict[str, tuple[float, float]] = {}
+            for port in component.ports:
+                pos = component_object.mapFromScene(component_object.get_port_item(port).portPos())
+                pins[port.name()] = (pos.x() - rect.x(), pos.y() - rect.y())
+                # Not rotated: a port on the top or the bottom, like those of the LCD
+                turn = (360 - component_object.rotation_angle) % 360
+                direction = rotated(component_object.port_direction(port), turn)
+                if direction in ("up", "down"):
+                    directions.setdefault(component.name(), {})[port.name()] = direction
+            shapes[component.name()] = NodeShape(rect.width(), rect.height(), pins)
+        lines: list[tuple[list[str], set[str]]] = []
+        # The lines of the drawn wires (a state has their paths, not lines)
+        for line in self._wires.to_lines():
+            outputs = set()
+            for key in line.ports:
+                line_port = self._port(key)
+                # An inout port (like the data bus of the LCD) is not where a line comes
+                # from, when it has an output
+                inout = isinstance(line_port, PortInOut)
+                if line_port is not None and line_port.is_output() and not inout:
+                    outputs.add(key)
+            lines.append((list(line.ports), outputs))
+        origin = (
+            min(position.x for position in model_dc.gui.values()),
+            min(position.y for position in model_dc.gui.values()),
+        )
+        result = auto_layout(shapes, lines, origin, directions)
+        for name, (x, y) in result.positions.items():
+            position = model_dc.gui[name]
+            position.x, position.y = x, y
+            position.rotation, position.flipped = 0, False
+        model_dc.circuit.wires = []
+        model_dc.wires = {}
+        model_dc.lines = result.lines
+        self.add_undo_state(undo_state)
+        self._restore_and_warn(model_dc)
+        self._app_model.sig_control_notify.emit()
+        self._app_model.sig_synchronize_gui.emit()
+        # The whole circuit, in its new places
+        self._app_model.zoom_fit()
 
     def _restore_state(self, model_dc: ModelDataClass) -> list[str]:
         """Build the circuit from a state, returns the warnings"""
