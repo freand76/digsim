@@ -15,12 +15,6 @@
                 "settings": {"bits": 4}
             },
             {
-                "name": "StaticValue",
-                "type": "digsim.circuit.components.StaticValue",
-                "display_name": "StaticValue",
-                "settings": {"width": 1, "value": 0}
-            },
-            {
                 "name": "full_adder",
                 "type": "digsim.circuit.components.SubCircuit",
                 "display_name": "full_adder",
@@ -69,13 +63,18 @@
                 "settings": {
                     "text": "A 4-bit adder from four full adders (full_adder.circuit), each from two half adders.\nThe DIP switches are A (top) and B, the hex digit shows A + B and the LED the carry."
                 }
+            },
+            {
+                "name": "GND",
+                "type": "digsim.circuit.components.GND",
+                "display_name": "GND",
+                "settings": {}
             }
         ]
     },
     "gui": {
         "DipSwitch": {"x": 60, "y": 60, "z": 0},
         "DipSwitch_1": {"x": 60, "y": 300, "z": 0},
-        "StaticValue": {"x": 460, "y": 20, "z": 0},
         "full_adder": {"x": 560, "y": 60, "z": 0},
         "full_adder_1": {"x": 560, "y": 210, "z": 0},
         "full_adder_2": {"x": 560, "y": 360, "z": 0},
@@ -83,7 +82,8 @@
         "Wires2Bus": {"x": 860, "y": 200, "z": 0},
         "HexDigit": {"x": 980, "y": 190, "z": 0},
         "Led": {"x": 980, "y": 560, "z": 0},
-        "Note_9": {"x": 60, "y": 640, "z": 0}
+        "Note_9": {"x": 60, "y": 640, "z": 0},
+        "GND": {"x": 470, "y": 140, "z": 0}
     },
     "lines": [
         {
@@ -125,11 +125,6 @@
             "ports": ["DipSwitch_1.3", "full_adder_3.b"],
             "points": {"1": [420, 340], "2": [420, 555]},
             "segments": [["DipSwitch_1.3", "1"], ["1", "2"], ["2", "full_adder_3.b"]]
-        },
-        {
-            "ports": ["StaticValue.O", "full_adder.cin"],
-            "points": {"1": [520, 30], "2": [520, 125]},
-            "segments": [["StaticValue.O", "1"], ["1", "2"], ["2", "full_adder.cin"]]
         },
         {
             "ports": ["full_adder.s", "Wires2Bus.bus_0"],
@@ -184,6 +179,11 @@
             "ports": ["Wires2Bus.bus", "HexDigit.val"],
             "points": {},
             "segments": [["Wires2Bus.bus", "HexDigit.val"]]
+        },
+        {
+            "ports": ["GND.O", "full_adder.cin"],
+            "points": {"1": [480, 125]},
+            "segments": [["GND.O", "1"], ["1", "full_adder.cin"]]
         }
     ],
     "shortcuts": {},

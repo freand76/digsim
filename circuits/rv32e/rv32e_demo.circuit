@@ -123,12 +123,6 @@
                 "settings": {"backlight": "green"}
             },
             {
-                "name": "lcd_rw",
-                "type": "digsim.circuit.components.StaticValue",
-                "display_name": "StaticValue",
-                "settings": {"width": 1, "value": 0, "radix": "dec"}
-            },
-            {
                 "name": "light_bits_1",
                 "type": "digsim.circuit.components.Bus2Wires",
                 "display_name": "Bus2Wires",
@@ -145,6 +139,12 @@
                 "type": "digsim.circuit.components.Note",
                 "display_name": "Note",
                 "settings": {"text": "GPIO bits 15:8"}
+            },
+            {
+                "name": "lcd_rw",
+                "type": "digsim.circuit.components.GND",
+                "display_name": "GND",
+                "settings": {}
             }
         ]
     },
@@ -166,10 +166,10 @@
         "Note_5": {"x": 850, "y": 905, "z": 0},
         "Note_6": {"x": 60, "y": 30, "z": 0},
         "lcd": {"x": 1420, "y": 560, "z": 0},
-        "lcd_rw": {"x": 1362, "y": 536, "z": 0},
         "light_bits_1": {"x": 880, "y": 643, "z": 1},
         "light_1": {"x": 960, "y": 643, "z": 1},
-        "Note_2_1": {"x": 1014, "y": 669, "z": 2}
+        "Note_2_1": {"x": 1014, "y": 669, "z": 2},
+        "lcd_rw": {"x": 1400, "y": 550, "z": 0}
     },
     "lines": [
         {
@@ -304,11 +304,6 @@
             "segments": [["light_bits.bus_7", "light.7"]]
         },
         {
-            "ports": ["lcd_rw.O", "lcd.RW"],
-            "points": {"1": [1400, 546], "2": [1400, 545], "3": [1490, 545]},
-            "segments": [["lcd_rw.O", "1"], ["1", "2"], ["2", "3"], ["3", "lcd.RW"]]
-        },
-        {
             "ports": ["light_bits_1.bus_0", "light_1.0"],
             "points": {},
             "segments": [["light_bits_1.bus_0", "light_1.0"]]
@@ -347,6 +342,11 @@
             "ports": ["light_bits_1.bus_7", "light_1.7"],
             "points": {},
             "segments": [["light_bits_1.bus_7", "light_1.7"]]
+        },
+        {
+            "ports": ["lcd_rw.O", "lcd.RW"],
+            "points": {"1": [1410, 539], "2": [1490, 539]},
+            "segments": [["lcd_rw.O", "1"], ["1", "2"], ["2", "lcd.RW"]]
         }
     ],
     "shortcuts": {"1": "reset"},

@@ -91,12 +91,6 @@
                 }
             },
             {
-                "name": "one",
-                "type": "digsim.circuit.components.StaticValue",
-                "display_name": "StaticValue",
-                "settings": {"width": 1, "value": 1, "radix": "dec"}
-            },
-            {
                 "name": "ilm_split",
                 "type": "digsim.circuit.components.Splitter",
                 "display_name": "Splitter",
@@ -213,6 +207,12 @@
                 "settings": {
                     "text": "Memory map\n0x00000000 - 0x0000FFFF   ROM     instructions (ILM), loads (DLM)\n0x10000000 - 0x1000FFFF   RAM     instructions (ILM), loads and stores (DLM)\n0xE0000000 - 0xE000FFFF   timer   loads (DLM), a free-running 32-bit counter\n0xF0000000 - 0xF000FFFF   GPIO    stores (DLM), write only\n\nILM: address bit 28 selects the ROM or the RAM, a pc above 0x1FFFFFFF traps.\nDLM: the comparators match address bits 31:16 with 0x0000 (ROM, loads only),\n0x1000 (RAM), 0xE000 (timer) and 0xF000 (GPIO). The read mux gives the processor\nthe ROM, the timer or else the RAM.\nWhen the ILM and the DLM both use the ROM or the RAM, the arbiter adds a wait cycle."
                 }
+            },
+            {
+                "name": "one",
+                "type": "digsim.circuit.components.VDD",
+                "display_name": "VDD",
+                "settings": {}
             }
         ]
     },
@@ -231,7 +231,6 @@
         "ram_wstrb": {"x": 2110, "y": 550, "z": 0},
         "halted": {"x": 560, "y": 570, "z": 0},
         "rv32": {"x": 300, "y": 355, "z": 0},
-        "one": {"x": 260, "y": 490, "z": 0},
         "ilm_split": {"x": 560, "y": 170, "z": 0},
         "ilm_mux": {"x": 400, "y": 140, "z": 0},
         "dlm_split": {"x": 580, "y": 270, "z": 0},
@@ -250,7 +249,8 @@
         "gpio_reg": {"x": 1760, "y": 365, "z": 0},
         "timer": {"x": 1960, "y": 365, "z": 0},
         "Note_0": {"x": 20, "y": 730, "z": 0},
-        "Note_1": {"x": 900, "y": 730, "z": 0}
+        "Note_1": {"x": 900, "y": 730, "z": 0},
+        "one": {"x": 260, "y": 410, "z": 0}
     },
     "lines": [
         {
@@ -349,14 +349,9 @@
             "segments": [["rv32.halted", "halted.halted"]]
         },
         {
-            "ports": ["one.O", "rv32.imem_ready"],
-            "points": {},
-            "segments": [["one.O", "rv32.imem_ready"]]
-        },
-        {
             "ports": ["ilm_split.bus_15_2", "arbiter.ilm_addr"],
-            "points": {"1": [650, 200], "2": [650, 200]},
-            "segments": [["ilm_split.bus_15_2", "1"], ["1", "2"], ["2", "arbiter.ilm_addr"]]
+            "points": {},
+            "segments": [["ilm_split.bus_15_2", "arbiter.ilm_addr"]]
         },
         {
             "ports": ["ilm_split.bus_28", "arbiter.ilm_ram", "ilm_mux.S"],
@@ -510,6 +505,11 @@
             "segments": [
                 ["timer.count", "1"], ["1", "2"], ["2", "3"], ["3", "4"], ["4", "rd_mux.C"]
             ]
+        },
+        {
+            "ports": ["one.O", "rv32.imem_ready"],
+            "points": {"1": [270, 500]},
+            "segments": [["one.O", "1"], ["1", "rv32.imem_ready"]]
         }
     ],
     "shortcuts": {},
