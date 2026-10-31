@@ -97,6 +97,8 @@ COMPONENTS: list[tuple[str, dict[str, Any]]] = [
     ("DFF", {"width": 1}),
     ("DFF", {"width": 4}),
     ("StaticValue", {"width": 4, "value": 5}),
+    ("GND", {}),
+    ("VDD", {}),
     ("LedBar", {"width": 4}),
     ("HexDigit", {"digits": 1, "dot": False}),
     ("HD44780", {}),

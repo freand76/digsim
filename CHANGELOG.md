@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - GUI: GND and VDD, small symbols for a constant 0 and 1, instead of a one-bit Static Value
  - GUI: the netlist view of a Verilog component has a search of its signals, cell types and source lines: the cells of the selected entry are shown in a color, the rest dimmed
  - GUI: Edit > Auto Layout places the components of a circuit in columns from its inputs on the left to its outputs on the right and draws the wires again, one undo step
  - GUI: View Netlist (or a double-click) on a Verilog component shows its gates or functional blocks and the wires between them in a read-only tab, inputs on the left and outputs on the right

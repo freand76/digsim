@@ -394,6 +394,8 @@ presses the button or toggles the switch.
 | ![DIP switch](images/components/DIP_SWITCH.png) | **DIP Switch**: a row of switches, one output per switch. |
 | ![Clock](images/components/Clock.png) | **Clock**: a square wave with a configurable frequency (1–100 Hz). |
 | ![Static value](images/components/ZERO.png) | **Static Value**: a constant value on a wire or a bus (1–16 bits), shown in decimal, hexadecimal or binary. |
+| ![GND](images/components/GND.png) | **GND**: ground, a constant 0, a small symbol instead of a Static Value of one bit. Its wire leaves it upwards. |
+| ![VDD](images/components/VDD.png) | **VDD**: the supply, a constant 1, a small symbol instead of a Static Value of one bit. Its wire leaves it downwards. |
 
 The switches can also be clicked while the simulation is stopped, to set the inputs before
 it starts or before **Step Clock**. The circuit then runs for a moment (10 µs) so that the

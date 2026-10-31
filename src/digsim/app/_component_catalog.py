@@ -30,6 +30,8 @@ COMPONENT_GROUPS: list[tuple[str, list[CatalogEntry]]] = [
             CatalogEntry("DipSwitch", "DIP switch", "switches bits"),
             CatalogEntry("Clock", "Clock", "clock oscillator frequency square wave"),
             CatalogEntry("StaticValue", "StaticValue", "static value constant"),
+            CatalogEntry("GND", "GND", "ground zero low constant 0"),
+            CatalogEntry("VDD", "VDD", "supply power one high constant 1"),
         ],
     ),
     (

@@ -39,6 +39,9 @@ def test_catalog_has_components():
         ("74", "IntegratedCircuit"),
         ("wire sink", "LabelWireIn"),
         ("anlz", "LogicAnalyzer"),
+        ("gnd", "GND"),
+        ("ground", "GND"),
+        ("vdd", "VDD"),
     ],
 )
 def test_search_components(query, first):

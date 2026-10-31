@@ -139,6 +139,8 @@ COMPONENT_IMAGES: list[tuple[str, str, dict[str, Any], Callable[..., None] | Non
     ("components/DIP_SWITCH.png", "DipSwitch", {"bits": 4}, after_init(dip_switch)),
     ("components/Clock.png", "Clock", {}, None),
     ("components/ZERO.png", "StaticValue", {}, None),
+    ("components/GND.png", "GND", {}, None),
+    ("components/VDD.png", "VDD", {}, None),
     ("components/LED_ON.png", "Led", {}, driven(1)),
     ("components/LedBar.png", "LedBar", {"width": 8}, lit_ports(["1", "2", "4", "7"])),
     ("HexDigit.png", "HexDigit", {}, driven(10, "val")),
