@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## vx.x.x
+ - GUI: a subcircuit view pans with a drag (with the hand cursor, an arrow over a subcircuit to double-click), and the Zoom In, Zoom Out and Zoom to Fit shortcuts zoom it (they zoomed the circuit behind it)
+
 ## v1.10.0
  - StaticValue: a radix setting, to show the value in decimal (as before), hexadecimal or binary
  - HD44780: a 16x2 character LCD module, programmed like the real one in 8-bit or 4-bit mode, with the A00 character ROM, custom characters and a blinking cursor. In the GUI it looks like a real module, with a green, blue, amber, white or red backlight.

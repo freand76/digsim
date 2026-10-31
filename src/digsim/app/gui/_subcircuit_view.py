@@ -11,8 +11,16 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import QPointF, QRectF, Qt
-from PySide6.QtGui import QBrush, QColor, QPainter, QPen, QResizeEvent, QWheelEvent
+from PySide6.QtCore import QPoint, QPointF, QRectF, Qt
+from PySide6.QtGui import (
+    QBrush,
+    QColor,
+    QMouseEvent,
+    QPainter,
+    QPen,
+    QResizeEvent,
+    QWheelEvent,
+)
 from PySide6.QtWidgets import (
     QGraphicsItem,
     QGraphicsScene,
@@ -325,13 +333,26 @@ class SubCircuitViewScene(QGraphicsScene):
 
 
 class SubCircuitView(QGraphicsView):
-    """The view of a subcircuit's scene, zoomed to fit when it is shown"""
+    """
+    The view of a subcircuit's scene, zoomed to fit when it is shown. A drag with the
+    mouse pans it, the wheel and the zoom shortcuts zoom.
+    """
+
+    ZOOM_IN_FACTOR = 1.25
+    ZOOM_OUT_FACTOR = 0.8
 
     def __init__(self, parent: QWidget) -> None:
         super().__init__(parent)
         self.refresh_theme()
         self.setRenderHint(QPainter.RenderHint.Antialiasing)
-        # It fits the parts when it gets a size, until the wheel zooms
+        # The hand cursor, like Shift in the circuit area. The parts take no mouse buttons,
+        # a drag pans on them too.
+        self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
+        # Moves without a button too, for the arrow over a part that can be viewed
+        self.viewport().setMouseTracking(True)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # It fits the parts when it gets a size, until it is zoomed or panned
         self._zoomed = False
 
     def refresh_theme(self) -> None:
@@ -342,7 +363,9 @@ class SubCircuitView(QGraphicsView):
     def resizeEvent(self, event: QResizeEvent) -> None:
         """QT function"""
         super().resizeEvent(event)
-        if not self._zoomed:
+        if self._zoomed:
+            self._update_scene_rect()
+        else:
             self.fit()
 
     def fit(self) -> None:
@@ -354,13 +377,69 @@ class SubCircuitView(QGraphicsView):
         if self.transform().m11() > FIT_MAX:
             self.resetTransform()
             self.scale(FIT_MAX, FIT_MAX)
-            self.centerOn(rect.center())
+        self._update_scene_rect()
+        self.centerOn(rect.center())
+
+    def zoom_fit(self) -> None:
+        """View > Zoom to Fit: fit the parts, also when the view gets another size"""
+        self._zoomed = False
+        self.fit()
+
+    def zoom_in(self) -> None:
+        """View > Zoom In"""
+        self._zoom(self.ZOOM_IN_FACTOR)
+
+    def zoom_out(self) -> None:
+        """View > Zoom Out"""
+        self._zoom(self.ZOOM_OUT_FACTOR)
+
+    def _zoom(self, factor: float) -> None:
+        self._zoomed = True
+        self.scale(factor, factor)
+        self._update_scene_rect()
+
+    def _update_scene_rect(self) -> None:
+        """
+        The parts with a visible area of room around them: the view pans until they are
+        at an edge. The scene would otherwise be the parts, which can't pan when they fit.
+        """
+        scene = self.scene()
+        if scene is None:
+            return
+        visible = self.mapToScene(self.viewport().rect()).boundingRect()
+        center = self.mapToScene(self.viewport().rect().center())
+        self.setSceneRect(
+            scene.itemsBoundingRect().adjusted(
+                -visible.width(), -visible.height(), visible.width(), visible.height()
+            )
+        )
+        self.centerOn(center)
+
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
+        """QT function: a drag pans, the view stays there when it gets another size"""
+        if event.buttons() & Qt.MouseButton.LeftButton:
+            self._zoomed = True
+        super().mouseMoveEvent(event)
+        if event.buttons() == Qt.MouseButton.NoButton:
+            self._update_cursor(event.position().toPoint())
+
+    def _update_cursor(self, pos: QPoint) -> None:
+        """An arrow over a part that can be viewed (a double-click), else the hand"""
+        scene = self.scene()
+        component_object = (
+            scene.subcircuit_object(self.mapToScene(pos))
+            if isinstance(scene, SubCircuitViewScene)
+            else None
+        )
+        part = None if component_object is None else component_object.component
+        viewable = isinstance(part, SubCircuit) and part.has_layout()
+        self.viewport().setCursor(
+            Qt.CursorShape.ArrowCursor if viewable else Qt.CursorShape.OpenHandCursor
+        )
 
     def wheelEvent(self, event: QWheelEvent) -> None:
         """QT function: the wheel zooms"""
-        factor = 1.25 if event.angleDelta().y() > 0 else 0.8
-        self._zoomed = True
-        self.scale(factor, factor)
+        self._zoom(self.ZOOM_IN_FACTOR if event.angleDelta().y() > 0 else self.ZOOM_OUT_FACTOR)
         event.accept()
 
 

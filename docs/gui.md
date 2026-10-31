@@ -529,9 +529,10 @@ file. A subcircuit can use subcircuits, but not the circuit it is in.
 **View Subcircuit** in its context menu, or a double-click on it (also while the
 simulation runs), shows what is inside this subcircuit, in a tab: its parts and wires,
 drawn like its file, with the values of the simulation of the circuit it is in. The view
-is read-only, and the simulation goes on when it is shown. A subcircuit in it has View
-Subcircuit and the double-click too, to look further inside. Closing the circuit's
-tab closes its views.
+is read-only, and the simulation goes on when it is shown. It opens zoomed to fit, a
+drag with the mouse pans it, and the wheel and the View menu zoom it. A subcircuit in it
+has View Subcircuit and the double-click too, to look further inside. Closing the
+circuit's tab closes its views.
 
 **Edit Subcircuit** in its context menu opens its file in a tab (or shows its tab). That
 edits the file, which every subcircuit of it uses: when the file is saved, the subcircuits

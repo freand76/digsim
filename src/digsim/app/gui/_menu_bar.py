@@ -22,6 +22,7 @@ from digsim.app._recent_files import with_recent, without_file
 from digsim.app.settings import GuiSettingsDialog
 
 from ._circuit_area import CircuitArea
+from ._subcircuit_view import SubCircuitView
 
 
 if TYPE_CHECKING:
@@ -57,8 +58,8 @@ class MenuBar(QMenuBar):
         # The circuit area of the tab that is shown, see set_tab()
         self._circuit_area: CircuitArea | None = None
         self._can_paste = False
-        # The tab that is shown is a view of a subcircuit, see set_tab()
-        self._read_only = False
+        # The view of a subcircuit when its tab is shown, see set_tab()
+        self._view: SubCircuitView | None = None
         # The circuit file of each model when the recent files were last updated, weak: the
         # model of a closed tab isn't kept for it
         self._recent_paths: WeakKeyDictionary[AppModel, str | None] = WeakKeyDictionary()
@@ -125,11 +126,9 @@ class MenuBar(QMenuBar):
         self._settings_action = self._add(edit_menu, "Se&ttings...", self._settings_dialog)
 
         view_menu = self.addMenu("&View")
-        self._add(view_menu, "Zoom &In", lambda: self._app_model.zoom_in(), ["Ctrl++", "Ctrl+="])
-        self._add(view_menu, "Zoom &Out", lambda: self._app_model.zoom_out(), "Ctrl+-")
-        self._add(
-            view_menu, "Zoom to &Fit", lambda: self._app_model.zoom_fit(), ["Ctrl+0", "Home"]
-        )
+        self._add(view_menu, "Zoom &In", self._zoom_in, ["Ctrl++", "Ctrl+="])
+        self._add(view_menu, "Zoom &Out", self._zoom_out, "Ctrl+-")
+        self._add(view_menu, "Zoom to &Fit", self._zoom_fit, ["Ctrl+0", "Home"])
         view_menu.addSeparator()
         self._view_menu = view_menu
 
@@ -295,15 +294,37 @@ class MenuBar(QMenuBar):
         if GuiSettingsDialog(self._window, self._app_model).start():
             self.sig_app_settings_changed.emit()
 
+    def _zoom_in(self) -> None:
+        if self._view is not None:
+            self._view.zoom_in()
+        else:
+            self._app_model.zoom_in()
+
+    def _zoom_out(self) -> None:
+        if self._view is not None:
+            self._view.zoom_out()
+        else:
+            self._app_model.zoom_out()
+
+    def _zoom_fit(self) -> None:
+        if self._view is not None:
+            self._view.zoom_fit()
+        else:
+            self._app_model.zoom_fit()
+
     def set_tab(
-        self, app_model: AppModel, circuit_area: CircuitArea, read_only: bool = False
+        self,
+        app_model: AppModel,
+        circuit_area: CircuitArea,
+        view: SubCircuitView | None = None,
     ) -> None:
         """
         The model and the circuit area of the tab that is shown, that the actions work
         on. Delete and Copy follow the selection of the circuit area, Paste the clipboard.
-        A read-only tab (the view of a subcircuit) has no actions that edit the circuit.
+        A read-only tab (the view of a subcircuit) has no actions that edit the circuit,
+        the zoom actions zoom its view.
         """
-        self._read_only = read_only
+        self._view = view
         if app_model is not self._app_model:
             self._app_model.sig_control_notify.disconnect(self.update_actions)
             self._app_model.sig_sim_time_notify.disconnect(self._sim_time_notify)
@@ -454,7 +475,7 @@ class MenuBar(QMenuBar):
         self._vcd_action.setChecked(vcd_on)
         self._vcd_action.setEnabled(not running and self._vcd is not None)
         self._vcd_file_action.setEnabled(not running and vcd_on)
-        if self._read_only:
+        if self._view is not None:
             for action in (
                 self._new_action,
                 self._undo_action,

@@ -470,7 +470,8 @@ class MainWindow(QMainWindow):
         for circuit_tab in self.tabs():
             circuit_tab.circuit_area.set_muted(circuit_tab is not tab)
         self._shown_tab = shown
-        self._menu_bar.set_tab(tab.app_model, tab.circuit_area, isinstance(shown, ViewTab))
+        view = shown.view if isinstance(shown, ViewTab) else None
+        self._menu_bar.set_tab(tab.app_model, tab.circuit_area, view)
         self._menu_bar.set_vcd(tab.vcd)
         self.settings_pane.set_tab(tab.app_model, tab.circuit_area, isinstance(shown, ViewTab))
         self._update_titles(tab)
