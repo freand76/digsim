@@ -671,6 +671,17 @@ input is written next to it. Hover over a cell to see its Yosys name. A Verilog 
 in a subcircuit view has View Netlist and the double-click too. The view is built again
 when the component is reloaded.
 
+The list on the left of the view has the signals of the Verilog (with their widths), the
+types of cells and, for functional blocks, the lines of the Verilog the cells were made
+from, each with how many cells it has. Type in the field above it (or press **Ctrl + F**)
+to find one, skipped letters are fine too: `cnt` finds the count of a counter, `regfile`
+the register file of a processor. A signal has the cells that drive it (an input the
+cells it drives). Select an entry (click it, or press **Enter** for the best match) to
+show its cells in a color, with the wires from them, and the rest dimmed. When the search
+finds just one entry, it is shown right away. **Esc** clears the search. A gate-level
+netlist keeps the names of the signals, not of the gates between them: a signal finds the
+cells that drive it, like the flip-flops of a register.
+
 ![The netlist view of the Verilog counter](images/NetlistView.png)
 
 #### The Verilog editor

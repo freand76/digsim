@@ -15,9 +15,11 @@ from typing import TYPE_CHECKING, Any
 from PySide6.QtCore import QPoint, QPointF, Qt
 from PySide6.QtGui import (
     QBrush,
+    QKeySequence,
     QMouseEvent,
     QPainter,
     QResizeEvent,
+    QShortcut,
     QWheelEvent,
 )
 from PySide6.QtWidgets import (
@@ -29,6 +31,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMenu,
+    QSplitter,
     QVBoxLayout,
     QWidget,
 )
@@ -49,7 +52,7 @@ from digsim.circuit.components import (
 from digsim.circuit.components.atoms import Component, Port
 from digsim.storage_model import LineDataClass
 
-from ._netlist_view import NetlistViewScene
+from ._netlist_view import NetlistSearchPane, NetlistViewScene
 from ._top_bar import SimControlWidget, SimTimeWidget
 from ._view_items import (
     LinesItem,
@@ -63,6 +66,8 @@ from ._view_items import (
 if TYPE_CHECKING:
     from digsim.app.model import AppModel
 
+# The width of the search of a netlist view
+SEARCH_WIDTH = 280
 # The margin around the parts when the view fits them, and the most it zooms in
 FIT_MARGIN = 20
 FIT_MAX = 2.0
@@ -401,8 +406,19 @@ class ViewTab(QWidget):
         self._label = QLabel(bar)
         bar_layout.addWidget(self._label, 1)
         layout.addWidget(bar)
-        self.view = SubCircuitView(self)
-        layout.addWidget(self.view, 1)
+        # A netlist has its search on the left of the view
+        splitter = QSplitter(self)
+        self.search = NetlistSearchPane(splitter)
+        self.view = SubCircuitView(splitter)
+        splitter.addWidget(self.search)
+        splitter.addWidget(self.view)
+        splitter.setStretchFactor(1, 1)
+        splitter.setSizes([SEARCH_WIDTH, 1000])
+        layout.addWidget(splitter, 1)
+        self.search.sig_highlight.connect(self._highlight)
+        QShortcut(QKeySequence("Ctrl+F"), self, self._focus_search).setContext(
+            Qt.ShortcutContext.WidgetWithChildrenShortcut
+        )
         self._scene: SubCircuitViewScene | NetlistViewScene | None = None
         self.refresh()
         app_model.sig_repaint.connect(self._repaint)
@@ -428,8 +444,10 @@ class ViewTab(QWidget):
             self.view.setScene(QGraphicsScene(self))
             self._scene = None
             return
+        self.search.setVisible(isinstance(instance, YosysComponent))
         if isinstance(instance, YosysComponent):
             self._scene = NetlistViewScene(self.app_model, instance)
+            self.search.set_entries(self._scene.entries)
             source = instance.source_file
             name = Path(source).name if source is not None else instance.module_name()
             kind = "functional blocks" if instance.functional else "gates"
@@ -442,6 +460,15 @@ class ViewTab(QWidget):
         self._label.setText(
             f"  {self.title()} ({about}), read-only: the values of the simulation of its circuit"
         )
+
+    def _highlight(self, cells: frozenset[str]) -> None:
+        if isinstance(self._scene, NetlistViewScene):
+            self._scene.highlight(cells)
+
+    def _focus_search(self) -> None:
+        if self.search.isVisible():
+            self.search.field.setFocus()
+            self.search.field.selectAll()
 
     def _view_part(self, part: Component) -> None:
         if not isinstance(self._scene, SubCircuitViewScene):

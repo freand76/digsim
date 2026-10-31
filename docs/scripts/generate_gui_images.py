@@ -293,7 +293,10 @@ def window_screenshots(model: AppModel, window: MainWindow) -> None:
 
 
 def netlist_view_screenshot(model: AppModel, window: MainWindow) -> None:
-    """The netlist view of the Verilog counter, running: its gates, flip-flops and wires"""
+    """
+    The netlist view of the Verilog counter, running: its gates, flip-flops and wires, the
+    flip-flops of the count found with the search
+    """
     with chdir(ROOT):
         model.load_circuit("circuits/yosys_counter/counter_yosys_verilog.circuit")
     model.model_start()
@@ -304,6 +307,10 @@ def netlist_view_screenshot(model: AppModel, window: MainWindow) -> None:
     spin(1500)
     model.sig_view_subcircuit.emit("counter")
     spin(500)
+    # The flip-flops of the count, found with the search
+    (view,) = window.view_tabs()
+    view.search.field.setText("cnt")
+    spin(300)
     window.grab().save(str(IMAGES / "NetlistView.png"))
     model.model_stop()
     spin(300)

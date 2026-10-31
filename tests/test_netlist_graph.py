@@ -18,8 +18,10 @@ from digsim.utils import (
     YosysPort,
     cell_node,
     constant_text,
+    netlist_entries,
     netlist_graph,
     port_node,
+    source_line,
 )
 
 
@@ -115,3 +117,24 @@ def test_a_new_build_has_new_parts():
     parts = component.netlist_parts()
     component.reload_file()
     assert component.netlist_parts() is not parts
+
+
+def test_the_entries_of_a_counter():
+    module = _counter()
+    entries = netlist_entries(module.netnames, module.cells, module.get_nets())
+    by_name = {(entry.kind, entry.name): entry for entry in entries}
+    # The flip-flops drive the count
+    cnt = by_name[("signal", "cnt")]
+    assert cnt.width == 4
+    assert {module.cells[cell].type for cell in cnt.cells} == {"$_DFFE_PP0P_"}
+    assert by_name[("type", "DFFE_PP0P")].cells == cnt.cells
+    # Nothing drives an input: it has the cells it drives
+    assert by_name[("signal", "up")].cells
+    assert all(not name.startswith("$") for kind, name in by_name if kind == "signal")
+    assert cnt.description() == "signal, 4 bits"
+
+
+def test_the_source_line_of_a_cell():
+    assert source_line("$add$./counter.v:14$2") == "counter.v:14"
+    assert source_line("$logic_or$/home/user/traffic_light.sv:53$6") == "traffic_light.sv:53"
+    assert source_line("$abc$652$auto$blifparse.cc:386:parse_blif$653") is None

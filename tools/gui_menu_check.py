@@ -615,6 +615,48 @@ def test_auto_layout_keeps_the_connections_and_is_one_undo_step(gui, circuit):
     gui.model._changed = False
 
 
+def test_the_search_of_a_netlist_view_highlights_its_cells(gui):
+    """A signal found in the search of a netlist view shows its cells, the rest dimmed"""
+    from pathlib import Path
+
+    from PySide6.QtGui import QKeyEvent
+
+    from digsim.app.gui._netlist_view import DIMMED, CellItem
+
+    path = Path(__file__).parent.parent / "circuits" / "yosys_counter"
+    gui.model.load_circuit(str(path / "counter_yosys_verilog.circuit"))
+    spin()
+    gui.model.sig_view_subcircuit.emit("counter")
+    spin()
+    (view,) = gui.window.view_tabs()
+    pane = view.search
+    assert pane.isVisible()
+    pane.field.setText("cnt")
+    spin()
+    # The only match is shown
+    assert pane.list.count() == 1
+    cells = [item for item in view.view.scene().items() if isinstance(item, CellItem)]
+    lit = [item for item in cells if item.highlight is not None]
+    assert len(lit) == 4
+    assert all(item.opacity() == DIMMED for item in cells if item not in lit)
+    # A selected entry is shown instead
+    pane.field.clear()
+    spin()
+    xor = next(
+        row for row in range(pane.list.count()) if pane.list.item(row).text().startswith("XOR")
+    )
+    pane.list.setCurrentRow(xor)
+    spin()
+    assert len([item for item in cells if item.highlight is not None]) == 3
+    # Esc clears the search and the highlight
+    escape = QKeyEvent(QEvent.Type.KeyPress, Qt.Key.Key_Escape, Qt.KeyboardModifier.NoModifier)
+    QCoreApplication.sendEvent(pane.field, escape)
+    spin()
+    assert pane.field.text() == ""
+    assert all(item.highlight is None and item.opacity() == 1.0 for item in cells)
+    gui.model._changed = False
+
+
 def test_double_click_views_a_subcircuit_while_it_runs(gui):
     from pathlib import Path
 

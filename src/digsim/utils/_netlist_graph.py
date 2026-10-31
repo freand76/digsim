@@ -9,8 +9,9 @@ the ports of the nodes (pins), each with the bits (nets) it carries
 from __future__ import annotations
 
 import dataclasses
+import re
 
-from ._yosys_netlist import NET_TYPE, Nets, YosysCell, YosysPort
+from ._yosys_netlist import NET_TYPE, Nets, YosysCell, YosysNetname, YosysPort
 
 
 @dataclasses.dataclass(frozen=True)
@@ -126,3 +127,73 @@ def netlist_graph(
         },
         constants=constants,
     )
+
+
+@dataclasses.dataclass(frozen=True)
+class NetlistEntry:
+    """
+    A named part of a netlist, and its cells: a signal of the Verilog (the cells that
+    drive it, or else the cells it drives), a type of cell, or a line of the source (the
+    cells made from it)
+    """
+
+    kind: str
+    name: str
+    cells: frozenset[str]
+    width: int = 0
+
+    def description(self) -> str:
+        """What it is, like "signal, 512 bits" or "cell type" """
+        if self.kind == "signal":
+            return f"signal, {self.width} bit{'s' if self.width != 1 else ''}"
+        return {"type": "cell type", "line": "source line"}.get(self.kind, self.kind)
+
+
+# A cell made from a line of the source, like $add$./counter.v:14$2 (a functional cell)
+_SOURCE_LINE = re.compile(r"^\$[A-Za-z_]+\$(?P<file>[^$]+?):(?P<line>\d+)\$")
+
+
+def source_line(cell_name: str) -> str | None:
+    """The file and line a cell was made from, from its name, like "counter.v:14" """
+    found = _SOURCE_LINE.match(cell_name)
+    if found is None:
+        return None
+    return f"{found['file'].replace(chr(92), '/').rsplit('/', 1)[-1]}:{found['line']}"
+
+
+def netlist_entries(
+    netnames: dict[str, YosysNetname], cells: dict[str, YosysCell], nets: Nets
+) -> list[NetlistEntry]:
+    """
+    The signals, the types of cells and the source lines of a module (with its nets, see
+    YosysModule.get_nets()), each with the cells (of 'cells') that are part of it.
+    Signals without cells are left out.
+    """
+    entries: list[NetlistEntry] = []
+    readers: dict[NET_TYPE, set[str]] = {}
+    for net, sinks in nets.sinks.items():
+        readers[net] = {sink.cell for sink in sinks if sink.cell in cells}
+    for name, netname in sorted(netnames.items()):
+        if netname.hide_name or name.startswith("$"):
+            continue
+        drivers: set[str] = set()
+        read: set[str] = set()
+        for net in netname.bits:
+            source = nets.source.get(net)
+            if source is not None and source.cell in cells:
+                drivers.add(source.cell)
+            drivers |= {d.cell for d in nets.inout_drivers.get(net, []) if d.cell in cells}
+            read |= readers.get(net, set())
+        found = drivers or read
+        if found:
+            entries.append(NetlistEntry("signal", name, frozenset(found), len(netname.bits)))
+    by_type: dict[str, set[str]] = {}
+    by_line: dict[str, set[str]] = {}
+    for name, cell in cells.items():
+        by_type.setdefault(cell.component_type().strip("_"), set()).add(name)
+        line = source_line(name)
+        if line is not None:
+            by_line.setdefault(line, set()).add(name)
+    entries += [NetlistEntry("type", t, frozenset(c)) for t, c in sorted(by_type.items())]
+    entries += [NetlistEntry("line", n, frozenset(c)) for n, c in sorted(by_line.items())]
+    return entries
