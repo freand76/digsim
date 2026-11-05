@@ -675,14 +675,16 @@ class NativeEngine:
         self._native_ports = [
             port for port, kind in zip(self.ports, kinds, strict=True) if kind != _PY
         ]
-        classes: dict[type[Port], type[Port]] = {}
+        classes: dict[tuple[type[Port], bool], type[Port]] = {}
         for port, kind in zip(self.ports, kinds, strict=True):
             if kind == _PY:
                 continue
-            cls = type(port)
-            if cls not in classes:
-                classes[cls] = self._native_class(cls, driven=kind != _OUT)
-            port.__class__ = classes[cls]
+            # An output can't be driven, also one of a cell in a block
+            driven = kind != _OUT and not (kind == _BLOCK_INNER and port.is_output())
+            key = (type(port), driven)
+            if key not in classes:
+                classes[key] = self._native_class(type(port), driven=driven)
+            port.__class__ = classes[key]
         # A port with several drivers has the set_value() of its _Drivers, which resolves
         # in Python: the engine does it for the ports it sets
         self._resolved_ports = [

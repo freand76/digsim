@@ -10,7 +10,7 @@ engine (the tests run with both engines). A netlist that can't be a block keeps 
 import pytest
 
 from digsim.circuit import Circuit, _native
-from digsim.circuit.components import YosysComponent
+from digsim.circuit.components import GND, VDD, YosysComponent
 from digsim.circuit.components.atoms import Component, PortIn
 from digsim.utils import YosysNetlist
 
@@ -224,3 +224,24 @@ def test_latch_sees_data_before_enable():
     component.port("in").value = 0b00
     circuit.run(ns=100)
     assert component.q.value == 0
+
+
+def test_gnd_and_vdd_next_to_a_block():
+    """GND and VDD outside a block (their outputs can't be driven, like the outputs of the
+    cells in a block) drive the inputs of a block"""
+    circuit = Circuit()
+    component = YosysComponent(circuit)
+    component.create_from_netlist(_counter())
+    vdd = VDD(circuit)
+    gnd = GND(circuit)
+    vdd.O.wire = component.rst
+    circuit.init()
+    circuit.run(ns=100)
+    _clock(circuit, component)
+    assert component.q.value == 0
+    vdd.O.disconnect(component.rst)
+    gnd.O.wire = component.rst
+    circuit.init()
+    circuit.run(ns=100)
+    _clock(circuit, component, 3)
+    assert component.q.value == 3
