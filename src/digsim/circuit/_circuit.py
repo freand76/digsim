@@ -291,7 +291,7 @@ class Circuit:
         if native is None:
             return
         self._engine = None
-        events, latest, time_ns = native.close()
+        events, latest, time_ns, after = native.close()
         if not keep_events:
             return
         self._time_ns = time_ns
@@ -306,6 +306,8 @@ class Circuit:
             self._circuit_events.append(event)
             if latest.get(id(port)) == seq:
                 self._events_by_port[port] = event  # type: ignore[index]
+        for call in after:
+            call()
 
     def _native_engine(self) -> Any:
         """The native engine, if the circuit has one and its wires haven't changed"""
@@ -380,6 +382,20 @@ class Circuit:
         Returns:
             True if the run stopped for a single step.
         """
+        native = self._engine
+        if native is not None and native.generation == connection_generation.value:
+            # The native engine: it runs to the stop time (also after its last event)
+            engine = native.engine
+            if s is None and ms is None and us is None and ns is not None:
+                stop_time_ns = engine.time + round(ns)
+            else:
+                stop_time_ns = engine.time + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
+            vcd = self._vcd
+            single_step_stop = engine.run(stop_time_ns, single_step, vcd)
+            self._time_ns = engine.time
+            if vcd is not None:
+                vcd.flush()
+            return bool(single_step_stop)
         stop_time_ns = self.time_ns + self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
         engine = self._native_engine()
         if engine is not None:
