@@ -53,6 +53,9 @@ try:
     import digsim_native  # type: ignore[import-untyped, import-not-found, unused-ignore]
 except ImportError:
     digsim_native = None
+# An older digsim-native, without blocks, doesn't take the arguments of this engine
+if digsim_native is not None and not hasattr(digsim_native.Engine, "block_default_state"):
+    digsim_native = None
 
 
 def mode() -> str:
