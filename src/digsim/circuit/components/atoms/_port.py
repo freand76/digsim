@@ -250,10 +250,9 @@ class Port(abc.ABC):
         Return True if a rising edge has occurred
         Note: This function can only be called once per 'update'
         """
-        rising_edge = False
-        if self.value == 1 and self._edge_detect_value == 0:
-            rising_edge = True
-        self._edge_detect_value = self.value
+        value = self.value
+        rising_edge = value == 1 and self._edge_detect_value == 0
+        self._edge_detect_value = value
         return rising_edge
 
     def is_falling_edge(self) -> bool:
@@ -261,10 +260,9 @@ class Port(abc.ABC):
         Return True if a falling edge has occurred
         Note: This function can only be called once per 'update'
         """
-        falling_edge = False
-        if self.value == 0 and self._edge_detect_value == 1:
-            falling_edge = True
-        self._edge_detect_value = self.value
+        value = self.value
+        falling_edge = value == 0 and self._edge_detect_value == 1
+        self._edge_detect_value = value
         return falling_edge
 
     @abc.abstractmethod
