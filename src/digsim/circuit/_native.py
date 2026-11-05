@@ -12,6 +12,11 @@ DIGSIM_ENGINE selects the engine:
   Python
 - "python": no native code
 
+The native engine simulates a Yosys component as one compiled block (see _block_plan()),
+and the combinational cells it simulates without delays between them. DIGSIM_BLOCKS=0
+turns both off: then every cell has its delay and events, exactly like in the Python
+engine (the same VCD file).
+
 The ports that the native engine simulates get a subclass of their class while it runs:
 their value is read from the engine, and setting them sets them in the engine.
 """
@@ -315,6 +320,11 @@ class _BlockPlan(NamedTuple):
     bits: dict[int, tuple[int, int]]
 
 
+def _compiled() -> bool:
+    """Blocks and levels of cells (DIGSIM_BLOCKS=0 for the events of every cell)"""
+    return os.environ.get("DIGSIM_BLOCKS") != "0"
+
+
 def _block_plan(component: YosysComponent) -> _BlockPlan | None:
     """
     The block of a Yosys component, None if it can't be one: the native engine simulates
@@ -323,7 +333,7 @@ def _block_plan(component: YosysComponent) -> _BlockPlan | None:
     netlist with a combinational loop, tristate buffers or inout ports, or cells it
     doesn't have, keeps the cells.
     """
-    if os.environ.get("DIGSIM_BLOCKS") == "0":
+    if not _compiled():
         return None
     try:
         parts = component.netlist_parts()
@@ -656,6 +666,7 @@ class NativeEngine:
                 for number, plan in enumerate(self.blocks)
             ],
             block_bits,
+            _compiled(),
         )
         self.generation = connection_generation.value
         for nid, port in enumerate(self.ports):

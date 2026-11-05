@@ -4,8 +4,10 @@
 
 # Run the 6502 example and the rewire test with the Python and the native engine, and
 # check that their output and VCD files are byte-identical. Prints the run times. Runs
-# .venv/bin/python, or $PYTHON.
+# .venv/bin/python, or $PYTHON. The native engine runs with DIGSIM_BLOCKS=0: every cell
+# with its delay and events, like in Python (blocks have no delays, see fuzz_blocks.sh).
 set -e
+export DIGSIM_BLOCKS=0
 cd "$(dirname "$0")/../.."
 OUT=$(mktemp -d)
 for args in "" "--functional" "--signals" "--functional --signals"; do

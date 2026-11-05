@@ -55,3 +55,4 @@ jobs:
       run: |
         PYTHON=python sh tools/native/compare_engines.sh
         PYTHON=python sh tools/native/fuzz_engines.sh 1 10
+        PYTHON=python sh tools/native/fuzz_blocks.sh 1 10
