@@ -12,21 +12,30 @@ DIGSIM_ENGINE selects the engine:
   Python
 - "python": no native code
 
+The native engine simulates a Yosys component as one compiled block (see _block_plan()),
+and the combinational cells it simulates without delays between them. DIGSIM_BLOCKS=0
+turns both off: then every cell has its delay and events, exactly like in the Python
+engine (the same VCD file).
+
 The ports that the native engine simulates get a subclass of their class while it runs:
 their value is read from the engine, and setting them sets them in the engine.
 """
 
 from __future__ import annotations
 
+import functools
 import os
-from typing import TYPE_CHECKING, Any
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from .components import _yosys_atoms as atoms
 from .components import _yosys_functional as functional
 from .components._static_level import GND, VDD
-from .components._yosys_component import SignalPort, StatePort
+from .components._yosys_component import SignalPort, StatePort, YosysComponent
 from .components.atoms import (
+    VALUE_TYPE,
     Component,
+    DigsimException,
     Port,
     PortIn,
     PortMultiBitWire,
@@ -43,6 +52,9 @@ if TYPE_CHECKING:
 try:
     import digsim_native  # type: ignore[import-untyped, import-not-found, unused-ignore]
 except ImportError:
+    digsim_native = None
+# An older digsim-native, without blocks, doesn't take the arguments of this engine
+if digsim_native is not None and not hasattr(digsim_native.Engine, "block_default_state"):
     digsim_native = None
 
 
@@ -181,7 +193,7 @@ _FUNCTIONAL: dict[type[functional.FunctionalCell], int] = {
     cls: kind for kind, classes in enumerate(_FUNCTIONAL_CLASSES) for cls in classes
 }
 # Port kinds, as in src/lib.rs of digsim-native
-_PY, _IN, _WIRE, _OUT, _BIT, _BUS, _CELL_INPUT, _WORD = range(8)
+_PY, _IN, _WIRE, _OUT, _BIT, _BUS, _CELL_INPUT, _WORD, _BLOCK_PIN, _BLOCK_INNER = range(10)
 # Bus ports that work the same natively, they don't change how the value is handled
 _BUS_CLASSES = (PortMultiBitWire, SignalPort, StatePort)
 _NONE = 2**32 - 1
@@ -285,19 +297,213 @@ def _bus_can_be_native(port: Port) -> bool:
     return all(type(bit) is PortWireBit and _driven_natively(bit) for bit in bits)
 
 
+class _BlockCell(NamedTuple):
+    """A cell of a block: its component, and its arguments for the engine but the word cell"""
+
+    component: Component
+    op: int  # 0 functional, 1 gate, 2 constant
+    kind: int
+    inputs: list[tuple[list[tuple[int, int]], bool]]
+    outputs: list[int]
+    stateful: bool
+    levels: list[int]
+    clock: int
+    value: int
+
+
+class _BlockPlan(NamedTuple):
+    """A Yosys component compiled to one block of the engine (see src/block.rs)"""
+
+    component: YosysComponent
+    members: set[Component]
+    widths: list[int]
+    cells: list[_BlockCell]
+    ranks: list[int]
+    # The (slot, bit) of each port of the members, by id()
+    bits: dict[int, tuple[int, int]]
+
+
+def _compiled() -> bool:
+    """Blocks and levels of cells (DIGSIM_BLOCKS=0 for the events of every cell)"""
+    return os.environ.get("DIGSIM_BLOCKS") != "0"
+
+
+def _block_plan(component: YosysComponent) -> _BlockPlan | None:
+    """
+    The block of a Yosys component, None if it can't be one: the native engine simulates
+    it as one block, the combinational cells in the order of their ranks without events
+    in between (like a compiled simulator), instead of with a delay for each cell. A
+    netlist with a combinational loop, tristate buffers or inout ports, or cells it
+    doesn't have, keeps the cells.
+    """
+    if not _compiled():
+        return None
+    try:
+        parts = component.netlist_parts()
+    except DigsimException:
+        return None
+    if any(port.is_inout for port in parts.ports.values()):
+        return None
+    members = set(parts.components.values())
+    widths = [1, 1]  # GND and VDD
+    net_bits: dict[Any, tuple[int, int]] = {"0": (0, 0), "1": (1, 0)}
+    for module_port in parts.ports.values():
+        if module_port.is_output:
+            continue
+        slot = len(widths)
+        widths.append(len(module_port.bits))
+        for bit, net in enumerate(module_port.bits):
+            net_bits.setdefault(net, (slot, bit))
+    # The cells and their output slots, then their inputs (they need all outputs)
+    found: list[tuple[Component, Any, list[int]]] = []
+    for cellname, yosys_cell in parts.cells.items():
+        cell_component = parts.components.get(cellname)
+        if cell_component is None:
+            continue
+        outputs: list[int] = []
+        if isinstance(cell_component, functional.FunctionalCell):
+            if (
+                not _word_cell_can_be_native(cell_component)
+                or isinstance(cell_component, functional.Tribuf)
+                or cell_component._word_outputs.keys() - cell_component._outputs.keys()
+            ):
+                return None
+            for name in cell_component._outputs:
+                slot = len(widths)
+                widths.append(len(cell_component._bits[name]))
+                outputs.append(slot)
+                for bit, net in enumerate(yosys_cell.connections[name]):
+                    net_bits[net] = (slot, bit)
+        else:
+            gate = _cell(cell_component)
+            if gate is None or gate[0] in (26, 27) or not _can_be_native(cell_component):
+                return None
+            output = cell_component.outports()[0]
+            slot = len(widths)
+            widths.append(1)
+            outputs.append(slot)
+            net_bits[yosys_cell.connections[output.name()][0]] = (slot, 0)
+        found.append((cell_component, yosys_cell, outputs))
+
+    def net_bit(net: Any) -> tuple[int, int]:
+        return net_bits.get(net, (_NONE, 0))
+
+    bits: dict[int, tuple[int, int]] = {}
+    cells: list[_BlockCell] = []
+    for cell_component, yosys_cell, outputs in found:
+        inputs: list[tuple[list[tuple[int, int]], bool]] = []
+        if isinstance(cell_component, functional.FunctionalCell):
+            stateful = isinstance(cell_component, functional._Register)
+            for name in cell_component._inputs:
+                nets = yosys_cell.connections[name]
+                update = name in cell_component._updating_inputs
+                if not stateful and not update:
+                    return None
+                inputs.append(([net_bit(net) for net in nets], update))
+                for bit_port, net in zip(cell_component._bits[name], nets, strict=True):
+                    bits[id(bit_port)] = net_bit(net)
+            for name, slot in zip(cell_component._outputs, outputs, strict=True):
+                for bit, bit_port in enumerate(cell_component._bits[name]):
+                    bits[id(bit_port)] = (slot, bit)
+            cells.append(
+                _BlockCell(cell_component, 0, 0, inputs, outputs, stateful, [0] * 6, 2, 0)
+            )
+            continue
+        kind, ports, levels = _cell(cell_component)  # type: ignore[misc]
+        stateful = kind >= 19
+        names = _GATES[type(cell_component)][1] if not stateful else _STATEFUL_INPUTS
+        names_list = list(names) if not stateful else list(_STATEFUL_INPUTS)
+        for name, gate_port in zip(names_list, ports, strict=True):
+            if gate_port is None:
+                inputs.append(([(_NONE, 0)], False))
+                continue
+            update = type(gate_port) is PortIn
+            if not stateful and not update:
+                return None
+            net = yosys_cell.connections[name][0]
+            inputs.append(([net_bit(net)], update))
+            bits[id(gate_port)] = net_bit(net)
+        bits[id(cell_component.outports()[0])] = (outputs[0], 0)
+        clock = _CODES.get(getattr(cell_component, "_old_C_level", "X"), 2)
+        cells.append(
+            _BlockCell(cell_component, 1, kind, inputs, outputs, stateful, levels, clock, 0)
+        )
+    for value, name in ((0, "GND"), (1, "VDD")):
+        constant = parts.components[name]
+        bits[id(constant.port("O"))] = (value, 0)
+        cells.append(_BlockCell(constant, 2, 27, [], [value], True, [0] * 6, 2, value))
+    # The ranks of the combinational cells: above the cells that drive them
+    producer = {slot: number for number, c in enumerate(cells) for slot in c.outputs}
+    drivers: list[set[int]] = []
+    for block_cell in cells:
+        sources = set()
+        if not block_cell.stateful:
+            for input_bits, _update in block_cell.inputs:
+                for slot, _bit in input_bits:
+                    producer_cell = producer.get(slot)
+                    if producer_cell is not None and not cells[producer_cell].stateful:
+                        sources.add(producer_cell)
+        drivers.append(sources)
+    driven: list[list[int]] = [[] for _ in cells]
+    for number, sources in enumerate(drivers):
+        for source in sources:
+            driven[source].append(number)
+    ranks = [-1] * len(cells)
+    waiting = [len(sources) for sources in drivers]
+    ready = [n for n, c in enumerate(cells) if not c.stateful and not waiting[n]]
+    for number in ready:
+        ranks[number] = 0
+    while ready:
+        number = ready.pop()
+        for target in driven[number]:
+            ranks[target] = max(ranks[target], ranks[number] + 1)
+            waiting[target] -= 1
+            if not waiting[target]:
+                ready.append(target)
+    if any(rank < 0 for rank, c in zip(ranks, cells, strict=True) if not c.stateful):
+        return None  # A combinational loop
+    ranks = [_NONE if c.stateful else rank for rank, c in zip(ranks, cells, strict=True)]
+    for member in members:
+        for member_port in member.ports:
+            if not member_port.is_input():
+                continue
+            if member_port.wired_ports or member_port._drivers is not None:
+                return None
+            member_driver = member_port.get_driver()
+            # Driven from outside: the bit must be one of an input of the module
+            outside = member_driver is not None and member_driver.parent() not in members
+            if outside and bits.get(id(member_port), (_NONE, 0))[0] == _NONE:
+                return None
+    return _BlockPlan(component, members, widths, cells, ranks, bits)
+
+
 class NativeEngine:
     """The native engine of a circuit, and the Python ports it took over"""
 
     def __init__(self, circuit: Circuit, time_ns: int) -> None:
         components = list(circuit._components.values())
+        # The Yosys components compiled to blocks, and the block of each of their cells
+        self.blocks: list[_BlockPlan] = []
+        self._member_block: dict[Component, int] = {}
+        for component in components:
+            if isinstance(component, YosysComponent):
+                plan = _block_plan(component)
+                if plan is not None:
+                    for member in plan.members:
+                        self._member_block[member] = len(self.blocks)
+                    self.blocks.append(plan)
+        self._blocks_defaulted: set[int] = set()
+        members = self._member_block
         cells: dict[Component, tuple[int, list[Port | None], list[int]]] = {}
         for component in components:
+            if component in members:
+                continue
             found = _cell(component)
             if found is not None and _can_be_native(component):
                 cells[component] = found
         self.cells = list(cells)
         cell_index = {component: index for index, component in enumerate(self.cells)}
-        self.word_cells = _native_word_cells(components)
+        self.word_cells = _native_word_cells([c for c in components if c not in members])
         self._word_index = {cell: number for number, cell in enumerate(self.word_cells)}
 
         # Every port that can have an event or be driven: the components' ports (also the
@@ -349,7 +555,56 @@ class NativeEngine:
                 word_output = word_cell_component._word_outputs.get(name)
                 if word_output is not None:
                     word_ports[id(word_output)] = output_number
+        # The ports of the blocks: (slot, bit) of each, and the pins
+        block_bits: list[tuple[int, int]] = []
+        block_pins: list[list[tuple[int, int, int]]] = [[] for _ in self.blocks]
+        block_vcd: list[list[tuple[int, int, int]]] = [[] for _ in self.blocks]
+        # The ports of the blocks that drive ports outside, and those they drive
+        self._outside: dict[int, list[Port]] = {}
+        for nid, port in enumerate(self.ports):
+            number = members.get(port.parent())
+            if number is None:
+                continue
+            plan = self.blocks[number]
+            slot, bit_index = plan.bits.get(id(port), (_NONE, 0))
+            if port.is_output():
+                outside = [t for t in port.wired_ports if t.parent() not in plan.members]
+                if outside and slot != _NONE:
+                    self._outside[nid] = outside
+                    block_pins[number].append((slot, bit_index, nid))
+                if slot != _NONE and not isinstance(port, functional._WordOut):
+                    block_vcd[number].append((slot, bit_index, nid))
+        outside_ids = {id(self.ports[nid]) for nid in self._outside}
+        # One input of a block for each bit it gets from outside: the ports of the other
+        # cells on the bit read it from the block
+        self._pins: set[int] = set()
+        seen: set[tuple[int, int, int]] = set()
         for port in self.ports:
+            number = members.get(port.parent())
+            if number is None or port.is_output():
+                continue
+            plan = self.blocks[number]
+            source = port.get_driver()
+            if source is None or source.parent() in plan.members:
+                continue
+            key = (number, *plan.bits[id(port)])
+            if key not in seen:
+                seen.add(key)
+                self._pins.add(id(port))
+        for port in self.ports:
+            number = members.get(port.parent())
+            if number is not None:
+                plan = self.blocks[number]
+                owners.append(number)
+                aux.append(len(block_bits))
+                block_bits.append(plan.bits.get(id(port), (_NONE, 0)))
+                if id(port) in self._pins:
+                    kinds.append(_BLOCK_PIN)
+                elif id(port) in outside_ids:
+                    kinds.append(_OUT)
+                else:
+                    kinds.append(_BLOCK_INNER)
+                continue
             cell = cell_index.get(port.parent())
             aux.append(word_ports.get(id(port), 0))
             word_cell = self._word_index.get(port.parent())  # type: ignore[call-overload]
@@ -392,7 +647,10 @@ class NativeEngine:
             kinds,
             owners,
             [_CODES.get(port._value, 2) if port.width == 1 else 2 for port in self.ports],
-            [[index[id(target)] for target in port.wired_ports] for port in self.ports],
+            [
+                [index[id(target)] for target in self._wired(nid, port)]
+                for nid, port in enumerate(self.ports)
+            ],
             [
                 [index[id(driver)] for driver in port._drivers.drivers]  # type: ignore[union-attr]
                 if kind != _PY and _resolved(port)
@@ -406,6 +664,12 @@ class NativeEngine:
             aux,
             [self._word_cell(cell, index) for cell in self.word_cells],
             time_ns,
+            [
+                self._block_args(plan, block_pins[number], block_vcd[number])
+                for number, plan in enumerate(self.blocks)
+            ],
+            block_bits,
+            _compiled(),
         )
         self.generation = connection_generation.value
         for nid, port in enumerate(self.ports):
@@ -414,14 +678,16 @@ class NativeEngine:
         self._native_ports = [
             port for port, kind in zip(self.ports, kinds, strict=True) if kind != _PY
         ]
-        classes: dict[type[Port], type[Port]] = {}
+        classes: dict[tuple[type[Port], bool], type[Port]] = {}
         for port, kind in zip(self.ports, kinds, strict=True):
             if kind == _PY:
                 continue
-            cls = type(port)
-            if cls not in classes:
-                classes[cls] = self._native_class(cls, driven=kind != _OUT)
-            port.__class__ = classes[cls]
+            # An output can't be driven, also one of a cell in a block
+            driven = kind != _OUT and not (kind == _BLOCK_INNER and port.is_output())
+            key = (type(port), driven)
+            if key not in classes:
+                classes[key] = self._native_class(type(port), driven=driven)
+            port.__class__ = classes[key]
         # A port with several drivers has the set_value() of its _Drivers, which resolves
         # in Python: the engine does it for the ports it sets
         self._resolved_ports = [
@@ -431,6 +697,77 @@ class NativeEngine:
         ]
         for port in self._resolved_ports:
             port.set_value = self._resolved_set_value(port)  # type: ignore[method-assign]
+        # The Python ports that the engine sets itself, without calling their set_value()
+        fast: list[tuple[int, int, Callable[[], None] | None]] = []
+        for nid, (port, kind) in enumerate(zip(self.ports, kinds, strict=True)):
+            if kind != _PY or port._drivers is not None:
+                continue
+            if (
+                type(port) is PortOutDelta
+                and not port._update_parent
+                and "delta_cycle" not in port.__dict__
+            ):
+                # Its events set the ports it drives in the engine
+                fast.append((nid, 3, None))
+                continue
+            if port.wired_ports or "set_value" in port.__dict__:
+                continue
+            if type(port) is PortIn:
+                fast.append((nid, 1, port.parent().update))
+            elif type(port) is PortWire:
+                fast.append((nid, 2, None))
+        self.engine.set_fast_ports(fast)
+
+    def _wired(self, nid: int, port: Port) -> list[Port]:
+        """The ports a port drives in the engine: a block drives its cells itself"""
+        members = self._member_block
+        if port.parent() in members:
+            return self._outside.get(nid, [])
+        return [t for t in port.wired_ports if t.parent() not in members or id(t) in self._pins]
+
+    def _block_args(
+        self,
+        plan: _BlockPlan,
+        pins: list[tuple[int, int, int]],
+        vcd: list[tuple[int, int, int]],
+    ) -> tuple[Any, ...]:
+        """A block for the engine"""
+        cells = []
+        for cell, rank in zip(plan.cells, plan.ranks, strict=True):
+            word = None
+            if cell.op == 0:
+                component = cell.component
+                assert isinstance(component, functional.FunctionalCell)
+                inputs = [
+                    (len(component._bits[name]), name in component._updating_inputs, w[0], w[1])
+                    for name, w in component._inputs.items()
+                ]
+                outputs: list[tuple[Any, ...]] = [
+                    (len(component._bits[name]), [], 0, None, [], last)
+                    for name, last in component._outputs.items()
+                ]
+                parameters = {name: component.param(name) for name in component._cell.parameters}
+                q = getattr(component, "_q", (0, 0))
+                clock = _CODES.get(getattr(component, "_old_clock", "X"), 2)
+                kind = _FUNCTIONAL[type(component)]
+                word = (kind, inputs, outputs, parameters, q, clock, True)
+                old_clock = clock
+            else:
+                old_clock = cell.clock
+            cells.append(
+                (
+                    cell.op,
+                    cell.kind,
+                    cell.inputs,
+                    cell.outputs,
+                    rank,
+                    word,
+                    cell.levels,
+                    old_clock,
+                    cell.value,
+                )
+            )
+        return (plan.widths, cells, pins, vcd)
 
     def _word_cell(
         self, cell: functional.FunctionalCell, index: dict[int, int]
@@ -476,6 +813,12 @@ class NativeEngine:
 
     def default_state(self, component: Component) -> bool:
         """Set the default state of a component the engine simulates, False if it doesn't"""
+        block = self._member_block.get(component)
+        if block is not None:
+            if block not in self._blocks_defaulted:
+                self._blocks_defaulted.add(block)
+                self.engine.block_default_state(block)
+            return True
         number = self._word_index.get(component)  # type: ignore[call-overload]
         if number is None:
             return False
@@ -501,8 +844,17 @@ class NativeEngine:
         def set_raw(port: Port, value: Any) -> None:
             engine.set_raw(port._nid, value)  # type: ignore[attr-defined]
 
-        namespace: dict[str, Any] = {"_value": property(get_value, set_raw)}
+        # Read in the engine without a Python call (engine.get() reads the _nid of the port)
+        def set_value_of(port: Port, value: Any) -> None:
+            port.set_value(value)
+
+        namespace: dict[str, Any] = {
+            "_value": property(engine.get, set_raw),
+            "value": property(engine.get, set_value_of),
+        }
         if driven:
+            # Port.value = x calls set_value(), the engine's for a port it drives
+            namespace["value"] = property(engine.get, engine.put)
             base_set_value = cls.set_value
 
             def set_value(port: Port, value: Any) -> None:
@@ -528,13 +880,17 @@ class NativeEngine:
             self.ports.append(port)
         return int(nid)
 
-    def close(self) -> tuple[list[tuple[int, int, Port, Any]], dict[int, int], int]:
+    def close(
+        self,
+    ) -> tuple[list[tuple[int, int, Port, Any]], dict[int, int], int, list[Callable[[], None]]]:
         """
         Give the ports back to Python. Returns the events in the order of the heap as
         (time, seq, port, value), the seq of the latest event of each port (by id()),
-        and the time.
+        the time, and what to call when the Python engine has the events: the cells of a
+        block that wait for a settle make their events.
         """
         events, latest, clocks = self.engine.export()
+        block_states = [self.engine.export_block(number) for number in range(len(self.blocks))]
         for port in self._resolved_ports:
             # Unless a removed driver left it with one, it resolves in Python again
             if port._drivers is not None:
@@ -561,9 +917,66 @@ class NativeEngine:
                 cell._old_clock = clock
             if isinstance(cell, functional.Tribuf):
                 cell._driving = driving
+        after: list[Callable[[], None]] = []
+        for plan, states in zip(self.blocks, block_states, strict=True):
+            after.extend(_restore_block(plan, states))
         ports = self.ports
         return (
             [(time, seq, ports[nid], value) for time, seq, nid, value in events],
             {id(ports[nid]): seq for nid, seq in enumerate(latest) if seq is not None},
             self.engine.time,
+            after,
         )
+
+
+def _word_of(ports: list[Port]) -> tuple[int, int]:
+    """The bits and the undefined bits of the values of ports"""
+    bits = undefined = 0
+    for number, port in enumerate(ports):
+        value = port._value
+        if value == 1:
+            bits |= 1 << number
+        elif value != 0:
+            undefined |= 1 << number
+    return bits, undefined
+
+
+def _restore_block(
+    plan: _BlockPlan, states: list[tuple[tuple[int, int] | None, Any, bool]]
+) -> list[Callable[[], None]]:
+    """
+    The state of the cells of a block in Python, from the values of their ports (back in
+    Python) and the state of the engine. Returns what the cells that wait for a settle do
+    then: a flip-flop sets its new output, a combinational cell updates.
+    """
+    after: list[Callable[[], None]] = []
+    for cell, (q, clock, waiting) in zip(plan.cells, states, strict=True):
+        component = cell.component
+        if isinstance(component, functional.FunctionalCell):
+            for name, word in component._inputs.items():
+                word[0], word[1] = _word_of(component._bits[name])
+            for name in component._outputs:
+                component._outputs[name] = _word_of(component._bits[name])
+            for name, word_output in component._word_outputs.items():
+                bits, undefined = component._outputs[name]  # type: ignore[misc]
+                word_output._value = bits | (undefined << len(component._bits[name]))
+            if isinstance(component, functional._Register):
+                component._old_clock = clock
+                if q is not None:
+                    component._q = q
+                    if waiting:
+                        after.append(functools.partial(component.write, "Q", q))
+            elif waiting:
+                after.append(component.update)
+        elif cell.op == 1:
+            if hasattr(component, "_old_C_level"):
+                component._old_C_level = clock  # type: ignore[attr-defined]
+            if waiting and cell.stateful and q is not None:
+                code: VALUE_TYPE = "X" if q[1] & 1 else q[0] & 1
+                output = component.outports()[0]
+                after.append(functools.partial(output.set_value, code))
+            elif waiting:
+                after.append(component.update)
+        elif waiting:
+            after.append(component.default_state)
+    return after

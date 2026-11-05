@@ -4,9 +4,11 @@
 
 # Run the random circuits of fuzz_gates.py and fuzz_functional.py with the Python and the
 # native engine, and check that their output and VCD files are byte-identical. Runs
-# .venv/bin/python, or $PYTHON.
+# .venv/bin/python, or $PYTHON. The native engine runs with DIGSIM_BLOCKS=0: every cell
+# with its delay and events, like in Python (blocks have no delays, see fuzz_blocks.sh).
 # Usage: sh tools/native/fuzz_engines.sh [first seed] [last seed]
 set -e
+export DIGSIM_BLOCKS=0
 cd "$(dirname "$0")/../.."
 OUT=$(mktemp -d)
 for script in fuzz_gates.py fuzz_functional.py; do
