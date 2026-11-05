@@ -684,9 +684,17 @@ class NativeEngine:
         # The Python ports that the engine sets itself, without calling their set_value()
         fast: list[tuple[int, int, Callable[[], None] | None]] = []
         for nid, (port, kind) in enumerate(zip(self.ports, kinds, strict=True)):
-            if kind != _PY or port._drivers is not None or port.wired_ports:
+            if kind != _PY or port._drivers is not None:
                 continue
-            if "set_value" in port.__dict__:
+            if (
+                type(port) is PortOutDelta
+                and not port._update_parent
+                and "delta_cycle" not in port.__dict__
+            ):
+                # Its events set the ports it drives in the engine
+                fast.append((nid, 3, None))
+                continue
+            if port.wired_ports or "set_value" in port.__dict__:
                 continue
             if type(port) is PortIn:
                 fast.append((nid, 1, port.parent().update))
