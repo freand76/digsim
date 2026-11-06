@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## vx.x.x
+## v1.11.0
  - Native engine: a Clock (outside the GUI) runs in the engine, its edges don't call Python (digsim-native 0.3.0)
  - Circuit.run_until_edge(rising=clock) (or falling=clock) runs through the next edge of a Clock, to just before its next edge, to drive a test bench by a clock instead of setting a clock input. With a port, it runs to the edge of the port. Clock.next_edge_ns() is the time of its next edge
  - Native engine: a Verilog (Yosys) component is simulated as one compiled block, its cells in the order of their ranks without events and delays between them (digsim-native 0.2.0). The RV32E processor of rv32e runs 4.7 times faster with functional blocks and 10 times with gates, about 50 and 100 times faster than in Python. Inside a block there are no delays (the outputs change 1 ns after an input), so VCD files differ from the Python engine's, the settled values are the same. DIGSIM_BLOCKS=0 simulates every cell with its delay, like the Python engine
