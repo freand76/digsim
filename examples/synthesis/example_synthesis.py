@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -12,7 +12,7 @@ import pathlib
 import sys
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import YosysComponent
+from digsim.circuit.components import Clock, YosysComponent
 from digsim.synth import Synthesis, SynthesisException
 
 
@@ -48,19 +48,16 @@ circuit = Circuit(vcd="fibonacci.vcd")
 
 synth_component = YosysComponent(circuit, path=yosys_json_output_path)
 
-# Initialize circuit
+# A clock of 500 Hz drives the component: a period of 2 ms
+clock = Clock(circuit, frequency=500)
+clock.O.wire = synth_component.clk
+
+# Initialize circuit (the clock starts low)
 circuit.init()
 
-# Start with clock and reset low, so that they are not undefined
-synth_component.clk.value = 0
-synth_component.reset.value = 0
-
-# Run for 1 ms
-circuit.run(ms=1)
-
-# Set reset signal high for 1ms
+# Reset (asynchronous) for a clock cycle
 synth_component.reset.value = 1
-circuit.run(ms=1)
+circuit.run_until_edge(rising=clock)
 
 print("\n===================== Reset ==========================\n")
 
@@ -69,19 +66,11 @@ print(synth_component)
 
 print("\n===================== Start ==========================\n")
 
-# Set reset signal low for 1ms
 synth_component.reset.value = 0
-circuit.run(ms=1)
 
-# Loop 16 times (print the index and value + generate clock cycle)
+# Loop 16 times (print the index and value, then run to the next rising clock edge)
 for _ in range(16):
     index = synth_component.index.value
     value = synth_component.value.value
     print(f"Fibonacci sequence [{index}] value is {value}")
-
-    # Set clock signal high for 1ms
-    synth_component.clk.value = 1
-    circuit.run(ms=1)
-    # Set clock signal low for 1ms
-    synth_component.clk.value = 0
-    circuit.run(ms=1)
+    circuit.run_until_edge(rising=clock)

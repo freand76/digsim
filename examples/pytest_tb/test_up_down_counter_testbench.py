@@ -7,7 +7,7 @@ import pathlib
 import pytest
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import YosysComponent
+from digsim.circuit.components import Clock, YosysComponent
 from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
 
@@ -19,38 +19,32 @@ pytestmark = pytest.mark.sanity
 class DutTester:
     """A helper class to test the up/down counter DUT (Device Under Test)"""
 
-    def __init__(self, circuit, dut):
+    def __init__(self, circuit, dut, clock):
         self._circuit = circuit
         self._dut = dut
+        self._clock = clock
         # Initialize DUT inputs
-        self._dut.clk.value = 0
         self._dut.nrst.value = 0
         self._dut.up.value = 0
         self._dut.down.value = 0
 
     def reset(self):
-        """Reset the DUT"""
+        """Reset the DUT, for a clock cycle"""
         self._dut.nrst.value = 0
-        self._circuit.run(ms=1)
+        self._circuit.run_until_edge(rising=self._clock)
         self._dut.nrst.value = 1
-        self._circuit.run(ms=1)
 
     def clock(self):
-        """Generate a clock cycle"""
-        self._dut.clk.value = 1
-        self._circuit.run(ms=1)
-        self._dut.clk.value = 0
-        self._circuit.run(ms=1)
+        """A clock cycle: to the next rising edge, the counter has its new value"""
+        self._circuit.run_until_edge(rising=self._clock)
 
     def up(self, up):
-        """Set the 'up' signal"""
+        """Set the 'up' signal, for the next rising edge"""
         self._dut.up.value = 1 if up else 0
-        self._circuit.run(ms=1)
 
     def down(self, down):
-        """Set the 'down' signal"""
+        """Set the 'down' signal, for the next rising edge"""
         self._dut.down.value = 1 if down else 0
-        self._circuit.run(ms=1)
 
     def value(self):
         """Get the counter value"""
@@ -75,9 +69,13 @@ def dut(current_path):
     _yosys_netlist = YosysNetlist(**_dut_synthesis.synth_to_dict())
     _dut.create_from_netlist(_yosys_netlist)
 
+    # A clock of 500 Hz drives the DUT: a period of 2 ms
+    clock = Clock(circuit, frequency=500)
+    clock.O.wire = _dut.clk
+
     # Initialize the circuit and yield the DUT tester
     circuit.init()
-    yield DutTester(circuit, _dut)
+    yield DutTester(circuit, _dut, clock)
 
 
 def test_no_count(dut):
