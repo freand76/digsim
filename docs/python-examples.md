@@ -270,7 +270,7 @@ StringOutput [char]: 'r'
 StringOutput [char]: 'l'
 StringOutput [char]: 'd'
 StringOutput [line]: 'Hello World'
-Simulated 302 clock cycles of 6502_primitives.json in 0.41 s: 728 clocks/second
+Simulated 302 clock cycles of 6502_primitives.json in 0.00 s: 71266 clocks/second
 ```
 
 `6502_primitives.json` is the CPU synthesized into gates. Add `--functional` to run
@@ -285,8 +285,12 @@ uv run python examples/yosys_6502/example_yosys_6502.py --functional
 ```text
 ...
 StringOutput [line]: 'Hello World'
-Simulated 302 clock cycles of 6502_functional.json in 0.26 s: 1147 clocks/second
+Simulated 302 clock cycles of 6502_functional.json in 0.01 s: 40579 clocks/second
 ```
+
+These are the times of the native engine, which simulates the CPU as a compiled block
+(see [Simulation engines](python.md#simulation-engines)). With `DIGSIM_ENGINE=python` both
+netlists run at about 1,100 to 1,400 clocks per second.
 
 `verilog/synth.sh` in the repository synthesizes both netlists.
 

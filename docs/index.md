@@ -22,8 +22,9 @@ reload the component, and try again.
 
 DigSim started as a way to visualize simple Verilog modules. It has since been used to
 simulate larger designs, such as the classic
-[6502 CPU](https://en.wikipedia.org/wiki/MOS_Technology_6502). It is slower than
-dedicated simulators, but fast enough to be useful.
+[6502 CPU](https://en.wikipedia.org/wiki/MOS_Technology_6502) and a RISC-V processor. Its
+native engine simulates a Verilog design as a compiled block, about as fast as Icarus
+Verilog for a small processor, though compiled simulators like Verilator are much faster.
 
 ## Features
 

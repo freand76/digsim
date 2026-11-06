@@ -93,6 +93,23 @@ It runs the same events as `run()`, in slices of the time, so a run that is cont
 with more calls has the same events as one long run. `oscillating_ports()` runs the
 circuit for a short while, 200 ns by default, and counts how often each output changes.
 
+### Simulation engines
+
+DigSim simulates with its native engine,
+[digsim-native](https://pypi.org/project/digsim-native/), which is installed with DigSim on
+Linux (x86_64 and arm64), Windows and macOS. Elsewhere, or with `DIGSIM_ENGINE=python`,
+it simulates in Python. Both give the same settled values.
+
+The native engine simulates a Verilog (Yosys) component as one compiled block, like a
+compiled simulator: its cells are evaluated in order, once each when an input changes,
+without delays between them, so its outputs change 1 ns after an input. This makes it 50
+to 100 times faster than the Python engine. The other components, and a clock without a
+GUI, work as in Python. A VCD file therefore shows no delays and no glitches inside a
+Verilog component, and is not the same as with the Python engine. With `DIGSIM_BLOCKS=0`
+the native engine simulates every cell with its delay, and writes the same VCD file as
+Python. A netlist with a combinational loop, tristate buffers or inout ports always keeps
+its cells and their delays.
+
 ### Components and ports
 
 Components live in `digsim.circuit.components`. Each component is created with the
@@ -112,6 +129,19 @@ component can be set directly, which is handy in testbenches:
 dut.clk.value = 1
 circuit.run(ms=1)
 print(dut.cnt.value)
+```
+
+A clock input is simpler to drive with a `Clock`. `circuit.run_until_edge(rising=clock)`
+runs through the next rising edge of the clock to just before its falling edge, when the
+logic after the edge has settled, and inputs set then are there at the next edge:
+
+```python
+clock = Clock(circuit, frequency=500)
+clock.O.wire = dut.clk
+circuit.init()
+for _ in range(10):
+    circuit.run_until_edge(rising=clock)
+    print(dut.cnt.value)
 ```
 
 Several outputs can drive the same input. It then has the value that they drive, and

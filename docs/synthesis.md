@@ -101,10 +101,13 @@ as wide as in the Verilog.
 synthesis = Synthesis(["counter.v"], "counter", functional=True)
 ```
 
-A netlist with functional blocks has far fewer cells, so it simulates faster. Between
-functional blocks, the bits of a port are also sent as one word instead of one bit at a
-time. The 6502 CPU in the [examples](python-examples.md#6502-cpu) has 2047 cells as gates and 431
-as functional blocks, and runs about 1.6 times faster. The simulation is the same for the
+A netlist with functional blocks has far fewer cells, so it simulates faster in the
+Python engine. Between functional blocks, the bits of a port are also sent as one word
+instead of one bit at a time. The 6502 CPU in the [examples](python-examples.md#6502-cpu)
+has 2047 cells as gates and 431 as functional blocks, and runs about 1.3 times faster in
+Python. The native engine simulates both as a compiled block (see
+[Simulation engines](python.md#simulation-engines)), and there the gates of the 6502 are
+even faster than its functional blocks. The simulation is the same for the
 ports of the design. Inside it there are no gates, and the signals between the functional
 blocks are not in a VCD file, only the ports of the design and the blocks' ports to them.
 
