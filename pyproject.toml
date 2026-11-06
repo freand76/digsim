@@ -35,7 +35,7 @@ dependencies = [
   "wasmtime==47.0.1",
   # The native engine (https://github.com/freand76/digsim-native), on the platforms it has
   # wheels for. Without it DigSim simulates in Python
-  "digsim-native==0.2.0; (sys_platform == 'linux' and platform_machine in 'x86_64 aarch64') or (sys_platform == 'win32' and platform_machine in 'AMD64 ARM64') or sys_platform == 'darwin'",
+  "digsim-native==0.3.0; (sys_platform == 'linux' and platform_machine in 'x86_64 aarch64') or (sys_platform == 'win32' and platform_machine in 'AMD64 ARM64') or sys_platform == 'darwin'",
 ]
 
 scripts = { digsim-logic-simulator = "digsim.app.cli:main" }

@@ -119,3 +119,17 @@ def test_port_without_an_edge():
     circuit.init()
     assert not circuit.run_until_edge(rising=value.O, max_ns=1000)
     assert circuit.time_ns == 1000
+
+
+def test_clock_runs_on_after_a_new_wire():
+    """The native engine runs the clock, a new wire hands it to Python: it goes on"""
+    circuit, clock, counter = _counter()
+    for count in range(1, 4):
+        circuit.run_until_edge(rising=clock)
+        assert counter.Q.value == count
+    probe = Counter(circuit, width=4)
+    clock.O.wire = probe.clk
+    for count in range(4, 8):
+        circuit.run_until_edge(rising=clock)
+        assert counter.Q.value == count
+    assert circuit.time_ns == 14 * clock.half_period_ns - 1

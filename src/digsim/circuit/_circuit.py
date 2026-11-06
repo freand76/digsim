@@ -592,8 +592,10 @@ class Circuit:
             if isinstance(parent, Clock) and target is parent.port("O"):
                 target = parent
         if isinstance(target, Clock):
-            edge = target.next_edge_ns(rising=level == 1)
-            self.run_until(ns=edge + target.half_period_ns - 1)
+            stop_ns = target.next_edge_ns(rising=level == 1) + target.half_period_ns - 1
+            time_ns = self.time_ns
+            if stop_ns >= time_ns:
+                self.run(ns=stop_ns - time_ns)
             return True
         limit = self.time_ns + max_ns
         old = target.value
@@ -608,6 +610,19 @@ class Circuit:
                 self.run_until(ns=self.time_ns)
                 return True
             old = new
+
+    def next_event_ns(self, port: EventPort) -> int | None:
+        """The time of the next event of a port, None if it has none"""
+        native = self._engine
+        if native is not None and native.generation == connection_generation.value:
+            return native.next_event_ns(port)
+        event = self._events_by_port.get(port)
+        return None if event is None else event._time_ns
+
+    def delay_changed(self, port: PortOutDelta) -> None:
+        """A port got a new delay, see PortOutDelta.set_delay_ns()"""
+        if self._engine is not None:
+            self._engine.delay_changed(port)
 
     def add_event(self, port: EventPort, value: VALUE_TYPE, propagation_delay_ns: int) -> None:
         """Add an event for a port, used by the components"""

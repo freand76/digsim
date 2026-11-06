@@ -40,15 +40,13 @@ class Clock(CallbackComponent):
         portout = PortOutImmediate(self, "O")
         self.add_port(portout)
         self._feedback.update_parent(True)
-        # When the output changes next (None before init())
-        self._next_toggle_ns: int | None = None
+        self._half_period_ns = 1
         self.parameter_set("frequency", frequency)
         self.reconfigure()
 
     def default_state(self) -> None:
         self.O.value = 0
         self._feedback.value = 1
-        self._next_toggle_ns = self.circuit.time_ns + self.half_period_ns
 
     def update(self) -> None:
         if self._feedback.value == 1:
@@ -57,7 +55,6 @@ class Clock(CallbackComponent):
         else:
             self.O.value = 0
             self._feedback.value = 1
-        self._next_toggle_ns = self.circuit.time_ns + self.half_period_ns
         super().update()
 
     def next_edge_ns(self, rising: bool = True) -> int:
@@ -67,21 +64,24 @@ class Clock(CallbackComponent):
         Raises:
             DigsimException: If the circuit isn't initialized (the clock doesn't run).
         """
-        if self._next_toggle_ns is None:
+        # The output changes at the next event of the feedback
+        edge = self.circuit.next_event_ns(self._feedback)
+        if edge is None:
             raise DigsimException("The clock runs from Circuit.init()")
-        edge = self._next_toggle_ns
         if (self.O.value == 1) == rising:
             # The next change is the other edge
-            edge += self.half_period_ns
+            edge += self._half_period_ns
         return edge
 
     @property
     def half_period_ns(self) -> int:
         """The time between two edges of the output, in nanoseconds"""
-        return int(1000000000 / (self.parameter_get("frequency") * 2))
+        return self._half_period_ns
 
     def reconfigure(self) -> None:
-        self._feedback.set_delay_ns(self.half_period_ns)
+        self._half_period_ns = int(1000000000 / (self.parameter_get("frequency") * 2))
+        self._feedback.set_delay_ns(self._half_period_ns)
+        self.circuit.delay_changed(self._feedback)
 
     @property
     def active(self) -> bool:
