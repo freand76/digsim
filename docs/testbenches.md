@@ -41,8 +41,9 @@ endmodule
 ## Loading the design
 
 A pytest fixture creates a circuit with the design as a `YosysComponent`, the device under
-test (DUT). Its ports get the names of the Verilog module's ports, so the counter has
-`dut.clk`, `dut.nrst`, `dut.up`, `dut.down` and `dut.value`:
+test (DUT), and a `Clock` that drives its clock input. The ports of the DUT get the names
+of the Verilog module's ports, so the counter has `dut.clk`, `dut.nrst`, `dut.up`,
+`dut.down` and `dut.value`:
 
 ```python
 import pathlib
@@ -50,7 +51,7 @@ import pathlib
 import pytest
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import YosysComponent
+from digsim.circuit.components import Clock, YosysComponent
 from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
 
@@ -62,8 +63,11 @@ def dut():
     verilog = pathlib.Path(__file__).parent / "up_down_counter.v"
     synthesis = Synthesis([str(verilog)], "up_down_counter")
     counter.create_from_netlist(YosysNetlist(**synthesis.synth_to_dict()))
+    # A clock of 500 Hz drives the DUT: a period of 2 ms
+    clock = Clock(circuit, frequency=500)
+    clock.O.wire = counter.clk
     circuit.init()
-    yield DutTester(circuit, counter)
+    yield DutTester(circuit, counter, clock)
 ```
 
 `Synthesis` runs Yosys on the Verilog files and `synth_to_dict()` returns the netlist,
@@ -78,42 +82,38 @@ scope, works too.
 
 ## Driving the inputs
 
-The DUT's inputs aren't driven by other components, so the test sets them directly with
-`.value`, and reads the outputs the same way. After a change, the test runs the circuit
-for a while, so that the change goes through the gates of the netlist. A helper class
-keeps the tests short:
+The other inputs of the DUT aren't driven by other components, so the test sets them
+directly with `.value`, and reads the outputs the same way. The clock drives the
+simulation: `circuit.run_until_edge(rising=clock)` runs through the next rising edge of
+the clock to just before its falling edge, so the counter has its new value, and inputs
+set then are there at the next rising edge. A helper class keeps the tests short:
 
 ```python
 class DutTester:
     """A helper class to test the up/down counter DUT (Device Under Test)"""
 
-    def __init__(self, circuit, dut):
+    def __init__(self, circuit, dut, clock):
         self._circuit = circuit
         self._dut = dut
+        self._clock = clock
         # Initialize DUT inputs
-        self._dut.clk.value = 0
         self._dut.nrst.value = 0
         self._dut.up.value = 0
         self._dut.down.value = 0
 
     def reset(self):
-        """Reset the DUT"""
+        """Reset the DUT, for a clock cycle"""
         self._dut.nrst.value = 0
-        self._circuit.run(ms=1)
+        self._circuit.run_until_edge(rising=self._clock)
         self._dut.nrst.value = 1
-        self._circuit.run(ms=1)
 
     def clock(self):
-        """Generate a clock cycle"""
-        self._dut.clk.value = 1
-        self._circuit.run(ms=1)
-        self._dut.clk.value = 0
-        self._circuit.run(ms=1)
+        """A clock cycle: to the next rising edge, the counter has its new value"""
+        self._circuit.run_until_edge(rising=self._clock)
 
     def up(self, up):
-        """Set the 'up' signal"""
+        """Set the 'up' signal, for the next rising edge"""
         self._dut.up.value = 1 if up else 0
-        self._circuit.run(ms=1)
 
     def value(self):
         """Get the counter value"""
@@ -127,9 +127,10 @@ A few things to know:
   value reads `"X"` too.
 - **Buses are integers.** A 4-bit output reads as a number from 0 to 15, and a bus input
   takes a number.
-- **Run long enough.** The gates of a netlist have delays of a few nanoseconds, so a design
-  this size settles well within 1 µs. The examples run 1 ms per step, which is more than
-  enough and makes the waveforms easy to read.
+- **Half a period is enough.** The logic after an edge settles within nanoseconds, the
+  clock of the example has 1 ms between its edges, which makes the waveforms easy to read.
+  To drive a clock input without a `Clock`, set it with `.value` and run the circuit
+  after each change, like the ALU test below runs after setting its inputs.
 
 ## Writing the tests
 

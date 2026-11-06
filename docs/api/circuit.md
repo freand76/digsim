@@ -9,6 +9,7 @@
         - init
         - run
         - run_until
+        - run_until_edge
         - run_within
         - restart_slices
         - oscillating_ports

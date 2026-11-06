@@ -747,7 +747,7 @@ def waves(vcd_dir: Path) -> None:
             ("value", "up_down_counter.value"),
         ],
         OUT / "testbench_waves.svg",
-        end=120 * ms,
+        end=104 * ms,
         width=1000,
     )
     # The traffic light, with its state as the names of the states
@@ -779,8 +779,8 @@ def waves(vcd_dir: Path) -> None:
             ("value", "up_down_counter.value"),
         ],
         OUT / "testbench_count_up_waves.svg",
-        start=24 * ms,
-        end=60 * ms,
+        start=22 * ms,
+        end=56 * ms,
         width=1000,
     )
     render_waves(

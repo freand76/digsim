@@ -30,6 +30,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 
 from .components import _yosys_atoms as atoms
 from .components import _yosys_functional as functional
+from .components._clock import Clock
 from .components._static_level import GND, VDD
 from .components._yosys_component import SignalPort, StatePort, YosysComponent
 from .components.atoms import (
@@ -53,8 +54,8 @@ try:
     import digsim_native  # type: ignore[import-untyped, import-not-found, unused-ignore]
 except ImportError:
     digsim_native = None
-# An older digsim-native, without blocks, doesn't take the arguments of this engine
-if digsim_native is not None and not hasattr(digsim_native.Engine, "block_default_state"):
+# An older digsim-native (without blocks or clocks) lacks what this engine calls
+if digsim_native is not None and not hasattr(digsim_native.Engine, "set_clocks"):
     digsim_native = None
 
 
@@ -193,7 +194,7 @@ _FUNCTIONAL: dict[type[functional.FunctionalCell], int] = {
     cls: kind for kind, classes in enumerate(_FUNCTIONAL_CLASSES) for cls in classes
 }
 # Port kinds, as in src/lib.rs of digsim-native
-_PY, _IN, _WIRE, _OUT, _BIT, _BUS, _CELL_INPUT, _WORD, _BLOCK_PIN, _BLOCK_INNER = range(10)
+_PY, _IN, _WIRE, _OUT, _BIT, _BUS, _CELL_INPUT, _WORD, _BLOCK_PIN, _BLOCK_INNER, _CLOCK = range(11)
 # Bus ports that work the same natively, they don't change how the value is handled
 _BUS_CLASSES = (PortMultiBitWire, SignalPort, StatePort)
 _NONE = 2**32 - 1
@@ -494,6 +495,20 @@ class NativeEngine:
                     self.blocks.append(plan)
         self._blocks_defaulted: set[int] = set()
         members = self._member_block
+        # The clocks that the engine runs: without a callback (the GUI's), the timer and
+        # the output have no other drivers (not with DIGSIM_BLOCKS=0: the events in the
+        # order of the Python engine)
+        self.clocks = [
+            component
+            for component in components
+            if _compiled()
+            and type(component) is Clock
+            and component._callback is None
+            and not component._feedback.wired_ports
+            and component.O._drivers is None
+        ]
+        clock_timers = {id(clock._feedback): number for number, clock in enumerate(self.clocks)}
+        clock_outputs = {id(clock.O) for clock in self.clocks}
         cells: dict[Component, tuple[int, list[Port | None], list[int]]] = {}
         for component in components:
             if component in members:
@@ -622,6 +637,12 @@ class NativeEngine:
             elif isinstance(port, PortWireBit) and id(port.get_parent_port()) in bus_index:
                 kinds.append(_BIT)
                 owners.append(index[id(port.get_parent_port())])
+            elif id(port) in clock_timers:
+                kinds.append(_CLOCK)
+                owners.append(clock_timers[id(port)])
+            elif id(port) in clock_outputs:
+                kinds.append(_OUT)
+                owners.append(_NONE)
             elif cell is None or isinstance(port, PortMultiBitWire):
                 kinds.append(_PY)
                 owners.append(_NONE)
@@ -682,12 +703,12 @@ class NativeEngine:
         for port, kind in zip(self.ports, kinds, strict=True):
             if kind == _PY:
                 continue
-            # An output can't be driven, also one of a cell in a block
-            driven = kind != _OUT and not (kind == _BLOCK_INNER and port.is_output())
-            key = (type(port), driven)
-            if key not in classes:
-                classes[key] = self._native_class(type(port), driven=driven)
-            port.__class__ = classes[key]
+            # An output can't be driven, also one of a cell in a block or a clock
+            driven = kind not in (_OUT, _CLOCK) and not (kind == _BLOCK_INNER and port.is_output())
+            class_key = (type(port), driven)
+            if class_key not in classes:
+                classes[class_key] = self._native_class(type(port), driven=driven)
+            port.__class__ = classes[class_key]
         # A port with several drivers has the set_value() of its _Drivers, which resolves
         # in Python: the engine does it for the ports it sets
         self._resolved_ports = [
@@ -717,6 +738,7 @@ class NativeEngine:
             elif type(port) is PortWire:
                 fast.append((nid, 2, None))
         self.engine.set_fast_ports(fast)
+        self.engine.set_clocks([index[id(clock.O)] for clock in self.clocks])
 
     def _wired(self, nid: int, port: Port) -> list[Port]:
         """The ports a port drives in the engine: a block drives its cells itself"""
@@ -868,6 +890,17 @@ class NativeEngine:
             namespace["set_value"] = set_value
         native_class = type(cls.__name__, (cls,), namespace)
         return native_class
+
+    def next_event_ns(self, port: Port) -> int | None:
+        """The time of the latest event of a port, None if it has none"""
+        nid = getattr(port, "_nid", None)
+        return None if nid is None else self.engine.next_event_time(nid)
+
+    def delay_changed(self, port: PortOutDelta) -> None:
+        """A port has a new delay (a Clock with a new frequency)"""
+        nid = getattr(port, "_nid", None)
+        if nid is not None:
+            self.engine.set_delay(nid, port._delay_ns)
 
     def nid(self, port: Port) -> int:
         """The index of a port in the engine, a Python port it doesn't have is added"""

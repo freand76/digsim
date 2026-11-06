@@ -66,6 +66,7 @@ gtkwave sr.vcd
 | `init()` | Initialize the circuit, after adding and connecting components |
 | `run(s=, ms=, us=, ns=)` | Run the simulation for a period of time |
 | `run_until(s=, ms=, us=, ns=)` | Run the simulation until an absolute time |
+| `run_until_edge(rising=clock)` / `(falling=clock)` | Run through the next edge of a `Clock`, to just before its next edge (the logic has settled), to drive a test bench by its clock. With a port instead of a clock, run to the edge of the port. |
 | `run_within(seconds, s=, ms=, us=, ns=)` | Run like `run()`, but for at most `seconds` on the clock, see [Oscillating circuits](#oscillating-circuits) |
 | `oscillating_ports(ns=200)` | The output ports of the top-level components that oscillate |
 | `process_single_event(stop_time_ns=None)` | Process only the next event, to step through a simulation. Returns two booleans: if an event was processed (not if there were none, or the next one is after `stop_time_ns`), and if it was on a port of a top-level component rather than inside one, like a Yosys component. |

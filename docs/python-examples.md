@@ -200,7 +200,8 @@ OUT 15
 [`examples/synthesis/example_synthesis.py`](https://github.com/freand76/digsim/blob/main/examples/synthesis/example_synthesis.py)
 synthesizes [`fibonacci.v`](https://github.com/freand76/digsim/blob/main/examples/synthesis/fibonacci.v),
 a Fibonacci sequence generator, with Yosys from Python, loads the netlist as a component and
-drives its clock and reset inputs directly from the script.
+drives it with a `Clock`: the script sets the reset input and runs from one rising edge of
+the clock to the next with `circuit.run_until_edge(rising=clock)`.
 
 ![Fibonacci circuit](images/examples/fibonacci_circuit.svg)
 
