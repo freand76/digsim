@@ -684,10 +684,10 @@ class NativeEngine:
                 continue
             # An output can't be driven, also one of a cell in a block
             driven = kind != _OUT and not (kind == _BLOCK_INNER and port.is_output())
-            key = (type(port), driven)
-            if key not in classes:
-                classes[key] = self._native_class(type(port), driven=driven)
-            port.__class__ = classes[key]
+            class_key = (type(port), driven)
+            if class_key not in classes:
+                classes[class_key] = self._native_class(type(port), driven=driven)
+            port.__class__ = classes[class_key]
         # A port with several drivers has the set_value() of its _Drivers, which resolves
         # in Python: the engine does it for the ports it sets
         self._resolved_ports = [
