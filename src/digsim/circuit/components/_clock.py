@@ -7,7 +7,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .atoms import CallbackComponent, Parameter, PortOutDelta, PortOutImmediate
+from .atoms import (
+    CallbackComponent,
+    DigsimException,
+    Parameter,
+    PortOutDelta,
+    PortOutImmediate,
+)
 
 
 if TYPE_CHECKING:
@@ -16,7 +22,8 @@ if TYPE_CHECKING:
 
 class Clock(CallbackComponent):
     """
-    A clock, its output is a square wave.
+    A clock, its output is a square wave. It starts low at init(), and rises half a period
+    later. A test bench can drive a circuit by its edges, see Circuit.run_until_edge().
 
     Ports:
         O: Output.
@@ -33,12 +40,15 @@ class Clock(CallbackComponent):
         portout = PortOutImmediate(self, "O")
         self.add_port(portout)
         self._feedback.update_parent(True)
+        # When the output changes next (None before init())
+        self._next_toggle_ns: int | None = None
         self.parameter_set("frequency", frequency)
         self.reconfigure()
 
     def default_state(self) -> None:
         self.O.value = 0
         self._feedback.value = 1
+        self._next_toggle_ns = self.circuit.time_ns + self.half_period_ns
 
     def update(self) -> None:
         if self._feedback.value == 1:
@@ -47,7 +57,23 @@ class Clock(CallbackComponent):
         else:
             self.O.value = 0
             self._feedback.value = 1
+        self._next_toggle_ns = self.circuit.time_ns + self.half_period_ns
         super().update()
+
+    def next_edge_ns(self, rising: bool = True) -> int:
+        """
+        The time of the next rising (or falling) edge of the output, in nanoseconds.
+
+        Raises:
+            DigsimException: If the circuit isn't initialized (the clock doesn't run).
+        """
+        if self._next_toggle_ns is None:
+            raise DigsimException("The clock runs from Circuit.init()")
+        edge = self._next_toggle_ns
+        if (self.O.value == 1) == rising:
+            # The next change is the other edge
+            edge += self.half_period_ns
+        return edge
 
     @property
     def half_period_ns(self) -> int:

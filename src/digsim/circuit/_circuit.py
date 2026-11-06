@@ -20,6 +20,7 @@ from digsim.storage_model import CircuitDataClass, CircuitFileDataClass
 
 from . import _native
 from ._waves_writer import WavesWriter
+from .components._clock import Clock
 from .components.atoms import (
     VALUE_TYPE,
     Component,
@@ -548,6 +549,65 @@ class Circuit:
         stop_time_ns = self._time_to_ns(s=s, ms=ms, us=us, ns=ns)
         if stop_time_ns >= self.time_ns:
             self.run(ns=stop_time_ns - self.time_ns)
+
+    def run_until_edge(
+        self,
+        rising: Clock | Port | None = None,
+        falling: Clock | Port | None = None,
+        max_ns: int = 1_000_000_000,
+    ) -> bool:
+        """
+        Run the simulation through the next rising (or falling) edge of a clock or a port,
+        to drive a simulation by its clock instead of setting a clock port:
+
+            circuit.init()
+            circuit.run_until_edge(rising=clock)  # The flip-flops have their new values
+            counter.up.value = 0  # Set inputs for the next edge
+            circuit.run_until_edge(rising=clock)
+
+        With a Clock (or its output), the run stops just before the clock's next edge,
+        half a period later, so that what the edge started has settled. With another port,
+        it stops after the events at the time of the edge (the port went from 0 to 1, or
+        from 1 to 0).
+
+        Args:
+            rising: The clock or port of a rising edge.
+            falling: The clock or port of a falling edge (instead of rising).
+            max_ns: The most time it runs to find the edge of a port.
+
+        Returns:
+            If there was an edge (False if a port had none in max_ns).
+
+        Raises:
+            CircuitError: Without one of rising and falling.
+            DigsimException: If the clock doesn't run (before init()).
+        """
+        if (rising is None) == (falling is None):
+            raise CircuitError("run_until_edge() needs rising or falling, one of them")
+        target = rising if rising is not None else falling
+        level = 1 if rising is not None else 0
+        assert target is not None
+        if isinstance(target, Port):
+            parent = target.parent()
+            if isinstance(parent, Clock) and target is parent.port("O"):
+                target = parent
+        if isinstance(target, Clock):
+            edge = target.next_edge_ns(rising=level == 1)
+            self.run_until(ns=edge + target.half_period_ns - 1)
+            return True
+        limit = self.time_ns + max_ns
+        old = target.value
+        while True:
+            processed, _ = self.process_single_event(stop_time_ns=limit)
+            if not processed:
+                self.run_until(ns=limit)
+                return False
+            new = target.value
+            if old == 1 - level and new == level:
+                # The other events at the time of the edge
+                self.run_until(ns=self.time_ns)
+                return True
+            old = new
 
     def add_event(self, port: EventPort, value: VALUE_TYPE, propagation_delay_ns: int) -> None:
         """Add an event for a port, used by the components"""
