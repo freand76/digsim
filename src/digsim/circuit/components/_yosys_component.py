@@ -694,8 +694,13 @@ class YosysComponent(MultiComponent):
     def _create_component(self) -> None:
         """Create yosys component"""
         module = self._module()
-        # Comparisons of the same nets with constants are simulated as one cell
-        cells = group_comparisons(module.cells)
+        # Comparisons of the same nets with constants are simulated as one cell. The ignored
+        # cells (like $print, of a $display) only read nets: they are left out.
+        cells = {
+            name: cell
+            for name, cell in group_comparisons(module.cells).items()
+            if cell.type not in IGNORED_CELLS
+        }
         nets = YosysModule(ports=module.ports, cells=cells).get_nets()
         # Create cells
         components_dict = self._create_cells(cells)

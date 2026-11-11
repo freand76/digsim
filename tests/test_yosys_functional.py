@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -144,6 +144,18 @@ def test_undefined_inputs(functional):
     outputs = _outputs(component)
     assert outputs["y_add"] == "X"
     assert outputs["y_case"] == "X"
+
+
+@pytest.mark.parametrize("functional", [False, True])
+def test_ignored_cells(functional):
+    """A cell that DigSim ignores ($display is a $print cell) can read the nets"""
+    circuit, component = _component("display", functional=functional)
+    component.d.value = 0x5A
+    component.clk.value = 0
+    circuit.run(ms=1)
+    component.clk.value = 1
+    circuit.run(ms=1)
+    assert component.q.value == 0x5A
 
 
 def test_component_setting():

@@ -2,6 +2,7 @@
 
 ## vx.x.x
  - Verilog (Yosys) components: the flip-flops and latches start undefined ("X"), as in Verilog and in hardware, or at the initial value of the Verilog (like "reg ready = 0", or the initial contents of a memory). They started at 0, which hid a register that is read before it is reset (an Icarus simulation shows it as X). Needs digsim-native 0.4.0 for the native engine
+ - Verilog with $display (or another simulation message or assertion) loads: it failed with a KeyError, DigSim ignores those cells
 
  - Native engine: a Clock (outside the GUI) runs in the engine, its edges don't call Python (digsim-native 0.3.0)
  - Circuit.run_until_edge(rising=clock) (or falling=clock) runs through the next edge of a Clock, to just before its next edge, to drive a test bench by a clock instead of setting a clock input. With a port, it runs to the edge of the port. Clock.next_edge_ns() is the time of its next edge
