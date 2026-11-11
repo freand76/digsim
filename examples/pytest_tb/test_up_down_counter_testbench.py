@@ -7,7 +7,7 @@ import pathlib
 import pytest
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import Clock, YosysComponent
+from digsim.circuit.components import Clock, VerilogComponent
 from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
 
@@ -64,7 +64,7 @@ def dut(current_path):
     circuit = Circuit(vcd="up_down_counter_test.vcd")
 
     # Synthesize the DUT from Verilog
-    _dut = YosysComponent(circuit)
+    _dut = VerilogComponent(circuit)
     _dut_synthesis = Synthesis([str(current_path / "up_down_counter.v")], "up_down_counter")
     _yosys_netlist = YosysNetlist(**_dut_synthesis.synth_to_dict())
     _dut.create_from_netlist(_yosys_netlist)

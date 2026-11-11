@@ -37,7 +37,7 @@ from digsim.circuit.components import (
     MemStdOut,
     PushButton,
     StaticValue,
-    YosysComponent,
+    VerilogComponent,
 )
 
 
@@ -77,8 +77,8 @@ clk = Clock(test_circuit, frequency=CLOCK_HZ, name="CLK")
 irq = StaticValue(test_circuit, "IRQ", value=0)
 rdy = StaticValue(test_circuit, "RDY", value=1)
 
-# Instantiate the 6502 Yosys component, RAM, and stdout output
-yosys_6502 = YosysComponent(
+# Instantiate the 6502 Verilog component, RAM, and stdout output
+yosys_6502 = VerilogComponent(
     test_circuit,
     path=example_path / netlist,
     signals=args.signals,

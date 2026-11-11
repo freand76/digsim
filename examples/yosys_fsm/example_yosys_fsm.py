@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -15,7 +15,7 @@ traffic_light.vcd.
 import pathlib
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import Clock, PushButton, YosysComponent
+from digsim.circuit.components import Clock, PushButton, VerilogComponent
 
 
 # Get the relative path to the example folder
@@ -25,7 +25,7 @@ with Circuit(vcd="traffic_light.vcd") as circuit:
     clock = Clock(circuit, frequency=10, name="clk")
     reset = PushButton(circuit, "reset")
     request = PushButton(circuit, "request")
-    light = YosysComponent(
+    light = VerilogComponent(
         circuit, path=example_path / "traffic_light.sv", functional=True, signals=True
     )
     clock.O.wire = light.clk

@@ -106,6 +106,7 @@ CLASS_NAME_TO_COMPONENT_OBJECT: dict[str, type[ComponentObject]] = {
     "RAM": RAMObject,
     "ROM": ROMObject,
     "YosysComponent": YosysObject,
+    "VerilogComponent": YosysObject,
     "Note": GuiNoteObject,
     "FlipFlop": FlipFlopObject,
     "SRFF": FlipFlopObject,

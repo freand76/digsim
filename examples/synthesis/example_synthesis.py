@@ -12,7 +12,7 @@ import pathlib
 import sys
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import Clock, YosysComponent
+from digsim.circuit.components import Clock, VerilogComponent
 from digsim.synth import Synthesis, SynthesisException
 
 
@@ -44,9 +44,9 @@ print("Synthesis done!")
 
 circuit = Circuit(vcd="fibonacci.vcd")
 
-# Create Yosys component (fibonacci) component in circuit
+# Create the Verilog component (fibonacci) in the circuit
 
-synth_component = YosysComponent(circuit, path=yosys_json_output_path)
+synth_component = VerilogComponent(circuit, path=yosys_json_output_path)
 
 # A clock of 500 Hz drives the component: a period of 2 ms
 clock = Clock(circuit, frequency=500)

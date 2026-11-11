@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -10,7 +10,7 @@ The example will generate a gtkwave file, 'counter.vcd'.
 import pathlib
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import VDD, PushButton, YosysComponent
+from digsim.circuit.components import VDD, PushButton, VerilogComponent
 
 
 # Get the relative path to example folder
@@ -19,8 +19,8 @@ example_path = pathlib.Path(__file__).parent.relative_to(pathlib.Path.cwd())
 # Create a new circuit
 circuit = Circuit()
 
-# Instantiate the Yosys counter component from its netlist
-yosys_counter = YosysComponent(circuit, path=str(example_path / "counter.json"))
+# Instantiate the counter component from its Yosys netlist
+yosys_counter = VerilogComponent(circuit, path=str(example_path / "counter.json"))
 
 # Instantiate clock and reset push buttons
 clk = PushButton(circuit, "clk")

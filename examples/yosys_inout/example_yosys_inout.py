@@ -11,7 +11,7 @@ gtkwave file, 'bus_register.vcd'.
 import pathlib
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import TristateBuffer, YosysComponent
+from digsim.circuit.components import TristateBuffer, VerilogComponent
 
 
 # Get the relative path to example folder
@@ -20,8 +20,8 @@ example_path = pathlib.Path(__file__).parent.relative_to(pathlib.Path.cwd())
 circuit = Circuit(vcd="bus_register.vcd")
 
 # Two registers from the same Verilog file, the second is named bus_register_1
-reg_a = YosysComponent(circuit, path=str(example_path / "bus_register.v"))
-reg_b = YosysComponent(circuit, path=str(example_path / "bus_register.v"))
+reg_a = VerilogComponent(circuit, path=str(example_path / "bus_register.v"))
+reg_b = VerilogComponent(circuit, path=str(example_path / "bus_register.v"))
 
 # The CPU drives the bus through a tristate buffer, only while its OE is high
 cpu = TristateBuffer(circuit, "cpu", width=8)
