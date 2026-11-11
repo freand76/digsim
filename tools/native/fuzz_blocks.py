@@ -225,7 +225,19 @@ for _ in range(rng.randint(10, 60)):
 for index, bits in enumerate(outputs):
     module_ports[f"out{index}"] = {"direction": "output", "bits": bits}
 
-netlist = YosysNetlist(modules={"fuzz": {"ports": module_ports, "cells": cells}})
+# Random initial values (the init attribute) for some registers, from an RNG of their own
+# so that a seed keeps its cells
+init_rng = random.Random(seed + 1_000_000)
+netnames = {}
+for name, cell in cells.items():
+    q = cell["connections"].get("Q")
+    if q and (cell["type"] in REGISTERS or cell["type"] in FLOPS) and init_rng.random() < 0.5:
+        init = "".join(init_rng.choice("01x") for _ in q)
+        netnames[f"{name}_q"] = {"bits": q, "attributes": {"init": init}}
+
+netlist = YosysNetlist(
+    modules={"fuzz": {"ports": module_ports, "cells": cells, "netnames": netnames}}
+)
 circuit = Circuit()
 component = YosysComponent(circuit)
 component.create_from_netlist(netlist)

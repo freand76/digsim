@@ -207,9 +207,9 @@ def test_yosys_aldffe_xxx_(test_class, c_edge, l_level, e_level):
     ],
 )
 def test_yosys_aldff_default_state(test_class):
-    """Test that the _ALDFF_/_ALDFFE_ output is low after circuit init"""
+    """Test that the _ALDFF_/_ALDFFE_ output is undefined after circuit init"""
     circuit = Circuit()
     _dut = test_class(circuit, "DUT")
     circuit.init()
     circuit.run(ms=1)
-    assert _dut.Q.value == 0
+    assert _dut.Q.value == "X"

@@ -28,6 +28,10 @@ class ClassNameParameterComponent(Component):
     Helper class to get active level and edges from class name
     """
 
+    # The flip-flops and latches: Q after init, "X" unless the netlist has an initial
+    # value for it (the init attribute of the net, set by YosysComponent)
+    initial_value: VALUE_TYPE = "X"
+
     def name_to_level(self, index: int) -> int:
         """
         Helper function to convert a specific position in the class name
@@ -460,7 +464,7 @@ class _SR_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.R._value == self._reset_level:
@@ -497,7 +501,7 @@ class _DFF_(ClockedComponent):
         self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.C._value != self._old_C_level and self.C._value == self._clock_edge:
@@ -527,7 +531,7 @@ class _DFFE2_(ClockedComponent):
         self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if (
@@ -570,7 +574,7 @@ class _DFF3_(ClockedComponent):
         self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.R._value == self._reset_level:
@@ -629,7 +633,7 @@ class _DFFE4_(ClockedComponent):
         self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.R._value == self._reset_level:
@@ -723,7 +727,7 @@ class _ALDFF_(ClockedComponent):
         self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.L._value == self._load_level:
@@ -767,7 +771,7 @@ class _ALDFFE_(ClockedComponent):
         self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.L._value == self._load_level:
@@ -829,7 +833,7 @@ class _DFFSR_(ClockedComponent):
         self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.R._value == self._reset_level:
@@ -891,7 +895,7 @@ class _DFFSRE_(ClockedComponent):
         self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.R._value == self._reset_level:
@@ -986,7 +990,7 @@ class _SDFF_(ClockedComponent):
         self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.C._value != self._old_C_level and self.C._value == self._clock_edge:
@@ -1046,7 +1050,7 @@ class _SDFFE_(ClockedComponent):
         self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.C._value != self._old_C_level and self.C._value == self._clock_edge:
@@ -1138,7 +1142,7 @@ class _SDFFCE_(ClockedComponent):
         self._old_C_level = self.C._value
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if (
@@ -1228,7 +1232,7 @@ class _DLATCH_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.E._value == self._enable_level:
@@ -1257,7 +1261,7 @@ class _DLATCH3_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.R._value == self._reset_level:
@@ -1313,7 +1317,7 @@ class _DLATCHSR_(ClassNameParameterComponent):
         self.add_port(PortOutDelta(self, "Q"))
 
     def default_state(self) -> None:
-        self.Q.set_value(0)
+        self.Q.set_value(self.initial_value)
 
     def update(self) -> None:
         if self.R._value == self._reset_level:

@@ -54,8 +54,9 @@ try:
     import digsim_native  # type: ignore[import-untyped, import-not-found, unused-ignore]
 except ImportError:
     digsim_native = None
-# An older digsim-native (without blocks or clocks) lacks what this engine calls
-if digsim_native is not None and not hasattr(digsim_native.Engine, "set_clocks"):
+# An older digsim-native (without blocks, clocks or the initial values of the registers)
+# lacks what this engine calls
+if digsim_native is not None and getattr(digsim_native, "INTERFACE", 0) < 4:
     digsim_native = None
 
 
@@ -309,7 +310,7 @@ class _BlockCell(NamedTuple):
     stateful: bool
     levels: list[int]
     clock: int
-    value: int
+    value: int  # A constant: its value, a gate flip-flop or latch: its initial value
 
 
 class _BlockPlan(NamedTuple):
@@ -426,8 +427,9 @@ def _block_plan(component: YosysComponent) -> _BlockPlan | None:
             bits[id(gate_port)] = net_bit(net)
         bits[id(cell_component.outports()[0])] = (outputs[0], 0)
         clock = _CODES.get(getattr(cell_component, "_old_C_level", "X"), 2)
+        initial = _CODES[getattr(cell_component, "initial_value", 0)] if stateful else 0
         cells.append(
-            _BlockCell(cell_component, 1, kind, inputs, outputs, stateful, levels, clock, 0)
+            _BlockCell(cell_component, 1, kind, inputs, outputs, stateful, levels, clock, initial)
         )
     for value, name in ((0, "GND"), (1, "VDD")):
         constant = parts.components[name]
@@ -770,9 +772,10 @@ class NativeEngine:
                 ]
                 parameters = {name: component.param(name) for name in component._cell.parameters}
                 q = getattr(component, "_q", (0, 0))
+                initial = getattr(component, "initial_value", (0, 0))
                 clock = _CODES.get(getattr(component, "_old_clock", "X"), 2)
                 kind = _FUNCTIONAL[type(component)]
-                word = (kind, inputs, outputs, parameters, q, clock, True)
+                word = (kind, inputs, outputs, parameters, q, clock, True, initial)
                 old_clock = clock
             else:
                 old_clock = cell.clock
@@ -829,9 +832,10 @@ class NativeEngine:
             )
         parameters = {name: cell.param(name) for name in cell._cell.parameters}
         q = getattr(cell, "_q", (0, 0))
+        initial = getattr(cell, "initial_value", (0, 0))
         clock = _CODES.get(getattr(cell, "_old_clock", "X"), 2)
         driving = getattr(cell, "_driving", True)
-        return (_FUNCTIONAL[type(cell)], inputs, outputs, parameters, q, clock, driving)
+        return (_FUNCTIONAL[type(cell)], inputs, outputs, parameters, q, clock, driving, initial)
 
     def default_state(self, component: Component) -> bool:
         """Set the default state of a component the engine simulates, False if it doesn't"""

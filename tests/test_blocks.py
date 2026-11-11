@@ -20,9 +20,9 @@ pytestmark = pytest.mark.sanity
 NATIVE = _native.mode() == "native"
 
 
-def _netlist(ports, cells):
+def _netlist(ports, cells, netnames=None):
     """A netlist of one module: ports {name: (direction, bits)}, cells {name: (type,
-    connections {port: (direction, bits)}, parameters)}"""
+    connections {port: (direction, bits)}, parameters)}, netnames {name: (bits, init)}"""
     return YosysNetlist(
         modules={
             "top": {
@@ -39,13 +39,18 @@ def _netlist(ports, cells):
                     }
                     for name, (kind, connections, parameters) in cells.items()
                 },
+                "netnames": {
+                    name: {"bits": bits, "attributes": {"init": init}}
+                    for name, (bits, init) in (netnames or {}).items()
+                },
             }
         }
     )
 
 
-def _counter():
-    """A 4-bit counter with a synchronous reset: q <= rst ? 0 : q + 1"""
+def _counter(init=None):
+    """A 4-bit counter with a synchronous reset: q <= rst ? 0 : q + 1, q starts at init
+    (a binary string, "X" without)"""
     q, plus, d = [2, 3, 4, 5], [6, 7, 8, 9], [10, 11, 12, 13]
     ports = {"clk": ("input", [14]), "rst": ("input", [15]), "q": ("output", q)}
     word = {"A_SIGNED": 0, "B_SIGNED": 0, "A_WIDTH": 4, "B_WIDTH": 4, "Y_WIDTH": 4}
@@ -71,7 +76,7 @@ def _counter():
             {"WIDTH": 4, "CLK_POLARITY": 1},
         ),
     }
-    return _netlist(ports, cells)
+    return _netlist(ports, cells, None if init is None else {"q": (q, init)})
 
 
 def _component(netlist):
@@ -231,7 +236,7 @@ def test_gnd_and_vdd_next_to_a_block():
     cells in a block) drive the inputs of a block"""
     circuit = Circuit()
     component = YosysComponent(circuit)
-    component.create_from_netlist(_counter())
+    component.create_from_netlist(_counter(init="0000"))
     vdd = VDD(circuit)
     gnd = GND(circuit)
     vdd.O.wire = component.rst

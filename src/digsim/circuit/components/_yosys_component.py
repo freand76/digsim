@@ -24,10 +24,12 @@ from digsim.utils import NetPort, Nets, YosysCell, YosysModule, YosysNetlist, Yo
 from digsim.utils._yosys_netlist import NET_TYPE
 
 from ._static_level import GND, VDD
+from ._yosys_atoms import ClassNameParameterComponent
 from ._yosys_functional import (
     FUNCTIONAL_CELLS,
     IGNORED_CELLS,
     FunctionalCell,
+    _Register,
     group_comparisons,
 )
 from .atoms import (
@@ -523,6 +525,34 @@ class YosysComponent(MultiComponent):
         return components_dict
 
     @staticmethod
+    def _set_initial_values(
+        initial: dict[int, int], cells: dict[str, YosysCell], components: dict[str, Component]
+    ) -> None:
+        """
+        The initial values of the flip-flops and latches: from the init attributes of the
+        nets of their outputs, the other bits start undefined ("X")
+        """
+        if not initial:
+            return
+        for cellname, cell in cells.items():
+            component = components.get(cellname)
+            nets = cell.connections.get("Q", [])
+            if component is None or not any(net in initial for net in nets):
+                continue
+            if isinstance(component, _Register):
+                value = undefined = 0
+                for bit, net in enumerate(nets):
+                    if isinstance(net, int) and net in initial:
+                        value |= initial[net] << bit
+                    else:
+                        undefined |= 1 << bit
+                component.initial_value = (value, undefined)
+            elif isinstance(component, ClassNameParameterComponent):
+                net = nets[0]
+                if isinstance(net, int):
+                    component.initial_value = initial[net]
+
+    @staticmethod
     def _cell_port(component: Component, net_port: NetPort) -> Port:
         """The port of a cell on a net: a gate port, or one bit of a functional cell port"""
         if isinstance(component, FunctionalCell):
@@ -669,6 +699,7 @@ class YosysComponent(MultiComponent):
         nets = YosysModule(ports=module.ports, cells=cells).get_nets()
         # Create cells
         components_dict = self._create_cells(cells)
+        self._set_initial_values(module.initial_values(), cells, components_dict)
         self._parts = NetlistParts(module.ports, cells, components_dict, nets)
         # Connect cells, functional cells to each other as words
         linked = self._link_functional_cells(components_dict, cells, nets)

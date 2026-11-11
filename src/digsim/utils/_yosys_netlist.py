@@ -178,6 +178,24 @@ class YosysModule:
                 names[number] = f"{names[number]}/{parameter}" if number in names else parameter
         return names
 
+    def initial_values(self) -> dict[int, int]:
+        """
+        The initial values of the nets that have one: the init attribute of a signal (a
+        register declared like "reg ready = 0"). Bits that are "x" in it have none.
+        """
+        values: dict[int, int] = {}
+        for netname in self.netnames.values():
+            init = netname.attributes.get("init")
+            if init is None:
+                continue
+            if isinstance(init, int):
+                init = format(init, "b").zfill(len(netname.bits))
+            # A binary string, the most significant bit first
+            for net, char in zip(netname.bits, reversed(init), strict=False):
+                if isinstance(net, int) and char in "01":
+                    values[net] = int(char)
+        return values
+
     def is_same_interface(self, netlist: YosysModule) -> bool:
         """Same port names, with the same directions and bitwidths"""
         if len(netlist.ports) != len(self.ports):

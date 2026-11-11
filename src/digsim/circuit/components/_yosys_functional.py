@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -937,24 +937,28 @@ class Bwmux(FunctionalCell):
 
 class _Register(FunctionalCell):
     """
-    A flip-flop or latch, with the output Q. Like the gate flip-flops, it starts at 0. A
-    control input is active at its polarity, and not active when it is undefined.
+    A flip-flop or latch, with the output Q. Like the gate flip-flops, it starts undefined
+    ("X"), or at the initial value of its bits in the netlist (initial_value, set by
+    YosysComponent). A control input is active at its polarity, and not active when it is
+    undefined.
     """
 
     def __init__(self, circuit: Circuit, name: str, cell: YosysCell) -> None:
         super().__init__(circuit, name, cell)
         self._width = self.param("WIDTH", self.width("Q"))
         self._mask = _mask(self._width)
-        self._q: Word = (0, 0)
+        # Q after init: the bits and the undefined bits
+        self.initial_value: Word = (0, self._mask)
+        self._q: Word = self.initial_value
         self._old_clock: VALUE_TYPE = "X"
 
     def init(self) -> None:
         super().init()
-        self._q = (0, 0)
+        self._q = self.initial_value
         self._old_clock = "X"
 
     def default_state(self) -> None:
-        self._q = (0, 0)
+        self._q = self.initial_value
         self.write("Q", self._q)
 
     def control_active(self, port_name: str, polarity_name: str) -> bool:
