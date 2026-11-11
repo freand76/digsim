@@ -1,15 +1,10 @@
 name: Docs
 
+# The site documents the released version: it is deployed when a release is published
+# (built from its tag), or by hand from a branch
 on:
-  push:
-    branches: [main]
-    paths:
-      - "docs/**"
-      # The API reference is generated from the docstrings
-      - "src/digsim/**"
-      - "mkdocs.yml"
-      - "CHANGELOG.md"
-      - ".github/workflows/docs.yaml"
+  release:
+    types: [published]
   workflow_dispatch:
 
 permissions:

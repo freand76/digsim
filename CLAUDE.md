@@ -45,8 +45,8 @@ uv run --with pytest pytest tools/gui_editor_check.py         # Verilog GUI chec
 
 Runs on push: ruff, `full_scope.yaml` (all tests and `examples/yosys_counter/*.py`, Linux
 x86_64, 3.11–3.15, native and Python engine), `minimal_scope.yaml` (Windows, Linux arm64,
-macOS: `sanity` tests with both engines, `tools/native/`). `docs.yaml` deploys on pushes
-to `main` touching `docs/`, `src/digsim/`, `mkdocs.yml`, `CHANGELOG.md`. Don't watch CI.
+macOS: `sanity` tests with both engines, `tools/native/`). `docs.yaml` deploys the site
+when a GitHub release is published (from its tag), or by hand. Don't watch CI.
 
 - Mark test files with platform-sensitive parts (files, paths, line endings, Yosys, the
   Verilog formatter, native engine) `pytestmark = pytest.mark.sanity`.
