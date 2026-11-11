@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## vx.x.x
+## v1.12.0
  - Verilog components: a Verilog file can have several modules. The component is the top module (the one no other module instantiates, with its submodules in it), or the module chosen with module="..." (Module in the settings pane of the GUI). Adding a file with several top modules in the GUI asks which one. It failed with "Only one module per file is supported"
  - RV32E example circuit: the clock runs at 1000 Hz (was 100 Hz), and the program writes the hello text a letter every 0.2 s. lcd.c has defines for the clock and the delay
  - Clock: the frequency is set as a number and a unit (Hz, kHz or MHz), from 1 Hz to 100 MHz (was a slider, 1–100 Hz). It is saved in Hz as before, so older circuits open unchanged
@@ -8,6 +8,7 @@
  - Verilog (Yosys) components: the flip-flops and latches start undefined ("X"), as in Verilog and in hardware, or at the initial value of the Verilog (like "reg ready = 0", or the initial contents of a memory). They started at 0, which hid a register that is read before it is reset (an Icarus simulation shows it as X). Needs digsim-native 0.4.0 for the native engine
  - The 74162 IC and the counter of the Verilog examples start at 0, as they did before the registers started undefined
  - Verilog with $display (or another simulation message or assertion) loads: it failed with a KeyError, DigSim ignores those cells
+ - GUI: when a changed setting removes wires (the ports are gone), the warning names the ports after the component that had them, not after the new one
 
 ## v1.11.0
  - Native engine: a Clock (outside the GUI) runs in the engine, its edges don't call Python (digsim-native 0.3.0)
