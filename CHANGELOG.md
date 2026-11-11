@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - RV32E example circuit: the clock runs at 1000 Hz (was 100 Hz), and the program writes the hello text a letter every 0.2 s. lcd.c has defines for the clock and the delay
  - Clock: the frequency is set as a number and a unit (Hz, kHz or MHz), from 1 Hz to 100 MHz (was a slider, 1–100 Hz). It is saved in Hz as before, so older circuits open unchanged
  - VerilogComponent: the YosysComponent by the name of what it is made from, a Verilog file (or a Yosys netlist), with the same arguments. The examples use it
  - Verilog (Yosys) components: the flip-flops and latches start undefined ("X"), as in Verilog and in hardware, or at the initial value of the Verilog (like "reg ready = 0", or the initial contents of a memory). They started at 0, which hid a register that is read before it is reset (an Icarus simulation shows it as X). Needs digsim-native 0.4.0 for the native engine

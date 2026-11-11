@@ -12,7 +12,7 @@
                 "name": "clock",
                 "type": "digsim.circuit.components.Clock",
                 "display_name": "Clock",
-                "settings": {"frequency": 100}
+                "settings": {"frequency": 1000}
             },
             {
                 "name": "reset",
@@ -82,7 +82,7 @@
                 "name": "Note_0",
                 "type": "digsim.circuit.components.Note",
                 "display_name": "Note",
-                "settings": {"text": "Clock, 100 Hz"}
+                "settings": {"text": "Clock, 1000 Hz"}
             },
             {
                 "name": "Note_1",
@@ -113,7 +113,7 @@
                 "type": "digsim.circuit.components.Note",
                 "display_name": "Note",
                 "settings": {
-                    "text": "RV32E demo: the rv32e subcircuit (rv32e.circuit) with a ROM and a RAM.\nThe RAM has Byte enable, for the byte strobes of the processor's stores.\nThe ROM (lcd.hex, built from lcd.c with make) drives the HD44780 LCD in 4-bit mode\nthrough the GPIO register: bits 3:0 are D7:D4, bit 4 RS and bit 5 E.\nIt writes a line of text with a custom character, and the time since reset\n(from the timer) on the second line.\nprogram.hex, the earlier demo (a running light), can be chosen in the ROM's settings.\nStart the simulation and press Reset (key 1). Double-click the rv32e component\nto see inside it."
+                    "text": "RV32E demo: the cpu subcircuit (cpu.circuit) with a ROM and a RAM.\nThe RAM has Byte enable, for the byte strobes of the processor's stores.\nThe program in the ROM (rv32e_code/lcd.bin, built from lcd.c with make) drives\nthe HD44780 LCD in 4-bit mode through the GPIO register: bits 3:0 are D7:D4,\nbit 4 RS and bit 5 E. It writes a line of text with a custom character, a letter\nevery 0.2 s, and the time since reset (from the timer) on the second line.\nStart the simulation and press Reset (key 1). Double-click the cpu component\nto see inside it."
                 }
             },
             {
@@ -350,5 +350,5 @@
         }
     ],
     "shortcuts": {"1": "reset"},
-    "settings": {"real_time": true, "color_wires": true, "update_frequency": 10}
+    "settings": {"real_time": true, "color_wires": true, "update_frequency": 50}
 }

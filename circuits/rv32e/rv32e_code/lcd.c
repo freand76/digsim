@@ -12,13 +12,14 @@
 // and the bar each write their own byte and leave the other one as it is.
 //
 // It sets up the LCD (4-bit mode, two lines), makes a heart the custom character 0,
-// writes a line of text between two hearts, and then shows the time since reset on the
-// second line, forever. The time is from the timer, which counts the clock cycles since
-// reset: a second is CLOCK_HZ cycles. The rv32e has no divide instruction (a division
-// in software takes seconds at 100 Hz), so the time steps on a second at a time. It
-// catches up with the timer first (at the start, the LCD has taken seconds to set up),
-// then only the digits that changed are written (the processor runs 100 instructions a
-// second, a character takes about 30).
+// writes a line of text between two hearts, a letter every LETTER_MS milliseconds, and
+// then shows the time since reset on the second line, forever. The time is from the
+// timer, which counts the clock cycles since reset: a second is CLOCK_HZ cycles. The
+// rv32e has no divide instruction (a division in software takes hundreds of cycles), so
+// the time steps on a second at a time. It catches up with the timer first (at the
+// start, the LCD has taken a while to set up), then only the digits that changed are
+// written (the processor runs CLOCK_HZ instructions a second, a character takes about
+// 30).
 
 #include <stdint.h>
 
@@ -35,7 +36,12 @@ extern volatile struct gpio GPIO;
 extern volatile const uint32_t TIMER;
 
 // The clock of rv32e_demo.circuit
-#define CLOCK_HZ 100
+#define CLOCK_HZ 1000
+
+// The time between the letters of the hello text, and in clock cycles (the compiler
+// divides, the processor can't)
+#define LETTER_MS 200
+#define LETTER_CYCLES (CLOCK_HZ * LETTER_MS / 1000)
 
 #define RS 0x10
 #define E 0x20
@@ -93,6 +99,25 @@ static void lcd_write(const char *text)
     }
 }
 
+// Wait for a number of clock cycles, by the timer (it can wrap around)
+static void wait_cycles(uint32_t cycles)
+{
+    uint32_t start = TIMER;
+    while (TIMER - start < cycles) {
+    }
+}
+
+// Write a text a letter at a time, LETTER_MS between the letters
+static void lcd_write_slowly(const char *text)
+{
+    while (*text) {
+        lcd_data((uint8_t)*text++);
+        if (*text) {
+            wait_cycles(LETTER_CYCLES);
+        }
+    }
+}
+
 // One second more: the seconds go up, and the digits before them when they wrap around.
 // Returns the place of the first digit that changed.
 static int time_add_second(void)
@@ -144,7 +169,7 @@ int main(void)
     }
     lcd_command(0x80); // The DDRAM address 0, the first line
     // The heart is character 0, written as 8 (the same character)
-    lcd_write("\x08 Hello RV32E! \x08");
+    lcd_write_slowly("\x08 Hello RV32E! \x08");
     lcd_command(0xc0); // The DDRAM address 0x40, the second line
     lcd_write("Uptime  ");
     // The timer when the next second has passed, it can wrap around

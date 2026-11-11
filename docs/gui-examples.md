@@ -105,16 +105,16 @@ simulation runs to play a tune.
 
 `rv32e_demo.circuit` in `circuits/rv32e/` is a small computer: a RISC-V RV32E processor
 that runs a C program and writes to an HD44780 character LCD. Start the simulation and
-press Reset (shortcut **1**). After a few seconds of simulated time the LCD shows
-"Hello RV32E!" between two hearts (a custom character), and the time since reset on the
-second line.
+press Reset (shortcut **1**). The LCD writes "Hello RV32E!" between two hearts (a custom
+character), a letter every 0.2 seconds of simulated time, and then the time since reset on
+the second line.
 
 - The processor is the `cpu` subcircuit (`cpu.circuit`): the RV32E core in Verilog
   ([`rv32e.v`](https://github.com/freand76/digsim/blob/main/circuits/rv32e/rv32e.v), a
   Verilog component that runs one instruction per clock cycle) with its memory system, an
   arbiter, a GPIO register and a timer, each a subcircuit of its own. Double-click it to
   see inside it, the memory map is in a note there.
-- A 100 Hz clock drives it. The ROM holds the program, `rv32e_code/lcd.bin`, and the RAM
+- A 1000 Hz clock drives it. The ROM holds the program, `rv32e_code/lcd.bin`, and the RAM
   has a byte enable input for the byte strobes of the processor's stores.
 - The program drives the LCD in 4-bit mode through byte 0 of the GPIO register: bits 3:0
   are D7:D4, bit 4 is RS and bit 5 is E. Once the text is written, byte 1 (bits 15:8) is a
