@@ -11,6 +11,8 @@ from digsim.app._settings_values import (
     NAME_PARAMETER,
     NAME_PATTERN,
     changes,
+    frequency_parts,
+    frequency_range,
     given_name,
     has_given_name,
     name_problem,
@@ -25,6 +27,7 @@ from digsim.circuit.components import (
     SRFF,
     Bus2Wires,
     CircuitInput,
+    Clock,
     Counter,
     FlipFlop,
     IntegratedCircuit,
@@ -152,3 +155,38 @@ def test_name_problem():
     assert "another component" in name_problem(other.name(), led, circuit)
     assert "spaces or dots" in name_problem("a.b", led, circuit)
     assert "spaces or dots" in name_problem("", led, circuit)
+
+
+@pytest.mark.parametrize(
+    ("hertz", "parts"),
+    [
+        (1, (1, "Hz")),
+        (999, (999, "Hz")),
+        (1_000, (1, "kHz")),
+        (1_500, (1_500, "Hz")),
+        (250_000, (250, "kHz")),
+        (2_000_000, (2, "MHz")),
+        (100_000_000, (100, "MHz")),
+    ],
+)
+def test_frequency_parts(hertz, parts):
+    """A frequency is shown in the largest unit that it is a whole number of"""
+    assert frequency_parts(hertz) == parts
+
+
+def test_frequency_range():
+    """The numbers of each unit stay within the frequencies of the parameter"""
+    assert frequency_range("Hz", 1, 100_000_000) == (1, 999)
+    assert frequency_range("kHz", 1, 100_000_000) == (1, 999)
+    assert frequency_range("MHz", 1, 100_000_000) == (1, 100)
+    assert frequency_range("kHz", 1_500, 20_000) == (2, 20)
+
+
+def test_clock_frequency_is_saved_in_hz():
+    """The pane shows the clock's frequency in Hz, the setting it saves"""
+    circuit = Circuit()
+    clock = Clock(circuit, frequency=2_000_000)
+    parameters = pane_parameters(clock, circuit)
+    assert parameters["frequency"]["type"] == "frequency"
+    assert pane_values(parameters)["frequency"] == 2_000_000
+    assert clock.settings_to_dict()["frequency"] == 2_000_000

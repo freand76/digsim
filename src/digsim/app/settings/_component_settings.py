@@ -29,6 +29,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QSlider,
+    QSpinBox,
     QStyle,
     QTextEdit,
     QVBoxLayout,
@@ -37,7 +38,12 @@ from PySide6.QtWidgets import (
 
 from digsim.app._editor_text import module_name, new_module_text
 from digsim.app._ic_search import search_ics
-from digsim.app._settings_values import new_settings
+from digsim.app._settings_values import (
+    FREQUENCY_UNITS,
+    frequency_parts,
+    frequency_range,
+    new_settings,
+)
 from digsim.circuit.components import IntegratedCircuit
 from digsim.circuit.components._splitter import group_ranges, group_text, parse_groups
 from digsim.circuit.components.atoms import ComponentException, Parameter
@@ -243,6 +249,58 @@ class ComponentSettingsIntRangeSlider(ComponentSettingsSlider):
         range_val = self._parameter_dict["range"][value]
         self._settings[self._parameter] = range_val
         self._value_label.setText(f"{range_val}")
+        self.emit_signal()
+
+
+class ComponentSettingsFrequency(ComponentSettingsBase):
+    """A frequency: a number and a unit (Hz, kHz or MHz), the setting is in Hz"""
+
+    def __init__(
+        self,
+        parent: SettingsHost,
+        parameter: str,
+        parameter_dict: Parameter,
+        settings: dict[str, Any],
+    ) -> None:
+        super().__init__(parent, parameter, parameter_dict, settings)
+        self._min = parameter_dict.get("min", 1)
+        self._max = parameter_dict.get("max", self._min)
+        layout = QGridLayout(self)
+        self.setLayout(layout)
+        layout.addWidget(self.description_label(), 0, 0, 1, 2)
+        self._number = QSpinBox(self)
+        self._unit = QComboBox(self)
+        for unit, size in FREQUENCY_UNITS.items():
+            if size <= self._max:
+                self._unit.addItem(unit, userData=unit)
+        number, unit = frequency_parts(int(parameter_dict.get("default", self._min)))
+        self._unit.setCurrentIndex(max(0, self._unit.findData(unit)))
+        self._set_range()
+        # A frequency from a file can be more than the input goes to, like 1500 Hz
+        self._number.setMaximum(max(self._number.maximum(), number))
+        self._number.setValue(number)
+        layout.addWidget(self._number, 1, 0, 1, 1)
+        layout.addWidget(self._unit, 1, 1, 1, 1)
+        layout.setColumnStretch(0, 1)
+        self._number.valueChanged.connect(self._update)
+        self._unit.currentIndexChanged.connect(self._unit_changed)
+        self._update()
+
+    def _set_range(self) -> None:
+        low, high = frequency_range(self._unit.currentData(), self._min, self._max)
+        self._number.setRange(low, high)
+
+    def _unit_changed(self) -> None:
+        # The number stays (10 Hz becomes 10 kHz) while the unit has it
+        self._number.blockSignals(True)
+        self._set_range()
+        self._number.blockSignals(False)
+        self._update()
+
+    def _update(self) -> None:
+        self._settings[self._parameter] = (
+            self._number.value() * FREQUENCY_UNITS[self._unit.currentData()]
+        )
         self.emit_signal()
 
 
@@ -575,6 +633,7 @@ _SETTINGS_WIDGETS: dict[str, type[ComponentSettingsBase]] = {
     "str": ComponentSettingText,
     "bool": ComponentSettingsCheckBox,
     "intrange": ComponentSettingsIntRangeSlider,
+    "frequency": ComponentSettingsFrequency,
     "ic_name": ComponentSettingsIcSelector,
     "component_name": ComponentSettingsNameSelector,
     "list": ComponentSettingsListSelector,

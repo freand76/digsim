@@ -24,6 +24,7 @@ ParameterType = Literal[
     "bit_groups",
     "bool",
     "component_name",
+    "frequency",
     "ic_name",
     "int",
     "intrange",

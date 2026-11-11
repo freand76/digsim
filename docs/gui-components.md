@@ -277,6 +277,7 @@ selects the input:
 | --- | --- | --- |
 | `int` | Slider | `min`, `max`, `default` |
 | `intrange` | Slider over a list of values | `range`, `default_index` |
+| `frequency` | A number and a unit (Hz, kHz or MHz), the value is in Hz | `min`, `max`, `default` (in Hz) |
 | `bool` | Checkbox | `default` |
 | `str` | Text field | `default`, `single_line` (one line instead of a text box), `invalid_list` (values not allowed), `pattern` (a regular expression a single line must match) |
 | `list` | Drop-down | `items` |

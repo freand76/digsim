@@ -20,6 +20,10 @@ if TYPE_CHECKING:
     from digsim.circuit import Circuit
 
 
+# The highest frequency in the GUI, a half period of 5 ns
+MAX_FREQUENCY = 100_000_000
+
+
 class Clock(CallbackComponent):
     """
     A clock, its output is a square wave. It starts low at init(), and rises half a period
@@ -91,11 +95,11 @@ class Clock(CallbackComponent):
     def get_parameters(cls) -> dict[str, Parameter]:
         return {
             "frequency": {
-                "type": "int",
+                "type": "frequency",
                 "min": 1,
-                "max": 100,
+                "max": MAX_FREQUENCY,
                 "default": 1,
-                "description": "Clock frequency in Hz",
+                "description": "Clock frequency",
                 "reconfigurable": True,
             },
         }

@@ -34,6 +34,28 @@ NAME_PATTERN = r"[^\s.]+"
 # The parameters that are chosen before a component is added, they have no default
 CHOSEN_FIRST = ("path", "ic_name")
 
+# The units of a frequency input, and their size in Hz: a frequency is saved in Hz
+FREQUENCY_UNITS = {"Hz": 1, "kHz": 1_000, "MHz": 1_000_000}
+
+# The largest number of a frequency input, the next unit is 1000 times larger
+FREQUENCY_NUMBER_MAX = 999
+
+
+def frequency_parts(hertz: int) -> tuple[int, str]:
+    """A frequency in Hz as a number and the largest unit it is a whole number of"""
+    for unit, size in reversed(FREQUENCY_UNITS.items()):
+        if hertz >= size and hertz % size == 0:
+            return hertz // size, unit
+    return hertz, "Hz"
+
+
+def frequency_range(unit: str, minimum: int, maximum: int) -> tuple[int, int]:
+    """The numbers of a frequency input in a unit, for a frequency from minimum to maximum Hz"""
+    size = FREQUENCY_UNITS[unit]
+    low = max(1, -(-minimum // size))
+    high = min(FREQUENCY_NUMBER_MAX, maximum // size)
+    return low, max(low, high)
+
 
 def _flip_flop_classes() -> dict[str, str]:
     return FlipFlop.get_parameters()[CLASS_PARAMETER]["component_list"]
