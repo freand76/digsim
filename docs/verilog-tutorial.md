@@ -151,7 +151,7 @@ panel opens below the text, and shows each step:
 | Step | What it does |
 | --- | --- |
 | Save | Saves `counter.v`, Yosys reads the file from disk |
-| List modules | Reads the Verilog and checks that the file has one module, as a Verilog component needs |
+| List modules | Reads the Verilog and finds the module of each component: the top module of the file (the one no other module instantiates), or the module chosen in its settings |
 | Synthesize into gates | Turns the module into a netlist of gates and flip-flops. A component with **Synthesize Verilog into functional blocks** checked gets a step "Synthesize into functional blocks" instead |
 | Check ports | Compares the ports of the new module with the component's. Here they are the same |
 | Update components | Builds the components of the file from the new netlist |

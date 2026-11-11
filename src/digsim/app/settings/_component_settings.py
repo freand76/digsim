@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLayout,
     QLineEdit,
@@ -40,8 +41,10 @@ from digsim.app._editor_text import module_name, new_module_text
 from digsim.app._ic_search import search_ics
 from digsim.app._settings_values import (
     FREQUENCY_UNITS,
+    MODULE_PARAMETER,
     frequency_parts,
     frequency_range,
+    new_module_choices,
     new_settings,
 )
 from digsim.circuit.components import IntegratedCircuit
@@ -804,6 +807,25 @@ class ComponentSettingsDialog(QDialog):
                 settings[first_key] = path
         return is_file_path, settings, new and len(path) > 0
 
+    @staticmethod
+    def _ask_module(parent: QWidget | None, path: str) -> str | None:
+        """
+        The module of a new component from a Verilog file with several top modules ("" for
+        the top module of another file), None if that was cancelled
+        """
+        modules = new_module_choices(path)
+        if not modules:
+            return ""
+        module, ok = QInputDialog.getItem(
+            parent,
+            "Module",
+            f"{Path(path).name} has several top modules.\nThe module of the component:",
+            modules,
+            0,
+            False,
+        )
+        return module if ok else None
+
     @classmethod
     def ask_new_settings(
         cls,
@@ -822,6 +844,12 @@ class ComponentSettingsDialog(QDialog):
         is_file_path, chosen, created = cls._is_file_path(parent, parameters)
         if is_file_path and len(chosen) == 0:
             return False, {}
+        if is_file_path and not created:
+            module = cls._ask_module(parent, str(next(iter(chosen.values()))))
+            if module is None:
+                return False, {}
+            if module:
+                chosen[MODULE_PARAMETER] = module
         if "ic_name" in parameters:
             dialog = ComponentSettingsDialog(
                 parent, app_model, name, {"ic_name": parameters["ic_name"]}

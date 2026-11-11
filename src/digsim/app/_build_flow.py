@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Literal
 
 from digsim.circuit.components import YosysComponent, YosysVariant
-from digsim.circuit.components._yosys_component import parameter_dict
+from digsim.circuit.components._yosys_component import file_modules, parameter_dict
 from digsim.circuit.components.atoms import DigsimException
 from digsim.synth import Synthesis, SynthesisException, YosysMessage, parse_messages
 
@@ -53,8 +53,11 @@ class BuildResult:
 def synth_step_name(variant: YosysVariant) -> str:
     """The name of the step that synthesizes into gates or functional blocks"""
     name = "Synthesize into functional blocks" if variant.functional else "Synthesize into gates"
+    details = [f"module {variant.module}"] if variant.module else []
     if variant.parameters:
-        name += f" ({variant.parameters.replace(',', ', ')})"
+        details.append(variant.parameters.replace(",", ", "))
+    if details:
+        name += f" ({', '.join(details)})"
     return name
 
 
@@ -76,8 +79,8 @@ def run_synthesis(
     path: str | Path, variants: set[YosysVariant], report: Callable[[BuildStep], None]
 ) -> BuildResult:
     """
-    List the modules of a Verilog file, and synthesize it into gates or functional blocks,
-    with parameters, as 'variants' says. Each step is reported when it starts
+    List the modules of a Verilog file, and synthesize its top module (or the module of a
+    variant) into gates or functional blocks, with parameters, as 'variants' says. Each step is reported when it starts
     and when it ends. The netlists are kept for the components (see synthesize_file).
     """
     path = str(path)
@@ -103,15 +106,24 @@ def run_synthesis(
         report(BuildStep(name, status, detail, time.monotonic() - start))
         return True
 
-    modules: list[str] = []
+    tops: list[str] = []
 
     def list_modules() -> str:
-        modules.extend(Synthesis.list_modules(path, log=log))
-        if len(modules) != 1:
+        hierarchy = file_modules(path, log)
+        tops.extend(Synthesis.top_modules(hierarchy))
+        chosen = sorted({variant.module for variant in variants if variant.module})
+        for module in chosen:
+            if module not in hierarchy:
+                raise SynthesisException(f"ERROR: The file has no module '{module}'", log)
+        if len(tops) != 1 and any(not variant.module for variant in variants):
             raise SynthesisException(
-                f"ERROR: The file has {len(modules)} modules, a Yosys component needs one", log
+                f"ERROR: The file has {len(tops)} top modules ({', '.join(tops)}), choose "
+                "the module of the component in its settings",
+                log,
             )
-        return f"Module {modules[0]}"
+        modules = chosen if all(variant.module for variant in variants) else [tops[0], *chosen]
+        modules = list(dict.fromkeys(modules))
+        return f"Module{'s' if len(modules) > 1 else ''} {', '.join(modules)}"
 
     if not run("List modules", list_modules):
         return result
@@ -124,8 +136,9 @@ def run_synthesis(
                 variant.functional,
                 log=log,
                 cached=False,
-                top=modules[0],
+                top=variant.module or tops[0],
                 parameters=parameter_dict(variant.parameters),
+                module=variant.module,
             )
             return ""
 

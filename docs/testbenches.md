@@ -72,8 +72,9 @@ def dut():
 
 `Synthesis` runs Yosys on the Verilog files and `synth_to_dict()` returns the netlist,
 see [Verilog and Yosys](synthesis.md). Naming the top module like this also works for
-designs with several modules. For a file with one module,
-`VerilogComponent(circuit, path="up_down_counter.v")` synthesizes it in one step.
+designs in several files. For a design in one file,
+`VerilogComponent(circuit, path="up_down_counter.v")` synthesizes its top module in one
+step.
 
 With `scope="module"`, the design is synthesized once for all tests in the file, and the
 tests share the DUT. Each test therefore starts with a reset. Synthesis of a small design

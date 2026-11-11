@@ -418,10 +418,17 @@ class VerilogEditor(QMainWindow):
                 "No component uses this file. The parameters are set for each component.",
             )
             return
+        # The module that the components are made from, the top module or a chosen one
+        modules = sorted({component.module_name() for component in components})
+        if len(modules) != 1:
+            QMessageBox.information(
+                self,
+                "Parameters",
+                f"The components of this file are made from different modules "
+                f"({', '.join(modules)}): set their parameters in Python.",
+            )
+            return
         try:
-            modules = Synthesis.list_modules(self._path)
-            if len(modules) != 1:
-                raise DigsimException(f"The file has {len(modules)} modules, it needs one")
             defaults = Synthesis.list_parameters(self._path, modules[0])
         except (DigsimException, OSError) as exc:
             QMessageBox.warning(self, "Parameters", f"The parameters can't be read: {exc}")

@@ -27,7 +27,7 @@ another `yosys` is installed.
 
 You don't always need to synthesize by hand: the GUI and `VerilogComponent` both accept
 `.v` files and synthesize them on load. Creating a netlist yourself is useful when the
-design has several modules, or when the same design is loaded often (synthesis of large
+design is in several files, or when the same design is loaded often (synthesis of large
 designs takes a while).
 
 ## The synthesis helper
@@ -89,6 +89,24 @@ the parameters of the module, with their defaults, and a column for each compone
 the file. An empty value is the default. **Synthesize** saves the file and synthesizes
 each component with its values, and asks first if that changes the ports of a component,
 like a wider bus does. Undo brings the values from before back, unless the ports changed.
+
+## Several modules
+
+A Verilog file can have several modules. A `VerilogComponent` (and a Verilog component in
+the GUI) is made from the top module of the file, the one that no other module of the
+file instantiates. The modules it instantiates are flattened into it. The `module`
+argument chooses another module of the file: one of several top modules, or a submodule
+to test on its own. A saved circuit keeps it.
+
+```python
+top = VerilogComponent(circuit, path="alu.v")  # The top module
+adder = VerilogComponent(circuit, path="alu.v", module="adder")
+```
+
+A file with several top modules needs the module, the component can't guess it. A
+netlist file is made from its one module. `Synthesis.module_hierarchy()` returns the
+modules of Verilog files with the modules that each one instantiates, and
+`Synthesis.top_modules()` the top modules of it.
 
 ## Gates or functional blocks
 
@@ -273,8 +291,8 @@ with open("counter.v", encoding="utf-8") as file:
 
 ## Limitations
 
-- A Verilog file loaded directly into a Verilog component can contain only one module.
-  Synthesize multi-module designs into a netlist first.
+- A Verilog component is made from one file. Synthesize a design in several files into a
+  netlist first.
 - `$display`, assertions and the other simulation messages and checks are left out of
   the simulation.
 

@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Verilog components: a Verilog file can have several modules. The component is the top module (the one no other module instantiates, with its submodules in it), or the module chosen with module="..." (Module in the settings pane of the GUI). Adding a file with several top modules in the GUI asks which one. It failed with "Only one module per file is supported"
  - RV32E example circuit: the clock runs at 1000 Hz (was 100 Hz), and the program writes the hello text a letter every 0.2 s. lcd.c has defines for the clock and the delay
  - Clock: the frequency is set as a number and a unit (Hz, kHz or MHz), from 1 Hz to 100 MHz (was a slider, 1–100 Hz). It is saved in Hz as before, so older circuits open unchanged
  - VerilogComponent: the YosysComponent by the name of what it is made from, a Verilog file (or a Yosys netlist), with the same arguments. The examples use it

@@ -639,9 +639,12 @@ replaced. A few folders can't be used, like `/tmp` on Linux, as Yosys can't read
 there, see [Verilog and Yosys](synthesis.md#verilog-and-yosys). DigSim says so when
 you choose one.
 
-!!! note
-    A Verilog file loaded directly can only contain one module. Synthesize designs with
-    several modules into a netlist first.
+A Verilog file can have several modules. The component is the top module, the one that
+no other module of the file instantiates, with the modules it instantiates flattened into
+it. When the file has several top modules, DigSim asks which module to use, and
+**Module** in the settings pane changes it later (the component is built again with the
+ports of that module). Both list all the modules of the file, the top modules first, then
+the submodules, to try one on its own.
 
 After changing your design, right-click the component and choose **Reload** to load the
 new version without rebuilding the circuit. A typical development loop is:

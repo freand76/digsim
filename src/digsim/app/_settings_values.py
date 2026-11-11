@@ -15,7 +15,14 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from digsim.circuit.components import FlipFlop, SubCircuit, YosysComponent
-from digsim.circuit.components.atoms import Component, ComponentException, Parameter
+from digsim.circuit.components._yosys_component import file_modules
+from digsim.circuit.components.atoms import (
+    Component,
+    ComponentException,
+    DigsimException,
+    Parameter,
+)
+from digsim.synth import Synthesis
 
 
 if TYPE_CHECKING:
@@ -33,6 +40,9 @@ NAME_PATTERN = r"[^\s.]+"
 
 # The parameters that are chosen before a component is added, they have no default
 CHOSEN_FIRST = ("path", "ic_name")
+
+# The module of a Verilog component, a setting for a file with several modules
+MODULE_PARAMETER = "module"
 
 # The units of a frequency input, and their size in Hz: a frequency is saved in Hz
 FREQUENCY_UNITS = {"Hz": 1, "kHz": 1_000, "MHz": 1_000_000}
@@ -103,6 +113,59 @@ def unique_name(name: str, taken: set[str]) -> str:
     return unique
 
 
+def _verilog_modules(path: str) -> dict[str, list[str]]:
+    """The modules of a Verilog file (see file_modules), none if it isn't one or has errors"""
+    if not path.lower().endswith((".v", ".sv")):
+        return {}
+    try:
+        return file_modules(path)
+    except (DigsimException, OSError):
+        # The component reports the error when it is made
+        return {}
+
+
+def _ordered_modules(modules: dict[str, list[str]]) -> list[str]:
+    """The modules of a file, the top modules first, then the submodules"""
+    tops = Synthesis.top_modules(modules)
+    return tops + [module for module in modules if module not in tops]
+
+
+def new_module_choices(path: str) -> list[str]:
+    """
+    The modules of a Verilog file with several top modules, to choose the module of a new
+    component from, as the settings pane lists them (see module_parameter): empty if the
+    file has one top module, which the component is then made from
+    """
+    modules = _verilog_modules(path)
+    if len(Synthesis.top_modules(modules)) < 2:
+        return []
+    return _ordered_modules(modules)
+
+
+def module_parameter(component: Component) -> Parameter | None:
+    """
+    The module setting of a Verilog component whose file has several modules: the top
+    modules first, then the other modules (to make a component of a submodule). None for
+    another component, or a file with one module.
+    """
+    if not isinstance(component, YosysComponent) or component.source_file is None:
+        return None
+    modules = _verilog_modules(component.source_file)
+    if len(modules) < 2:
+        return None
+    items = _ordered_modules(modules)
+    current = component.module_name()
+    if current not in items:
+        # Like a module that is gone from the file
+        items = [current, *items]
+    return {
+        "type": "list",
+        "description": "Module",
+        "default": current,
+        "items": items,
+    }
+
+
 def pane_parameters(component: Component, circuit: Circuit) -> dict[str, Parameter]:
     """
     The parameters of a component, each with its value as the default: the settings that
@@ -151,6 +214,8 @@ def pane_parameters(component: Component, circuit: Circuit) -> dict[str, Paramet
             # Like the label of a wire source whose sink is gone
             parameter["items"] = [str(values[name]), *parameter["items"]]
         parameters[name] = parameter
+        if name == "path" and (module := module_parameter(component)) is not None:
+            parameters[MODULE_PARAMETER] = module
     return parameters
 
 

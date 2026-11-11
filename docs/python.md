@@ -199,7 +199,10 @@ vdd.wire = counter.up
 circuit.init()
 ```
 
-See [Verilog and Yosys](synthesis.md) for more about synthesis.
+A file with several modules makes a component of its top module, the one that no other
+module instantiates. `module="half_adder"` chooses another module, also when the file has
+several top modules. See [Verilog and Yosys](synthesis.md#several-modules) for more about
+synthesis.
 
 ## Subcircuits
 

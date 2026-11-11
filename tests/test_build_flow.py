@@ -79,15 +79,16 @@ def test_error_in_synthesis():
     assert result.errors()
 
 
-def test_two_modules():
-    result, steps, _ = _run(VERILOG / "multiple_modules.v", {GATES})
-    assert steps[-1] == (
-        "List modules",
-        "error",
-        "The file has 3 modules, a Yosys component needs one",
+def test_several_top_modules():
+    """Without the module of the component, the file needs one top module"""
+    message = (
+        "The file has 3 top modules (multi_module_one, multi_module_two, multi_module_three), "
+        "choose the module of the component in its settings"
     )
+    result, steps, _ = _run(VERILOG / "multiple_modules.v", {GATES})
+    assert steps[-1] == ("List modules", "error", message)
     assert result.netlists is None
-    assert result.errors()[0].text == "The file has 3 modules, a Yosys component needs one"
+    assert result.errors()[0].text == message
 
 
 def test_warnings():

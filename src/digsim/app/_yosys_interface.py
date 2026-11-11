@@ -133,6 +133,7 @@ def load_netlists(
             log=log,
             cached=cached,
             parameters=parameter_dict(variant.parameters),
+            module=variant.module,
         )
         for variant in sorted(variants)
     }
@@ -145,7 +146,9 @@ def variant_with(component: YosysComponent, parameters: str | None) -> YosysVari
     """
     if parameters is None:
         return component.variant
-    return YosysVariant(component.functional, parameter_text(parameter_dict(parameters)))
+    return YosysVariant(
+        component.functional, parameter_text(parameter_dict(parameters)), component.module
+    )
 
 
 def parameter_column(texts: dict[str, str]) -> str:

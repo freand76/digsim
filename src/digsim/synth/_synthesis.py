@@ -360,6 +360,50 @@ class Synthesis:
         return modules[module]
 
     @classmethod
+    def _read_rtlil(cls, verilog_files: VerilogFiles, log: list[str] | None) -> list[str]:
+        """The modules of Verilog files in RTLIL, as Yosys reads them, by line"""
+        files = _script_files(verilog_files)
+        with cls._work_dir() as work_dir:
+            rtlil_file = work_dir / "modules.il"
+            script = f"read_verilog -sv {files}; write_rtlil {_script_path(rtlil_file)}"
+            cls._run_yosys(script, work_dir, log if log is not None else [])
+            return rtlil_file.read_text(encoding="utf-8").splitlines()
+
+    @classmethod
+    def module_hierarchy(
+        cls, verilog_files: VerilogFiles, log: list[str] | None = None
+    ) -> dict[str, list[str]]:
+        """
+        The modules of Verilog files, in the order of the Verilog, each with the modules
+        of the files that it instantiates.
+
+        Args:
+            verilog_files: One Verilog file, or a list of them.
+            log: A list to add the Yosys log to.
+
+        Raises:
+            SynthesisException: If Yosys reports an error, like a syntax error.
+        """
+        modules: dict[str, list[str]] = {}
+        instances: list[str] = []
+        for line in cls._read_rtlil(verilog_files, log):
+            if line.startswith("module "):
+                instances = modules.setdefault(line.split()[1].removeprefix("\\"), [])
+            elif line.startswith("  cell \\"):
+                # A module (Yosys cells start with $): "cell \TYPE \NAME"
+                instances.append(line.split()[1].removeprefix("\\"))
+        return {
+            module: [name for name in dict.fromkeys(names) if name in modules]
+            for module, names in modules.items()
+        }
+
+    @staticmethod
+    def top_modules(hierarchy: Mapping[str, Sequence[str]]) -> list[str]:
+        """The modules of a module_hierarchy() that no other module instantiates"""
+        instantiated = {name for instances in hierarchy.values() for name in instances}
+        return [module for module in hierarchy if module not in instantiated]
+
+    @classmethod
     def list_module_parameters(
         cls, verilog_files: VerilogFiles, log: list[str] | None = None
     ) -> dict[str, dict[str, int | str]]:
@@ -374,12 +418,7 @@ class Synthesis:
         Raises:
             SynthesisException: If Yosys reports an error, like a syntax error.
         """
-        files = _script_files(verilog_files)
-        with cls._work_dir() as work_dir:
-            rtlil_file = work_dir / "modules.il"
-            script = f"read_verilog -sv {files}; write_rtlil {_script_path(rtlil_file)}"
-            cls._run_yosys(script, work_dir, log if log is not None else [])
-            rtlil = rtlil_file.read_text(encoding="utf-8").splitlines()
+        rtlil = cls._read_rtlil(verilog_files, log)
         modules: dict[str, dict[str, int | str]] = {}
         parameters: dict[str, int | str] = {}
         for line in rtlil:
