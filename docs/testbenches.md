@@ -40,7 +40,7 @@ endmodule
 
 ## Loading the design
 
-A pytest fixture creates a circuit with the design as a `YosysComponent`, the device under
+A pytest fixture creates a circuit with the design as a `VerilogComponent`, the device under
 test (DUT), and a `Clock` that drives its clock input. The ports of the DUT get the names
 of the Verilog module's ports, so the counter has `dut.clk`, `dut.nrst`, `dut.up`,
 `dut.down` and `dut.value`:
@@ -51,7 +51,7 @@ import pathlib
 import pytest
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import Clock, YosysComponent
+from digsim.circuit.components import Clock, VerilogComponent
 from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
 
@@ -59,7 +59,7 @@ from digsim.utils import YosysNetlist
 @pytest.fixture(scope="module")
 def dut():
     circuit = Circuit(vcd="up_down_counter_test.vcd")
-    counter = YosysComponent(circuit)
+    counter = VerilogComponent(circuit)
     verilog = pathlib.Path(__file__).parent / "up_down_counter.v"
     synthesis = Synthesis([str(verilog)], "up_down_counter")
     counter.create_from_netlist(YosysNetlist(**synthesis.synth_to_dict()))
@@ -73,7 +73,7 @@ def dut():
 `Synthesis` runs Yosys on the Verilog files and `synth_to_dict()` returns the netlist,
 see [Verilog and Yosys](synthesis.md). Naming the top module like this also works for
 designs with several modules. For a file with one module,
-`YosysComponent(circuit, path="up_down_counter.v")` synthesizes it in one step.
+`VerilogComponent(circuit, path="up_down_counter.v")` synthesizes it in one step.
 
 With `scope="module"`, the design is synthesized once for all tests in the file, and the
 tests share the DUT. Each test therefore starts with a reset. Synthesis of a small design

@@ -25,7 +25,7 @@ another `yosys` is installed.
     Verilog includes with `` `include `` are read by Yosys itself, keep them in the same
     places.
 
-You don't always need to synthesize by hand: the GUI and `YosysComponent` both accept
+You don't always need to synthesize by hand: the GUI and `VerilogComponent` both accept
 `.v` files and synthesize them on load. Creating a netlist yourself is useful when the
 design has several modules, or when the same design is loaded often (synthesis of large
 designs takes a while).
@@ -73,10 +73,10 @@ other values. The values are integers, also negative ones and ones wider than 32
 
 ```python
 synthesis = Synthesis(["fifo.v"], "fifo", parameters={"WIDTH": 16, "DEPTH": 4})
-fifo = YosysComponent(circuit, path="fifo.v", parameters={"WIDTH": 16, "DEPTH": 4})
+fifo = VerilogComponent(circuit, path="fifo.v", parameters={"WIDTH": 16, "DEPTH": 4})
 ```
 
-A `YosysComponent` also takes them as text, `parameters="WIDTH=16,DEPTH=4"`, and a saved
+A `VerilogComponent` also takes them as text, `parameters="WIDTH=16,DEPTH=4"`, and a saved
 circuit keeps them. Each set of parameters is a netlist of its own, so two components of
 the same file can have different ports. A parameter that the module doesn't have is a
 synthesis error. A netlist file has no parameters, they were set when it was
@@ -111,7 +111,7 @@ even faster than its functional blocks. The simulation is the same for the
 ports of the design. Inside it there are no gates, and the signals between the functional
 blocks are not in a VCD file, only the ports of the design and the blocks' ports to them.
 
-`YosysComponent(circuit, path="counter.v", functional=True)` synthesizes a Verilog file
+`VerilogComponent(circuit, path="counter.v", functional=True)` synthesizes a Verilog file
 into functional blocks, and in the GUI a checkbox after the file selects it. A netlist
 file is used the way it was synthesized.
 
@@ -121,6 +121,24 @@ synthesis doesn't make: the adders and multipliers of `alumacc` (`$alu`, `$macc_
 `$lcu`, `$fa`) and lookup tables (`$lut`, `$sop`). Memories (`$mem_v2`) and extracted state machines (`$fsm`) are not simulated.
 Synthesize with `memory_map`, and without the FSM passes (`synth -nofsm`) or with
 `fsm_map`, like the functional synthesis does.
+
+## Initial values
+
+The flip-flops and latches of a design start undefined (`"X"`), like in a Verilog
+simulator, until a reset or a clock edge gives them a value. A register with an initial
+value in the Verilog starts at it, after every `init()` of the circuit:
+
+```verilog
+reg [7:0] count;      // "X" until it is reset
+reg ready = 0;        // 0
+reg [3:0] mode = 4'b10xx;  // the two lower bits are "X"
+```
+
+The initial contents of a memory (an `initial` block, or `$readmemh`) work the same way,
+Yosys maps the memory to registers with initial values. Yosys keeps the initial values in
+the netlist (the `init` attribute of the signal), so a netlist file has them too. A
+register that the design reads before it is reset makes its outputs `"X"`, which shows
+where a reset is missing.
 
 ## Tristate outputs
 
@@ -160,12 +178,12 @@ word: a word of which only some bits are driven is `"X"` for the ports it drives
 ## Internal signals and states
 
 A Yosys netlist also has the names of the wires and registers of the Verilog, with the
-bits they use. With `signals=True`, a `YosysComponent` makes them readable, and writes
+bits they use. With `signals=True`, a `VerilogComponent` makes them readable, and writes
 them to the VCD file next to the ports. It makes the simulation slower, so it is off by
 default.
 
 ```python
-cpu = YosysComponent(circuit, path="cpu.json", signals=True, states=["state"])
+cpu = VerilogComponent(circuit, path="cpu.json", signals=True, states=["state"])
 cpu.signal_names()  # ["ABH", "ABL", ..., "PC", "state", ...]
 cpu.signal("PC")  # The value, like a port value: a number or "X"
 cpu.state("state")  # The name of the state, like "FETCH"
@@ -255,8 +273,10 @@ with open("counter.v", encoding="utf-8") as file:
 
 ## Limitations
 
-- A Verilog file loaded directly into a Yosys component can contain only one module.
+- A Verilog file loaded directly into a Verilog component can contain only one module.
   Synthesize multi-module designs into a netlist first.
+- `$display`, assertions and the other simulation messages and checks are left out of
+  the simulation.
 
 See the [Yosys documentation](https://yosyshq.readthedocs.io/projects/yosys/) for
 everything else Yosys can do.

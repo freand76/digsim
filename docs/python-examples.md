@@ -334,7 +334,7 @@ back after a while. The component is created with `signals=True`, so its interna
 the state and a timer, are readable, and the state has the names of the enum:
 
 ```python
-light = YosysComponent(circuit, path="traffic_light.sv", functional=True, signals=True)
+light = VerilogComponent(circuit, path="traffic_light.sv", functional=True, signals=True)
 light.state("state")  # "RED", "RED_YELLOW", "GREEN" or "YELLOW"
 ```
 

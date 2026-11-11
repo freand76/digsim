@@ -6,7 +6,7 @@ see [Python Circuits](../python.md).
 | Module | Contents |
 | --- | --- |
 | [`digsim.circuit`](circuit.md) | `Circuit`, which holds the components and runs the simulation |
-| [`digsim.circuit.components`](components.md) | The components, like `AND`, `Led` and `YosysComponent` |
+| [`digsim.circuit.components`](components.md) | The components, like `AND`, `Led` and `VerilogComponent` |
 | [`digsim.circuit.components.atoms`](base-classes.md) | The [base classes](base-classes.md) of all components, and the [ports](ports.md) |
 | [`digsim.synth`](synthesis.md) | `Synthesis`, Verilog to netlist with Yosys |
 | [`digsim.utils`](netlist.md) | The Yosys netlist classes |

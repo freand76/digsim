@@ -610,7 +610,7 @@ folder.
 
 ![Verilog](images/components/YOSYS.png)
 
-A Verilog component (`YosysComponent` in Python) gets its behavior from your own Verilog,
+A Verilog component (`VerilogComponent` in Python) gets its behavior from your own Verilog,
 synthesized by Yosys. When you add one, DigSim asks if you want to open a file or start a
 new Verilog file. **Open a file** opens a file dialog for either a **Verilog file** or a
 **Yosys netlist** in JSON format. Verilog files are synthesized automatically when loaded.

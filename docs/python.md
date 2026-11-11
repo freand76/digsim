@@ -175,20 +175,21 @@ The available components are:
 | Buses | `Bus2Wires`, `Wires2Bus`, `Splitter`, `TristateBuffer`, `LabelWireIn`, `LabelWireOut` |
 | Memory | `RAM`, `ROM`, `MemStdOut` |
 | Circuit ports | `CircuitInput`, `CircuitOutput`, `CircuitInOut`, `SubCircuit` |
-| Complex | `IntegratedCircuit`, `YosysComponent` |
+| Complex | `IntegratedCircuit`, `VerilogComponent` |
 
 ## Verilog components
 
-A `YosysComponent` can be created straight from a Verilog file or from a Yosys JSON
-netlist. Its ports get the names of the Verilog module's ports
+A `VerilogComponent` can be created straight from a Verilog file or from a Yosys JSON
+netlist (it is a `YosysComponent`, the name the GUI saves). Its ports get the names of the
+Verilog module's ports
 ([`examples/yosys_counter`](https://github.com/freand76/digsim/tree/main/examples/yosys_counter)):
 
 ```python
 from digsim.circuit import Circuit
-from digsim.circuit.components import VDD, PushButton, YosysComponent
+from digsim.circuit.components import VDD, PushButton, VerilogComponent
 
 circuit = Circuit(vcd="counter.vcd")
-counter = YosysComponent(circuit, path="examples/yosys_counter/counter.v")
+counter = VerilogComponent(circuit, path="examples/yosys_counter/counter.v")
 clk = PushButton(circuit, "clk")
 vdd = VDD(circuit)
 

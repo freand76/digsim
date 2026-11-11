@@ -1,7 +1,7 @@
 # Yosys Netlist
 
 The classes in `digsim.utils` read a Yosys JSON netlist, for example to build a
-[YosysComponent](components.md#digsim.circuit.components.YosysComponent) from it:
+[VerilogComponent](components.md#digsim.circuit.components.VerilogComponent) from it:
 
 ```python
 from digsim.utils import YosysNetlist
