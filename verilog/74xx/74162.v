@@ -1,4 +1,4 @@
-// Copyright (c) Fredrik Andersson, 2023-2025
+// Copyright (c) Fredrik Andersson, 2023-2026
 // All rights reserved
 
 // 74162: synchronous 4-bit decade counter with parallel load, written from the datasheet.
@@ -7,6 +7,7 @@
 // counter in a chain. Q[0] is QA and Q[3] is QD of the datasheet.
 // The flip-flops toggle like the datasheet's logic, so the counts 10 to 15 go back to
 // the decade like on the real chip: 10, 11, 6 and 12, 13, 4 and 14, 15, 2.
+// It starts at 0, the real chip at any count until it is cleared or loaded.
 
 module ttl_74162 (
     input Clear_bar,
@@ -16,7 +17,7 @@ module ttl_74162 (
     input [3:0] D,
     input Clk,
     output RCO,
-    output reg [3:0] Q
+    output reg [3:0] Q = 4'd0
 );
    // The toggles of a synchronous decade counter: QA always, QB when QA is high and QD
    // low, QC when QA and QB are high, QD when QA, QB and QC are high, or QA and QD

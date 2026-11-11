@@ -3,6 +3,7 @@
 ## vx.x.x
  - VerilogComponent: the YosysComponent by the name of what it is made from, a Verilog file (or a Yosys netlist), with the same arguments. The examples use it
  - Verilog (Yosys) components: the flip-flops and latches start undefined ("X"), as in Verilog and in hardware, or at the initial value of the Verilog (like "reg ready = 0", or the initial contents of a memory). They started at 0, which hid a register that is read before it is reset (an Icarus simulation shows it as X). Needs digsim-native 0.4.0 for the native engine
+ - The 74162 IC and the counter of the Verilog examples start at 0, as they did before the registers started undefined
  - Verilog with $display (or another simulation message or assertion) loads: it failed with a KeyError, DigSim ignores those cells
 
  - Native engine: a Clock (outside the GUI) runs in the engine, its edges don't call Python (digsim-native 0.3.0)
