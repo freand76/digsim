@@ -943,6 +943,53 @@ def test_change_settings(gui, circuit):
     assert ("✓", "Synthesize into functional blocks") in build(editor)
 
 
+MODULES = """
+module half_adder(input a, input b, output s, output c);
+  assign s = a ^ b;
+  assign c = a & b;
+endmodule
+
+module full_adder(input a, input b, input cin, output s, output cout);
+  wire s1, c1, c2;
+  half_adder ha1(.a(a), .b(b), .s(s1), .c(c1));
+  half_adder ha2(.a(s1), .b(cin), .s(s), .c(c2));
+  assign cout = c1 | c2;
+endmodule
+"""
+
+
+def test_change_module(gui):
+    """Another module keeps the wires of the ports it has, the others are in a warning"""
+    path = gui.work_dir / "adders.v"
+    path.write_text(MODULES, encoding="utf-8")
+    adder = gui.add("YosysComponent", 300, 0, path=str(path))
+    assert adder.name() == "full_adder"
+    wires = gui.model.objects.wires
+    for row, port in enumerate(("a", "b", "cin")):
+        wires.connect_ports(gui.add("OnOffSwitch", 0, 100 * row).O, adder.port(port))
+    for row, port in enumerate(("s", "cout")):
+        wires.connect_ports(adder.port(port), gui.add("Led", 600, 100 * row).I)
+    gui.model.sig_synchronize_gui.emit()
+    spin()
+    component_object = gui.model.objects.components.get_object(adder)
+    gui.model.objects.components.change_settings(component_object, {"module": "half_adder"})
+    spin()
+    assert gui.errors == []
+    assert yosys(gui).name() == "half_adder"
+    assert [line for line in connections(gui) if "adder" in line] == [
+        "OnOffSwitch.O>half_adder.a",
+        "OnOffSwitch_1.O>half_adder.b",
+        "half_adder.s>Led.I",
+    ]
+    (warning,) = gui.warnings
+    # The ports of the full adder, which the half adder doesn't have
+    assert warning.endswith(":\nfull_adder.cin\nfull_adder.cout")
+    gui.model.objects.undo()
+    spin()
+    assert yosys(gui).name() == "full_adder"
+    assert len(connections(gui)) == 5
+
+
 def test_settings_error(gui, circuit):
     component_object = gui.model.objects.components.get_object(yosys(gui))
     undo_steps = len(gui.model.objects._undo_stack)

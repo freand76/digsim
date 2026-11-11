@@ -226,7 +226,7 @@ class ModelObjects:
         Build the circuit again with other settings for a component, another class (a
         flip-flop of another kind) or another name, an undo step. It keeps its place, and
         the wires to the ports that it still has. Returns its name, and the ports whose
-        wires are gone. Raises DigsimException, and nothing changes, if it can't be built
+        wires are gone (named after the component as it was, which had them). Raises DigsimException, and nothing changes, if it can't be built
         with them.
 
         A component with the name it got (like an IC named after its module) gets the
@@ -234,6 +234,7 @@ class ModelObjects:
         """
         undo_state = self._app_model.circuit_to_model()
         model_dc = self._app_model.circuit_to_model()
+        old_name = name
         lines = self._app_model.objects.wires.to_lines()
         component_dc = next(dc for dc in model_dc.circuit.components if dc.name == name)
         old_component = self._toplevel(name)
@@ -294,7 +295,13 @@ class ModelObjects:
             restore(model_dc)
         self.add_undo_state(undo_state)
         self._app_model.sig_synchronize_gui.emit()
-        return name, sorted(gone)
+        # Its ports by the name it had, like a Verilog component named after its module:
+        # the new one doesn't have them
+        prefix = f"{name}."
+        return name, sorted(
+            f"{old_name}.{key.removeprefix(prefix)}" if key.startswith(prefix) else key
+            for key in gone
+        )
 
     def _yosys_netlists(self) -> list[tuple[str, YosysVariant, YosysNetlist]]:
         """The netlists of the Yosys components, to build them again without their files"""
