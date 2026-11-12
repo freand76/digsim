@@ -20,7 +20,7 @@ from digsim.synth import Synthesis
 pytestmark = pytest.mark.sanity
 
 
-VERILOG = Path(__file__).parent / "verilog"
+VERILOG = Path(__file__).parent.parent / "verilog"
 GATES, FUNCTIONAL = YosysVariant(False), YosysVariant(True)
 
 

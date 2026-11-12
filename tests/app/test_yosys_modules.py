@@ -32,7 +32,7 @@ from digsim.synth import Synthesis
 pytestmark = pytest.mark.sanity
 
 
-VERILOG = Path(__file__).parent / "verilog"
+VERILOG = Path(__file__).parent.parent / "verilog"
 HIERARCHY = VERILOG / "hierarchy.v"
 MULTIPLE = VERILOG / "multiple_modules.v"
 MULTIPLE_MODULES = ["multi_module_one", "multi_module_two", "multi_module_three"]

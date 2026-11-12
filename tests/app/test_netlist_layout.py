@@ -15,7 +15,7 @@ from digsim.utils import Pin, netlist_graph
 
 pytestmark = pytest.mark.sanity
 
-COUNTER = Path(__file__).parent.parent / "examples" / "yosys_counter" / "counter.v"
+COUNTER = Path(__file__).parent.parent.parent / "examples" / "yosys_counter" / "counter.v"
 
 
 def _input() -> NodeShape:

@@ -23,7 +23,7 @@ from digsim.synth import Synthesis, SynthesisException
 from digsim.utils import YosysNetlist
 
 
-VERILOG = Path(__file__).parent / "verilog" / "parameters.v"
+VERILOG = Path(__file__).parent.parent / "verilog" / "parameters.v"
 
 
 @pytest.fixture(autouse=True)
@@ -259,7 +259,7 @@ def test_set_parameters(work_dir):
 
 
 def test_list_module_parameters():
-    other = Path(__file__).parent / "verilog" / "multiple_modules.v"
+    other = Path(__file__).parent.parent / "verilog" / "multiple_modules.v"
     modules = Synthesis.list_module_parameters([VERILOG, other])
     assert modules["parameters"] == {"WIDTH": 4, "OFFSET": 1, "BIG": 0}
     assert modules["multi_module_one"] == {}
@@ -272,7 +272,7 @@ def test_list_module_parameters():
 
 
 def test_command_line_lists_the_parameters():
-    other = Path(__file__).parent / "verilog" / "one_module.v"
+    other = Path(__file__).parent.parent / "verilog" / "one_module.v"
     command = [sys.executable, "-m", "digsim.synth", "list", "-i", str(VERILOG), str(other)]
     result = subprocess.run(command, check=True, capture_output=True, text=True)
     lines = result.stdout.splitlines()

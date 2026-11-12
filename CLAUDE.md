@@ -10,9 +10,10 @@ no newer-only syntax. Dependencies in `pyproject.toml` pinned exactly.
   `components/atoms/`, IC netlists in `components/ic/`
 - `src/digsim/app/`: GUI (`cli.py`, `gui/`, `gui_objects/`, `model/`, `settings/`)
 - `src/digsim/synth/` Yosys synthesis, `storage_model/` pydantic save/load, `utils/` netlists
-- `tests/`, `examples/` (pytest testbenches in `examples/pytest_tb/`), `circuits/` (a folder
-  per GUI circuit with its files, packaged as `digsim.examples` by `setup.py` for File >
-  Examples), `tools/gui_fuzz.py`, `docs/` (MkDocs Material, published to
+- `tests/` (the engine's, the Qt-free tests of `digsim.app` in `tests/app/`), `examples/`
+  (pytest testbenches in `examples/pytest_tb/`), `circuits/` (a folder per GUI circuit
+  with its files, packaged as `digsim.examples` by `setup.py` for File > Examples),
+  `tools/gui_fuzz.py`, `docs/` (MkDocs Material, published to
   https://freand76.github.io/digsim/)
 
 ## Commands
@@ -108,7 +109,7 @@ when a GitHub release is published (from its tag), or by hand. Don't watch CI.
 - GUI: `app/gui_objects/_name_object.py`, a `ComponentObject` with `paint_component`,
   `paint_selectable_component` (selector icon), `update_ports`/`port_direction` for custom
   port places. Register in `_gui_object_factory.py` and `app/_component_catalog.py`
-  (`tests/test_component_catalog.py`), add to `COMPONENTS` in `tools/gui_fuzz.py`.
+  (`tests/app/test_component_catalog.py`), add to `COMPONENTS` in `tools/gui_fuzz.py`.
 - Docs: a row in `docs/gui.md`, `docs/python.md`, `docs/api/components.md`, an image entry
   in `generate_gui_images.py`, and `CHANGELOG.md`. `docs/components.md` and
   `docs/gui-components.md` walk through `XNOR` and `LedBar`.

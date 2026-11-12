@@ -16,7 +16,7 @@ from digsim.circuit.components import SubCircuit
 # Also on the other platforms: the minimal scope of the tests (see .github/workflows)
 pytestmark = pytest.mark.sanity
 
-ROOT = Path(__file__).parent.parent
+ROOT = Path(__file__).parent.parent.parent
 
 
 # The build outputs that setup.py leaves out of the package
