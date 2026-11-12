@@ -33,7 +33,8 @@ MAX_DATA_WIDTH = 32
 # Text files in the format of Verilog's $readmemh, other files are binary
 TEXT_FILE_TYPES = (".hex", ".mem", ".txt")
 
-_FILEINFO = "Memory contents (*.bin *.hex *.mem *.txt);;All files (*)"
+# The files of the path parameter, for the file dialog of the GUI (like the other components)
+_FILEINFO = "Memory contents (*.bin *.hex *.mem *.txt)"
 
 _COMMENTS = re.compile(r"//[^\n]*|/\*.*?\*/", re.DOTALL)
 

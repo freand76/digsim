@@ -35,8 +35,7 @@ from digsim.app.editor import VerilogEditors
 from digsim.app.gui_objects._subcircuit_object import reload_subcircuits
 from digsim.app.model import AppModel
 from digsim.app.settings._settings_pane import ComponentSettingsPane
-from digsim.circuit.components import SubCircuit
-from digsim.circuit.components._subcircuit import files_used
+from digsim.circuit.components import SubCircuit, files_used
 
 from ._appearance import THEMES, apply_theme
 from ._circuit_area import CircuitArea

@@ -14,8 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
-from digsim.circuit.components import YosysComponent, YosysVariant
-from digsim.circuit.components._yosys_component import file_modules, parameter_dict
+from digsim.circuit.components import YosysComponent, YosysVariant, file_modules, parameter_dict
 from digsim.circuit.components.atoms import DigsimException
 from digsim.synth import Synthesis, SynthesisException, YosysMessage, parse_messages
 

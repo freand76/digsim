@@ -14,9 +14,10 @@ from pathlib import Path
 from typing import Any
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import YosysComponent, YosysVariant
-from digsim.circuit.components._yosys_component import (
+from digsim.circuit.components import (
+    YosysComponent,
     YosysComponentException,
+    YosysVariant,
     parameter_dict,
     parameter_text,
 )

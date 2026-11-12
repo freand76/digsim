@@ -24,8 +24,7 @@ from PySide6.QtWidgets import (
 
 from digsim.app._build_flow import BuildResult, BuildStep
 from digsim.app._yosys_interface import variant_with
-from digsim.circuit.components import YosysVariant
-from digsim.circuit.components._yosys_component import parameter_dict
+from digsim.circuit.components import YosysVariant, parameter_dict
 from digsim.circuit.components.atoms import DigsimException
 from digsim.synth import Synthesis
 from digsim.verilog import VerilogFormatError, VerilogFormatter

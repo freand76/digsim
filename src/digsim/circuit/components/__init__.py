@@ -7,7 +7,14 @@ from ._arithmetic import Adder, Comparator, Multiplier, Negator, Subtractor
 from ._bus_bits import Bus2Wires, Wires2Bus
 from ._button import PushButton
 from ._buzzer import Buzzer
-from ._circuit_port import CircuitInOut, CircuitInput, CircuitOutput, CircuitPort
+from ._circuit_port import (
+    CIRCUIT_PORT_TYPES,
+    CircuitInOut,
+    CircuitInput,
+    CircuitOutput,
+    CircuitPort,
+    free_label,
+)
 from ._clock import Clock
 from ._counter import Counter
 from ._decoder import Decoder, Demultiplexer
@@ -21,17 +28,25 @@ from ._label_wire import LabelWireIn, LabelWireOut
 from ._led import Led
 from ._led_bar import LedBar
 from ._logic_analyzer import LogicAnalyzer
-from ._memory import RAM, ROM
+from ._memory import RAM, ROM, TEXT_FILE_TYPES, read_memory_file
 from ._memstdout import MemStdOut
 from ._note import Note
 from ._on_off_switch import OnOffSwitch
 from ._probe import Probe
 from ._seven_segment import SevenSegment
-from ._splitter import Splitter
+from ._splitter import Splitter, group_ranges, group_text, parse_groups
 from ._static_level import GND, VDD
 from ._static_value import StaticValue
-from ._subcircuit import SubCircuit, SubCircuitException
+from ._subcircuit import SubCircuit, SubCircuitException, files_used
 from ._tristate_buffer import TristateBuffer
 from ._verilog_component import VerilogComponent
-from ._yosys_component import YosysComponent, YosysComponentException, YosysVariant
+from ._yosys_component import (
+    NetlistParts,
+    YosysComponent,
+    YosysComponentException,
+    YosysVariant,
+    file_modules,
+    parameter_dict,
+    parameter_text,
+)
 from .atoms import PortConnectionError, PortInOut

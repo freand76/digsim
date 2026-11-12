@@ -16,8 +16,7 @@ from digsim.app._netlist_layout import NodeShape
 from digsim.app._settings_values import given_name, has_given_name, unique_name
 from digsim.app._wire_route import rotated
 from digsim.circuit import Circuit
-from digsim.circuit.components import CircuitPort, YosysComponent
-from digsim.circuit.components._yosys_component import YosysVariant
+from digsim.circuit.components import CircuitPort, YosysComponent, YosysVariant
 from digsim.circuit.components.atoms import Component, DigsimException, Port, PortInOut
 from digsim.storage_model import LineDataClass, ModelDataClass
 from digsim.utils import YosysNetlist

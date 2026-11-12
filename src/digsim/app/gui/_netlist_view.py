@@ -35,8 +35,13 @@ from digsim.app.gui_objects import ComponentObject
 from digsim.app.gui_objects import _theme as theme
 from digsim.app.gui_objects._symbol_objects import paint_gate
 from digsim.circuit import Circuit
-from digsim.circuit.components import CircuitInOut, CircuitInput, CircuitOutput, YosysComponent
-from digsim.circuit.components._yosys_component import NetlistParts
+from digsim.circuit.components import (
+    CircuitInOut,
+    CircuitInput,
+    CircuitOutput,
+    NetlistParts,
+    YosysComponent,
+)
 from digsim.utils import (
     NetlistEntry,
     NetlistGraph,

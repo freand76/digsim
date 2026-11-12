@@ -14,8 +14,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from digsim.circuit.components import FlipFlop, SubCircuit, YosysComponent
-from digsim.circuit.components._yosys_component import file_modules
+from digsim.circuit.components import FlipFlop, SubCircuit, YosysComponent, file_modules
 from digsim.circuit.components.atoms import (
     Component,
     ComponentException,

@@ -39,8 +39,8 @@ from digsim.circuit.components import (
     SubCircuit,
     YosysComponent,
     YosysVariant,
+    files_used,
 )
-from digsim.circuit.components._subcircuit import files_used
 from digsim.circuit.components.atoms import (
     CallbackComponent,
     Component,

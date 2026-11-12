@@ -47,8 +47,7 @@ from digsim.app._settings_values import (
     new_module_choices,
     new_settings,
 )
-from digsim.circuit.components import IntegratedCircuit
-from digsim.circuit.components._splitter import group_ranges, group_text, parse_groups
+from digsim.circuit.components import IntegratedCircuit, group_ranges, group_text, parse_groups
 from digsim.circuit.components.atoms import ComponentException, Parameter
 from digsim.synth import yosys_path_problem
 

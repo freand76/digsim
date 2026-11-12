@@ -42,7 +42,6 @@ from digsim.app._memory_contents import (
 from digsim.app.gui_objects import _theme as theme
 from digsim.app.settings._dialog_flags import DIALOG_FLAGS
 from digsim.circuit.components import RAM, ROM
-from digsim.circuit.components._memory import _FILEINFO
 from digsim.circuit.components.atoms import DigsimException
 
 
@@ -51,6 +50,9 @@ if TYPE_CHECKING:
     from digsim.app.model import AppModel
 
 Index = QModelIndex | QPersistentModelIndex
+
+# The memory files, like the file dialog of the path setting of a RAM or ROM
+_FILE_FILTER = f"{RAM.get_parameters()['path']['fileinfo']};;All Files (*.*)"
 
 
 class _WordsModel(QAbstractTableModel):
@@ -398,7 +400,7 @@ class HexEditorDialog(QDialog):
 
     def save_simulation_as(self) -> bool:
         """Save As...: the words of the RAM now, in a file of their own (from address 0)"""
-        path, _ = QFileDialog.getSaveFileName(self, "Save the RAM as it is now", "", _FILEINFO)
+        path, _ = QFileDialog.getSaveFileName(self, "Save the RAM as it is now", "", _FILE_FILTER)
         if not path:
             return False
         words = self._simulation_words()
@@ -457,7 +459,7 @@ class HexEditorDialog(QDialog):
 
     def _ask_path(self) -> str:
         """A file for a RAM that has none, "" if that was cancelled"""
-        path, _ = QFileDialog.getSaveFileName(self, "Save the contents", "", _FILEINFO)
+        path, _ = QFileDialog.getSaveFileName(self, "Save the contents", "", _FILE_FILTER)
         return path
 
     def save(self) -> bool:

@@ -310,3 +310,32 @@ The base class of all components, with the methods they share, is
     options:
       heading_level: 3
       filters: ["!^_", "!^update$", "!^default_state$", "!^get_parameters$", "!^get_circuit_parameters$", "!^reconfigure$", "!^init$", "!^has_action$", "!^onpress$", "!^onrelease$", "!^settings_to_dict$", "!^clear$", "!^remove_connections$", "!^active$", "!^PORTLIST$", "!^VAL_TO_SEGMENTS$", "!^TONE_TO_FREQUENCY$", "!^folder$", "!^segments$", "!^select$", "!^selected$", "!^signal_data$", "!^data_dict$", "!^port_in$", "!^port_out$"]
+
+## Helper functions
+
+The file formats and parameters the components read, for scripts that work with the
+same files:
+
+::: digsim.circuit.components.read_memory_file
+    options:
+      heading_level: 3
+
+::: digsim.circuit.components.file_modules
+    options:
+      heading_level: 3
+
+::: digsim.circuit.components.files_used
+    options:
+      heading_level: 3
+
+::: digsim.circuit.components.parameter_dict
+    options:
+      heading_level: 3
+
+::: digsim.circuit.components.parameter_text
+    options:
+      heading_level: 3
+
+::: digsim.circuit.components.NetlistParts
+    options:
+      heading_level: 3

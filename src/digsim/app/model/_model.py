@@ -16,8 +16,7 @@ from PySide6.QtCore import QThread, Signal
 from digsim.app._clock_step import StepTooSlow, step_clock
 from digsim.app._wire_key import port_key
 from digsim.app.gui_objects import ComponentObject
-from digsim.circuit.components import SubCircuit
-from digsim.circuit.components._subcircuit import files_used
+from digsim.circuit.components import SubCircuit, files_used
 from digsim.circuit.components.atoms import Component, DigsimException
 from digsim.storage_model import AppFileDataClass, ModelDataClass
 

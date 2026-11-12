@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from digsim.circuit.components._memory import TEXT_FILE_TYPES, read_memory_file
+from digsim.circuit.components import TEXT_FILE_TYPES, read_memory_file
 
 
 # Words on a line of a text file, and in a row of the editor
