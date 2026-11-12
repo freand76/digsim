@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -8,7 +8,7 @@ The example will generate a gtkwave file, 'circuit.vcd'.
 
 import pathlib
 
-from digsim import Circuit
+from digsim.circuit import Circuit
 
 
 def led_callback(comp):

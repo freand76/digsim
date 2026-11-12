@@ -64,6 +64,9 @@ markers = [
 [tool.mypy]
 python_version = "3.11"
 files = ["src"]
+# digsim is a namespace package (no __init__.py): its modules are found from src
+mypy_path = "src"
+explicit_package_bases = true
 disallow_untyped_defs = true
 warn_redundant_casts = true
 warn_unused_ignores = true
