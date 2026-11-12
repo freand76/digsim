@@ -67,6 +67,16 @@ def mode() -> str:
     return "python" if os.environ.get("DIGSIM_ENGINE") == "python" else "native"
 
 
+def vcd_writer() -> Any:
+    """
+    The VcdWriter class of digsim-native (with both engines), None without one: then
+    pyvcd writes the VCD file
+    """
+    if digsim_native is None or getattr(digsim_native, "INTERFACE", 0) < 5:
+        return None
+    return digsim_native.VcdWriter
+
+
 # The native cells, by the class they are made from: the kind (the order of Kind in
 # src/lib.rs of digsim-native) and the input ports in the order of the kind
 _GATES: dict[type[Component], tuple[int, str]] = {

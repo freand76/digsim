@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## vx.x.x
+ - VCD files: written by the VCD writer of digsim-native (the same file as pyvcd writes), with both engines, and the native engine writes the changes of its own ports without calling Python. The 6502 example with --vcd runs about 3 times faster (from 4,300 to 12,700 clocks per second), with five times as many changes in the file, see the next line. Without digsim-native, pyvcd writes the file as before. Needs digsim-native 0.5.0
+ - VCD files with the native engine: the signals inside a Verilog component made of gates (like the 6502 example) changed in the file, they stayed X
+
 ## v1.12.0
  - Verilog components: a Verilog file can have several modules. The component is the top module (the one no other module instantiates, with its submodules in it), or the module chosen with module="..." (Module in the settings pane of the GUI). Adding a file with several top modules in the GUI asks which one. It failed with "Only one module per file is supported"
  - RV32E example circuit: the clock runs at 1000 Hz (was 100 Hz), and the program writes the hello text a letter every 0.2 s. lcd.c has defines for the clock and the delay

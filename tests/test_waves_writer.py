@@ -89,3 +89,50 @@ def test_bus_that_becomes_undefined(tmp_path):
     assert wires2bus.bus.value == "X"
     circuit.vcd_close()
     assert _last_vcd_value(vcd.read_text(), "bus") == "bX"
+
+
+def _write_with(writer_class, path):
+    """A VCD file with the variables and changes DigSim writes, by a writer class"""
+    with open(path, "w", encoding="utf-8") as file:
+        writer = writer_class(file, timescale="1 ns", date="today")
+        bit = writer.register_var("top.cell", "A", "wire", size=1)
+        bus = writer.register_var("top", "bus", "wire", size=8)
+        wide = writer.register_var("top", "wide", "wire", size=80)
+        text = writer.register_var("top", "state", "string", init="")
+        other = writer.register_var("other", "B", "wire", size=1)
+        changes = [
+            (0, bit, "X"),
+            (0, bus, "X"),
+            (0, text, "IDLE"),
+            (0, bit, 0),
+            (5, bit, 1),
+            (5, bus, 0xA5),
+            (5, wide, 2**79 + 1),
+            (5, other, "Z"),
+            (6, bus, 0xA5),
+            (7, bus, "X"),
+            (7, text, "RUN state\t2"),
+            (9, bit, 1),
+            (12, wide, "X"),
+            (12, bit, 0),
+        ]
+        for time_ns, var, value in changes:
+            writer.change(var, time_ns, value)
+        with pytest.raises(ValueError):
+            writer.change(bus, 13, 256)
+        writer.change(bus, 14, 3)
+        writer.close()
+    return path.read_bytes()
+
+
+def test_native_vcd_writer_like_pyvcd(tmp_path):
+    """The VCD writer of digsim-native writes the same file as pyvcd"""
+    from vcd import VCDWriter
+
+    from digsim.circuit import _native
+
+    native_writer = _native.vcd_writer()
+    if native_writer is None:
+        pytest.skip("digsim-native without a VCD writer")
+    expected = _write_with(VCDWriter, tmp_path / "pyvcd.vcd")
+    assert _write_with(native_writer, tmp_path / "native.vcd") == expected

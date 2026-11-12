@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """
@@ -10,17 +10,24 @@ from typing import Any
 
 from vcd import VCDWriter
 
+from . import _native
 from .components.atoms import Port
 from .components.atoms._port import connection_generation
 
 
 class WavesWriter:
-    """Class that handles the creation of vcd files"""
+    """
+    Class that handles the creation of vcd files. With digsim-native it writes them with
+    its VcdWriter (the same text as pyvcd's VCDWriter, faster): the native engine then
+    writes the changes of its ports itself, see native_vars().
+    """
 
     def __init__(self, filename: str) -> None:
         self._vcd_name: str = filename
         self._vcd_file: io.TextIOWrapper | None = None
-        self._vcd_writer: VCDWriter | None = None
+        self._vcd_writer: Any = None
+        # The native VcdWriter, if the writer is one (the native engine writes to it)
+        self.native: Any = None
         self._vcd_dict: dict[Port, Any] = {}
         # The ports that are written as text, like the name of a state (see init())
         self._text_ports: set[Port] = set()
@@ -38,7 +45,13 @@ class WavesWriter:
         self._vcd_file = open(self._vcd_name, mode="w", encoding="utf-8")  # noqa
         if self._vcd_file is None:
             raise RuntimeError("VCD file is None")
-        self._vcd_writer = VCDWriter(self._vcd_file, timescale="1 ns", date="today")
+        native_writer = _native.vcd_writer()
+        if native_writer is not None:
+            self.native = native_writer(self._vcd_file, timescale="1 ns", date="today")
+            self._vcd_writer = self.native
+        else:
+            self.native = None
+            self._vcd_writer = VCDWriter(self._vcd_file, timescale="1 ns", date="today")
         self._vcd_dict = {}
         self._text_ports = set()
         self._vars_cache = {}
@@ -68,6 +81,20 @@ class WavesWriter:
             self._vars_cache[port] = port_vars
         return port_vars
 
+    def native_vars(self, port: Port) -> list[tuple[int, int]] | None:
+        """
+        For the native engine: the variables to update when 'port' changes, as (variable,
+        index of its port in the engine). None if the engine can't write them itself: a
+        variable is text, or its port isn't in the engine (then it calls write()).
+        """
+        found = []
+        for wired_port, var, is_text in self._port_vars(port):
+            nid = getattr(wired_port, "_nid", None)
+            if is_text or nid is None:
+                return None
+            found.append((var, nid))
+        return found
+
     def write(self, port: Port, time_ns: int) -> None:
         """Write port value to vcd file"""
         if self._vcd_file is None:
@@ -83,6 +110,8 @@ class WavesWriter:
 
     def flush(self) -> None:
         """Write buffered changes to the vcd file"""
+        if self.native is not None:
+            self.native.drain()
         if self._vcd_file is not None:
             self._vcd_file.flush()
 
@@ -91,6 +120,7 @@ class WavesWriter:
         if self._vcd_writer is not None:
             self._vcd_writer.close()
             self._vcd_writer = None
+        self.native = None
 
         if self._vcd_file is not None:
             self._vcd_file.close()
