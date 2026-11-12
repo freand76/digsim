@@ -5,7 +5,8 @@ Python API, and Yosys (`yowasp-yosys`) to synthesize Verilog. Two wheels from th
 a uv workspace: `digsim-engine` (`engine/`, everything but the GUI, no Qt) and the app
 (the root), which pins the engine at its own version. `digsim` is a namespace package in
 both, the engine must not import `digsim.app` or PySide6
-(`tests/test_engine_without_gui.py`). Python >= 3.11 (CI 3.11–3.15),
+(`tests/test_engine_without_gui.py`), and the app only imports public engine names, from
+the packages' `__init__.py` (`tests/app/test_engine_imports.py`). Python >= 3.11 (CI 3.11–3.15),
 no newer-only syntax. Dependencies in `pyproject.toml` pinned exactly.
 
 ## Layout
