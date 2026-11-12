@@ -32,9 +32,13 @@ uv run python docs/scripts/generate_gui_images.py   # component images, screensh
 uv run python docs/scripts/generate_verilog_tutorial.py
 uv run python docs/scripts/generate_new_verilog_tutorial.py
 uv run python tools/gui_fuzz.py --seeds 3,11,21 --steps 300  # GUI test, offscreen
+sh tools/native/test_local_native.sh   # ../digsim-native built and tested with DigSim
 uv run --with pytest pytest tools/gui_editor_check.py         # Verilog GUI checks
 ```
 
+- digsim-native's CI doesn't test DigSim: run `test_local_native.sh` before pushing
+  digsim-native. Each repo works with the old and the new version of the other (DigSim
+  checks `INTERFACE`), so either can be pushed first.
 - Ruff, mypy and pytest before committing. `uv run --with .` from another project can use
   a stale build (`--reinstall`).
 - `/tmp` is not usable for circuits, Verilog or copies of them (nor a scratchpad under
