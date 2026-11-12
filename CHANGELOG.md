@@ -6,6 +6,7 @@
  - Python API: the helpers for the files and parameters that the components read are exported by digsim.circuit.components: read_memory_file, file_modules (the modules of a Verilog file), files_used (the files a subcircuit uses), parameter_dict and parameter_text (the parameters of a Verilog component) and NetlistParts. The GUI used them from private modules
  - GUI: the file dialog of the path of a RAM or ROM had "All files" twice
  - Python API: digsim is a namespace package (no __init__.py), so that the engine and the GUI can be packages of their own. Import Circuit from digsim.circuit: `from digsim import Circuit` no longer works
+ - digsim-engine: the simulator is a package of its own, without the GUI and Qt, for scripts, testbenches and servers: pip install digsim-engine. digsim-logic-simulator installs it, with the same version. The imports don't change
 
 ## v1.12.0
  - Verilog components: a Verilog file can have several modules. The component is the top module (the one no other module instantiates, with its submodules in it), or the module chosen with module="..." (Module in the settings pane of the GUI). Adding a file with several top modules in the GUI asks which one. It failed with "Only one module per file is supported"

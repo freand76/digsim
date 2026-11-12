@@ -1,0 +1,2 @@
+graft src/digsim/circuit/components/ic
+global-exclude *.py[co]

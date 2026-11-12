@@ -1,15 +1,20 @@
 # CLAUDE.md
 
 DigSim (`digsim-logic-simulator` on PyPI): digital logic simulator with a PySide6 GUI, a
-Python API, and Yosys (`yowasp-yosys`) to synthesize Verilog. Python >= 3.11 (CI 3.11–3.15),
+Python API, and Yosys (`yowasp-yosys`) to synthesize Verilog. Two wheels from this repo,
+a uv workspace: `digsim-engine` (`engine/`, everything but the GUI, no Qt) and the app
+(the root), which pins the engine at its own version. `digsim` is a namespace package in
+both, the engine must not import `digsim.app` or PySide6
+(`tests/test_engine_without_gui.py`). Python >= 3.11 (CI 3.11–3.15),
 no newer-only syntax. Dependencies in `pyproject.toml` pinned exactly.
 
 ## Layout
 
-- `src/digsim/circuit/`: simulation core, components in `components/`, ports in
+- `engine/src/digsim/circuit/`: simulation core, components in `components/`, ports in
   `components/atoms/`, IC netlists in `components/ic/`
 - `src/digsim/app/`: GUI (`cli.py`, `gui/`, `gui_objects/`, `model/`, `settings/`)
-- `src/digsim/synth/` Yosys synthesis, `storage_model/` pydantic save/load, `utils/` netlists
+- `engine/src/digsim/synth/` Yosys synthesis, `storage_model/` pydantic save/load, `utils/`
+  netlists, `verilog/` the Verilog lexer and formatter
 - `tests/` (the engine's, the Qt-free tests of `digsim.app` in `tests/app/`), `examples/`
   (pytest testbenches in `examples/pytest_tb/`), `circuits/` (a folder per GUI circuit
   with its files, packaged as `digsim.examples` by `setup.py` for File > Examples),
@@ -50,7 +55,8 @@ uv run --with pytest pytest tools/gui_editor_check.py         # Verilog GUI chec
 
 Runs on push: ruff, `full_scope.yaml` (all tests and `examples/yosys_counter/*.py`, Linux
 x86_64, 3.11–3.15, native and Python engine), `minimal_scope.yaml` (Windows, Linux arm64,
-macOS: `sanity` tests with both engines, `tools/native/`). `docs.yaml` deploys the site
+macOS: `sanity` tests with both engines, `tools/native/`), and the engine alone (its wheel
+without PySide6, the tests but `tests/app/`). `docs.yaml` deploys the site
 when a GitHub release is published (from its tag), or by hand. Don't watch CI.
 
 - Mark test files with platform-sensitive parts (files, paths, line endings, Yosys, the
@@ -145,7 +151,9 @@ when a GitHub release is published (from its tag), or by hand. Don't watch CI.
 
 ## Releases
 
-1. Bump `version` in `pyproject.toml`, turn `## vx.x.x` into the version ("Prepare for
-   release x.y.z" commit).
-2. `bash create_dist_pkg.sh` builds `dist/` (and `requirements.txt` with pip-compile).
+1. Bump `version` in `pyproject.toml` and `engine/pyproject.toml`, and the
+   `digsim-engine==` pin, turn `## vx.x.x` into the version ("Prepare for release x.y.z"
+   commit).
+2. `bash create_dist_pkg.sh` builds both wheels and sdists in `dist/` with `uv build`
+   (and `requirements.txt`).
 3. `twine upload dist/*` is **always the maintainer's**. Never upload anything.

@@ -1,21 +1,17 @@
-# Break for error
+# Build the wheels and sdists of the release in dist/: digsim-logic-simulator (the GUI)
+# and digsim-engine (engine/), each from its sdist. Upload them with: twine upload dist/*
 set -e
 
 # Delete old dists
 rm -rfv dist/*
 
-# Install needed packages
-echo "Install tools"
-uv venv --clear .dist_venv --python 3.13
-source .dist_venv/bin/activate
-uv pip install pip-tools build twine --upgrade --python .dist_venv/bin/python
-
-# Build dist
 echo "Build dist"
-echo " - Compile"
-pip-compile pyproject.toml
-echo " - Build"
-uv run --active -m build
+uv build --all-packages --out-dir dist
+
+# The pinned requirements of the app, digsim-engine from dist/ (it isn't on PyPI before
+# the release)
+echo "Compile requirements.txt"
+uv pip compile pyproject.toml --no-sources --find-links dist --output-file requirements.txt
 
 # Print dist files
 echo "Dist files:"

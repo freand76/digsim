@@ -3,7 +3,9 @@
 DigSim is published on PyPI as
 [`digsim-logic-simulator`](https://pypi.org/project/digsim-logic-simulator/) and
 requires **Python 3.11 or newer**. All dependencies, including the Qt GUI toolkit and the
-Yosys synthesis tool, are installed automatically.
+Yosys synthesis tool, are installed automatically. The simulator without the GUI is
+[`digsim-engine`](https://pypi.org/project/digsim-engine/), for scripts, testbenches and
+servers that don't need Qt.
 
 Pick the option that suits you:
 
@@ -12,6 +14,7 @@ Pick the option that suits you:
 | Try DigSim without installing anything permanently | [Run with uvx](#run-with-uvx-no-installation) |
 | Have the `digsim-logic-simulator` command always available | [Install as a tool](#install-as-a-command-line-tool) |
 | Use DigSim from my own Python scripts or tests | [Install into a virtual environment](#install-into-a-virtual-environment) |
+| Simulate from Python without the GUI (no Qt) | [Install only the engine](#install-only-the-engine) |
 | Run the examples or work on DigSim itself | [Run from source](#run-from-source) |
 
 ## Run with uvx (no installation)
@@ -92,6 +95,20 @@ digsim-logic-simulator
 python -m digsim.app
 ```
 
+## Install only the engine
+
+`digsim-engine` is the simulator of DigSim without the GUI: the [Python API](python.md),
+Verilog components with Yosys, VCD files and the circuit files of the GUI. It doesn't
+install Qt, which makes it smaller and lets it run where Qt doesn't, like on a server or
+in CI:
+
+```sh
+pip install digsim-engine
+```
+
+Scripts import it the same way, `from digsim.circuit import Circuit`.
+`digsim-logic-simulator` installs it too, with the same version.
+
 ## Run from source
 
 Clone the repository to get the [example circuits](https://github.com/freand76/digsim/tree/main/circuits),
@@ -110,8 +127,8 @@ cd digsim
     uv run -m digsim.app
     ```
 
-    `uv sync` creates `.venv` and installs DigSim in editable mode, so code changes take
-    effect without reinstalling. Prefix other commands with `uv run`, for example
+    `uv sync` creates `.venv` and installs DigSim and its engine (in `engine/`) in
+    editable mode, so code changes take effect without reinstalling. Prefix other commands with `uv run`, for example
     `uv run python examples/example_sr.py`.
 
 === "pip"
@@ -119,7 +136,7 @@ cd digsim
     ```sh
     python3 -m venv .venv
     source .venv/bin/activate
-    pip install -e .
+    pip install -e ./engine -e .
     python -m digsim.app
     ```
 

@@ -1,7 +1,8 @@
 name: Full Scope
 
 # All of the tests, on Linux x86_64 with each Python, with the native engine and with the
-# Python engine. The other platforms run the minimal scope (minimal_scope.yaml).
+# Python engine. The other platforms run the minimal scope (minimal_scope.yaml). The
+# engine job tests digsim-engine on its own, without the GUI.
 
 on: [push]
 
@@ -25,7 +26,8 @@ jobs:
     - name: Upgrade pip
       run: python -m pip install --upgrade pip
     - name: Install digsim
-      run: pip install .
+      # The engine from engine/, digsim-logic-simulator pins its version
+      run: pip install ./engine .
     - name: Run netlist example
       run: python examples/yosys_counter/example_yosys_counter_netlist.py
     - name: Run verilog example
@@ -40,3 +42,22 @@ jobs:
         job-summary: true
     - name: Execute pytest with the Python engine
       run: DIGSIM_ENGINE=python python -m pytest -q
+
+  engine:
+    # The engine as a package of its own, without the GUI and PySide6: the tests that
+    # aren't the GUI's
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: "3.13"
+    - name: Install digsim-engine
+      run: pip install ./engine "pytest==9.1.1"
+    - name: Check that the GUI isn't installed
+      run: python -c "import importlib.util as u; assert u.find_spec('PySide6') is None"
+    - name: Execute pytest
+      run: python -m pytest -q --ignore=tests/app
+    - name: Execute pytest with the Python engine
+      run: DIGSIM_ENGINE=python python -m pytest -q --ignore=tests/app

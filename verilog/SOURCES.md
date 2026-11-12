@@ -11,7 +11,7 @@ against models of the datasheets in `tests/test_ics.py`: 74181, 74182, 74283, 74
 74194, 74245, 74374, 74574, 74595 (`verilog/74xx`), 4017, 4021, 4029, 4094 and 4511
 (`verilog/4000`).
 `verilog/synth.sh` synthesizes them into the netlists in
-`src/digsim/circuit/components/ic`.
+`engine/src/digsim/circuit/components/ic`.
 
 ## 6502 CPU [Link](https://github.com/Arlet/verilog-6502)
 ```

@@ -25,22 +25,21 @@ classifiers = [
 
 requires-python = ">=3.11"
 dependencies = [
-  "pyvcd==0.5.0",
+  # The simulator, in engine/ (a wheel of its own, with the same version)
+  "digsim-engine==1.12.0",
   "pyside6==6.12.0",
-  "platformdirs==4.9.4",
-  "pydantic==2.14.1",
-  "yowasp-yosys==0.70.0.0.post1259",
-  # Runs Yosys in-process: yowasp-yosys accepts any 1.x, and it decides the wasmtime versions
-  "yowasp-runtime==1.96",
-  "wasmtime==47.0.1",
-  # The native engine (https://github.com/freand76/digsim-native), on the platforms it has
-  # wheels for. Without it DigSim simulates in Python
-  "digsim-native==0.5.0; (sys_platform == 'linux' and platform_machine in 'x86_64 aarch64') or (sys_platform == 'win32' and platform_machine in 'AMD64 ARM64') or sys_platform == 'darwin'",
 ]
 
 scripts = { digsim-logic-simulator = "digsim.app.cli:main" }
 
 keywords = ["educational", "simulation", "digital"]
+
+[tool.uv.workspace]
+members = ["engine"]
+
+[tool.uv.sources]
+# The engine of this repo, not the one on PyPI
+digsim-engine = { workspace = true }
 
 [tool.uv]
 # Rebuild the cached package when the sources change, not only pyproject.toml,
@@ -63,9 +62,9 @@ markers = [
 
 [tool.mypy]
 python_version = "3.11"
-files = ["src"]
-# digsim is a namespace package (no __init__.py): its modules are found from src
-mypy_path = "src"
+files = ["src", "engine/src"]
+# digsim is a namespace package (no __init__.py), in the app and the engine
+mypy_path = "src,engine/src"
 explicit_package_bases = true
 disallow_untyped_defs = true
 warn_redundant_casts = true
@@ -82,8 +81,8 @@ target-version = "py311"
 show-fixes = true
 output-format = "full"
 
-src = ["src"]
-namespace-packages = ["src/digsim"]
+src = ["src", "engine/src"]
+namespace-packages = ["src/digsim", "engine/src/digsim"]
 
 [tool.ruff.lint]
 # "extend" here adds to the ruff defaults, rather than replacing.

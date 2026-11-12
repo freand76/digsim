@@ -28,12 +28,12 @@ all the steps needed to get a component into the component selector:
 ## 1. Add the component to DigSim
 
 Move the component class to its own module in
-[`src/digsim/circuit/components`](https://github.com/freand76/digsim/tree/main/src/digsim/circuit/components),
+[`engine/src/digsim/circuit/components`](https://github.com/freand76/digsim/tree/main/engine/src/digsim/circuit/components),
 for example `_xnor.py` and `_led_bar.py`. Module names start with `_`, and the code in
 DigSim is type annotated, so the class looks like this:
 
 ```python
-# src/digsim/circuit/components/_xnor.py
+# engine/src/digsim/circuit/components/_xnor.py
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -58,7 +58,7 @@ class XNOR(Component):
 ## 2. Export the component
 
 Add the class to
-[`src/digsim/circuit/components/__init__.py`](https://github.com/freand76/digsim/blob/main/src/digsim/circuit/components/__init__.py):
+[`engine/src/digsim/circuit/components/__init__.py`](https://github.com/freand76/digsim/blob/main/engine/src/digsim/circuit/components/__init__.py):
 
 ```python
 from ._led_bar import LedBar
@@ -308,7 +308,7 @@ Components that the user operates while the simulation runs, like buttons and sw
 - return the state from the `active` property, to light the status dot of a
   `DeviceObject` with `STATUS_LIGHT = True`.
 
-See `PushButton` and `OnOffSwitch` in `src/digsim/circuit/components` for examples. In the
+See `PushButton` and `OnOffSwitch` in `engine/src/digsim/circuit/components` for examples. In the
 GUI object, `single_click_action()` handles clicks while the simulation is stopped, and
 `add_context_menu_action(menu, parent)` adds entries to the context menu.
 

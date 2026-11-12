@@ -1,0 +1,58 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "digsim-engine"
+description = "The simulator of DigSim: digital logic circuits in Python, and Verilog with Yosys"
+# The same version as digsim-logic-simulator (../pyproject.toml), which pins it
+version = "1.12.0"
+authors = [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
+maintainers =  [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
+readme = "README.md"
+license-files = ["LICENSE.md"]
+urls = { homepage = "https://github.com/freand76/digsim", documentation = "https://freand76.github.io/digsim/" }
+
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
+  "Programming Language :: Python :: 3 :: Only",
+]
+
+requires-python = ">=3.11"
+dependencies = [
+  "pyvcd==0.5.0",
+  "platformdirs==4.9.4",
+  "pydantic==2.14.1",
+  "yowasp-yosys==0.70.0.0.post1259",
+  # Runs Yosys in-process: yowasp-yosys accepts any 1.x, and it decides the wasmtime versions
+  "yowasp-runtime==1.96",
+  "wasmtime==47.0.1",
+  # The native engine (https://github.com/freand76/digsim-native), on the platforms it has
+  # wheels for. Without it DigSim simulates in Python
+  "digsim-native==0.5.0; (sys_platform == 'linux' and platform_machine in 'x86_64 aarch64') or (sys_platform == 'win32' and platform_machine in 'AMD64 ARM64') or sys_platform == 'darwin'",
+]
+
+keywords = ["educational", "simulation", "digital", "verilog"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+namespaces = true
+
+[tool.setuptools.package-data]
+# The netlists of the ICs (IntegratedCircuit)
+"digsim.circuit.components.ic" = ["*.json"]
+
+[tool.uv]
+# Rebuild the cached package when the sources change, not only pyproject.toml
+cache-keys = [
+  { file = "pyproject.toml" },
+  { file = "MANIFEST.in" },
+  { file = "src/**/*.py" },
+  { file = "src/**/*.json" },
+]

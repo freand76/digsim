@@ -74,6 +74,9 @@ pip install digsim-logic-simulator
 python -m digsim.app                      # start the GUI
 ```
 
+For scripts without the GUI, `pip install digsim-engine` installs only the simulator,
+without Qt.
+
 ### Option 4: Run from source
 
 Clone the repository to get the example circuits and Python examples, or to work on
@@ -82,7 +85,7 @@ DigSim itself:
 ```sh
 git clone https://github.com/freand76/digsim.git
 cd digsim
-uv sync                                   # or: pip install -e . (in a virtual environment)
+uv sync                                   # or: pip install -e ./engine -e . (in a venv)
 uv run -m digsim.app
 ```
 

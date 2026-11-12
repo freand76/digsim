@@ -1,4 +1,4 @@
-# Copyright (c) Fredrik Andersson, 2023-2025
+# Copyright (c) Fredrik Andersson, 2023-2026
 # All rights reserved
 
 """Pystest module to test functionality of yosys component"""
@@ -264,7 +264,7 @@ def test_yosys_component_not_gate_static_input():
 
 def test_yosys_complex_netlist():
     comlex_json_netlist_file = (
-        Path(__file__).parent.parent / "src/digsim/circuit/components/ic/74162.json"
+        Path(__file__).parent.parent / "engine/src/digsim/circuit/components/ic/74162.json"
     )
     with open(comlex_json_netlist_file, encoding="utf-8") as json_file:
         netlist_dict = json.load(json_file)

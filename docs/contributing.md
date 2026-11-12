@@ -43,10 +43,10 @@ DigSim uses [uv](https://docs.astral.sh/uv/) for development.
 
 | Path | Contents |
 | --- | --- |
-| `src/digsim/circuit/` | The simulator: `Circuit`, components and ports (`components/atoms/`) |
+| `engine/src/digsim/circuit/` | The simulator: `Circuit`, components and ports (`components/atoms/`) |
 | `src/digsim/app/` | The GUI application: main window (`gui/`), component drawing (`gui_objects/`), model and settings dialogs |
-| `src/digsim/synth/`, `src/digsim/utils/` | Yosys synthesis and netlist parsing |
-| `src/digsim/storage_model/` | The file format for saved circuits |
+| `engine/src/digsim/synth/`, `engine/src/digsim/utils/` | Yosys synthesis and netlist parsing |
+| `engine/src/digsim/storage_model/` | The file format for saved circuits |
 | `tests/` | The tests |
 | `examples/`, `circuits/` | Python examples and GUI circuits, see [Python Examples](python-examples.md) and [GUI Examples](gui-examples.md) |
 | `docs/` | This documentation |

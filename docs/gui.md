@@ -603,7 +603,7 @@ to add the selected IC. Pins with names ending in `_bar` are active low.
 | 4511 | BCD to 7-segment latch and decoder |
 
 More ICs can be added by placing Yosys JSON netlists in the
-[`src/digsim/circuit/components/ic`](https://github.com/freand76/digsim/tree/main/src/digsim/circuit/components/ic)
+[`engine/src/digsim/circuit/components/ic`](https://github.com/freand76/digsim/tree/main/engine/src/digsim/circuit/components/ic)
 folder.
 
 ### Verilog component

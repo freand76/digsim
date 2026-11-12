@@ -10,10 +10,10 @@ step, using two examples:
     Both components are part of DigSim, so you can read the finished code:
 
     - `XNOR` is in
-      [`_gates.py`](https://github.com/freand76/digsim/blob/main/src/digsim/circuit/components/_gates.py),
+      [`_gates.py`](https://github.com/freand76/digsim/blob/main/engine/src/digsim/circuit/components/_gates.py),
       extended from the two-input version in this guide to 2 to 8 inputs, like the other gates.
     - `LedBar` is in
-      [`_led_bar.py`](https://github.com/freand76/digsim/blob/main/src/digsim/circuit/components/_led_bar.py).
+      [`_led_bar.py`](https://github.com/freand76/digsim/blob/main/engine/src/digsim/circuit/components/_led_bar.py).
 
 Everything here works in your own project, without changing DigSim. To use a component in
 the DigSim application too, continue with
