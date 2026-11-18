@@ -14,6 +14,7 @@ from PySide6.QtCore import QPointF
 import digsim.app.gui_objects
 import digsim.circuit.components
 from digsim.app._line_graph import without_ports
+from digsim.app._model_data import ModelDataClass
 from digsim.app._settings_values import (
     CLASS_PARAMETER,
     NAME_PARAMETER,
@@ -47,7 +48,7 @@ from digsim.circuit.components.atoms import (
     DigsimException,
     Parameter,
 )
-from digsim.storage_model import GuiPositionDataClass, ModelDataClass
+from digsim.storage_model import GuiPositionDataClass
 from digsim.utils import YosysNetlist
 
 

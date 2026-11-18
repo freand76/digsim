@@ -10,10 +10,11 @@ from dataclasses import replace
 from typing import TYPE_CHECKING
 
 from digsim.app._clipboard_lines import lines_between, moved_lines, renamed_port_keys
+from digsim.app._model_data import ClipboardDataClass
 from digsim.app._wire_key import port_key
 from digsim.circuit.components import CIRCUIT_PORT_TYPES, free_label
 from digsim.circuit.components.atoms import DigsimException
-from digsim.storage_model import ClipboardDataClass, ComponentDataClass, GuiPositionDataClass
+from digsim.storage_model import ComponentDataClass, GuiPositionDataClass
 
 
 if TYPE_CHECKING:

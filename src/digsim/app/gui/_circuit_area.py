@@ -49,6 +49,7 @@ from PySide6.QtWidgets import (
 )
 
 from digsim.app._line_graph import junctions, on_segment
+from digsim.app._model_data import ClipboardDataClass
 from digsim.app._wire_key import Wire
 from digsim.app._wire_lines import At, GraphSegment, Node, PointMove
 from digsim.app._wire_path import (
@@ -78,7 +79,6 @@ from digsim.app.gui_objects._buzzer_object import BuzzerObject
 from digsim.app.gui_objects._component_port_item import PortGraphicsItem
 from digsim.app.settings import ComponentSettingsDialog
 from digsim.circuit.components.atoms import VALUE_TYPE, Component, Port, PortConnectionError
-from digsim.storage_model import ClipboardDataClass
 
 from ._drag_preview import drag_preview
 

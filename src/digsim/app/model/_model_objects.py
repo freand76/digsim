@@ -12,13 +12,14 @@ from typing import TYPE_CHECKING, Any
 from digsim.app._auto_layout import auto_layout
 from digsim.app._clipboard_lines import renamed_port, renamed_port_keys
 from digsim.app._line_graph import without_ports
+from digsim.app._model_data import ModelDataClass
 from digsim.app._netlist_layout import NodeShape
 from digsim.app._settings_values import given_name, has_given_name, unique_name
 from digsim.app._wire_route import rotated
 from digsim.circuit import Circuit
 from digsim.circuit.components import CircuitPort, YosysComponent, YosysVariant
 from digsim.circuit.components.atoms import Component, DigsimException, Port, PortInOut
-from digsim.storage_model import LineDataClass, ModelDataClass
+from digsim.storage_model import LineDataClass
 from digsim.utils import YosysNetlist
 
 from ._model_clipboard import ModelClipboard

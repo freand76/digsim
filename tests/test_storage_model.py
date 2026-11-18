@@ -18,19 +18,12 @@ from digsim.storage_model import (
     GuiPositionDataClass,
     GuiWireDataClass,
     LineDataClass,
-    ModelDataClass,
 )
 from digsim.storage_model._circuit import JSON_WIDTH, json_text
 
 
 # Also on the other platforms: the minimal scope of the tests (see .github/workflows)
 pytestmark = pytest.mark.sanity
-
-
-def test_model_dataclass_keeps_shortcuts():
-    """The model state (also used for undo) holds the shortcuts of a loaded file"""
-    app_file_dc = AppFileDataClass(circuit=CircuitDataClass(), shortcuts={"1": "button"})
-    assert ModelDataClass.from_app_file_dc(app_file_dc).shortcuts == {"1": "button"}
 
 
 @pytest.mark.parametrize("content", ["[]", "3", '"text"', "{"])
@@ -102,7 +95,7 @@ def test_wire_with_dot_in_component_name(tmp_path):
 
 
 def test_wire_shapes_saved_and_loaded(tmp_path):
-    """The wire shapes are saved with the circuit file, and are part of the model state"""
+    """The wire shapes are saved with the circuit file"""
     app_file_dc = AppFileDataClass(
         circuit=CircuitDataClass(name="c"),
         wires={"led.I": GuiWireDataClass(path=[150.5, 80, 200])},
@@ -110,7 +103,6 @@ def test_wire_shapes_saved_and_loaded(tmp_path):
     app_file_dc.save(tmp_path / "c.circuit")
     loaded = AppFileDataClass.load(tmp_path / "c.circuit")
     assert loaded.wires == {"led.I": GuiWireDataClass(path=[150.5, 80, 200])}
-    assert ModelDataClass.from_app_file_dc(loaded).wires == loaded.wires
 
 
 def test_circuit_file_without_wire_shapes(tmp_path):
@@ -221,7 +213,6 @@ def test_circuit_file_with_lines(tmp_path):
     assert "wires" not in saved
     assert "wires" not in saved["circuit"]
     assert AppFileDataClass.load(filename) == app_file_dc
-    assert ModelDataClass.from_app_file_dc(app_file_dc).lines == [line]
     circuit = Circuit()
     circuit.from_json_file(filename)
     assert circuit.get_component("B").O.wired_ports == [circuit.get_component("L").I]

@@ -4,7 +4,8 @@
 """Pytest module to test the lines and the data of copied components"""
 
 from digsim.app._clipboard_lines import lines_between, moved_lines
-from digsim.storage_model import ClipboardDataClass, ComponentDataClass, LineDataClass
+from digsim.app._model_data import ClipboardDataClass
+from digsim.storage_model import ComponentDataClass, LineDataClass
 
 
 # A button that drives two LEDs, the line goes right from the button and splits at p1
