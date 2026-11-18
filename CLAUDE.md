@@ -56,7 +56,7 @@ uv run --with pytest pytest tools/gui_editor_check.py         # Verilog GUI chec
 
 Runs on push: ruff, `full_scope.yaml` (all tests and `examples/yosys_counter/*.py`, Linux
 x86_64, 3.11–3.15, native and Python engine), `minimal_scope.yaml` (Windows, Linux arm64,
-macOS: `sanity` tests with both engines, `tools/native/`), and the engine alone (its wheel
+macOS: `sanity` tests with the native engine, `tools/native/`), and the engine alone (its wheel
 without PySide6, the tests but `tests/app/`). `docs.yaml` deploys the site
 when a GitHub release is published (from its tag), or by hand. Don't watch CI.
 

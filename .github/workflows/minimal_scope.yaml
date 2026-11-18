@@ -2,8 +2,9 @@ name: Minimal Scope
 
 # The platforms other than Linux x86_64, with one Python: the tests marked sanity (pytest
 # -m sanity, the parts that can differ between platforms, like files and paths, Yosys,
-# the Verilog formatter and the native engine), with both engines, and the native engine
-# compared with the Python engine. Not Windows arm64 (the dependencies of DigSim don't
+# the Verilog formatter and the native engine) with the native engine, and the native
+# engine compared with the Python engine. The Python engine is pure Python, the full
+# scope runs all of the tests with it. Not Windows arm64 (the dependencies of DigSim don't
 # load there) or musl Linux (no PySide6 wheels).
 
 on: [push]
@@ -48,9 +49,6 @@ jobs:
 
     - name: Execute pytest (minimal scope)
       run: python -m pytest -q -m sanity
-
-    - name: Execute pytest (minimal scope) with the Python engine
-      run: DIGSIM_ENGINE=python python -m pytest -q -m sanity
 
     - name: Compare the engines
       run: |
