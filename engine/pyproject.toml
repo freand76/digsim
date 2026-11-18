@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "digsim-engine"
 description = "The simulator of DigSim: digital logic circuits in Python, and Verilog with Yosys"
 # The same version as digsim-logic-simulator (../pyproject.toml), which pins it
-version = "1.12.0"
+version = "1.13.0"
 authors = [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 maintainers =  [{name = "Fredrik Andersson", email = "freand@gmail.com"}]
 readme = "README.md"
