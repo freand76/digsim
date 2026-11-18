@@ -9,8 +9,8 @@ from digsim.circuit import Circuit
 from digsim.circuit.components import AND, DFF, MUX, NAND, NOR, NOT, OR, SR, XNOR, XOR
 
 
-# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
-pytestmark = pytest.mark.sanity
+# The minimal scope on the other platforms (see .github/workflows) runs the tests marked
+# sanity: the sequential ones, the engines are also compared there
 
 
 @pytest.mark.parametrize(
@@ -193,6 +193,7 @@ def test_mux(in_a, in_b, in_s, out_y):
     assert _mux.Y.value == out_y
 
 
+@pytest.mark.sanity
 def test_sr():
     """Test SR"""
     circuit = Circuit()
@@ -233,6 +234,7 @@ def test_sr():
     assert _sr.nQ.value == 1
 
 
+@pytest.mark.sanity
 def test_dff():
     """Test DFF"""
     circuit = Circuit()
@@ -267,6 +269,7 @@ def test_dff():
     assert _dff.Q.value == 1
 
 
+@pytest.mark.sanity
 def test_dff_async_reset():
     """Test DFF with asynchronous reset"""
     circuit = Circuit()
@@ -307,6 +310,7 @@ def test_dff_async_reset():
     assert _dff.Q.value == 1
 
 
+@pytest.mark.sanity
 def test_dff_clock_enable():
     """Test DFF with clock enable"""
     circuit = Circuit()

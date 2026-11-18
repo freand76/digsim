@@ -24,8 +24,8 @@ from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
 
 
-# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
-pytestmark = pytest.mark.sanity
+# The minimal scope on the other platforms (see .github/workflows) runs the tests marked
+# sanity: the ones with files and Yosys
 
 
 @pytest.mark.parametrize(
@@ -331,6 +331,7 @@ def test_bus_from_bits():
     assert bus.bus.value == 3
 
 
+@pytest.mark.sanity
 def test_vcd_high_impedance(tmp_path):
     """High impedance is written as "Z" to the VCD file"""
     vcd = tmp_path / "tristate.vcd"
@@ -345,6 +346,7 @@ def test_vcd_high_impedance(tmp_path):
     assert "b1010101 " in text
 
 
+@pytest.mark.sanity
 def test_save_and_load_outputs_on_one_wire(tmp_path):
     """Push buttons on one LED are saved as two wires, and loaded again"""
     buttons = Buttons()
@@ -356,6 +358,7 @@ def test_save_and_load_outputs_on_one_wire(tmp_path):
     assert [driver.parent().name() for driver in led.I.get_drivers()] == ["B0", "B1"]
 
 
+@pytest.mark.sanity
 def test_save_and_load_shared_wire(tmp_path):
     """A wire with two drivers is saved as two wires, and loaded again"""
     wire = SharedWire()
@@ -381,6 +384,7 @@ def _design(circuit, top, functional):
     return component
 
 
+@pytest.mark.sanity
 @pytest.mark.parametrize("functional", [False, True])
 def test_verilog_tristate_output(functional):
     """assign y = oe ? a : 'bz: the output is not driven when oe is low"""
@@ -395,6 +399,7 @@ def test_verilog_tristate_output(functional):
         assert design.y.value == expected, oe
 
 
+@pytest.mark.sanity
 @pytest.mark.parametrize("functional", [False, True])
 def test_verilog_tristate_bus(functional):
     """Two tristate drivers on a bus inside a design, with the bus as the output"""
@@ -410,6 +415,7 @@ def test_verilog_tristate_bus(functional):
         assert design.y.value == expected, (oe_a, oe_b)
 
 
+@pytest.mark.sanity
 @pytest.mark.parametrize("functional", [False, True])
 def test_verilog_outputs_share_a_wire(functional):
     """The tristate outputs of two designs drive the same bus"""

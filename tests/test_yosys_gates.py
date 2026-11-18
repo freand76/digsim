@@ -30,8 +30,8 @@ from digsim.circuit.components._yosys_atoms import (
 )
 
 
-# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
-pytestmark = pytest.mark.sanity
+# The minimal scope on the other platforms (see .github/workflows) runs the tests marked
+# sanity: every cell with the native engine, the engines are also compared there
 
 
 @pytest.mark.parametrize(
@@ -625,6 +625,7 @@ def _mux16_inputs(value_a, value_rest):
     return inputs
 
 
+@pytest.mark.sanity
 @pytest.mark.parametrize(
     "cell, inputs, expected",
     [

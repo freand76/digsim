@@ -25,8 +25,8 @@ from digsim.synth import Synthesis
 from digsim.utils import YosysNetlist
 
 
-# Also on the other platforms: the minimal scope of the tests (see .github/workflows)
-pytestmark = pytest.mark.sanity
+# The minimal scope on the other platforms (see .github/workflows) runs the tests marked
+# sanity: an IC from the bundled netlists and from Yosys, logic and sequential
 
 
 VERILOG = Path(__file__).parent.parent / "verilog"
@@ -171,6 +171,7 @@ def test_74181_function_table(kind):
                             assert bench.get("Cn4") == cn4, (s, cn, a, b)
 
 
+@pytest.mark.sanity
 @pytest.mark.parametrize("kind", KINDS)
 @pytest.mark.parametrize("active_low", [False, True])
 def test_74181_74182_16_bit(kind, active_low):
@@ -404,6 +405,7 @@ def test_74194_shift_register(kind):
         assert bench.get("Q") == q, (s1, s0)
 
 
+@pytest.mark.sanity
 @pytest.mark.parametrize("kind", KINDS)
 def test_74595_shift_register(kind):
     bench = Bench("74595", kind)

@@ -60,8 +60,9 @@ macOS: `sanity` tests with the native engine, `tools/native/`), and the engine a
 without PySide6, the tests but `tests/app/`). `docs.yaml` deploys the site
 when a GitHub release is published (from its tag), or by hand. Don't watch CI.
 
-- Mark test files with platform-sensitive parts (files, paths, line endings, Yosys, the
-  Verilog formatter, native engine) `pytestmark = pytest.mark.sanity`.
+- Mark platform-sensitive tests (files, paths, line endings, Yosys, the Verilog formatter,
+  native engine) `@pytest.mark.sanity`, a file that is mostly such tests with `pytestmark`.
+  Not every simulation test: the minimal scope compares the engines.
 - Tests must not import `QtGui`/`QtWidgets` (no `libEGL` in CI): keep testable logic in
   Qt-free modules. The GUI has no CI tests: check by running the app
   (`QT_QPA_PLATFORM=offscreen` for scripts), `tools/gui_fuzz.py` (the `gui-tester` agent)
