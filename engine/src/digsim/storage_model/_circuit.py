@@ -2,7 +2,8 @@
 # All rights reserved
 
 """
-Module that handles the dataclasses for circuit load/save
+The circuit files: the circuit of a Python circuit file, and the GUI circuit file with the
+positions of the components and the lines of wires
 """
 
 from __future__ import annotations
@@ -13,7 +14,7 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic.dataclasses import dataclass
 
 
@@ -263,4 +264,82 @@ class CircuitFileDataClass:
         data = asdict(self)
         if not self.lines:
             del data["lines"]
+        write_json_file(filename, data)
+
+
+@dataclass
+class GuiPositionDataClass:
+    """
+    Where a component is in the GUI: the top left corner of it before it is rotated, its
+    place in the stack (z), its rotation clockwise, 0, 90, 180 or 270 degrees, and if it is
+    mirrored top to bottom before the rotation
+    """
+
+    x: int = 100
+    y: int = 100
+    z: int = 0
+    rotation: int = 0
+    flipped: bool = False
+
+
+@dataclass
+class GuiWireDataClass:
+    """
+    The shape of a wire in the GUI: the position of each segment between the first and
+    the last, [x, y, x, ..., x], see digsim.app._wire_path. A wire that starts at a
+    corner of another wire from the same output port (a branch, see digsim.app._wire_tree)
+    has that wire, by the input port it drives, and the number of the corner. A wire that
+    ends at a corner of another wire (it joins its line, see digsim.app._wire_lines) has
+    that wire and corner as its joint. A connection that is not drawn, but implied by the
+    line that its ports are on, is not 'drawn'.
+    """
+
+    path: list[int]
+    branch: str | None = None
+    corner: int | None = None
+    joint: str | None = None
+    joint_corner: int | None = None
+    drawn: bool = True
+
+    @field_validator("path", mode="before")
+    @classmethod
+    def _whole_numbers(cls, path: Any) -> Any:
+        """Positions are whole numbers, files with fractions are rounded"""
+        if isinstance(path, list):
+            return [round(value) if isinstance(value, float) else value for value in path]
+        return path
+
+
+@dataclass
+class AppFileDataClass:
+    """
+    A GUI circuit file: the components, their positions, and the lines of wires that
+    connect them (see LineDataClass). Files from before lines have the connections in
+    'circuit' and the shapes of the wires in 'wires'.
+    """
+
+    circuit: CircuitDataClass
+    gui: dict[str, GuiPositionDataClass] = Field(default_factory=dict)
+    lines: list[LineDataClass] = Field(default_factory=list)
+    # The wire shapes of files from before lines, by the input port each wire drives
+    wires: dict[str, GuiWireDataClass] = Field(default_factory=dict)
+    shortcuts: dict[str, str] = Field(default_factory=dict)
+    settings: dict[str, Any] = Field(default_factory=dict)
+
+    @staticmethod
+    def load(filename: str | Path) -> AppFileDataClass:
+        return AppFileDataClass(**read_json_file(filename))
+
+    def save(self, filename: str | Path) -> None:
+        data = asdict(self)
+        # Not in files with lines, the lines have the connections and the wires
+        if not self.wires:
+            del data["wires"]
+        if not self.circuit.wires:
+            del data["circuit"]["wires"]
+        # Only the rotated and mirrored components have a rotation in the file
+        for position in data["gui"].values():
+            for key in ("rotation", "flipped"):
+                if not position[key]:
+                    del position[key]
         write_json_file(filename, data)

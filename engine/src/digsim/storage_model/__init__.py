@@ -3,11 +3,13 @@
 
 """All classes within digsim.storage_model namespace"""
 
-from ._app import AppFileDataClass, GuiPositionDataClass, GuiWireDataClass
 from ._circuit import (
+    AppFileDataClass,
     CircuitDataClass,
     CircuitFileDataClass,
     ComponentDataClass,
+    GuiPositionDataClass,
+    GuiWireDataClass,
     LineDataClass,
     WireDataClass,
 )
