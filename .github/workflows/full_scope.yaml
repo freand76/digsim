@@ -2,7 +2,8 @@ name: Full Scope
 
 # All of the tests, on Linux x86_64 with each Python, with the native engine and with the
 # Python engine. The other platforms run the minimal scope (minimal_scope.yaml). The
-# engine job tests digsim-engine on its own, without the GUI.
+# engine job tests digsim-engine on its own, without the GUI. The cocotb job runs the
+# cocotb tests with cocotb installed, on one Python.
 
 on: [push]
 
@@ -61,3 +62,20 @@ jobs:
       run: python -m pytest -q --ignore=tests/app
     - name: Execute pytest with the Python engine
       run: DIGSIM_ENGINE=python python -m pytest -q --ignore=tests/app
+
+  cocotb:
+    # DigSim as a cocotb simulator, with the cocotb release on PyPI: the tests of
+    # tests/test_cocotb.py, which skip running a cocotb testbench without cocotb
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+    - name: Set up Python
+      uses: actions/setup-python@v7
+      with:
+        python-version: "3.14"
+    - name: Install digsim-engine and cocotb
+      run: pip install ./engine "cocotb==2.1.0" "pytest==9.1.1"
+    - name: Execute the cocotb tests
+      run: python -m pytest -q tests/test_cocotb.py
+    - name: Execute the cocotb tests with the Python engine
+      run: DIGSIM_ENGINE=python python -m pytest -q tests/test_cocotb.py
