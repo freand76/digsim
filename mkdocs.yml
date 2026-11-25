@@ -20,6 +20,7 @@ nav:
       - Python Examples: python-examples.md
       - Verilog and Yosys: synthesis.md
       - Verilog Testbench with pytest: testbenches.md
+      - Verilog Testbench with cocotb: cocotb.md
       - Creating Components: components.md
   - API Reference:
       - Overview: api/index.md
