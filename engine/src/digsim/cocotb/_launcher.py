@@ -87,6 +87,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--functional", action="store_true", help="Synthesize into functional blocks"
     )
+    parser.add_argument("--waves", metavar="FILE", help="Write the waveforms to a VCD file")
     args, extra = parser.parse_known_args(argv)
     # Plusargs (+name or +name=value) are for the tests, like with other simulators
     plusargs = [arg for arg in extra if arg.startswith("+")]
@@ -116,10 +117,11 @@ def main(argv: list[str] | None = None) -> int:
         )
         top = YosysComponent(circuit)
         top.create_from_netlist(YosysNetlist(**netlist))
-    circuit.init()
     scheduler = _simulator._Scheduler(
         circuit, top, str(Path(args.sources[0]).resolve()), [parser.prog, *plusargs]
     )
+    if args.waves:
+        circuit.vcd(args.waves, timescale=_simulator.TIMESCALE)
     _simulator.install(scheduler)
     if "cocotb" in sys.modules:
         raise RuntimeError("cocotb was imported before the DigSim simulator was installed")
@@ -128,6 +130,9 @@ def main(argv: list[str] | None = None) -> int:
     # What the GPI does at the start of the simulation
     from pygpi.entry import load_entry
 
-    load_entry()
-    scheduler.run()
+    try:
+        load_entry()
+        scheduler.run()
+    finally:
+        circuit.vcd_close()
     return 0

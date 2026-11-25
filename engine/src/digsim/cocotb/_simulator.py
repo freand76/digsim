@@ -67,6 +67,8 @@ _NO_DELAY = 3
 _TYPE_STRINGS = {MODULE: "GPI_MODULE", LOGIC: "GPI_LOGIC", LOGIC_ARRAY: "GPI_LOGIC_ARRAY"}
 
 _PRECISION = -12
+# The time of a DigSim nanosecond in VCD files
+TIMESCALE = "1 ps"
 
 
 class sim_callback:
@@ -212,12 +214,13 @@ class _Watch:
 
 
 class _Scheduler:
-    """Runs a circuit and calls cocotb's callbacks"""
+    """Runs a circuit and calls cocotb's callbacks. It initializes the circuit"""
 
     def __init__(self, circuit: Circuit, top: Component, path: str, args: list[str]) -> None:
         self.circuit = circuit
         self.args = args
         name = top.name()
+        circuit.init()
         self.root = sim_obj(name, name, MODULE, definition=name, definition_file=path)
         for port in top.ports:
             child = sim_obj(
