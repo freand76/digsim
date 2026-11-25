@@ -239,3 +239,49 @@ def test_yosys_warnings(verilog_path):
     assert all(message.kind == "warning" for message in messages)
     assert any(message.line == 4 and "implicitly declared" in message.text for message in messages)
     assert any(message.line is None and "y2" in message.text for message in messages)
+
+
+def _options_netlist(verilog_path, **arguments):
+    """The ports and cells of tests/verilog/cocotb_options.sv, synthesized"""
+    synthesis = Synthesis(str(verilog_path / "cocotb_options.sv"), "options", **arguments)
+    module = synthesis.synth_to_dict(silent=True)["modules"]["options"]
+    cells = sorted({cell["type"] for cell in module["cells"].values()})
+    return len(module["ports"]["a"]["bits"]), cells
+
+
+def test_yosys_includes_and_defines(verilog_path):
+    """Files are included from the include folders, macros are defined with or without a value"""
+    include = verilog_path / "include"
+    assert _options_netlist(verilog_path, includes=[include]) == (2, [])
+    assert _options_netlist(verilog_path, includes=[include], defines={"INVERT": None}) == (
+        2,
+        ["$_NOT_"],
+    )
+    assert _options_netlist(
+        verilog_path,
+        includes=[str(include)],
+        defines={"INVERT": 1, "OTHER": "8'd3"},
+        parameters={"WIDTH": 4},
+    ) == (4, ["$_NOT_"])
+
+
+def test_yosys_include_missing(verilog_path):
+    """Without the include folder, Yosys can't find the included file"""
+    with pytest.raises(SynthesisException, match="cocotb_options.vh"):
+        _options_netlist(verilog_path)
+
+
+@pytest.mark.parametrize(
+    "arguments, message",
+    [
+        ({"defines": {"1X": 1}}, "Not a macro name"),
+        ({"defines": {"X": "a b"}}, "has a space or a quote"),
+        ({"defines": {"X": 'a"'}}, "has a space or a quote"),
+        ({"defines": {"X": "a;b"}}, "has a space or a quote"),
+        ({"includes": ["include folder"]}, "include folder"),
+    ],
+)
+def test_yosys_bad_includes_and_defines(verilog_path, arguments, message):
+    """Macros and include folders that a Yosys script can't give are errors at once"""
+    with pytest.raises(SynthesisException, match=message):
+        Synthesis(str(verilog_path / "cocotb_options.sv"), "options", **arguments)

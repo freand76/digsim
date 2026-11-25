@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Python API: Synthesis has include folders (includes) and macros (defines) for the Verilog files
  - Python API: `import digsim.synth` as the first import of digsim failed with a circular import. Importing digsim.circuit first worked
  - Python API: Circuit.vcd() has a timescale, the time of a nanosecond of the simulation in the file ("1 ns" as before), like "1 ps" for cocotb
  - cocotb (a proof of concept): python -m digsim.cocotb synthesizes a Verilog design with Yosys and runs cocotb's tests on it, in one process, without a build step or a simulator of its own (make SIM=digsim with a cocotb that has Makefile.digsim). One DigSim nanosecond is a picosecond for cocotb, so that the gate delays are short against the clocks of the tests. The tests read the ports of the top module and the named signals inside the design (the wires and registers that synthesis keeps, dut.u_alu.result for a submodule), and trigger on their edges. --no-signals (SIM_ARGS with make) leaves the signals out, for a faster simulation. Waveforms with --waves (WAVES=1 with make), in picoseconds, with the signals. Only the inputs of the top module can be set (deposits, other writes are logged and ignored), and a port is undefined as a whole
