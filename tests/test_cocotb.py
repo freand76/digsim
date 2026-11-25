@@ -7,6 +7,7 @@ without cocotb, and the launcher with cocotb when it is installed
 """
 
 import importlib.util
+import itertools
 import os
 import subprocess
 import sys
@@ -34,7 +35,6 @@ def _scheduler():
     """A scheduler with the counter, installed as the simulator"""
     circuit = Circuit()
     top = YosysComponent(circuit, _yosys_source(str(COUNTER)), module="counter")
-    circuit.init()
     scheduler = sim._Scheduler(circuit, top, str(COUNTER), ["digsim", "+seed=1"])
     sim.install(scheduler)
     yield scheduler
@@ -184,6 +184,34 @@ def test_exception_ends_simulation(scheduler, capsys):
     assert "callback failed" in capsys.readouterr().err
 
 
+def _changes(vcd, name):
+    """The (time, value) changes of a one bit variable of a VCD file"""
+    lines = vcd.read_text(encoding="utf-8").splitlines()
+    ident = next(line.split()[3] for line in lines if line.endswith(f" {name} $end"))
+    changes, time = [], 0
+    for line in lines:
+        if line.startswith("#"):
+            time = int(line[1:])
+        elif line[1:] == ident and line[0] in "01xX":
+            changes.append((time, line[0]))
+    return changes
+
+
+def test_waves(scheduler, tmp_path):
+    """The VCD file is in picoseconds, with the changes of the inputs at their times"""
+    vcd = tmp_path / "waves.vcd"
+    scheduler.circuit.vcd(str(vcd), timescale=sim.TIMESCALE)
+    clk = scheduler.root.get_handle_by_name("clk")
+    for time, value in ((1000, 1), (2000, 0)):
+        sim.register_timed_callback(
+            time, lambda value=value: clk.set_signal_val_int(sim._DEPOSIT, value)
+        )
+    scheduler.run()
+    scheduler.circuit.vcd_close()
+    assert "$timescale 1 ps $end" in vcd.read_text(encoding="utf-8")
+    assert _changes(vcd, "clk") == [(0, "X"), (1000, "1"), (2000, "0")]
+
+
 def test_long_time(scheduler):
     """The time is split into two 32 bit words"""
     times = []
@@ -272,6 +300,7 @@ def test_cocotb_testbench(tmp_path):
         env.pop(name, None)
     command = [sys.executable, "-m", "digsim.cocotb", str(COUNTER), "--toplevel", "counter"]
     command += ["--test-modules", "counter_tb", "+digsim_plusarg=42"]
+    command += ["--waves", str(tmp_path / "counter.vcd")]
     run = subprocess.run(
         command, check=False, cwd=TESTBENCH, env=env, capture_output=True, text=True
     )
@@ -280,3 +309,7 @@ def test_cocotb_testbench(tmp_path):
     assert len(cases) == 5
     failed = [case.get("name") for case in cases if case.find("failure") is not None]
     assert failed == [], run.stdout
+    # The 10 ns clocks of the tests, in picoseconds
+    changes = _changes(tmp_path / "counter.vcd", "clk")
+    assert len(changes) > 20
+    assert 5000 in {later - earlier for (earlier, _), (later, _) in itertools.pairwise(changes)}
