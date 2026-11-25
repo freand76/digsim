@@ -71,7 +71,7 @@ warn_redundant_casts = true
 warn_unused_ignores = true
 
 [[tool.mypy.overrides]]
-module = ["yowasp_yosys"]
+module = ["yowasp_yosys", "pygpi.*"]
 ignore_missing_imports = true
 
 [tool.ruff]
