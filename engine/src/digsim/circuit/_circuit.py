@@ -223,9 +223,14 @@ class Circuit:
         self._circuit_events = []
         self._events_by_port = {}
 
-    def vcd(self, filename: str) -> None:
+    def vcd(self, filename: str, timescale: str = "1 ns") -> None:
         """
         Start writing waveforms to a VCD file, for GTKWave or another viewer.
+
+        Args:
+            filename: The VCD file.
+            timescale: The time of a nanosecond of the simulation in the file, like
+                "1 ps" when a nanosecond stands for a picosecond (as for cocotb).
 
         Raises:
             CircuitError: If a VCD file is already open.
@@ -233,7 +238,7 @@ class Circuit:
         """
         if self._vcd is not None:
             raise CircuitError("VCD already started")
-        self._vcd = WavesWriter(filename=filename)
+        self._vcd = WavesWriter(filename=filename, timescale=timescale)
         try:
             self._vcd_init()
         except BaseException:

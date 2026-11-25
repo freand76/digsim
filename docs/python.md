@@ -72,7 +72,7 @@ gtkwave sr.vcd
 | `process_single_event(stop_time_ns=None)` | Process only the next event, to step through a simulation. Returns two booleans: if an event was processed (not if there were none, or the next one is after `stop_time_ns`), and if it was on a port of a top-level component rather than inside one, like a Yosys component. |
 | `time_ns` | The current simulation time in nanoseconds |
 | `get_component(name)` | Look up a component by name |
-| `vcd(filename)` / `vcd_close()` | Start or finish writing a VCD file |
+| `vcd(filename, timescale="1 ns")` / `vcd_close()` | Start or finish writing a VCD file, `timescale` is the time of a simulated nanosecond in the file |
 | `to_json_file(filename)` | Save the circuit. File paths in it, like a Verilog file, are stored relative to the file. |
 | `from_json_file(filename, folder=None)` | Load a circuit, also a circuit file saved by the GUI, with the connections of its wires. Relative file paths in it are read from the file's folder, or from `folder` if it is given. |
 

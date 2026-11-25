@@ -160,6 +160,26 @@ def test_vcd_that_cannot_be_opened(tmp_path):
     assert (tmp_path / "waves.vcd").exists()
 
 
+@pytest.mark.parametrize("timescale", [None, "1 ps"])
+def test_vcd_timescale(tmp_path, timescale):
+    """A VCD file is in nanoseconds, or in the time given for a nanosecond"""
+    circuit = Circuit()
+    button = PushButton(circuit, "button")
+    circuit.init()
+    vcd = tmp_path / "waves.vcd"
+    if timescale is None:
+        circuit.vcd(str(vcd))
+    else:
+        circuit.vcd(str(vcd), timescale=timescale)
+    circuit.run(ns=5)
+    button.push()
+    circuit.run(ns=1)
+    circuit.vcd_close()
+    lines = vcd.read_text(encoding="utf-8").splitlines()
+    assert f"$timescale {timescale or '1 ns'} $end" in lines
+    assert "#5" in lines
+
+
 def test_sub_components_initialized_once():
     """The circuit initializes each component once, also the parts of a component"""
     calls = []

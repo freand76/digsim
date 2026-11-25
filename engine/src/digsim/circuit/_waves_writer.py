@@ -22,8 +22,10 @@ class WavesWriter:
     writes the changes of its ports itself, see native_vars().
     """
 
-    def __init__(self, filename: str) -> None:
+    def __init__(self, filename: str, timescale: str = "1 ns") -> None:
         self._vcd_name: str = filename
+        # The time of one step of the simulation (a DigSim nanosecond) in the file
+        self._timescale = timescale
         self._vcd_file: io.TextIOWrapper | None = None
         self._vcd_writer: Any = None
         # The native VcdWriter, if the writer is one (the native engine writes to it)
@@ -47,11 +49,11 @@ class WavesWriter:
             raise RuntimeError("VCD file is None")
         native_writer = _native.vcd_writer()
         if native_writer is not None:
-            self.native = native_writer(self._vcd_file, timescale="1 ns", date="today")
+            self.native = native_writer(self._vcd_file, timescale=self._timescale, date="today")
             self._vcd_writer = self.native
         else:
             self.native = None
-            self._vcd_writer = VCDWriter(self._vcd_file, timescale="1 ns", date="today")
+            self._vcd_writer = VCDWriter(self._vcd_file, timescale=self._timescale, date="today")
         self._vcd_dict = {}
         self._text_ports = set()
         self._vars_cache = {}
