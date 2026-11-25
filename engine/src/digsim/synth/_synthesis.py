@@ -29,6 +29,12 @@ VerilogFiles = str | os.PathLike[str] | Sequence[str | os.PathLike[str]]
 # The parameters of the top module that a synthesis changes, by name
 Parameters = Mapping[str, int]
 
+# The folders that Verilog files include files from
+IncludeFolders = Sequence[str | os.PathLike[str]]
+
+# The macros of the Verilog files, by name: a value, or None for a macro without one
+Defines = Mapping[str, object]
+
 # One Yosys at a time: it sends the console output of the whole process to a file, and the
 # GUI synthesizes in a thread
 _yosys_lock = threading.Lock()
@@ -139,6 +145,39 @@ def _rtlil_value(text: str) -> int | str:
 def _script_path(path: pathlib.Path) -> str:
     """A path for a Yosys script: forward slashes, quoted in case it contains spaces"""
     return f'"{path.as_posix()}"'
+
+
+def _read_commands(includes: IncludeFolders | None, defines: Defines | None) -> str:
+    """
+    The include folders and the macros as Yosys commands, before the files are read
+
+    Raises:
+        SynthesisException: If Yosys can't read a folder, or its path or the value of a
+            macro has a space, a double quote, a semicolon or a # (which a Yosys script can't
+            give), or a macro name is not a Verilog identifier.
+    """
+    options = []
+    for include in includes or ():
+        path, problem = _yosys_path(pathlib.Path(include))
+        if path is None:
+            raise SynthesisException(f"Yosys can't read the include folder {include}: {problem}")
+        folder = path.as_posix()
+        if re.search(r"[\s\";#]", folder):
+            raise SynthesisException(
+                f"Yosys can't read the include folder {include}: it has a space or a quote"
+            )
+        options.append(f"read -incdir {folder}; ")
+    for name, value in (defines or {}).items():
+        if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_$]*", name):
+            raise SynthesisException(f"Not a macro name: '{name}'")
+        if value is None:
+            options.append(f"read -define {name}; ")
+            continue
+        text = str(value)
+        if re.search(r"[\s\";#]", text):
+            raise SynthesisException(f"The value of macro '{name}' has a space or a quote")
+        options.append(f"read -define {name}={text}; ")
+    return "".join(options)
 
 
 def _script_files(verilog_files: VerilogFiles) -> str:
@@ -257,11 +296,16 @@ class Synthesis:
             cells, so it simulates faster.
         parameters: Values for parameters of the top module, by name, instead of their
             defaults, like {"WIDTH": 16}. The values are integers.
+        includes: Folders to find the files of `include in, after the folder of the
+            including file.
+        defines: Macros for the Verilog files, like `define, by name: {"WIDTH": 8}, or
+            {"DEBUG": None} for a macro without a value.
 
     Raises:
         SynthesisException: If a parameter name is not a Verilog identifier, or its value
             not an integer. A parameter that the module doesn't have is an error of the
-            synthesis.
+            synthesis. A macro name that is not a Verilog identifier, a value or an
+            include folder with a space or a quote.
     """
 
     @staticmethod
@@ -440,11 +484,14 @@ class Synthesis:
         verilog_top_module: str,
         functional: bool = False,
         parameters: Parameters | None = None,
+        includes: IncludeFolders | None = None,
+        defines: Defines | None = None,
     ) -> None:
         self._verilog_files = _file_list(verilog_files)
         self._verilog_top_module = verilog_top_module
         self._functional = functional
         self._parameter_arguments = _parameter_arguments(parameters)
+        self._read_commands = _read_commands(includes, defines)
         self._yosys_log: list[str] = []
 
     def synth_to_json(self, silent: bool = False) -> str:
@@ -458,7 +505,7 @@ class Synthesis:
             SynthesisException: If Yosys reports an error, like a syntax error.
         """
         top = self._verilog_top_module
-        script = f"read -sv {_script_files(self._verilog_files)}; "
+        script = f"{self._read_commands}read -sv {_script_files(self._verilog_files)}; "
         script += f"hierarchy -top {top}{self._parameter_arguments}; "
         # Tristate buffers ('bz) become tristate cells: several on one net are merged into
         # one, and the ones that don't drive an output port of the design become logic

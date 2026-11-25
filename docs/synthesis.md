@@ -90,6 +90,19 @@ the file. An empty value is the default. **Synthesize** saves the file and synth
 each component with its values, and asks first if that changes the ports of a component,
 like a wider bus does. Undo brings the values from before back, unless the ports changed.
 
+## Include folders and macros
+
+`Synthesis` finds the files of `` `include `` in the folder of the including file, and
+then in the folders of `includes`. `defines` are macros, like `` `define `` in the files,
+with a value or `None` for a macro without one:
+
+```python
+synthesis = Synthesis(["top.sv"], "top", includes=["include"], defines={"WIDTH": 8, "DEBUG": None})
+```
+
+Yosys reads the folders and the values as they are written, so they can't have spaces or
+double quotes.
+
 ## Several modules
 
 A Verilog file can have several modules. A `VerilogComponent` (and a Verilog component in
