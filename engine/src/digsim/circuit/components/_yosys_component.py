@@ -19,7 +19,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 import digsim.circuit.components._yosys_atoms
-from digsim.synth import Synthesis
+
+# The module, not its names: digsim.synth imports digsim.circuit, which imports this
+from digsim import synth
 from digsim.utils import NetPort, Nets, YosysCell, YosysModule, YosysNetlist, YosysPort
 from digsim.utils._yosys_netlist import NET_TYPE
 
@@ -166,7 +168,7 @@ def file_modules(path: str | Path, log: list[str] | None = None) -> dict[str, li
     with _hierarchy_lock:
         hierarchy = _hierarchy_cache.get((resolved, digest))
     if hierarchy is None:
-        hierarchy = Synthesis.module_hierarchy(resolved, log)
+        hierarchy = synth.Synthesis.module_hierarchy(resolved, log)
         with _hierarchy_lock:
             _hierarchy_cache[(resolved, digest)] = hierarchy
             while len(_hierarchy_cache) > _NetlistCache.SIZE:
@@ -183,7 +185,7 @@ def top_module(path: str | Path, log: list[str] | None = None) -> str:
         SynthesisException: If Yosys reports an error, like a syntax error.
         OSError: If the file can't be read.
     """
-    tops = Synthesis.top_modules(file_modules(path, log))
+    tops = synth.Synthesis.top_modules(file_modules(path, log))
     if len(tops) == 1:
         return tops[0]
     name = Path(path).name
@@ -1002,7 +1004,7 @@ class YosysComponent(MultiComponent):
             top = module
         elif top is None:
             top = top_module(path, yosys_log)
-        synthesis = Synthesis(path, top, functional=functional, parameters=parameters)
+        synthesis = synth.Synthesis(path, top, functional=functional, parameters=parameters)
         try:
             netlist_dict = synthesis.synth_to_dict(silent=True)
         finally:

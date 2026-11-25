@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## vx.x.x
+ - Python API: `import digsim.synth` as the first import of digsim failed with a circular import. Importing digsim.circuit first worked
+
 ## v1.13.0
  - VCD files: written by the VCD writer of digsim-native (the same file as pyvcd writes), with both engines, and the native engine writes the changes of its own ports without calling Python. The 6502 example with --vcd runs about 3 times faster (from 4,300 to 12,700 clocks per second), with five times as many changes in the file, see the next line. Without digsim-native, pyvcd writes the file as before. Needs digsim-native 0.5.0
  - VCD files with the native engine: the signals inside a Verilog component made of gates (like the 6502 example) changed in the file, they stayed X

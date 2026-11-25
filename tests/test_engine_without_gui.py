@@ -9,6 +9,8 @@ that it can be a package of its own
 import subprocess
 import sys
 
+import pytest
+
 
 ENGINE_PACKAGES = ["circuit", "synth", "storage_model", "utils", "verilog"]
 
@@ -38,3 +40,15 @@ def test_engine_imports_without_gui():
     assert result.returncode == 0, result.stderr
     # Not an empty walk: the engine has more modules than its packages
     assert int(result.stdout) > 20
+
+
+@pytest.mark.parametrize("package", ENGINE_PACKAGES)
+def test_package_imports_first(package):
+    """Each package of the engine imports first in a new Python, without circular imports"""
+    result = subprocess.run(
+        [sys.executable, "-c", f"import digsim.{package}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
