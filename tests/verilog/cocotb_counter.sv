@@ -11,13 +11,17 @@ module counter (
   timeunit 1ns;
   timeprecision 1ns;
 
+  // A named signal inside the module, for the waves
+  logic [7:0] value;
+  assign count = value;
+
   always_ff @(posedge clk) begin
     if (rst)
-      count <= 8'd0;
+      value <= 8'd0;
     else if (set)
-      count <= din;
+      value <= din;
     else if (ena)
-      count <= count + 1;
+      value <= value + 1;
   end
 
 endmodule
