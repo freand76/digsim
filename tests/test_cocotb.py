@@ -6,8 +6,10 @@ Pytest module to test DigSim as a cocotb simulator: the stand-in for cocotb.simu
 without cocotb, and the launcher with cocotb when it is installed
 """
 
+import argparse
 import importlib.util
 import itertools
+import json
 import os
 import subprocess
 import sys
@@ -20,13 +22,15 @@ from digsim.circuit import Circuit
 from digsim.circuit.components import YosysComponent
 from digsim.cocotb import _simulator as sim
 from digsim.cocotb import main
-from digsim.cocotb._launcher import _yosys_source
+from digsim.cocotb._launcher import _define, _parameter, _yosys_source
 
 
 # Yosys and files: also on the other platforms (see .github/workflows)
 pytestmark = pytest.mark.sanity
 
-COUNTER = Path(__file__).parent / "verilog" / "cocotb_counter.sv"
+VERILOG = Path(__file__).parent / "verilog"
+COUNTER = VERILOG / "cocotb_counter.sv"
+OPTIONS = VERILOG / "cocotb_options.sv"
 TESTBENCH = Path(__file__).parent / "cocotb_tb"
 
 
@@ -369,3 +373,158 @@ def test_cocotb_testbench(tmp_path):
     texts = [line[1:].split()[0] for line in lines if line.endswith(f" {ident}")]
     values = {int(text, 2) for text in texts if set(text) <= {"0", "1"}}
     assert set(range(10, 21)) <= values
+
+
+@pytest.mark.parametrize(
+    "text, parameter",
+    [
+        ("WIDTH=8", ("WIDTH", 8)),
+        ("WIDTH=0x10", ("WIDTH", 16)),
+        ("WIDTH=8'd5", ("WIDTH", 5)),
+        ("WIDTH=4'b10_10", ("WIDTH", 10)),
+        ("WIDTH='hFF", ("WIDTH", 255)),
+    ],
+)
+def test_parameter_values(text, parameter):
+    """Parameters are integers, also as Verilog constants"""
+    assert _parameter(text) == parameter
+
+
+@pytest.mark.parametrize("text", ["WIDTH", "WIDTH=wide", "WIDTH=8'x5"])
+def test_bad_parameter_values(text):
+    """A parameter without a value, or with a value that isn't an integer"""
+    with pytest.raises(argparse.ArgumentTypeError):
+        _parameter(text)
+
+
+def test_defines():
+    """A macro with or without a value"""
+    assert _define("DEBUG") == ("DEBUG", None)
+    assert _define("WIDTH=8") == ("WIDTH", "8")
+    assert _define("EMPTY=") == ("EMPTY", "")
+
+
+def _netlist_module(path):
+    module = next(iter(json.loads(path.read_text(encoding="utf-8"))["modules"].values()))
+    cells = sorted({cell["type"] for cell in module["cells"].values()})
+    return len(module["ports"]["a"]["bits"]), cells
+
+
+def test_netlist_build_step(tmp_path):
+    """--netlist only synthesizes, with include folders, macros and parameters"""
+    netlist = tmp_path / "options.json"
+    arguments = [str(OPTIONS), "--toplevel", "options", "-I", str(VERILOG / "include")]
+    assert main([*arguments, "--netlist", str(netlist)]) == 0
+    assert _netlist_module(netlist) == (2, [])
+    assert main([*arguments, "-DINVERT", "-PWIDTH=4", "--netlist", str(netlist)]) == 0
+    assert _netlist_module(netlist) == (4, ["$_NOT_"])
+
+
+def test_netlist_include_from_own_folder(tmp_path):
+    """A file synthesized as a copy without its time declarations includes from its folder"""
+    netlist = tmp_path / "local.json"
+    source = VERILOG / "cocotb_local_include.sv"
+    assert main([str(source), "--toplevel", "local_include", "--netlist", str(netlist)]) == 0
+    assert _netlist_module(netlist) == (3, [])
+
+
+def test_netlist_top_module_found(tmp_path):
+    """One file without --toplevel: its top module"""
+    netlist = tmp_path / "counter.json"
+    assert main([str(COUNTER), "--netlist", str(netlist)]) == 0
+    assert list(json.loads(netlist.read_text(encoding="utf-8"))["modules"]) == ["counter"]
+
+
+def test_synthesis_error(tmp_path, capsys, monkeypatch):
+    """A synthesis error is printed with the Yosys log, the launcher returns 1"""
+    monkeypatch.delenv("COCOTB_TOPLEVEL", raising=False)
+    netlist = tmp_path / "options.json"
+    assert main([str(OPTIONS), "--toplevel", "options", "--netlist", str(netlist)]) == 1
+    error = capsys.readouterr().err
+    assert "Yosys:" in error
+    assert "DigSim:" in error
+    assert "cocotb_options.vh" in error
+    assert not netlist.exists()
+
+
+def test_netlist_arguments(tmp_path, monkeypatch):
+    """The netlist is a .json file, and a netlist is simulated as it is"""
+    monkeypatch.delenv("COCOTB_TOPLEVEL", raising=False)
+    with pytest.raises(SystemExit):
+        main([str(COUNTER), "--netlist", str(tmp_path / "counter.txt")])
+    netlist = tmp_path / "counter.json"
+    assert main([str(COUNTER), "--netlist", str(netlist)]) == 0
+    with pytest.raises(SystemExit):
+        main([str(netlist), "-PWIDTH=4", "--test-modules", "counter_tb"])
+    with pytest.raises(SystemExit):
+        main([str(OPTIONS), "-DINVERT", "--test-modules", "counter_tb"])
+
+
+def _cocotb_runner_check():
+    """Skip unless cocotb has the DigSim runner (not in cocotb 2.1)"""
+    if importlib.util.find_spec("cocotb") is None:
+        pytest.skip("cocotb isn't installed")
+    check = (
+        "from cocotb_tools.runner import SUPPORTED_RUNNERS; print('digsim' in SUPPORTED_RUNNERS)"
+    )
+    run = subprocess.run(
+        [sys.executable, "-c", check], check=False, capture_output=True, text=True
+    )
+    if run.stdout.strip() != "True":
+        pytest.skip("cocotb has no DigSim runner")
+
+
+_RUNNER_SCRIPT = """
+import sys
+from cocotb_tools.runner import get_runner
+
+build_dir, counter, testbench = sys.argv[1:]
+sys.path.insert(0, testbench)
+runner = get_runner("digsim")
+for _ in range(2):
+    runner.build(sources=[counter], hdl_toplevel="counter", build_dir=build_dir)
+runner.test(
+    test_module="counter_tb",
+    hdl_toplevel="counter",
+    plusargs=["+digsim_plusarg=42"],
+    waves=True,
+)
+"""
+
+
+def test_cocotb_runner(tmp_path):
+    """cocotb's Python runner: build() synthesizes once, test() runs the tests"""
+    _cocotb_runner_check()
+    env = {
+        name: value
+        for name, value in os.environ.items()
+        if not name.startswith("COCOTB_") and name not in ("WAVES", "PYTEST_CURRENT_TEST")
+    }
+    command = [sys.executable, "-c", _RUNNER_SCRIPT, str(tmp_path), str(COUNTER), str(TESTBENCH)]
+    run = subprocess.run(command, check=False, env=env, capture_output=True, text=True)
+    output = run.stdout + run.stderr
+    assert run.returncode == 0, output
+    assert "Skipping synthesis" in output
+    cases = ET.parse(tmp_path / "results.xml").getroot().findall(".//testcase")
+    assert len(cases) == 7
+    assert [case.get("name") for case in cases if case.find("failure") is not None] == []
+    assert (tmp_path / "counter.json").is_file()
+    assert len(_changes(tmp_path / "counter.vcd", "clk")) > 20
+
+
+def test_cocotb_pytest_plugin(tmp_path):
+    """cocotb's pytest plugin with --cocotb-simulator=digsim"""
+    _cocotb_runner_check()
+    env = {
+        name: value
+        for name, value in os.environ.items()
+        if not name.startswith("COCOTB_") and name != "PYTEST_CURRENT_TEST"
+    }
+    command = [sys.executable, "-m", "pytest", "-p", "cocotb_tools._pytest.plugin"]
+    command += ["--cocotb-simulator=digsim", "-p", "no:cacheprovider", "-q"]
+    command += [str(TESTBENCH / "plugin_counter.py")]
+    run = subprocess.run(
+        command, check=False, cwd=tmp_path, env=env, capture_output=True, text=True
+    )
+    assert run.returncode == 0, run.stdout + run.stderr
+    assert "2 passed, 1 passed cocotb runner" in run.stdout

@@ -2,8 +2,10 @@
 # All rights reserved
 
 """
-The launcher: it builds the circuit, puts the stand-in for `cocotb.simulator` in place
-before cocotb is imported, starts cocotb like the GPI does, and runs the simulation
+The launcher: it synthesizes the design (or loads its netlist), builds the circuit, puts
+the stand-in for `cocotb.simulator` in place before cocotb is imported, starts cocotb like
+the GPI does, and runs the simulation. With --netlist it only synthesizes, the build step
+of cocotb's runner.
 """
 
 from __future__ import annotations
@@ -23,7 +25,8 @@ import platformdirs
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import YosysComponent
-from digsim.synth import Synthesis
+from digsim.circuit.components._yosys_component import top_module
+from digsim.synth import Synthesis, SynthesisException
 from digsim.utils import YosysNetlist
 
 from . import _simulator
@@ -70,12 +73,51 @@ def _yosys_source(source: str) -> str:
     return str(copy)
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Run cocotb's tests on a Verilog design"""
+def _define(text: str) -> tuple[str, str | None]:
+    """A macro: NAME or NAME=VALUE"""
+    name, _, value = text.partition("=")
+    return name, value if "=" in text else None
+
+
+# A sized Verilog constant, like 8'd5 or 4'b1010
+_SIZED_CONSTANT = re.compile(r"\d*'s?([bodh])([0-9a-f_]+)", re.IGNORECASE)
+_BASES = {"b": 2, "o": 8, "d": 10, "h": 16}
+
+
+def _parameter(text: str) -> tuple[str, int]:
+    """
+    A parameter: NAME=VALUE, the value an integer (like 8, 0x10 or 8'd5)
+
+    Raises:
+        argparse.ArgumentTypeError: If it has no value, or the value isn't an integer.
+    """
+    name, equals, value = text.partition("=")
+    if not equals:
+        raise argparse.ArgumentTypeError(f"'{text}' is not NAME=VALUE")
+    value = value.strip()
+    try:
+        return name, int(value, 0)
+    except ValueError:
+        pass
+    match = _SIZED_CONSTANT.fullmatch(value)
+    if match is None:
+        raise argparse.ArgumentTypeError(f"The value of parameter '{name}' is not an integer")
+    return name, int(match.group(2).replace("_", ""), _BASES[match.group(1).lower()])
+
+
+def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="python -m digsim.cocotb", description="Run cocotb tests on a Verilog design"
+        prog="python -m digsim.cocotb",
+        description=(
+            "Run cocotb tests on a Verilog design, synthesized with Yosys, or only "
+            "synthesize it with --netlist. Plusargs (+name=value) are for the tests."
+        ),
     )
-    parser.add_argument("sources", nargs="+", help="The Verilog files")
+    parser.add_argument(
+        "sources",
+        nargs="+",
+        help="The Verilog files, or a netlist (.json) written with --netlist",
+    )
     parser.add_argument(
         "--toplevel", default=os.environ.get("COCOTB_TOPLEVEL"), help="The top module"
     )
@@ -85,7 +127,38 @@ def main(argv: list[str] | None = None) -> int:
         help="The Python modules with the tests, separated by commas",
     )
     parser.add_argument(
+        "-I",
+        dest="includes",
+        metavar="FOLDER",
+        action="append",
+        default=[],
+        help="A folder to include files from",
+    )
+    parser.add_argument(
+        "-D",
+        dest="defines",
+        metavar="NAME[=VALUE]",
+        action="append",
+        default=[],
+        type=_define,
+        help="A macro, like `define",
+    )
+    parser.add_argument(
+        "-P",
+        dest="parameters",
+        metavar="NAME=VALUE",
+        action="append",
+        default=[],
+        type=_parameter,
+        help="A value for a parameter of the top module, an integer",
+    )
+    parser.add_argument(
         "--functional", action="store_true", help="Synthesize into functional blocks"
+    )
+    parser.add_argument(
+        "--netlist",
+        metavar="FILE",
+        help="Only synthesize: write the netlist to FILE, to run the tests on later",
     )
     parser.add_argument(
         "--waves",
@@ -97,15 +170,62 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Leave out the named signals inside the design, for a faster simulation",
     )
-    args, extra = parser.parse_known_args(argv)
-    # Plusargs (+name or +name=value) are for the tests, like with other simulators
-    plusargs = [arg for arg in extra if arg.startswith("+")]
-    if len(plusargs) != len(extra):
-        parser.error(f"unrecognized arguments: {' '.join(set(extra) - set(plusargs))}")
+    return parser
+
+
+def _synthesis(
+    parser: argparse.ArgumentParser, args: argparse.Namespace, toplevel: str | None
+) -> Synthesis:
+    """The synthesis of the Verilog files, with the time declarations removed"""
+    sources = [_yosys_source(source) for source in args.sources]
+    includes = list(args.includes)
+    # A copy without the time declarations includes files from the folder of the original
+    for source, used in zip(args.sources, sources, strict=True):
+        folder = str(Path(source).resolve().parent)
+        if used != str(Path(source).resolve()) and not re.search(r"[\s\";#]", folder):
+            includes.append(folder)
+    if toplevel is None:
+        if len(sources) > 1 or args.includes or args.defines:
+            parser.error("Give --toplevel or set COCOTB_TOPLEVEL")
+        toplevel = top_module(sources[0])
+    return Synthesis(
+        sources,
+        toplevel,
+        functional=args.functional,
+        parameters=dict(args.parameters),
+        includes=includes,
+        defines=dict(args.defines),
+    )
+
+
+def _design(
+    parser: argparse.ArgumentParser,
+    args: argparse.Namespace,
+    toplevel: str | None,
+    circuit: Circuit,
+) -> YosysComponent:
+    """The design as a component of the circuit, from a netlist or the Verilog files"""
+    # The named signals (wires and registers), for the tests and the waves
+    signals = not args.no_signals
+    if len(args.sources) == 1 and args.sources[0].endswith(".json"):
+        if args.includes or args.defines or args.parameters or args.functional:
+            parser.error("A netlist is used as it is: no -I, -D, -P or --functional")
+        return YosysComponent(circuit, args.sources[0], signals=signals)
+    netlist = _synthesis(parser, args, toplevel).synth_to_dict(silent=True)
+    top = YosysComponent(circuit, signals=signals)
+    top.create_from_netlist(YosysNetlist(**netlist))
+    return top
+
+
+def _run(parser: argparse.ArgumentParser, args: argparse.Namespace, plusargs: list[str]) -> int:
     # The Makefiles can give the library with the module, like "top.counter"
     toplevel = args.toplevel.strip().rsplit(".", 1)[-1] if args.toplevel else None
-    if len(args.sources) > 1 and not toplevel:
-        parser.error("Give --toplevel or set COCOTB_TOPLEVEL with several Verilog files")
+    if args.netlist:
+        if not args.netlist.endswith(".json"):
+            parser.error("The netlist is a .json file")
+        netlist = _synthesis(parser, args, toplevel).synth_to_json(silent=True)
+        Path(args.netlist).write_text(netlist, encoding="utf-8")
+        return 0
     if not args.test_modules:
         parser.error("Give --test-modules or set COCOTB_TEST_MODULES")
     os.environ["COCOTB_TEST_MODULES"] = args.test_modules
@@ -115,21 +235,8 @@ def main(argv: list[str] | None = None) -> int:
     if os.getcwd() not in sys.path:
         sys.path.insert(0, os.getcwd())
 
-    sources = [_yosys_source(source) for source in args.sources]
-    # The named signals (wires and registers), for the tests and the waves
-    signals = not args.no_signals
     circuit = Circuit()
-    if len(sources) == 1:
-        top = YosysComponent(
-            circuit, sources[0], functional=args.functional, signals=signals, module=toplevel
-        )
-    else:
-        assert toplevel is not None
-        netlist = Synthesis(sources, toplevel, functional=args.functional).synth_to_dict(
-            silent=True
-        )
-        top = YosysComponent(circuit, signals=signals)
-        top.create_from_netlist(YosysNetlist(**netlist))
+    top = _design(parser, args, toplevel, circuit)
     scheduler = _simulator._Scheduler(
         circuit, top, str(Path(args.sources[0]).resolve()), [parser.prog, *plusargs]
     )
@@ -149,3 +256,20 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         circuit.vcd_close()
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run cocotb's tests on a Verilog design, or synthesize it (see --help)"""
+    parser = _parser()
+    arguments = sys.argv[1:] if argv is None else argv
+    # Plusargs (+name or +name=value) are for the tests, like with other simulators. Taken
+    # out first: argparse would take them for sources.
+    plusargs = [arg for arg in arguments if arg.startswith("+")]
+    args = parser.parse_args([arg for arg in arguments if not arg.startswith("+")])
+    try:
+        return _run(parser, args, plusargs)
+    except SynthesisException as error:
+        for line in error.log:
+            print("Yosys:", line, file=sys.stderr)
+        print(f"DigSim: {error}", file=sys.stderr)
+        return 1

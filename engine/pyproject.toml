@@ -38,6 +38,10 @@ dependencies = [
   "digsim-native==0.5.0; (sys_platform == 'linux' and platform_machine in 'x86_64 aarch64') or (sys_platform == 'win32' and platform_machine in 'AMD64 ARM64') or sys_platform == 'darwin'",
 ]
 
+# Runs cocotb tests on DigSim (python -m digsim.cocotb), the command that cocotb's pytest
+# plugin finds DigSim by
+scripts = { digsim-cocotb = "digsim.cocotb:main" }
+
 keywords = ["educational", "simulation", "digital", "verilog"]
 
 [tool.setuptools.packages.find]
