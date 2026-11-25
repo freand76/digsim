@@ -87,7 +87,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--functional", action="store_true", help="Synthesize into functional blocks"
     )
-    parser.add_argument("--waves", metavar="FILE", help="Write the waveforms to a VCD file")
+    parser.add_argument(
+        "--waves",
+        metavar="FILE",
+        help="Write the waveforms to a VCD file, with the named signals inside the design",
+    )
     args, extra = parser.parse_known_args(argv)
     # Plusargs (+name or +name=value) are for the tests, like with other simulators
     plusargs = [arg for arg in extra if arg.startswith("+")]
@@ -107,15 +111,19 @@ def main(argv: list[str] | None = None) -> int:
         sys.path.insert(0, os.getcwd())
 
     sources = [_yosys_source(source) for source in args.sources]
+    # The named signals (wires and registers) make the simulation slower: only for waves
+    signals = bool(args.waves)
     circuit = Circuit()
     if len(sources) == 1:
-        top = YosysComponent(circuit, sources[0], functional=args.functional, module=toplevel)
+        top = YosysComponent(
+            circuit, sources[0], functional=args.functional, signals=signals, module=toplevel
+        )
     else:
         assert toplevel is not None
         netlist = Synthesis(sources, toplevel, functional=args.functional).synth_to_dict(
             silent=True
         )
-        top = YosysComponent(circuit)
+        top = YosysComponent(circuit, signals=signals)
         top.create_from_netlist(YosysNetlist(**netlist))
     scheduler = _simulator._Scheduler(
         circuit, top, str(Path(args.sources[0]).resolve()), [parser.prog, *plusargs]

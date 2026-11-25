@@ -313,3 +313,9 @@ def test_cocotb_testbench(tmp_path):
     changes = _changes(tmp_path / "counter.vcd", "clk")
     assert len(changes) > 20
     assert 5000 in {later - earlier for (earlier, _), (later, _) in itertools.pairwise(changes)}
+    # A named signal inside the design, with the values of the counter
+    lines = (tmp_path / "counter.vcd").read_text(encoding="utf-8").splitlines()
+    ident = next(line.split()[3] for line in lines if line.endswith(" value $end"))
+    texts = [line[1:].split()[0] for line in lines if line.endswith(f" {ident}")]
+    values = {int(text, 2) for text in texts if set(text) <= {"0", "1"}}
+    assert set(range(10, 21)) <= values
