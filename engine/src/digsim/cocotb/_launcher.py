@@ -92,6 +92,11 @@ def main(argv: list[str] | None = None) -> int:
         metavar="FILE",
         help="Write the waveforms to a VCD file, with the named signals inside the design",
     )
+    parser.add_argument(
+        "--no-signals",
+        action="store_true",
+        help="Leave out the named signals inside the design, for a faster simulation",
+    )
     args, extra = parser.parse_known_args(argv)
     # Plusargs (+name or +name=value) are for the tests, like with other simulators
     plusargs = [arg for arg in extra if arg.startswith("+")]
@@ -111,8 +116,8 @@ def main(argv: list[str] | None = None) -> int:
         sys.path.insert(0, os.getcwd())
 
     sources = [_yosys_source(source) for source in args.sources]
-    # The named signals (wires and registers) make the simulation slower: only for waves
-    signals = bool(args.waves)
+    # The named signals (wires and registers), for the tests and the waves
+    signals = not args.no_signals
     circuit = Circuit()
     if len(sources) == 1:
         top = YosysComponent(
