@@ -74,3 +74,30 @@ async def test_wrong_value_fails(dut):
 async def test_plusarg(dut):
     """The plusargs of the command line reach the tests"""
     assert cocotb.plusargs["digsim_plusarg"] == "42"
+
+
+@cocotb.test
+async def test_internal_signals(dut):
+    """The named signals inside the design, also in a submodule, as in the Verilog"""
+    Clock(dut.clk, 10, "ns").start()
+    await reset(dut)
+    dut.ena.value = 1
+    for _ in range(6):
+        before = int(dut.value.value)
+        await RisingEdge(dut.clk)
+        await Timer(1, "ns")
+        assert dut.value.value == dut.count.value
+        assert int(dut.u_parity.odd_reg.value) == before.bit_count() % 2
+    # An edge trigger on a signal inside a submodule
+    await RisingEdge(dut.u_parity.odd_reg)
+    assert int(dut.odd.value) == 1
+
+
+@cocotb.test
+async def test_internal_write_ignored(dut):
+    """A write to a signal inside the design is logged and ignored, the test goes on"""
+    Clock(dut.clk, 10, "ns").start()
+    await reset(dut)
+    dut.value.value = 100
+    await Timer(1, "ns")
+    assert int(dut.value.value) == 0

@@ -34,7 +34,7 @@ TESTBENCH = Path(__file__).parent / "cocotb_tb"
 def _scheduler():
     """A scheduler with the counter, installed as the simulator"""
     circuit = Circuit()
-    top = YosysComponent(circuit, _yosys_source(str(COUNTER)), module="counter")
+    top = YosysComponent(circuit, _yosys_source(str(COUNTER)), module="counter", signals=True)
     scheduler = sim._Scheduler(circuit, top, str(COUNTER), ["digsim", "+seed=1"])
     sim.install(scheduler)
     yield scheduler
@@ -73,7 +73,7 @@ def test_handles(scheduler):
     assert root.get_type() == sim.MODULE
     assert root.get_definition_name() == "counter"
     names = [child.get_name_string() for child in root.iterate(sim.OBJECTS)]
-    assert names == ["clk", "rst", "ena", "set", "din", "count"]
+    assert names == ["clk", "rst", "ena", "set", "din", "count", "odd", "u_parity", "value"]
     clk = root.get_handle_by_name("clk")
     din = root.get_handle_by_name("din")
     assert root.get_handle_by_name("missing") is None
@@ -105,15 +105,65 @@ def test_values(scheduler):
     assert din.get_signal_val_binstr() == "ZZZZZZZZ"
 
 
-def test_unsupported_writes(scheduler):
-    """Only deposits on inputs: no force, no writes to outputs"""
-    din = scheduler.root.get_handle_by_name("din")
-    count = scheduler.root.get_handle_by_name("count")
+def test_unsupported_writes(scheduler, caplog):
+    """
+    Only deposits on the inputs of the top module: other writes are logged and ignored,
+    like the GPI does with a write that the simulator rejects
+    """
+    root = scheduler.root
+    din = root.get_handle_by_name("din")
+    count = root.get_handle_by_name("count")
+    value = root.get_handle_by_name("value")
+    sub_clk = root.get_handle_by_name("u_parity").get_handle_by_name("clk")
     force = 1
-    with pytest.raises(NotImplementedError):
-        din.set_signal_val_int(force, 1)
-    with pytest.raises(NotImplementedError):
-        count.set_signal_val_int(sim._DEPOSIT, 1)
+    din.set_signal_val_int(force, 1)
+    count.set_signal_val_int(sim._DEPOSIT, 1)
+    value.set_signal_val_int(sim._DEPOSIT, 1)
+    sub_clk.set_signal_val_int(sim._DEPOSIT, 1)
+    for obj in (din, count, value, sub_clk):
+        assert set(obj.get_signal_val_binstr()) == {"X"}
+    errors = [record.getMessage() for record in caplog.records if record.name == "gpi"]
+    assert errors == [
+        "DigSim can only deposit values, not force or release counter.din",
+        "DigSim can only set the inputs of the top module, not counter.count",
+        "DigSim can only set the inputs of the top module, not counter.value",
+        "DigSim can only set the inputs of the top module, not counter.u_parity.clk",
+    ]
+
+
+def test_internal_signals(scheduler):
+    """The named signals inside the design, also in a submodule, with value changes"""
+    root = scheduler.root
+    parity = root.get_handle_by_name("u_parity")
+    assert parity.get_type() == sim.MODULE
+    assert parity.get_fullname_string() == "counter.u_parity"
+    odd_reg = parity.get_handle_by_name("odd_reg")
+    value = root.get_handle_by_name("value")
+    assert odd_reg.get_fullname_string() == "counter.u_parity.odd_reg"
+    assert odd_reg.get_type() == sim.LOGIC
+    assert value.get_type() == sim.LOGIC_ARRAY
+    assert value.get_range() == (7, 0, sim.RANGE_DOWN)
+    for name, level in (("rst", 0), ("ena", 0), ("set", 1), ("din", 3)):
+        root.get_handle_by_name(name).set_signal_val_int(sim._DEPOSIT, level)
+    clk = root.get_handle_by_name("clk")
+    clk.set_signal_val_int(sim._DEPOSIT, 0)
+    changes = []
+    sim.register_value_change_callback(
+        value, lambda: changes.append((_now(), value.get_signal_val_long())), sim.VALUE_CHANGE
+    )
+    sim.register_timed_callback(1000, lambda: clk.set_signal_val_int(sim._DEPOSIT, 1))
+    sim.register_timed_callback(2000, lambda: clk.set_signal_val_int(sim._DEPOSIT, 0))
+    sim.register_timed_callback(3000, lambda: clk.set_signal_val_int(sim._DEPOSIT, 1))
+    sim.register_timed_callback(4000, sim.stop_simulator)
+    scheduler.run()
+    # The value is loaded at the first edge (after the delays of the gates), its parity
+    # (two ones: even) at the next
+    assert len(changes) == 1
+    assert 1000 < changes[0][0] < 2000
+    assert changes[0][1] == 3
+    assert root.get_handle_by_name("count").get_signal_val_long() == 3
+    assert odd_reg.get_signal_val_binstr() == "0"
+    assert root.get_handle_by_name("odd").get_signal_val_binstr() == "0"
 
 
 def test_phases(scheduler):
@@ -306,7 +356,7 @@ def test_cocotb_testbench(tmp_path):
     )
     assert run.returncode == 0, run.stdout + run.stderr
     cases = ET.parse(results).getroot().findall(".//testcase")
-    assert len(cases) == 5
+    assert len(cases) == 7
     failed = [case.get("name") for case in cases if case.find("failure") is not None]
     assert failed == [], run.stdout
     # The 10 ns clocks of the tests, in picoseconds

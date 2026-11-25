@@ -7,6 +7,10 @@ Python code talks to a simulator only through this module. The `_Scheduler` runs
 circuit and calls cocotb's callbacks in the phases of a time step (timed, value change,
 ReadWrite, ReadOnly, NextTimeStep).
 
+The top module has its ports and the named signals inside it (the wires and registers that
+synthesis keeps, see YosysComponent's 'signals'), with the submodules of a dotted name like
+"alu.out" as modules. Only the inputs of the top module can be set.
+
 Time: one DigSim nanosecond is one picosecond for cocotb (precision 1e-12), so that the
 1 ns delay of every gate is short against the clock periods of cocotb tests.
 """
@@ -16,11 +20,13 @@ from __future__ import annotations
 import heapq
 import importlib.metadata
 import itertools
+import logging
 import traceback
 from collections.abc import Callable, Iterator
 from typing import Any
 
 from digsim.circuit import Circuit
+from digsim.circuit.components import YosysComponent
 from digsim.circuit.components.atoms import VALUE_TYPE, Component, Port
 
 
@@ -67,6 +73,9 @@ _NO_DELAY = 3
 _TYPE_STRINGS = {MODULE: "GPI_MODULE", LOGIC: "GPI_LOGIC", LOGIC_ARRAY: "GPI_LOGIC_ARRAY"}
 
 _PRECISION = -12
+
+# The logger of cocotb's GPI, for what the GPI would log
+_gpi_log = logging.getLogger("gpi")
 # The time of a DigSim nanosecond in VCD files
 TIMESCALE = "1 ps"
 
@@ -175,12 +184,20 @@ class sim_obj:
         return iter(list(self._children.values()) if mode == OBJECTS else [])
 
     def _set(self, action: int, value: VALUE_TYPE) -> None:
-        if action not in (_DEPOSIT, _NO_DELAY):
-            raise NotImplementedError(f"DigSim can only deposit values, not on {self._fullname}")
+        # Like the GPI with a write that the simulator rejects: log it and go on (cocotb
+        # applies most writes in a callback of its own, where an exception would end the
+        # simulation)
         port = self._signal()
-        if not port.is_input():
-            raise NotImplementedError(f"DigSim can only set input ports, not {self._fullname}")
-        port.value = value
+        if action not in (_DEPOSIT, _NO_DELAY):
+            _gpi_log.error(
+                "DigSim can only deposit values, not force or release %s", self._fullname
+            )
+        elif not port.is_input() or not port.parent().is_toplevel():
+            _gpi_log.error(
+                "DigSim can only set the inputs of the top module, not %s", self._fullname
+            )
+        else:
+            port.value = value
 
     def set_signal_val_binstr(self, action: int, value: str) -> None:
         if set(value) <= {"0", "1"}:
@@ -213,6 +230,10 @@ class _Watch:
         self.callbacks: list[tuple[sim_callback, int]] = []
 
 
+def _logic_type(port: Port) -> int:
+    return LOGIC if port.width == 1 else LOGIC_ARRAY
+
+
 class _Scheduler:
     """Runs a circuit and calls cocotb's callbacks. It initializes the circuit"""
 
@@ -223,13 +244,11 @@ class _Scheduler:
         circuit.init()
         self.root = sim_obj(name, name, MODULE, definition=name, definition_file=path)
         for port in top.ports:
-            child = sim_obj(
-                port.name(),
-                f"{name}.{port.name()}",
-                LOGIC if port.width == 1 else LOGIC_ARRAY,
-                port,
-            )
+            child = sim_obj(port.name(), f"{name}.{port.name()}", _logic_type(port), port)
             self.root._children[port.name()] = child
+        if isinstance(top, YosysComponent) and top.parameter_get("signals"):
+            for signal in top.signal_names():
+                self._add_signal(signal, top._signal_port(signal))
         self.running = False
         self._stop = False
         self._stopped_by_cocotb = False
@@ -240,6 +259,24 @@ class _Scheduler:
         self._nextstep: list[sim_callback] = []
         self._end_of_sim: list[sim_callback] = []
         self._watches: dict[Port, _Watch] = {}
+
+    def _add_signal(self, name: str, port: Port) -> None:
+        """A named signal, in modules for the submodules of its name ("alu.out")"""
+        parent = self.root
+        *modules, leaf = name.split(".")
+        for module in modules:
+            child = parent._children.get(module)
+            if child is None:
+                child = sim_obj(module, f"{parent._fullname}.{module}", MODULE)
+                parent._children[module] = child
+            elif child._type != MODULE:
+                # The name of a module is taken by a port or signal
+                return
+            parent = child
+        if leaf not in parent._children:
+            parent._children[leaf] = sim_obj(
+                leaf, f"{parent._fullname}.{leaf}", _logic_type(port), port
+            )
 
     # Registering
 
