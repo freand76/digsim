@@ -2,6 +2,7 @@
 
 ## vx.x.x
  - Python API: `import digsim.synth` as the first import of digsim failed with a circular import. Importing digsim.circuit first worked
+ - cocotb (a proof of concept): python -m digsim.cocotb synthesizes a Verilog design with Yosys and runs cocotb's tests on it, in one process, without a build step or a simulator of its own (make SIM=digsim with a cocotb that has Makefile.digsim). One DigSim nanosecond is a picosecond for cocotb, so that the gate delays are short against the clocks of the tests. Only the ports of the top module, deposits on inputs, and a port is undefined as a whole. No waveforms yet
 
 ## v1.13.0
  - VCD files: written by the VCD writer of digsim-native (the same file as pyvcd writes), with both engines, and the native engine writes the changes of its own ports without calling Python. The 6502 example with --vcd runs about 3 times faster (from 4,300 to 12,700 clocks per second), with five times as many changes in the file, see the next line. Without digsim-native, pyvcd writes the file as before. Needs digsim-native 0.5.0
