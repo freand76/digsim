@@ -42,6 +42,8 @@ LOGIC_ARRAY = 13
 PACKED_STRUCT = 14
 PACKED_UNION = 15
 FIXED_STRING = 16
+# cocotb 2.1 (later cocotb has PACKED_ARRAY, PACKED_STRUCT and PACKED_UNION)
+PACKED = 17
 
 # Iteration modes
 OBJECTS = 1
@@ -445,6 +447,11 @@ def register_end_of_sim_time_callback(func: Callable[..., Any], *args: Any) -> s
     return scheduler.add(scheduler._end_of_sim, sim_callback(func, args))
 
 
+def set_sim_event_callback(sim_event_callback: Callable[[], object]) -> None:
+    """cocotb 2.1, later cocotb registers with register_end_of_sim_time_callback()"""
+    register_end_of_sim_time_callback(sim_event_callback)
+
+
 def stop_simulator() -> None:
     _current().stop()
 
@@ -493,6 +500,7 @@ __all__ = [
     "NETARRAY",
     "OBJECTS",
     "PACKAGE",
+    "PACKED",
     "PACKED_ARRAY",
     "PACKED_STRUCT",
     "PACKED_UNION",
@@ -524,6 +532,7 @@ __all__ = [
     "register_value_change_callback",
     "root_iterate",
     "set_gpi_log_level",
+    "set_sim_event_callback",
     "sim_callback",
     "sim_obj",
     "sim_obj_iterator",
