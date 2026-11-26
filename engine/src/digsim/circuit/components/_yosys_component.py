@@ -917,6 +917,50 @@ class YosysComponent(MultiComponent):
         """
         return self._signal_port(name).value
 
+    def deposit(self, name: str, value: VALUE_TYPE, bit: int | None = None) -> None:
+        """
+        Deposit a value on a named signal, like a Verilog deposit (vpi_put_value()): the
+        signal and the logic it drives have the value now, and the cells that drive it
+        keep it until they drive it again, a register until its next active clock edge,
+        a gate until one of its inputs changes.
+
+        Args:
+            name: The name of the signal, see signal_names().
+            value: The value, a number or "X".
+            bit: Only this bit of the signal (0 the least significant), the value 0, 1 or
+                "X".
+
+        Raises:
+            YosysComponentException: If the component was created without signals=True,
+                or it has no signal with the name, or a bit of the signal is constant,
+                not driven, or a port of the component (set the port instead), or the
+                native engine is older than digsim-native 0.6.0.
+        """
+        port = self._signal_port(name)
+        assert isinstance(port, PortMultiBitWire)
+        bits = range(port.width) if bit is None else [bit]
+        drivers = []
+        for index in bits:
+            driver = port.get_bit(index).get_driver()
+            if driver is None:
+                raise YosysComponentException(f"Bit {index} of '{name}' is not driven")
+            if isinstance(driver.parent(), (GND, VDD)):
+                raise YosysComponentException(f"Bit {index} of '{name}' is constant")
+            if driver.parent() is self:
+                raise YosysComponentException(
+                    f"Bit {index} of '{name}' is a port of '{self.name()}', set the port"
+                )
+            drivers.append((index, driver))
+        for index, driver in drivers:
+            if isinstance(value, int):
+                bit_value: VALUE_TYPE = (value >> (index if bit is None else 0)) & 1
+            else:
+                bit_value = value
+            if not self._circuit._deposit(driver, bit_value):
+                raise YosysComponentException(
+                    "Deposits need digsim-native 0.6.0 or later with the native engine"
+                )
+
     def state(self, name: str) -> str:
         """
         The name of the value of a signal with named values (see the 'states' argument),

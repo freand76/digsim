@@ -87,9 +87,14 @@ cocotb's pytest plugin selects DigSim with `--cocotb-simulator=digsim`, or finds
   the range and the signedness of its declaration: `dut.down[11]` is the bit of index 11
   of `logic [11:4] down`. A signal with a constant value, like a register that only an
   `initial` block sets, is read only.
-- Only the inputs of the top module can be set, with deposits. A write to another signal
-  is logged as an error of the `gpi` logger and ignored, like a write that a simulator
-  rejects.
+- The inputs of the top module are set with deposits, and the signals inside get
+  deposits (`dut.value.value = 5` on a register): the signal has the value now, and the
+  logic that drives it keeps it until it drives again, a register until its next active
+  clock edge, a gate until one of its inputs changes. In a netlist of gates every bit has
+  a gate of its own. A signal that is an input (`assign b = a`) has a buffer of its own,
+  for its deposits. Deposits on the signals inside need digsim-native 0.6.0 with the
+  native engine. A force, or a write to an output or a constant, is logged as an error of
+  the `gpi` logger and ignored, like a write that a simulator rejects.
 - A value is defined, or undefined (`X`) or not driven (`Z`) as a whole: a write of
   `0b01X0` sets `X`. The bits of an input can be set one at a time (`dut.din[0]`), a
   vector with an undefined bit reads as `X`.

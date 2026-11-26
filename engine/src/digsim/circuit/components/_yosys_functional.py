@@ -258,6 +258,35 @@ class FunctionalCell(Component):
             return "X"
         return word[0] & 1
 
+    def deposit_state(self, port: Port, value: VALUE_TYPE) -> None:
+        """
+        A deposit on the port of an output bit (see Circuit._deposit(), which sets the
+        port): the last value written has it, so the cell writes the bit again when its
+        value differs, and the cells the word drives get it
+        """
+        for name, ports in self._bits.items():
+            if name in self._outputs and port in ports:
+                break
+        else:
+            return
+        low = 1 << ports.index(port)
+        last = self._outputs[name]
+        bits, undefined = last if last is not None else (0, self._output_masks[name])
+        bits &= ~low
+        undefined &= ~low
+        if value == 1:
+            bits |= low
+        elif value != 0:
+            undefined |= low
+        self._outputs[name] = (bits, undefined)
+        self.deposit_word(name, (bits, undefined))
+        word_output = self._word_outputs.get(name)
+        if word_output is not None:
+            word_output.value = bits | (undefined << len(ports))
+
+    def deposit_word(self, name: str, word: Word) -> None:
+        """The state of a deposit on an output, see deposit_state(): Q of a register"""
+
     def write(self, name: str, word: Word) -> None:
         """Set an output port: an event for the word, and for each bit with a port"""
         mask = self._output_masks[name]
@@ -975,6 +1004,10 @@ class _Register(FunctionalCell):
     def set_q(self, word: Word) -> None:
         self._q = word
         self.write("Q", word)
+
+    def deposit_word(self, name: str, word: Word) -> None:
+        if name == "Q":
+            self._q = word
 
     def update(self) -> None:
         raise NotImplementedError

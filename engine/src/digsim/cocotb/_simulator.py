@@ -11,7 +11,8 @@ The top module has its ports and the named signals inside it (the wires and regi
 synthesis keeps, see YosysComponent's 'signals'), with the submodules of a dotted name like
 "alu.out" as modules. A vector is a packed object, its bits by the indices of its
 declaration. A signal with a constant value (like a register only set in an initial block)
-is read only. Only the inputs of the top module can be set.
+is read only. The inputs of the top module are set, the signals inside get deposits (see
+YosysComponent.deposit()).
 
 Time: one DigSim nanosecond is one picosecond for cocotb (precision 1e-12), so that the
 1 ns delay of every gate is short against the clock periods of cocotb tests.
@@ -29,7 +30,7 @@ from collections.abc import Callable, Iterator
 from typing import Any
 
 from digsim.circuit import Circuit
-from digsim.circuit.components import YosysComponent
+from digsim.circuit.components import YosysComponent, YosysComponentException
 from digsim.circuit.components.atoms import VALUE_TYPE, Component, Port, PortMultiBitWire
 from digsim.utils import YosysModule
 
@@ -148,6 +149,7 @@ class sim_obj:
         declaration: _Declaration | None = None,
         constant: str | None = None,
         writable: Port | None = None,
+        deposit: Callable[[VALUE_TYPE, int | None], None] | None = None,
     ) -> None:
         self._name = name
         self._fullname = fullname
@@ -160,6 +162,8 @@ class sim_obj:
         # The port of the top module that a write sets (the port itself, or the bus of a
         # bit), None if it can't be set
         self._writable = writable
+        # A signal inside the design: a deposit of a value (on one bit, or all)
+        self._deposit = deposit
         self._children: dict[str, sim_obj] = {}
         self._bits: dict[int, sim_obj] = {}
 
@@ -205,7 +209,16 @@ class sim_obj:
         port = self._signal()
         assert isinstance(port, PortMultiBitWire)
         writable = port if self._writable is not None else None
-        return sim_obj(name, fullname, LOGIC, port.get_bit(bit), writable=writable)
+        deposit = self._deposit
+        bit_deposit = None
+        if deposit is not None:
+
+            def bit_deposit(value: VALUE_TYPE, _bit: int | None) -> None:
+                deposit(value, bit)
+
+        return sim_obj(
+            name, fullname, LOGIC, port.get_bit(bit), writable=writable, deposit=bit_deposit
+        )
 
     def get_handle_by_name(self, name: str, discovery_method: Any = None) -> sim_obj | None:
         return self._children.get(name)
@@ -273,12 +286,19 @@ class sim_obj:
             _gpi_log.error(
                 "DigSim can only deposit values, not force or release %s", self._fullname
             )
-        elif self._writable is None:
-            _gpi_log.error(
-                "DigSim can only set the inputs of the top module, not %s", self._fullname
-            )
-        else:
+        elif self._writable is not None:
             self._signal().value = value
+        elif self._deposit is not None:
+            try:
+                self._deposit(value, None)
+            except YosysComponentException as error:
+                _gpi_log.error("DigSim can't deposit on %s: %s", self._fullname, error)
+        else:
+            _gpi_log.error(
+                "DigSim can only set the inputs of the top module and deposit on the "
+                "signals inside, not %s",
+                self._fullname,
+            )
 
     def set_signal_val_binstr(self, action: int, value: str) -> None:
         if set(value) <= {"0", "1"}:
@@ -318,6 +338,15 @@ def _logic_type(width: int) -> int:
 
 # The constant bits of a netlist, as the characters of a binstr
 _CONSTANT_BITS = {"0": "0", "1": "1", "x": "X", "X": "X", "z": "Z", "Z": "Z"}
+
+
+def _depositor(top: YosysComponent, name: str) -> Callable[[VALUE_TYPE, int | None], None]:
+    """The deposits on a signal inside the design"""
+
+    def deposit(value: VALUE_TYPE, bit: int | None) -> None:
+        top.deposit(name, value, bit)
+
+    return deposit
 
 
 def _constant_signals(module: YosysModule) -> dict[str, str]:
@@ -362,7 +391,9 @@ class _Scheduler:
             self.root._children[port.name()] = child
         if isinstance(top, YosysComponent) and module is not None and top.parameter_get("signals"):
             for signal in top.signal_names():
-                self._add_signal(signal, module, port=top._signal_port(signal))
+                self._add_signal(
+                    signal, module, port=top._signal_port(signal), deposit=_depositor(top, signal)
+                )
             for signal, constant in _constant_signals(module).items():
                 self._add_signal(signal, module, constant=constant)
         self.running = False
@@ -382,6 +413,7 @@ class _Scheduler:
         module: YosysModule,
         port: Port | None = None,
         constant: str | None = None,
+        deposit: Callable[[VALUE_TYPE, int | None], None] | None = None,
     ) -> None:
         """A named signal, in modules for the submodules of its name ("alu.out")"""
         parent = self.root
@@ -406,6 +438,7 @@ class _Scheduler:
             port,
             declaration=_Declaration(netname.signed, netname.offset, netname.upto),
             constant=constant,
+            deposit=deposit,
         )
 
     # Registering

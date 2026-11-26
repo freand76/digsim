@@ -323,6 +323,28 @@ class Circuit:
             return None
         return None if native is None else native.engine
 
+    def _deposit(self, port: Port, value: VALUE_TYPE) -> bool:
+        """
+        A deposit on the output port of a cell (see YosysComponent.deposit()), like
+        Verilog's vpi_put_value() on a net: the port and the ports it drives have the value
+        now, and the cell keeps it until it sets the port again (a flip-flop at an active
+        clock edge, a gate when an input changes). Returns False if it can't (with an
+        older digsim-native).
+        """
+        native = self._native_engine()
+        if native is not None:
+            deposited = self._engine.deposit(port, value, self._vcd)  # type: ignore[union-attr]
+            if deposited is not None:
+                return bool(deposited)
+        deposit_state = getattr(port.parent(), "deposit_state", None)
+        if deposit_state is not None:
+            # A functional cell: the value it compares its next one with
+            deposit_state(port, value)
+        port.update_wires(value)
+        if self._vcd is not None:
+            self._vcd.write(port, self._time_ns)
+        return True
+
     def process_single_event(self, stop_time_ns: int | None = None) -> tuple[bool, bool]:
         """
         Process only the next event, to step through a simulation.

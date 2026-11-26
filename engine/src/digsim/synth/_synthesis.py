@@ -211,6 +211,43 @@ def _script_files(verilog_files: VerilogFiles) -> str:
     return " ".join(paths)
 
 
+def _constant_bits(bits: list[int | str], constants: dict[int, str]) -> list[int | str]:
+    """The nets of bits, a constant for the ones in constants"""
+    return [constants.get(bit, bit) if isinstance(bit, int) else bit for bit in bits]
+
+
+def _without_constant_buffers(text: str) -> str:
+    """
+    A netlist (JSON) without the buffers of constants that Yosys' insbuf inserts: a signal
+    with a constant value stays constant
+    """
+    netlist = json.loads(text)
+    for module in netlist["modules"].values():
+        constants: dict[int, str] = {}
+        cells = module["cells"]
+        found = True
+        while found:
+            found = False
+            for name, cell in list(cells.items()):
+                if cell["type"] != "$_BUF_":
+                    continue
+                source = cell["connections"]["A"][0]
+                source = constants.get(source, source) if isinstance(source, int) else source
+                if isinstance(source, str):
+                    constants[cell["connections"]["Y"][0]] = source
+                    del cells[name]
+                    found = True
+        if not constants:
+            continue
+        for item in [*module["ports"].values(), *module["netnames"].values()]:
+            item["bits"] = _constant_bits(item["bits"], constants)
+        for cell in cells.values():
+            connections = cell["connections"]
+            for port in connections:
+                connections[port] = _constant_bits(connections[port], constants)
+    return json.dumps(netlist, indent=2)
+
+
 @contextmanager
 def _console_to_file(console_file: pathlib.Path) -> Iterator[None]:
     """
@@ -317,7 +354,9 @@ class Synthesis:
         keep_signals: Keep the named wires and registers, also of the submodules, and
             the logic that drives them, also when no output depends on them. Synthesis
             removes those, which hides them from a simulation that shows the signals
-            inside the design, like the tests of cocotb. The netlist gets bigger.
+            inside the design, like the tests of cocotb. A signal that is the same net as
+            another one (assign b = a, not a constant) gets a buffer, so that it has a
+            cell of its own. The netlist gets bigger.
 
     Raises:
         SynthesisException: If a parameter name is not a Verilog identifier, or its value
@@ -545,6 +584,11 @@ class Synthesis:
             script += "memory_dff; "
             script += "proc; opt; techmap; opt; "
             script += f"synth -noabc -top {top}; "
+        if self._keep_signals:
+            # A buffer for each bit of a signal that is the same net as another one (like
+            # an input, assign b = a): a cell of its own that drives it, for deposits. The
+            # buffers of constants are removed after.
+            script += "insbuf; "
 
         self._yosys_log = []
         with self._work_dir() as work_dir:
@@ -563,7 +607,8 @@ class Synthesis:
                 if not silent:
                     for line in self._yosys_log:
                         print("Yosys:", line)
-            return json_file.read_text(encoding="utf-8")
+            text = json_file.read_text(encoding="utf-8")
+            return _without_constant_buffers(text) if self._keep_signals else text
 
     def synth_to_dict(self, silent: bool = False) -> dict[str, Any]:
         """

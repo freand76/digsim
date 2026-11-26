@@ -128,8 +128,8 @@ def test_values(scheduler):
 
 def test_unsupported_writes(scheduler, caplog):
     """
-    Only deposits on the inputs of the top module: other writes are logged and ignored,
-    like the GPI does with a write that the simulator rejects
+    Deposits on the inputs of the top module and the signals inside: other writes are
+    logged and ignored, like the GPI does with a write that the simulator rejects
     """
     root = scheduler.root
     din = root.get_handle_by_name("din")
@@ -139,16 +139,23 @@ def test_unsupported_writes(scheduler, caplog):
     force = 1
     din.set_signal_val_int(force, 1)
     count.set_signal_val_int(sim._DEPOSIT, 1)
-    value.set_signal_val_int(sim._DEPOSIT, 1)
     sub_clk.set_signal_val_int(sim._DEPOSIT, 1)
-    for obj in (din, count, value, sub_clk):
+    for obj in (din, count, sub_clk):
         assert set(obj.get_signal_val_binstr()) == {"X"}
+    # A register inside: a deposit
+    value.set_signal_val_int(sim._DEPOSIT, 1)
+    assert value.get_signal_val_long() == 1
     errors = [record.getMessage() for record in caplog.records if record.name == "gpi"]
     assert errors == [
         "DigSim can only deposit values, not force or release counter.din",
-        "DigSim can only set the inputs of the top module, not counter.count",
-        "DigSim can only set the inputs of the top module, not counter.value",
-        "DigSim can only set the inputs of the top module, not counter.u_parity.clk",
+        (
+            "DigSim can only set the inputs of the top module and deposit on the signals "
+            "inside, not counter.count"
+        ),
+        (
+            "DigSim can't deposit on counter.u_parity.clk: Bit 0 of 'u_parity.clk' is a "
+            "port of 'counter', set the port"
+        ),
     ]
 
 
@@ -422,8 +429,10 @@ def test_defines():
 
 
 def _netlist_module(path):
+    """The width of the port a and the types of the cells, without the buffers of the kept
+    signals"""
     module = next(iter(json.loads(path.read_text(encoding="utf-8"))["modules"].values()))
-    cells = sorted({cell["type"] for cell in module["cells"].values()})
+    cells = sorted({cell["type"] for cell in module["cells"].values()} - {"$_BUF_"})
     return len(module["ports"]["a"]["bits"]), cells
 
 

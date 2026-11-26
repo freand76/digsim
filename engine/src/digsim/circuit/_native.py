@@ -529,6 +529,7 @@ class NativeEngine:
             if found is not None and _can_be_native(component):
                 cells[component] = found
         self.cells = list(cells)
+        self._cell_set = set(self.cells)
         cell_index = {component: index for index, component in enumerate(self.cells)}
         self.word_cells = _native_word_cells([c for c in components if c not in members])
         self._word_index = {cell: number for number, cell in enumerate(self.word_cells)}
@@ -904,6 +905,37 @@ class NativeEngine:
             namespace["set_value"] = set_value
         native_class = type(cls.__name__, (cls,), namespace)
         return native_class
+
+    def deposit(self, port: Port, value: VALUE_TYPE, vcd: Any) -> bool | None:
+        """
+        Circuit._deposit() of the output port of a cell: True if the engine deposited it,
+        False if it can't (an older digsim-native, a constant), None for a Python port
+        """
+        nid = getattr(port, "_nid", None)
+        if nid is None:
+            return None
+        if getattr(digsim_native, "INTERFACE", 0) < 6:
+            return False
+        parent = port.parent()
+        number = self._member_block.get(parent)
+        if number is not None:
+            slot, bit = self.blocks[number].bits.get(id(port), (_NONE, 0))
+            if slot == _NONE:
+                return False
+            return bool(self.engine.deposit_block(number, slot, bit, value, vcd))
+        word_cell = self._word_index.get(parent)  # type: ignore[call-overload]
+        if word_cell is not None:
+            assert isinstance(parent, functional.FunctionalCell)
+            for output, name in enumerate(parent._outputs):
+                if port in parent._bits[name]:
+                    bit = parent._bits[name].index(port)
+                    self.engine.deposit_word(word_cell, output, bit, value, vcd)
+                    return True
+            return False
+        if parent in self._cell_set and port is parent.outports()[0]:
+            self.engine.deposit_port(nid, value, vcd)
+            return True
+        return None
 
     def next_event_ns(self, port: Port) -> int | None:
         """The time of the latest event of a port, None if it has none"""
