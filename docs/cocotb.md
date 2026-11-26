@@ -83,11 +83,18 @@ cocotb's pytest plugin selects DigSim with `--cocotb-simulator=digsim`, or finds
   the logic that drives them, also when no output depends on them, see `keep_signals` in
   [Synthesis](synthesis.md#internal-signals-and-states). A submodule without signals of
   its own is not seen, nor a generate block.
+- A vector is a packed object (`PackedArrayObject`, `PackedObject` in cocotb 2.1), with
+  the range and the signedness of its declaration: `dut.down[11]` is the bit of index 11
+  of `logic [11:4] down`. A signal with a constant value, like a register that only an
+  `initial` block sets, is read only.
 - Only the inputs of the top module can be set, with deposits. A write to another signal
   is logged as an error of the `gpi` logger and ignored, like a write that a simulator
   rejects.
 - A value is defined, or undefined (`X`) or not driven (`Z`) as a whole: a write of
-  `0b01X0` sets `X`.
+  `0b01X0` sets `X`. The bits of an input can be set one at a time (`dut.din[0]`), a
+  vector with an undefined bit reads as `X`.
+- An `enum` declared without a type (an `int`, signed) reads as unsigned: Yosys doesn't
+  mark it signed.
 - One time step is a picosecond, and every gate has a delay of one step, so that the
   gates of the netlist settle long before the next edge of a clock of the tests. A test
   that reads an output in the time step of a clock edge sees its old value, as with

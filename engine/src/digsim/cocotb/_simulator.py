@@ -9,7 +9,9 @@ ReadWrite, ReadOnly, NextTimeStep).
 
 The top module has its ports and the named signals inside it (the wires and registers that
 synthesis keeps, see YosysComponent's 'signals'), with the submodules of a dotted name like
-"alu.out" as modules. Only the inputs of the top module can be set.
+"alu.out" as modules. A vector is a packed object, its bits by the indices of its
+declaration. A signal with a constant value (like a register only set in an initial block)
+is read only. Only the inputs of the top module can be set.
 
 Time: one DigSim nanosecond is one picosecond for cocotb (precision 1e-12), so that the
 1 ns delay of every gate is short against the clock periods of cocotb tests.
@@ -21,13 +23,15 @@ import heapq
 import importlib.metadata
 import itertools
 import logging
+import sys
 import traceback
 from collections.abc import Callable, Iterator
 from typing import Any
 
 from digsim.circuit import Circuit
 from digsim.circuit.components import YosysComponent
-from digsim.circuit.components.atoms import VALUE_TYPE, Component, Port
+from digsim.circuit.components.atoms import VALUE_TYPE, Component, Port, PortMultiBitWire
+from digsim.utils import YosysModule
 
 
 # The object types (cocotb only compares them with these names)
@@ -70,7 +74,13 @@ RANGE_DOWN = -1
 _DEPOSIT = 0
 _NO_DELAY = 3
 
-_TYPE_STRINGS = {MODULE: "GPI_MODULE", LOGIC: "GPI_LOGIC", LOGIC_ARRAY: "GPI_LOGIC_ARRAY"}
+_TYPE_STRINGS = {
+    MODULE: "GPI_MODULE",
+    LOGIC: "GPI_LOGIC",
+    LOGIC_ARRAY: "GPI_LOGIC_ARRAY",
+    PACKED_ARRAY: "GPI_PACKED_ARRAY",
+    PACKED: "GPI_PACKED",
+}
 
 _PRECISION = -12
 
@@ -93,8 +103,39 @@ class sim_callback:
         self._active = False
 
 
+def _packed_type() -> int:
+    """The type of a Verilog vector: PACKED_ARRAY, or PACKED in cocotb 2.1"""
+    handle = sys.modules.get("cocotb.handle")
+    types = getattr(handle, "_type2cls", None)
+    return PACKED if types is not None and PACKED_ARRAY not in types else PACKED_ARRAY
+
+
+class _Declaration:
+    """The declaration of a signal: signed, and its range (see YosysPort)"""
+
+    def __init__(self, signed: int = 0, offset: int = 0, upto: int = 0) -> None:
+        self.signed = bool(signed)
+        self.offset = offset
+        self.upto = bool(upto)
+
+    def range(self, width: int) -> tuple[int, int, int]:
+        """The left and right index, and the direction"""
+        last = self.offset + width - 1
+        if self.upto:
+            return self.offset, last, RANGE_UP
+        return last, self.offset, RANGE_DOWN
+
+    def bit(self, index: int, width: int) -> int | None:
+        """The bit (0 the least significant) of an index of the declaration, or None"""
+        bit = self.offset + width - 1 - index if self.upto else index - self.offset
+        return bit if 0 <= bit < width else None
+
+
 class sim_obj:
-    """A simulation object: the top module or one of its ports"""
+    """
+    A simulation object: a module, a port or signal (or one bit of one), or a signal
+    with a constant value, binstr its bits (the most significant first)
+    """
 
     def __init__(
         self,
@@ -104,6 +145,9 @@ class sim_obj:
         port: Port | None = None,
         definition: str = "",
         definition_file: str = "",
+        declaration: _Declaration | None = None,
+        constant: str | None = None,
+        writable: Port | None = None,
     ) -> None:
         self._name = name
         self._fullname = fullname
@@ -111,12 +155,26 @@ class sim_obj:
         self._port = port
         self._definition = definition
         self._definition_file = definition_file
+        self._declaration = declaration or _Declaration()
+        self._constant = constant
+        # The port of the top module that a write sets (the port itself, or the bus of a
+        # bit), None if it can't be set
+        self._writable = writable
         self._children: dict[str, sim_obj] = {}
+        self._bits: dict[int, sim_obj] = {}
 
     def _signal(self) -> Port:
         if self._port is None:
             raise TypeError(f"{self._fullname} is not a signal")
         return self._port
+
+    def _width(self) -> int:
+        if self._constant is not None:
+            return len(self._constant)
+        return self._signal().width
+
+    def _is_value(self) -> bool:
+        return self._port is not None or self._constant is not None
 
     def get_const(self) -> bool:
         return False
@@ -128,13 +186,32 @@ class sim_obj:
         return self._definition
 
     def get_handle_by_index(self, index: int) -> sim_obj | None:
-        return None
+        if not self.get_indexable():
+            return None
+        width = self._width()
+        bit = self._declaration.bit(index, width)
+        if bit is None:
+            return None
+        child = self._bits.get(bit)
+        if child is None:
+            child = self._bits[bit] = self._bit(index, bit)
+        return child
+
+    def _bit(self, index: int, bit: int) -> sim_obj:
+        name = f"{self._name}[{index}]"
+        fullname = f"{self._fullname}[{index}]"
+        if self._constant is not None:
+            return sim_obj(name, fullname, LOGIC, constant=self._constant[-1 - bit])
+        port = self._signal()
+        assert isinstance(port, PortMultiBitWire)
+        writable = port if self._writable is not None else None
+        return sim_obj(name, fullname, LOGIC, port.get_bit(bit), writable=writable)
 
     def get_handle_by_name(self, name: str, discovery_method: Any = None) -> sim_obj | None:
         return self._children.get(name)
 
     def get_indexable(self) -> bool:
-        return False
+        return self._is_value() and self._type != LOGIC
 
     def get_name_string(self) -> str:
         return self._name
@@ -143,17 +220,19 @@ class sim_obj:
         return self._fullname
 
     def get_num_elems(self) -> int:
-        return self._signal().width if self._port is not None else len(self._children)
+        return self._width() if self._is_value() else len(self._children)
 
     def get_range(self) -> tuple[int, int, int]:
-        if self._port is None:
+        if not self._is_value():
             return 0, 0, RANGE_NO_DIR
-        return self._port.width - 1, 0, RANGE_DOWN
+        return self._declaration.range(self._width())
 
     def get_actual(self) -> sim_obj | None:
         return None
 
     def get_signal_val_binstr(self) -> str:
+        if self._constant is not None:
+            return self._constant
         port = self._signal()
         value = port.value
         if isinstance(value, int):
@@ -162,6 +241,8 @@ class sim_obj:
 
     def get_signal_val_long(self) -> int:
         # An undefined value reads as 0, like a VPI integer value
+        if self._constant is not None:
+            return int(self._constant, 2) if set(self._constant) <= {"0", "1"} else 0
         value = self._signal().value
         return value if isinstance(value, int) else 0
 
@@ -172,13 +253,14 @@ class sim_obj:
         raise TypeError(f"{self._fullname} is not a string")
 
     def get_signed(self) -> bool:
-        return False
+        return self._declaration.signed
 
     def get_type(self) -> int:
-        return self._type
+        # A vector: the type of the cocotb in use, it is imported by now
+        return _packed_type() if self._type == PACKED_ARRAY else self._type
 
     def get_type_string(self) -> str:
-        return _TYPE_STRINGS.get(self._type, "GPI_UNKNOWN")
+        return _TYPE_STRINGS.get(self.get_type(), "GPI_UNKNOWN")
 
     def iterate(self, mode: int) -> Iterator[sim_obj]:
         return iter(list(self._children.values()) if mode == OBJECTS else [])
@@ -187,17 +269,16 @@ class sim_obj:
         # Like the GPI with a write that the simulator rejects: log it and go on (cocotb
         # applies most writes in a callback of its own, where an exception would end the
         # simulation)
-        port = self._signal()
         if action not in (_DEPOSIT, _NO_DELAY):
             _gpi_log.error(
                 "DigSim can only deposit values, not force or release %s", self._fullname
             )
-        elif not port.is_input() or not port.parent().is_toplevel():
+        elif self._writable is None:
             _gpi_log.error(
                 "DigSim can only set the inputs of the top module, not %s", self._fullname
             )
         else:
-            port.value = value
+            self._signal().value = value
 
     def set_signal_val_binstr(self, action: int, value: str) -> None:
         if set(value) <= {"0", "1"}:
@@ -209,7 +290,7 @@ class sim_obj:
             self._set(action, "X")
 
     def set_signal_val_int(self, action: int, value: int) -> None:
-        self._set(action, value & ((1 << self._signal().width) - 1))
+        self._set(action, value & ((1 << self._width()) - 1))
 
     def set_signal_val_real(self, action: int, value: float) -> None:
         raise TypeError(f"{self._fullname} is not a real")
@@ -230,8 +311,29 @@ class _Watch:
         self.callbacks: list[tuple[sim_callback, int]] = []
 
 
-def _logic_type(port: Port) -> int:
-    return LOGIC if port.width == 1 else LOGIC_ARRAY
+def _logic_type(width: int) -> int:
+    """A bit, or a vector (see sim_obj.get_type)"""
+    return LOGIC if width == 1 else PACKED_ARRAY
+
+
+# The constant bits of a netlist, as the characters of a binstr
+_CONSTANT_BITS = {"0": "0", "1": "1", "x": "X", "X": "X", "z": "Z", "Z": "Z"}
+
+
+def _constant_signals(module: YosysModule) -> dict[str, str]:
+    """The named signals with only constant bits, as binstrs (signal_names() has the rest)"""
+    constants = {}
+    for name, netname in module.netnames.items():
+        if (
+            netname.hide_name
+            or name.startswith("$")
+            or name in module.ports
+            or not netname.bits
+            or not all(isinstance(bit, str) for bit in netname.bits)
+        ):
+            continue
+        constants[name] = "".join(_CONSTANT_BITS[str(bit)] for bit in reversed(netname.bits))
+    return constants
 
 
 class _Scheduler:
@@ -243,12 +345,26 @@ class _Scheduler:
         name = top.name()
         circuit.init()
         self.root = sim_obj(name, name, MODULE, definition=name, definition_file=path)
+        module = top._module() if isinstance(top, YosysComponent) else None
         for port in top.ports:
-            child = sim_obj(port.name(), f"{name}.{port.name()}", _logic_type(port), port)
+            declaration = _Declaration()
+            if module is not None and port.name() in module.ports:
+                yosys_port = module.ports[port.name()]
+                declaration = _Declaration(yosys_port.signed, yosys_port.offset, yosys_port.upto)
+            child = sim_obj(
+                port.name(),
+                f"{name}.{port.name()}",
+                _logic_type(port.width),
+                port,
+                declaration=declaration,
+                writable=port if port.is_input() else None,
+            )
             self.root._children[port.name()] = child
-        if isinstance(top, YosysComponent) and top.parameter_get("signals"):
+        if isinstance(top, YosysComponent) and module is not None and top.parameter_get("signals"):
             for signal in top.signal_names():
-                self._add_signal(signal, top._signal_port(signal))
+                self._add_signal(signal, module, port=top._signal_port(signal))
+            for signal, constant in _constant_signals(module).items():
+                self._add_signal(signal, module, constant=constant)
         self.running = False
         self._stop = False
         self._stopped_by_cocotb = False
@@ -260,23 +376,37 @@ class _Scheduler:
         self._end_of_sim: list[sim_callback] = []
         self._watches: dict[Port, _Watch] = {}
 
-    def _add_signal(self, name: str, port: Port) -> None:
+    def _add_signal(
+        self,
+        name: str,
+        module: YosysModule,
+        port: Port | None = None,
+        constant: str | None = None,
+    ) -> None:
         """A named signal, in modules for the submodules of its name ("alu.out")"""
         parent = self.root
-        *modules, leaf = name.split(".")
-        for module in modules:
-            child = parent._children.get(module)
+        *submodules, leaf = name.split(".")
+        for submodule in submodules:
+            child = parent._children.get(submodule)
             if child is None:
-                child = sim_obj(module, f"{parent._fullname}.{module}", MODULE)
-                parent._children[module] = child
+                child = sim_obj(submodule, f"{parent._fullname}.{submodule}", MODULE)
+                parent._children[submodule] = child
             elif child._type != MODULE:
                 # The name of a module is taken by a port or signal
                 return
             parent = child
-        if leaf not in parent._children:
-            parent._children[leaf] = sim_obj(
-                leaf, f"{parent._fullname}.{leaf}", _logic_type(port), port
-            )
+        if leaf in parent._children:
+            return
+        netname = module.netnames[name]
+        width = port.width if port is not None else len(constant or "")
+        parent._children[leaf] = sim_obj(
+            leaf,
+            f"{parent._fullname}.{leaf}",
+            _logic_type(width),
+            port,
+            declaration=_Declaration(netname.signed, netname.offset, netname.upto),
+            constant=constant,
+        )
 
     # Registering
 
@@ -286,6 +416,9 @@ class _Scheduler:
         return callback
 
     def value_change(self, obj: sim_obj, callback: sim_callback, edge: int) -> sim_callback:
+        if obj._constant is not None:
+            # A constant doesn't change: the callback is never called
+            return callback
         port = obj._signal()
         watch = self._watches.get(port)
         if watch is None:

@@ -4,7 +4,7 @@
 """
 Module with classes to parse a yosys netlist.
 Only the parts of the netlist that are used to build a component are read, pydantic
-ignores the rest (for example net names and attributes).
+ignores the rest.
 """
 
 from __future__ import annotations
@@ -58,6 +58,11 @@ class YosysPort:
 
     direction: str
     bits: BIT_TYPE
+    # The declaration: signed, and the range, [offset + width - 1:offset] (or with upto
+    # [offset:offset + width - 1], bits[0] is then the last index)
+    signed: int = 0
+    offset: int = 0
+    upto: int = 0
 
     @property
     def is_output(self) -> bool:
@@ -124,6 +129,10 @@ class YosysNetname:
     bits: BIT_TYPE
     hide_name: int = 0
     attributes: dict[str, str | int] = Field(default_factory=dict)
+    # The declaration, like the ones of a YosysPort
+    signed: int = 0
+    offset: int = 0
+    upto: int = 0
 
     def enum_names(self) -> dict[int, str]:
         """The names of the values, for a signal declared as a SystemVerilog enum"""

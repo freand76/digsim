@@ -23,6 +23,8 @@ from digsim.circuit.components import YosysComponent
 from digsim.cocotb import _simulator as sim
 from digsim.cocotb import main
 from digsim.cocotb._launcher import _define, _parameter, _yosys_source
+from digsim.synth import Synthesis
+from digsim.utils import YosysNetlist
 
 
 # Yosys and files: also on the other platforms (see .github/workflows)
@@ -31,6 +33,7 @@ pytestmark = pytest.mark.sanity
 VERILOG = Path(__file__).parent / "verilog"
 COUNTER = VERILOG / "cocotb_counter.sv"
 OPTIONS = VERILOG / "cocotb_options.sv"
+TYPES = VERILOG / "cocotb_types.sv"
 TESTBENCH = Path(__file__).parent / "cocotb_tb"
 
 
@@ -40,6 +43,19 @@ def _scheduler():
     circuit = Circuit()
     top = YosysComponent(circuit, _yosys_source(str(COUNTER)), module="counter", signals=True)
     scheduler = sim._Scheduler(circuit, top, str(COUNTER), ["digsim", "+seed=1"])
+    sim.install(scheduler)
+    yield scheduler
+    sim._scheduler = None
+
+
+@pytest.fixture(name="types")
+def _types():
+    """A scheduler with tests/verilog/cocotb_types.sv, its signals kept as for the tests"""
+    circuit = Circuit()
+    netlist = Synthesis(str(TYPES), "types", keep_signals=True).synth_to_dict(silent=True)
+    top = YosysComponent(circuit, signals=True)
+    top.create_from_netlist(YosysNetlist(**netlist))
+    scheduler = sim._Scheduler(circuit, top, str(TYPES), ["digsim"])
     sim.install(scheduler)
     yield scheduler
     sim._scheduler = None
@@ -82,8 +98,9 @@ def test_handles(scheduler):
     din = root.get_handle_by_name("din")
     assert root.get_handle_by_name("missing") is None
     assert clk.get_type() == sim.LOGIC
-    assert din.get_type() == sim.LOGIC_ARRAY
-    assert din.get_type_string() == "GPI_LOGIC_ARRAY"
+    # A vector: packed, the type of the cocotb in use (PACKED in cocotb 2.1)
+    assert din.get_type() == sim._packed_type()
+    assert din.get_type_string() in ("GPI_PACKED_ARRAY", "GPI_PACKED")
     assert din.get_fullname_string() == "counter.din"
     assert din.get_range() == (7, 0, sim.RANGE_DOWN)
     assert din.get_num_elems() == 8
@@ -145,7 +162,7 @@ def test_internal_signals(scheduler):
     value = root.get_handle_by_name("value")
     assert odd_reg.get_fullname_string() == "counter.u_parity.odd_reg"
     assert odd_reg.get_type() == sim.LOGIC
-    assert value.get_type() == sim.LOGIC_ARRAY
+    assert value.get_type() == sim._packed_type()
     assert value.get_range() == (7, 0, sim.RANGE_DOWN)
     for name, level in (("rst", 0), ("ena", 0), ("set", 1), ("din", 3)):
         root.get_handle_by_name(name).set_signal_val_int(sim._DEPOSIT, level)
@@ -550,3 +567,72 @@ def test_cocotb_pytest_plugin(tmp_path):
     )
     assert run.returncode == 0, run.stdout + run.stderr
     assert "2 passed, 1 passed cocotb runner" in run.stdout
+
+
+def test_packed_types_and_ranges(types):
+    """Vectors are packed, with the ranges and the signedness of their declarations"""
+    root = types.root
+    handles = {name: root.get_handle_by_name(name) for name in ("up", "s", "down", "y")}
+    for handle in handles.values():
+        assert handle.get_type() == sim._packed_type()
+        assert handle.get_indexable()
+    assert handles["up"].get_range() == (0, 3, sim.RANGE_UP)
+    assert handles["down"].get_range() == (11, 4, sim.RANGE_DOWN)
+    assert handles["s"].get_range() == (7, 0, sim.RANGE_DOWN)
+    assert [name for name, handle in handles.items() if handle.get_signed()] == ["s", "y"]
+    up_copy = root.get_handle_by_name("up_copy")
+    assert up_copy.get_range() == (0, 3, sim.RANGE_UP)
+    assert not up_copy.get_signed()
+
+
+def test_bits_by_index(types):
+    """The bits of a vector by the indices of its declaration, set one at a time"""
+    root = types.root
+    up = root.get_handle_by_name("up")
+    down = root.get_handle_by_name("down")
+    s = root.get_handle_by_name("s")
+    up.set_signal_val_int(sim._DEPOSIT, 0b1000)
+    down.set_signal_val_int(sim._DEPOSIT, 0)
+    s.set_signal_val_int(sim._DEPOSIT, 0)
+    # [0:3]: index 0 is the most significant bit
+    assert up.get_handle_by_index(0).get_signal_val_binstr() == "1"
+    assert up.get_handle_by_index(3).get_signal_val_binstr() == "0"
+    bit = down.get_handle_by_index(4)
+    assert bit is down.get_handle_by_index(4)
+    assert bit.get_type() == sim.LOGIC
+    assert not bit.get_indexable()
+    assert bit.get_fullname_string() == "types.down[4]"
+    assert down.get_handle_by_index(3) is None
+    assert down.get_handle_by_index(12) is None
+    down.get_handle_by_index(11).set_signal_val_int(sim._DEPOSIT, 1)
+    down.get_handle_by_index(4).set_signal_val_int(sim._DEPOSIT, 1)
+    assert down.get_signal_val_long() == 0x81
+    sim.register_timed_callback(1000, sim.stop_simulator)
+    types.run()
+    assert root.get_handle_by_name("y").get_signal_val_long() == 0x81
+    assert root.get_handle_by_name("up_copy").get_handle_by_index(0).get_signal_val_long() == 1
+
+
+def test_constant_signal(types, caplog):
+    """A register only set in an initial block is a constant: read only, it doesn't change"""
+    constant = types.root.get_handle_by_name("constant_reg")
+    assert constant.get_type() == sim._packed_type()
+    assert constant.get_signal_val_binstr() == "0101"
+    assert constant.get_signal_val_long() == 5
+    assert constant.get_range() == (3, 0, sim.RANGE_DOWN)
+    assert constant.get_num_elems() == 4
+    assert constant.get_handle_by_index(0).get_signal_val_binstr() == "1"
+    assert constant.get_handle_by_index(1).get_signal_val_long() == 0
+    changes = []
+    sim.register_value_change_callback(constant, lambda: changes.append(1), sim.VALUE_CHANGE)
+    constant.set_signal_val_int(sim._DEPOSIT, 0)
+    constant.get_handle_by_index(0).set_signal_val_int(sim._DEPOSIT, 0)
+    root_bit = types.root.get_handle_by_name("y").get_handle_by_index(0)
+    root_bit.set_signal_val_int(sim._DEPOSIT, 1)
+    sim.register_timed_callback(1000, sim.stop_simulator)
+    types.run()
+    assert constant.get_signal_val_binstr() == "0101"
+    assert changes == []
+    errors = [record.getMessage() for record in caplog.records if record.name == "gpi"]
+    assert len(errors) == 3
+    assert all("only set the inputs" in error for error in errors)
