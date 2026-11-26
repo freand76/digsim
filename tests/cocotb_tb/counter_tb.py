@@ -94,10 +94,19 @@ async def test_internal_signals(dut):
 
 
 @cocotb.test
-async def test_internal_write_ignored(dut):
-    """A write to a signal inside the design is logged and ignored, the test goes on"""
+async def test_internal_deposit(dut):
+    """A write to a register inside the design is a deposit, it keeps it until it is clocked"""
     Clock(dut.clk, 10, "ns").start()
     await reset(dut)
     dut.value.value = 100
     await Timer(1, "ns")
-    assert int(dut.value.value) == 0
+    assert int(dut.value.value) == 100
+    assert int(dut.count.value) == 100
+    # Not enabled: the edge doesn't change it
+    await RisingEdge(dut.clk)
+    await Timer(1, "ns")
+    assert int(dut.value.value) == 100
+    dut.ena.value = 1
+    await RisingEdge(dut.clk)
+    await Timer(1, "ns")
+    assert int(dut.value.value) == 101
