@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## vx.x.x
+## v1.15.0
  - Python API: YosysComponent.deposit() sets a named signal like a Verilog deposit: the value now, and the cells that drive it keep it until they drive it again (a register until its next active clock edge, a gate until an input changes). Synthesis(keep_signals=True) gives a signal that is the same net as another one (like an input) a buffer of its own. Needs digsim-native 0.6.0 with the native engine
  - cocotb: writes to the signals inside the design are deposits, they were logged as errors and ignored
  - cocotb: a vector is a packed object (PackedArrayObject, PackedObject in cocotb 2.1) with the range and the signedness of its declaration, and its bits can be indexed (dut.down[11] of logic [11:4] down) and the bits of an input set. It was a LogicArrayObject, VHDL's type, unsigned and from 0, without bits. A signal with a constant value, like a register only set in an initial block, is read only, it was missing
