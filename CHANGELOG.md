@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## vx.x.x
+ - Python API: Synthesis takes macros with any value, like a string with spaces and quotes (defines={"FILE": '"data/rom.hex"'}), also -D of python -m digsim.cocotb and the defines of cocotb's runner. They failed with "has a space or a quote"
+
 ## v1.14.0
  - Python API: Synthesis has include folders (includes) and macros (defines) for the Verilog files
  - Python API: `import digsim.synth` as the first import of digsim failed with a circular import. Importing digsim.circuit first worked

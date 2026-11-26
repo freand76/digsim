@@ -100,8 +100,9 @@ with a value or `None` for a macro without one:
 synthesis = Synthesis(["top.sv"], "top", includes=["include"], defines={"WIDTH": 8, "DEBUG": None})
 ```
 
-Yosys reads the folders and the values as they are written, so they can't have spaces or
-double quotes.
+A value is the text of the macro, as after `` `define NAME ``, so a string macro has its
+quotes: `{"FILE": '"data/rom.hex"'}`. Yosys reads the include folders as they are written,
+so they can't have spaces or double quotes.
 
 ## Several modules
 

@@ -147,16 +147,15 @@ def _script_path(path: pathlib.Path) -> str:
     return f'"{path.as_posix()}"'
 
 
-def _read_commands(includes: IncludeFolders | None, defines: Defines | None) -> str:
+def _include_commands(includes: IncludeFolders | None) -> str:
     """
-    The include folders and the macros as Yosys commands, before the files are read
+    The include folders as Yosys commands, before the files are read
 
     Raises:
-        SynthesisException: If Yosys can't read a folder, or its path or the value of a
-            macro has a space, a double quote, a semicolon or a # (which a Yosys script can't
-            give), or a macro name is not a Verilog identifier.
+        SynthesisException: If Yosys can't read a folder, or its path has a space, a
+            double quote, a semicolon or a # (which a Yosys script can't give).
     """
-    options = []
+    commands = []
     for include in includes or ():
         path, problem = _yosys_path(pathlib.Path(include))
         if path is None:
@@ -166,18 +165,32 @@ def _read_commands(includes: IncludeFolders | None, defines: Defines | None) -> 
             raise SynthesisException(
                 f"Yosys can't read the include folder {include}: it has a space or a quote"
             )
-        options.append(f"read -incdir {folder}; ")
+        commands.append(f"read -incdir {folder}; ")
+    return "".join(commands)
+
+
+def _define_header(defines: Defines | None) -> str:
+    """
+    The macros as `define lines, a header that Yosys reads before the files. A Yosys
+    script would split a value at a space and drop its quotes, like those of a string.
+
+    Raises:
+        SynthesisException: If a macro name is not a Verilog identifier, or a value has a
+            line break (or ends with a backslash).
+    """
+    lines = []
     for name, value in (defines or {}).items():
         if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_$]*", name):
             raise SynthesisException(f"Not a macro name: '{name}'")
         if value is None:
-            options.append(f"read -define {name}; ")
+            lines.append(f"`define {name}\n")
             continue
         text = str(value)
-        if re.search(r"[\s\";#]", text):
-            raise SynthesisException(f"The value of macro '{name}' has a space or a quote")
-        options.append(f"read -define {name}={text}; ")
-    return "".join(options)
+        # A backslash at the end would continue the line, into the next macro
+        if "\n" in text or "\r" in text or text.endswith("\\"):
+            raise SynthesisException(f"The value of macro '{name}' has a line break")
+        lines.append(f"`define {name} {text}\n")
+    return "".join(lines)
 
 
 def _script_files(verilog_files: VerilogFiles) -> str:
@@ -299,13 +312,14 @@ class Synthesis:
         includes: Folders to find the files of `include in, after the folder of the
             including file.
         defines: Macros for the Verilog files, like `define, by name: {"WIDTH": 8}, or
-            {"DEBUG": None} for a macro without a value.
+            {"DEBUG": None} for a macro without a value. A value is the text of the
+            macro, like '"file.txt"' for a string.
 
     Raises:
         SynthesisException: If a parameter name is not a Verilog identifier, or its value
             not an integer. A parameter that the module doesn't have is an error of the
-            synthesis. A macro name that is not a Verilog identifier, a value or an
-            include folder with a space or a quote.
+            synthesis. A macro name that is not a Verilog identifier, a macro value with a
+            line break, or an include folder with a space or a quote.
     """
 
     @staticmethod
@@ -491,7 +505,8 @@ class Synthesis:
         self._verilog_top_module = verilog_top_module
         self._functional = functional
         self._parameter_arguments = _parameter_arguments(parameters)
-        self._read_commands = _read_commands(includes, defines)
+        self._include_commands = _include_commands(includes)
+        self._define_header = _define_header(defines)
         self._yosys_log: list[str] = []
 
     def synth_to_json(self, silent: bool = False) -> str:
@@ -505,8 +520,8 @@ class Synthesis:
             SynthesisException: If Yosys reports an error, like a syntax error.
         """
         top = self._verilog_top_module
-        script = f"{self._read_commands}read -sv {_script_files(self._verilog_files)}; "
-        script += f"hierarchy -top {top}{self._parameter_arguments}; "
+        files = _script_files(self._verilog_files)
+        script = f"hierarchy -top {top}{self._parameter_arguments}; "
         # Tristate buffers ('bz) become tristate cells: several on one net are merged into
         # one, and the ones that don't drive an output port of the design become logic
         script += "proc; flatten; tribuf -merge -logic; "
@@ -524,6 +539,12 @@ class Synthesis:
 
         self._yosys_log = []
         with self._work_dir() as work_dir:
+            if self._define_header:
+                # Read first, in the same read as the files: its macros are theirs
+                header = work_dir / "defines.vh"
+                header.write_text(self._define_header, encoding="utf-8")
+                files = f"{_script_path(header)} {files}"
+            script = f"{self._include_commands}read -sv {files}; {script}"
             json_file = work_dir / "netlist.json"
             try:
                 self._run_yosys(

@@ -275,13 +275,30 @@ def test_yosys_include_missing(verilog_path):
     "arguments, message",
     [
         ({"defines": {"1X": 1}}, "Not a macro name"),
-        ({"defines": {"X": "a b"}}, "has a space or a quote"),
-        ({"defines": {"X": 'a"'}}, "has a space or a quote"),
-        ({"defines": {"X": "a;b"}}, "has a space or a quote"),
+        ({"defines": {"X": "a\nb"}}, "has a line break"),
+        ({"defines": {"X": "a\\"}}, "has a line break"),
         ({"includes": ["include folder"]}, "include folder"),
     ],
 )
 def test_yosys_bad_includes_and_defines(verilog_path, arguments, message):
-    """Macros and include folders that a Yosys script can't give are errors at once"""
+    """Macros and include folders that Yosys can't be given are errors at once"""
     with pytest.raises(SynthesisException, match=message):
         Synthesis(str(verilog_path / "cocotb_options.sv"), "options", **arguments)
+
+
+STRING_MACRO = '"path/to/some (random quote)/a;b#c.wow"'
+
+
+def _string_macro_value(verilog_path, text):
+    """y of tests/verilog/synth_string_macro.sv, with the macro TEXT"""
+    synthesis = Synthesis(
+        str(verilog_path / "synth_string_macro.sv"), "string_macro", defines={"TEXT": text}
+    )
+    module = synthesis.synth_to_dict(silent=True)["modules"]["string_macro"]
+    return module["ports"]["y"]["bits"]
+
+
+def test_yosys_string_macro(verilog_path):
+    """A string macro keeps its quotes, spaces, semicolon and #, like a `define in a file"""
+    assert _string_macro_value(verilog_path, STRING_MACRO) == ["1", "0"]
+    assert _string_macro_value(verilog_path, '"other"') == ["0", "1"]

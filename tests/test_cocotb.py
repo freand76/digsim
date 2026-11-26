@@ -420,6 +420,16 @@ def test_netlist_build_step(tmp_path):
     assert _netlist_module(netlist) == (4, ["$_NOT_"])
 
 
+def test_netlist_string_macro(tmp_path):
+    """-D gives a string macro as it is written, with its quotes and spaces"""
+    netlist = tmp_path / "string_macro.json"
+    source = str(VERILOG / "synth_string_macro.sv")
+    text = '-DTEXT="path/to/some (random quote)/a;b#c.wow"'
+    assert main([source, "--toplevel", "string_macro", text, "--netlist", str(netlist)]) == 0
+    module = json.loads(netlist.read_text(encoding="utf-8"))["modules"]["string_macro"]
+    assert module["ports"]["y"]["bits"] == ["1", "0"]
+
+
 def test_netlist_include_from_own_folder(tmp_path):
     """A file synthesized as a copy without its time declarations includes from its folder"""
     netlist = tmp_path / "local.json"

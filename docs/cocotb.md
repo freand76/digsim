@@ -40,7 +40,7 @@ are plusargs for the tests (`cocotb.plusargs`).
 | `--toplevel NAME` | The top module, needed with several files or with `-I` and `-D` (one file: its top module) |
 | `--test-modules NAMES` | The Python modules with the tests, separated by commas |
 | `-I FOLDER` | A folder to include files from, after the folder of the including file |
-| `-D NAME[=VALUE]` | A macro, like `` `define `` |
+| `-D NAME[=VALUE]` | A macro, like `` `define ``, also a string: `'-DFILE="data/rom.hex"'` |
 | `-P NAME=VALUE` | A value for a parameter of the top module, an integer like `8`, `0x10` or `8'd5` |
 | `--functional` | Synthesize into functional blocks instead of gates, which simulates faster |
 | `--waves FILE` | Write the waveforms to a VCD file |
