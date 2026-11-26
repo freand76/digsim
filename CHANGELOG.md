@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## vx.x.x
+## v1.14.0
  - Python API: Synthesis has include folders (includes) and macros (defines) for the Verilog files
  - Python API: `import digsim.synth` as the first import of digsim failed with a circular import. Importing digsim.circuit first worked
  - Python API: Circuit.vcd() has a timescale, the time of a nanosecond of the simulation in the file ("1 ns" as before), like "1 ps" for cocotb
