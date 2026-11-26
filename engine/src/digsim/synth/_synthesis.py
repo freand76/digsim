@@ -314,6 +314,10 @@ class Synthesis:
         defines: Macros for the Verilog files, like `define, by name: {"WIDTH": 8}, or
             {"DEBUG": None} for a macro without a value. A value is the text of the
             macro, like '"file.txt"' for a string.
+        keep_signals: Keep the named wires and registers, also of the submodules, and
+            the logic that drives them, also when no output depends on them. Synthesis
+            removes those, which hides them from a simulation that shows the signals
+            inside the design, like the tests of cocotb. The netlist gets bigger.
 
     Raises:
         SynthesisException: If a parameter name is not a Verilog identifier, or its value
@@ -500,6 +504,7 @@ class Synthesis:
         parameters: Parameters | None = None,
         includes: IncludeFolders | None = None,
         defines: Defines | None = None,
+        keep_signals: bool = False,
     ) -> None:
         self._verilog_files = _file_list(verilog_files)
         self._verilog_top_module = verilog_top_module
@@ -507,6 +512,7 @@ class Synthesis:
         self._parameter_arguments = _parameter_arguments(parameters)
         self._include_commands = _include_commands(includes)
         self._define_header = _define_header(defines)
+        self._keep_signals = keep_signals
         self._yosys_log: list[str] = []
 
     def synth_to_json(self, silent: bool = False) -> str:
@@ -522,6 +528,9 @@ class Synthesis:
         top = self._verilog_top_module
         files = _script_files(self._verilog_files)
         script = f"hierarchy -top {top}{self._parameter_arguments}; "
+        if self._keep_signals:
+            # The wires with names in the Verilog: w:* doesn't select the ones of Yosys ($)
+            script += "setattr -set keep 1 w:*; "
         # Tristate buffers ('bz) become tristate cells: several on one net are merged into
         # one, and the ones that don't drive an output port of the design become logic
         script += "proc; flatten; tribuf -merge -logic; "

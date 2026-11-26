@@ -44,7 +44,7 @@ are plusargs for the tests (`cocotb.plusargs`).
 | `-P NAME=VALUE` | A value for a parameter of the top module, an integer like `8`, `0x10` or `8'd5` |
 | `--functional` | Synthesize into functional blocks instead of gates, which simulates faster |
 | `--waves FILE` | Write the waveforms to a VCD file |
-| `--no-signals` | Leave out the named signals inside the design, for a faster simulation |
+| `--no-signals` | Leave out the named signals inside the design, and the logic that only they use, for a faster simulation |
 | `--netlist FILE` | Only synthesize: write the netlist to a `.json` file, then give the file instead of the Verilog files to run the tests on it |
 
 ## With cocotb's Makefiles, runner and pytest plugin
@@ -58,7 +58,8 @@ make SIM=digsim WAVES=1  # sim_build/<toplevel>.vcd
 
 `VERILOG_INCLUDE_DIRS` gives include folders, and `COMPILE_ARGS` can give macros and
 parameters as `-DNAME=VALUE` and `-PNAME=VALUE`. `SIM_ARGS=--no-signals` leaves out the
-signals inside the design.
+signals inside the design. With the runner, `build_args=["--no-signals"]` leaves them out
+of the netlist, and `test_args=["--no-signals"]` out of the simulation.
 
 The Python runner synthesizes the design in `build()`, to `sim_build/<toplevel>.json`,
 and `test()` runs the tests on that netlist (it synthesizes again for other parameters):
@@ -76,10 +77,12 @@ cocotb's pytest plugin selects DigSim with `--cocotb-simulator=digsim`, or finds
 
 ## What the tests see
 
-- The ports of the top module, and the named signals inside it, the wires and registers
-  that synthesis keeps: `dut.value` for a register of the top module, `dut.u_sub.signal`
-  for one of the submodule `u_sub`. Triggers like `RisingEdge` work on all of them.
-  Synthesis removes or renames signals that only carry logic, registers stay.
+- The ports of the top module, and the named signals inside it, the wires and registers:
+  `dut.value` for a register of the top module, `dut.u_sub.signal` for one of the
+  submodule `u_sub`. Triggers like `RisingEdge` work on all of them. They are kept with
+  the logic that drives them, also when no output depends on them, see `keep_signals` in
+  [Synthesis](synthesis.md#internal-signals-and-states). A submodule without signals of
+  its own is not seen, nor a generate block.
 - Only the inputs of the top module can be set, with deposits. A write to another signal
   is logged as an error of the `gpi` logger and ignored, like a write that a simulator
   rejects.

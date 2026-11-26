@@ -1,6 +1,7 @@
 # CHANGELOG
 
 ## vx.x.x
+ - Python API: Synthesis(keep_signals=True) keeps the named wires and registers, and the logic that drives them, also when no output depends on them. The cocotb tests see them: python -m digsim.cocotb keeps them unless --no-signals is given. They were removed by the synthesis, like the whole logic of a module without outputs
  - Python API: Synthesis takes macros with any value, like a string with spaces and quotes (defines={"FILE": '"data/rom.hex"'}), also -D of python -m digsim.cocotb and the defines of cocotb's runner. They failed with "has a space or a quote"
 
 ## v1.14.0

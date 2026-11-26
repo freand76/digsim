@@ -168,7 +168,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--no-signals",
         action="store_true",
-        help="Leave out the named signals inside the design, for a faster simulation",
+        help=(
+            "Leave out the named signals inside the design, and the logic that only they "
+            "use, for a faster simulation"
+        ),
     )
     return parser
 
@@ -195,6 +198,8 @@ def _synthesis(
         parameters=dict(args.parameters),
         includes=includes,
         defines=dict(args.defines),
+        # The named signals for the tests, also where no output depends on them
+        keep_signals=not args.no_signals,
     )
 
 

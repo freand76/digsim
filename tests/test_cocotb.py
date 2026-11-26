@@ -430,6 +430,18 @@ def test_netlist_string_macro(tmp_path):
     assert module["ports"]["y"]["bits"] == ["1", "0"]
 
 
+def test_netlist_keeps_signals(tmp_path):
+    """The signals that no output depends on are kept for the tests, not with --no-signals"""
+    netlist = tmp_path / "keep.json"
+    arguments = [str(VERILOG / "synth_keep_signals.sv"), "--toplevel", "keep_signals"]
+    assert main([*arguments, "--netlist", str(netlist)]) == 0
+    module = json.loads(netlist.read_text(encoding="utf-8"))["modules"]["keep_signals"]
+    assert "count_plus_two" in module["netnames"]
+    assert main([*arguments, "--no-signals", "--netlist", str(netlist)]) == 0
+    module = json.loads(netlist.read_text(encoding="utf-8"))["modules"]["keep_signals"]
+    assert "count_plus_two" not in module["netnames"]
+
+
 def test_netlist_include_from_own_folder(tmp_path):
     """A file synthesized as a copy without its time declarations includes from its folder"""
     netlist = tmp_path / "local.json"

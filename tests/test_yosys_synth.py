@@ -9,6 +9,8 @@ from pathlib import Path
 
 import pytest
 
+from digsim.circuit import Circuit
+from digsim.circuit.components import YosysComponent
 from digsim.synth import (
     Synthesis,
     SynthesisException,
@@ -17,6 +19,7 @@ from digsim.synth import (
     yosys_path_problem,
 )
 from digsim.synth._synthesis import _console_to_file
+from digsim.utils import YosysNetlist
 
 
 # Also on the other platforms: the minimal scope of the tests (see .github/workflows)
@@ -302,3 +305,38 @@ def test_yosys_string_macro(verilog_path):
     """A string macro keeps its quotes, spaces, semicolon and #, like a `define in a file"""
     assert _string_macro_value(verilog_path, STRING_MACRO) == ["1", "0"]
     assert _string_macro_value(verilog_path, '"other"') == ["0", "1"]
+
+
+def _keep_signals_netlist(verilog_path, **arguments):
+    synthesis = Synthesis(str(verilog_path / "synth_keep_signals.sv"), "keep_signals", **arguments)
+    return synthesis.synth_to_dict(silent=True)
+
+
+@pytest.mark.parametrize("functional", [False, True])
+def test_yosys_keep_signals(verilog_path, functional):
+    """keep_signals keeps the signals that no output depends on, also of submodules"""
+    netlist = _keep_signals_netlist(verilog_path, functional=functional)
+    assert "count" not in netlist["modules"]["keep_signals"]["netnames"]
+    netlist = _keep_signals_netlist(verilog_path, functional=functional, keep_signals=True)
+    names = YosysNetlist(**netlist).get_modules()["keep_signals"].signal_names()
+    assert {"count", "count_plus_two", "u_add.a", "u_add.y"} <= set(names)
+
+
+@pytest.mark.parametrize("functional", [False, True])
+def test_yosys_keep_signals_simulated(verilog_path, functional):
+    """The kept signals are simulated: the counter and the adder after it"""
+    netlist = _keep_signals_netlist(verilog_path, functional=functional, keep_signals=True)
+    circuit = Circuit()
+    top = YosysComponent(circuit, signals=True)
+    top.create_from_netlist(YosysNetlist(**netlist))
+    circuit.init()
+    top.rst.value = 1
+    for clock in range(4):
+        top.clk.value = 1
+        circuit.run(us=1)
+        top.clk.value = 0
+        circuit.run(us=1)
+        top.rst.value = 0
+        assert top.signal("count") == clock
+        assert top.signal("count_plus_two") == clock + 2
+        assert top.signal("u_add.y") == clock + 2

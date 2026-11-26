@@ -224,6 +224,12 @@ cpu.state("state")  # The name of the state, like "FETCH"
 The names are hierarchical after flattening, like `ALU.OUT` for the signal `OUT` in the
 submodule `ALU`.
 
+Synthesis removes the logic that no output depends on, with its signals, and merges
+signals that carry the same value. `Synthesis(..., keep_signals=True)` keeps every named
+wire and register and the logic that drives them, for a netlist to see them all in a
+simulation, like the [cocotb](cocotb.md) tests do. The netlist gets bigger and the
+simulation slower.
+
 A signal with names for its values, like the state of a state machine, is written to the
 VCD file twice: as its value, like the other signals, and as text, the name of its
 value, in a variable with `_name` after the signal's name (`state_name` for `state`).
