@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## vx.x.x
+ - Python API: with Synthesis(keep_signals=True), a signal that is the same net as another one (assign b = a) changes at the same time again with the Python engine, its buffer has no gate delay. It changed a gate delay later, so a cocotb test that read it after an edge of the other one saw the old value
+
 ## v1.15.0
  - Python API: YosysComponent.deposit() sets a named signal like a Verilog deposit: the value now, and the cells that drive it keep it until they drive it again (a register until its next active clock edge, a gate until an input changes). Synthesis(keep_signals=True) gives a signal that is the same net as another one (like an input) a buffer of its own. Needs digsim-native 0.6.0 with the native engine
  - cocotb: writes to the signals inside the design are deposits, they were logged as errors and ignored

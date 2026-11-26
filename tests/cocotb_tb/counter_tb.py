@@ -90,6 +90,8 @@ async def test_internal_signals(dut):
         assert int(dut.u_parity.odd_reg.value) == before.bit_count() % 2
     # An edge trigger on a signal inside a submodule
     await RisingEdge(dut.u_parity.odd_reg)
+    # The output follows it in the same time step (assign odd = odd_reg)
+    await ReadOnly()
     assert int(dut.odd.value) == 1
 
 

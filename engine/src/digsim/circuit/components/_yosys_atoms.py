@@ -118,7 +118,9 @@ class _BUF_(Component):
     def __init__(self, circuit: Circuit, name: str | None = None) -> None:
         super().__init__(circuit, name)
         self.add_port(PortIn(self, "A"))
-        self.add_port(PortOutDelta(self, "Y"))
+        # A wire (Yosys' insbuf gives a signal that is the same net as another one a
+        # buffer): no gate delay, the signals change at the same time
+        self.add_port(PortOutDelta(self, "Y", delay_ns=0))
 
     def update(self) -> None:
         self.Y.set_value(self.A._value)
